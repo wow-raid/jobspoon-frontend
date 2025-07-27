@@ -29,7 +29,7 @@
 import { ref, onMounted, nextTick, markRaw } from "vue";
 import { shallowRef } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { useReviewStore } from "../../stores/reviewStore";
+import { useReviewStore } from "../../../review/stores/reviewStore";
 import {
   createAwsS3Instance,
   getSignedUrlFromS3,

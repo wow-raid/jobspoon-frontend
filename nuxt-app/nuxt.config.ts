@@ -1,9 +1,12 @@
 import { defineNuxtConfig } from "nuxt/config";
-import { federation } from "@module-federation/vite";
+import federation from "@originjs/vite-plugin-federation";
+import topLevelAwait from "vite-plugin-top-level-await";
 
 export default defineNuxtConfig({
   ssr: false,
+
   app: {
+    baseURL: "/nuxt/",
     head: {
       // title: 'JOBSTICK',
       titleTemplate: "%s JOBSTICK",
@@ -104,30 +107,43 @@ export default defineNuxtConfig({
   },
 
   vite: {
+     server: {
+      cors: {
+        origin: "*", // 혹은 "*" 로 모든 출처 허용
+        methods: ["GET", "HEAD"]
+      }
+    },
+    build: {
+      target: "esnext", // 최신 브라우저를 타겟으로 빌드
+      rollupOptions: {
+        external: [
+          "#nuxt/routes",
+          "./.output/client/index.mjs",
+        ],
+      },
+    },
+    ssr: {
+      noExternal: ["vuetify", "form-data", "formdata-polyfill", "#nuxt/routes"],
+    },
+    resolve: {
+      alias: {
+        "axios/lib/platform/node/classes/FormData.js":
+          "axios/lib/platform/browser/classes/FormData.js",
+      },
+    },
     plugins: [
       federation({
         name: "nuxtApp",
         filename: "remoteEntry.js",
         exposes: {
-          // 호스트에서 import("nuxtApp/bootstrap") 으로 부트스트랩 진입점 사용
           "./bootstrap": "./bootstrap.ts",
         },
-        library: {
-          type: "var", // var 방식으로 번들링
-          name: "nuxtApp", // window.nuxtApp 에 할당
-        },
-        shared: {
-          vue: { singleton: true, requiredVersion: "^3.5.12" },
-          "vue-router": { singleton: true, requiredVersion: "latest" },
-          vuetify: { singleton: true, requiredVersion: "^3.7.3" },
-        },
+        remotes: {},
       }),
+      topLevelAwait(),
     ],
     optimizeDeps: {
       include: ["@tosspayments/payment-widget-sdk"],
-    },
-    ssr: {
-      noExternal: ["vuetify"], // SSR에서도 Vuetify를 외부 패키지로 처리하지 않도록 설정
     },
   },
 
@@ -177,6 +193,5 @@ export default defineNuxtConfig({
     },
   },
 
-  plugins: ['~/plugins/vgtag.js',
-    { src: '~/plugins/webfontloader.client.ts', mode: 'client' }],
+  plugins: [{ src: "~/plugins/vgtag.js", mode: "client" }],
 });

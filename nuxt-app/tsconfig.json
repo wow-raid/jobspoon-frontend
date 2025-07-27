@@ -7,6 +7,10 @@
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
 
+    "types": [
+      "@types/node"
+    ],
+
     // ✅ 경로 설정 추가
     "baseUrl": ".",
     "paths": {

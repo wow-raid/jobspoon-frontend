@@ -2,6 +2,7 @@ import * as axiosUtility from "../../utility/axiosInstance";
 import { companyReportState } from "./companyReportState";
 import { useCompanyReportStore } from "./companyReportStore";
 
+
 export const companyReportActions = {
 	async requestCompanyReportToDjango(companyReportId: number): Promise<void> {
 		const { djangoAxiosInstance } = axiosUtility.createAxiosInstances();

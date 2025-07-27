@@ -7,12 +7,10 @@
   ],
   "scripts": {
     "bootstrap": "lerna bootstrap",
-    "dev": "lerna run dev --parallel",
-    "start": "lerna run start --parallel"
+    "start": "lerna run start --parallel",
+    "dev": "lerna run dev --parallel --stream"
   },
   "devDependencies": {
-    "@module-federation/vite": "^1.6.0",
-    "@types/node": "^24.1.0",
     "cross-env": "^7.0.3",
     "external-remotes-plugin": "^1.0.0",
     "lerna": "^8.2.2"
