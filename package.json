@@ -3,14 +3,14 @@
   "private": true,
   "workspaces": [
     "main-container",
-    "html-css-test-app"
+    "nuxt-app"
   ],
   "scripts": {
     "bootstrap": "lerna bootstrap",
-    "start": "lerna run start --parallel"
+    "start": "lerna run start --parallel",
+    "dev": "lerna run dev --parallel --stream"
   },
   "devDependencies": {
-    "@module-federation/vite": "^1.6.0",
     "cross-env": "^7.0.3",
     "external-remotes-plugin": "^1.0.0",
     "lerna": "^8.2.2"
