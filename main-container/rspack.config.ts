@@ -21,31 +21,15 @@ export default defineConfig({
   },
 
   devServer: {
-    port: 3330,
-    historyApiFallback: {
-      rewrites: [
-        //cors 설정용
-        // /nuxt/** 은 건너뛰고 (→ proxy 로 보냄)
-        // 그 외는 전부 React index.html
-        {
-          from: /^\/(?!nuxt\/).*/,
-          to: "/index.html",
-        },
-      ],
-    },
-    proxy: [
-      {
-        //cors 설정용
-        context: ["/nuxt"], // nuxt 로 시작하는 모든 요청
-        target: "http://localhost:3000",
-        changeOrigin: true,
-        secure: false,
-      },
-    ],
+    port: 80,
+    historyApiFallback: true,
+    watchFiles: [path.resolve(__dirname, "src")],
   },
   output: {
+    // You need to set a unique value that is not equal to other applications
     uniqueName: "main_container",
-    publicPath: "http://localhost:3330/",
+    // publicPath must be configured if using manifest
+    publicPath: "http://localhost:80/",
   },
 
   experiments: {
@@ -92,12 +76,8 @@ export default defineConfig({
   plugins: [
     new rspack.HtmlRspackPlugin({
       template: "./index.html",
-      scriptLoading: "module",
     }),
-    new ModuleFederationPlugin({
-      ...mfConfig,
-      remoteType: "module",
-    }),
+    new ModuleFederationPlugin(mfConfig),
     isDev ? new RefreshPlugin() : null,
   ].filter(Boolean),
   optimization: {

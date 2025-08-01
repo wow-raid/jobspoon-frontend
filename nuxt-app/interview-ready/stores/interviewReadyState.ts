@@ -1,3 +1,0 @@
-export const interviewReadyState = () => ({
-    // backend 모델의 column과 맞춰야 할 것 같다....
-})
