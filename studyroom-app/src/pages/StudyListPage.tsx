@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { StudyRoom } from '../types/study';
 import { FAKE_STUDY_ROOMS } from '../data/mockData';
 import StudyRoomCard from '../components/StudyRoomCard';
+import Modal from '../components/Modal';
+import CreateStudyForm from "../components/CreateStudyForm";
 import FilterBar, { FilterValues } from '../components/FilterBar';
 import '../styles/StudyListPage.css';
 
@@ -51,6 +53,9 @@ const StudyListPage: React.FC = () => {
                     <StudyRoomCard key={room.id} room={room} />
                 ))}
             </div>
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+                <CreateStudyForm />
+            </Modal>
         </div>
     );
 };
