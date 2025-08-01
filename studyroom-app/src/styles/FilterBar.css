@@ -1,0 +1,38 @@
+.filter-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    background-color: #2c2f3b;
+    padding: 16px;
+    border-radius: 8px;
+}
+
+.filter-container select,
+.search-input {
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #4a4e59;
+    background-color: #1e2129;
+    color: white;
+}
+
+.search-input {
+    flex-grow: 1;
+    min-width: 200px;
+}
+
+.checkbox-label {
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+}
