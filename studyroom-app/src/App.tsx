@@ -3,9 +3,9 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
 import StudyListPage from './pages/StudyListPage';
 import StudyDetailPage from './pages/StudyDetailPage';
-// import MyStudiesPage from './pages/MyStudiesPage';
 
 import './styles/App.css';
+import SuccessPage from "./pages/SuccessPage.tsx";
 
 function App() {
     return (
@@ -13,8 +13,8 @@ function App() {
             <div className="app-container">
                 <Routes>
                     <Route path="/" element={<StudyListPage />} />
-                    {/*<Route path="/my-studies" element={<MyStudiesPage />} />*/}
                     <Route path="/study/:id" element={<StudyDetailPage />} />
+                    <Route path="/success" element={<SuccessPage />} />
                 </Routes>
             </div>
         </MemoryRouter>
