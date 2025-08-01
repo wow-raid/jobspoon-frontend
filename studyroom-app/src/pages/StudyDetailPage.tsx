@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { StudyRoom } from '../types/study';
 import { FAKE_STUDY_ROOMS } from '../data/mockData';
 import StudyDetailView from '../components/StudyDetailView';
@@ -8,10 +8,10 @@ import ApplicationForm from '../components/ApplicationForm';
 
 const StudyDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const [study, setStudy] = useState<StudyRoom | undefined>(undefined);
     const [loading, setLoading] = useState(true);
     const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
-    const [hasApplied, setHasApplied] = useState(false);
 
     useEffect(() => {
         setLoading(true);
@@ -25,9 +25,7 @@ const StudyDetailPage: React.FC = () => {
         console.log(`스터디 ID: ${study?.id}`);
         console.log(`신청 메시지: ${message}`);
 
-        alert('참가 신청이 완료되었습니다.');
-        setIsApplyModalOpen(false);
-        setHasApplied(true);
+        navigate('/success', { state: { title: study?.title}});
     };
 
     if (loading) {
@@ -43,7 +41,6 @@ const StudyDetailPage: React.FC = () => {
             <StudyDetailView
                 room={study}
                 onApplyClick={() => setIsApplyModalOpen(true)}
-                hasApplied={hasApplied}
             />
 
             <Modal isOpen={isApplyModalOpen} onClose={() => setIsApplyModalOpen(false)}>
