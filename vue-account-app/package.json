@@ -1,5 +1,5 @@
 {
-  "name": "main-container",
+  "name": "vue-account-app",
   "version": "0.0.1",
   "scripts": {
     "clean": "rimraf dist",
@@ -9,31 +9,33 @@
     "start": "cross-env NODE_ENV=development rspack serve"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.23.8",
+    "@babel/preset-typescript": "^7.23.3",
     "@rspack/cli": "~1.2.0",
     "@rspack/core": "~1.2.0",
-    "@rspack/plugin-react-refresh": "~1.0.1",
     "@tailwindcss/postcss": "^4.0.3",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
+    "@types/webfontloader": "^1.6.38",
     "autoprefixer": "^10.1.0",
     "css-loader": "^7.1.2",
     "postcss": "^8.2.1",
     "postcss-loader": "^8.0.0",
-    "react-refresh": "^0.14.0",
     "rimraf": "^6.0.1",
     "tailwindcss": "^4.0.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vue-loader": "^16.8.1",
+    "vue-template-compiler": "^2.6.14"
   },
   "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
+    "@mdi/font": "^7.4.47",
+    "@mdi/js": "^7.4.47",
     "@module-federation/enhanced": "^0.8.9",
-    "@mui/icons-material": "^7.0.1",
-    "@mui/material": "^7.0.1",
-    "mitt": "^3.0.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.30.0"
+    "@vueuse/head": "^2.0.0",
+    "pinia": "^3.0.3",
+    "roboto-fontface": "^0.10.0",
+    "vue": "^3.2.19",
+    "vue-router": "^4.5.1",
+    "vuetify": "^3.8.8",
+    "webfontloader": "^1.6.28"
   }
 }
