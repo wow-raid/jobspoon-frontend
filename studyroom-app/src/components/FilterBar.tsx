@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { REGIONS, DEV_JOBS } from "../types/filter";
 import '../styles/FilterBar.css';
 
 export interface FilterValues {
@@ -7,17 +8,6 @@ export interface FilterValues {
     job: string;
     showRecruitingOnly: boolean;
 }
-
-const REGIONS = [
-    '전체', '온라인', '서울', '경기', '인천', '강원',
-    '충북', '충남', '대전', '세종', '전북', '전남', '광주',
-    '경북', '경남', '대구', '울산', '부산', '제주'
-];
-
-const DEV_JOBS = [
-    '전체', '프론트엔드', '백엔드', '풀스택', '모바일', 'iOS',
-    '안드로이드', 'AI/ML', '데이터', 'DevOps', 'QA', '보안', 'PM', '디자이너'
-];
 
 interface FilterBarProps {
     onFilterChange: (filters: FilterValues) => void;
