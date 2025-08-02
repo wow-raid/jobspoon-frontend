@@ -93,10 +93,6 @@ export default defineConfig({
         type: "css",
       },
       {
-        test: /\.svg$/,
-        type: "asset",
-      },
-      {
         test: /\.(jsx?|tsx?)$/,
         use: [
           {
