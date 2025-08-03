@@ -4,6 +4,8 @@ import ReactDOM from "react-dom/client";
 import { CircularProgress } from "@mui/material";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
+import LayOut from "./components/layout/LayOut";
+
 import mitt from "mitt";
 
 import VueAccountAppWrapper from "./VueAccountWrapper.tsx";
@@ -15,8 +17,13 @@ const App = () => {
     <BrowserRouter>
       <Suspense fallback={<CircularProgress />}>
         <Routes>
-          <Route path="/" element={<div>Home Page</div>} />
-          <Route path="/vue-account/*" element={<VueAccountAppWrapper eventBus={eventBus}/>} />
+          <Route path="/" element={<LayOut />}>
+            <Route index element={<div>Home Page</div>} />
+            <Route
+              path="/vue-account/*"
+              element={<VueAccountAppWrapper eventBus={eventBus} />}
+            />
+          </Route>
         </Routes>
       </Suspense>
     </BrowserRouter>
