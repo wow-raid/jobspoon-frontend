@@ -29,3 +29,26 @@ export const FAKE_STUDY_ROOMS: StudyRoom[] = [
     { id: 19, status: 'closed', location: '온라인', job: 'AI', category: 'AI', title: '머신러닝 기초 (마감)', host: '머신러너', postedAt: '18일 전', roles: ['참가자 5명'], requirements: ['Python'], tags: ['#머신러닝', '#AI'], currentMembers: 6, maxMembers: 6, description: '머신러닝의 기본 개념과 알고리즘을 학습합니다.' },
     { id: 20, status: 'recruiting', location: '온라인', job: 'CS', category: 'CS', title: '자료구조 & 알고리즘', host: '알고리즘정복', postedAt: '20일 전', roles: ['스터디원 4명'], requirements: ['프로그래밍 언어 1개 이상'], tags: ['#자료구조', '#알고리즘'], currentMembers: 1, maxMembers: 5, description: '코딩 테스트의 기반이 되는 자료구조와 알고리즘을 공부합니다.' },
 ];
+
+export const MY_APPLICATIONS = [
+    { id: 1, studyTitle: 'React 신입 스터디', status: 'pending', appliedAt: '1일 전' },
+    { id: 2, studyTitle: 'Spring Boot 기초부터', status: 'approved', appliedAt: '3일 전' },
+    { id: 3, studyTitle: 'JPA/QueryDSL 정복하기', status: 'rejected', appliedAt: '5일 전' },
+    { id: 4, studyTitle: '웹 성능 최적화', status: 'pending', appliedAt: '1주 전' },
+    { id: 5, studyTitle: 'Next.js 실전 프로젝트', status: 'approved', appliedAt: '2일 전' },
+    { id: 6, studyTitle: 'Vue.js 스터디', status: 'rejected', appliedAt: '4일 전' },
+    { id: 7, studyTitle: 'TypeScript 심화 스터디', status: 'pending', appliedAt: '6일 전' },
+    { id: 8, studyTitle: 'Node.js & Express 프로젝트', status: 'approved', appliedAt: '1주 전' },
+    { id: 9, studyTitle: '대용량 트래픽 처리 설계', status: 'pending', appliedAt: '10일 전' },
+    { id: 10, studyTitle: 'Django로 만드는 웹 서비스', status: 'rejected', appliedAt: '11일 전' },
+    { id: 11, studyTitle: '코틀린으로 앱 만들기', status: 'approved', appliedAt: '12일 전' },
+    { id: 12, studyTitle: 'SwiftUI 사이드 프로젝트', status: 'pending', appliedAt: '2주 전' },
+    { id: 13, studyTitle: 'Jetpack Compose 스터디', status: 'rejected', appliedAt: '2주 전' },
+    { id: 14, studyTitle: 'RxSwift 스터디', status: 'approved', appliedAt: '3주 전' },
+    { id: 15, studyTitle: 'Docker & Kubernetes 기초', status: 'pending', appliedAt: '1일 전' },
+    { id: 16, studyTitle: '네트워크 스터디', status: 'approved', appliedAt: '5일 전' },
+    { id: 17, studyTitle: 'PyTorch 논문 구현', status: 'rejected', appliedAt: '8일 전' },
+    { id: 18, studyTitle: 'CI/CD 파이프라인 구축', status: 'pending', appliedAt: '9일 전' },
+    { id: 19, studyTitle: '머신러닝 기초', status: 'approved', appliedAt: '2주 전' },
+    { id: 20, studyTitle: '자료구조 & 알고리즘', status: 'pending', appliedAt: '4일 전' },
+];
