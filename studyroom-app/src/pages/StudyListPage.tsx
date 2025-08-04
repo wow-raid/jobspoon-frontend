@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { StudyRoom } from '../types/study';
 import { FAKE_STUDY_ROOMS } from '../data/mockData';
 import StudyRoomCard from '../components/StudyRoomCard';
@@ -41,9 +42,14 @@ const StudyListPage: React.FC = () => {
             </div>
             <div className="list-page-header">
                 <h2>모든 스터디 <span>({filteredRooms.length})</span></h2>
-                <button className="create-study-btn" onClick={() => setIsModalOpen(true)}>
-                    스터디 생성
-                </button>
+                <div className="header-actions">
+                    <Link to="/my-applications" className="nav-btn-secondary">
+                        신청 내역
+                    </Link>
+                    <button className="create-study-btn" onClick={() => setIsModalOpen(true)}>
+                        스터디 생성
+                    </button>
+                </div>
             </div>
 
             <FilterBar onFilterChange={setFilters} />
