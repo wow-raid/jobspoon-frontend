@@ -9,11 +9,11 @@ import LayOut from "./components/layout/LayOut";
 import mitt from "mitt";
 
 import VueAccountAppWrapper from "./VueAccountWrapper.tsx";
+import VueAiInterviewAppWrapper from "./VueAiInterview.tsx";
 
 const eventBus = mitt();
 
 const StudyRoomApp = lazy(() => import("studyRoomApp/App"));
-// const VueAccountAppWrapper = lazy(() => import("./VueAccountAppWrapper.tsx"));
 
 const App = () => {
   return (
@@ -29,6 +29,10 @@ const App = () => {
             <Route
               path="/studies/*"
               element={<StudyRoomApp />}
+            />
+            <Route
+              path="/vue-ai-interview/*"
+              element={<VueAiInterviewAppWrapper eventBus={eventBus} />}
             />
           </Route>
         </Routes>

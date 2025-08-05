@@ -1,7 +1,7 @@
 import { createApp, h } from "vue";
 import type { App as VueApp } from "vue";
 import App from "./App.vue";
-import { loadFonts } from "./plugins/webfontloader";
+import { loadFonts } from "../src/plugins/webfontloader";
 
 import "vuetify/styles";
 import "@mdi/font/css/materialdesignicons.css";
@@ -12,11 +12,11 @@ import * as directives from "vuetify/directives";
 import * as labsComponents from "vuetify/labs/components";
 import { createVuetify } from "vuetify/lib/framework.mjs";
 import { createPinia } from "pinia";
-import router from "./router";
+import router from './router'
 
 let app: VueApp<Element> | null = null;
 
-export const vueAccountAppMount = (el: string | Element, eventBus: any) => {
+export const vueAiInterviewAppMount = (el: string | Element, eventBus: any) => {
     const container = typeof el === "string" ? document.querySelector(el) : el;
     if (!container) return;
     container.innerHTML = "";
@@ -66,7 +66,7 @@ export const vueAccountAppMount = (el: string | Element, eventBus: any) => {
         app.use(vuetify).use(router).use(pinia);
         app.provide("eventBus", eventBus);
 
-        eventBus.on("vue-account-routing-event", (path: string) => {
+        eventBus.on("vue-ai-interview-routing-event", (path: string) => {
             if (router.currentRoute.value.fullPath !== path) {
                 router.push(path);
             }
@@ -99,7 +99,7 @@ async function injectVuetifyCssIntoShadow(shadowRoot: ShadowRoot) {
     shadowRoot.appendChild(style);
 }
 
-export const vueAccountAppUnmount = () => {
+export const vueAiInterviewAppUnmount = () => {
     if (app) {
         app.unmount();
         app = null;

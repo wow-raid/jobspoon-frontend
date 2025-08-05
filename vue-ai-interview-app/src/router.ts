@@ -1,11 +1,11 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
+import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 
 // 페이지 컴포넌트 import
-import AiInterview from './pages/ai-interview.vue';
-import AiInterviewLLM from './pages/llm-test/ai-interview-llm.vue';
-import AiInterviewAnswerResult from './pages/result/ai-interview-answer-result.vue';
+import AiInterview from '../src/ai-interview/pages/ai-interview.vue';
+import AiInterviewLLM from '../src/ai-interview/pages/llm-test/ai-interview-llm.vue';
+import AiInterviewAnswerResult from '../src/ai-interview/pages/result/ai-interview-answer-result.vue';
 
-const routes: RouteRecordRaw[] = [
+const routes: Array<RouteRecordRaw> = [
     {
         path: '/ai-test',
         component: AiInterview,
@@ -21,7 +21,9 @@ const routes: RouteRecordRaw[] = [
     // 필요하다면 기타 라우트 추가
 ];
 
-export const router = createRouter({
-    history: createWebHistory(), // hash 모드면 createWebHashHistory()
+const router = createRouter({
+    history: createWebHistory("/vue-ai-interview"), // hash 모드면 createWebHashHistory()
     routes,
 });
+
+export default router;

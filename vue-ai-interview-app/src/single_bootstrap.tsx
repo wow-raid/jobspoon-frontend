@@ -1,8 +1,7 @@
 import { createApp, h } from 'vue'
 import type { App as VueApp } from 'vue'
 import App from './App.vue'
-import vuetify from './plugins/vuetify'
-import { loadFonts } from './plugins/webfontloader'
+import { loadFonts } from "../src/plugins/webfontloader";
 import { createHead } from '@vueuse/head'
 
 import 'vuetify/styles' // Vuetify의 기본 스타일
@@ -18,7 +17,7 @@ import router from './router'
 
 let app: VueApp<Element> | null = null;
 
-export const vueAccountAppMount = (el: string | Element, eventBus: any) => {
+export const vueAiInterviewAppMount = (el: string | Element, eventBus: any) => {
     loadFonts().then(() => {
         const vuetify = createVuetify({
             components: {
@@ -39,7 +38,7 @@ export const vueAccountAppMount = (el: string | Element, eventBus: any) => {
         app.use(vuetify).use(router).use(pinia).use(head);
         app.provide('eventBus', eventBus);
 
-        eventBus.on('vue-account-routing-event', (path: string) => {
+        eventBus.on('vue-ai-interview-routing-event', (path: string) => {
             if (router.currentRoute.value.fullPath !== path) {
                 router.push(path);
             }
@@ -48,7 +47,7 @@ export const vueAccountAppMount = (el: string | Element, eventBus: any) => {
     });
 };
 
-export const vueAccountAppUnmount = () => {
+export const vueAiInterviewAppUnmount = () => {
     if (app) {
         app.unmount();
         app = null;
@@ -94,4 +93,4 @@ const eventBus: EventBus = {
 
 const root = document.querySelector('#vue-board-app')
 
-if (root) { vueAccountAppMount(root, eventBus) }
+if (root) { vueAiInterviewAppMount(root, eventBus) }

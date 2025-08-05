@@ -8,7 +8,7 @@ import './styles/App.css';
 import SuccessPage from "./pages/SuccessPage.tsx";
 import MyApplicationsPage from "./pages/MyApplicationsPage.tsx";
 
-function App() {
+const App: React.FC = () => {
     return (
             <div className="app-container">
                 <Routes>
