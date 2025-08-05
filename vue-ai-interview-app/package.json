@@ -2,9 +2,8 @@
   "name": "vue-ai-interview-app",
   "version": "0.0.1",
   "scripts": {
-    "clean": "rimraf dist",
-    "build": "cross-env NODE_ENV=production rspack build",
-    "build:dev": "cross-env NODE_ENV=development rspack build",
+    "build": "NODE_ENV=production rspack build",
+    "build:dev": "NODE_ENV=development rspack build",
     "build:start": "cd dist && rspack serve",
     "start": "cross-env NODE_ENV=development rspack serve"
   },
@@ -32,6 +31,7 @@
     "@mdi/js": "^7.4.47",
     "@module-federation/enhanced": "^0.8.9",
     "@vueuse/head": "^2.0.0",
+    "chart.js": "^4.5.0",
     "pinia": "^3.0.3",
     "roboto-fontface": "^0.10.0",
     "vue": "^3.2.19",

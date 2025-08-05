@@ -7,9 +7,12 @@ export const mfConfig = {
   shared: {
     react: { singleton: true, requiredVersion: "^18.2.0" },
     "react-dom": { singleton: true, requiredVersion: "^18.2.0" },
+    "@emotion/react": { singleton: true, requiredVersion: "^11.14.0" },
+    "@emotion/styled": { singleton: true, requiredVersion: "^11.14.0" },
     "@mui/material": { singleton: true, requiredVersion: "^7.0.1" },
     "@mui/icons-material": { singleton: true, requiredVersion: "^7.0.1" },
     "react-router-dom": { singleton: true, requiredVersion: "^6.30.0" },
+    three: { singleton: true, requiredVersion: "^0.177.0" },
   },
   dts: false
 };

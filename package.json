@@ -5,6 +5,7 @@
     "main-container",
     "navigation-bar-app",
     "vue-account-app",
+    "vue-ai-interview-app",
     "studyroom-app"
   ],
   "scripts": {

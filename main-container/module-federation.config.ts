@@ -4,10 +4,13 @@ export const mfConfig = {
     vueAccountApp: `vueAccountApp@${process.env.VUE_ACCOUNT_APP}/remoteEntry.js`,
     navigationBarApp: `navigationBarApp@${process.env.REACT_NAVIGATION_APP}/remoteEntry.js`,
     studyRoomApp: `studyRoomApp@${process.env.REACT_STUDYROOM_APP}/remoteEntry.js`,
+    vueAiInterviewApp: `vueAiInterviewApp@${process.env.VUE_AI_INTERVIEW_APP}/remoteEntry.js`,
   },
   shared: {
     react: { singleton: true, requiredVersion: "^18.2.0" },
     "react-dom": { singleton: true, requiredVersion: "^18.2.0" },
+    "@emotion/react": { singleton: true, requiredVersion: "^11.14.0" },
+    "@emotion/styled": { singleton: true, requiredVersion: "^11.14.0" },
     "@mui/material": { singleton: true, requiredVersion: "^7.0.1" },
     "@mui/icons-material": { singleton: true, requiredVersion: "^7.0.1" },
     "react-router-dom": { singleton: true, requiredVersion: "^6.30.0" },
