@@ -5,6 +5,7 @@
     "main-container",
     "navigation-bar-app",
     "vue-account-app",
+    "studyroom-app"
   ],
   "scripts": {
     "build": "lerna run build --parallel",

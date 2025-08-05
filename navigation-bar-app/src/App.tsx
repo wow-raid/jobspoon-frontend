@@ -63,6 +63,14 @@ const App: React.FC = () => {
                 >
                     EDDI
                 </Typography>
+
+                <Button
+                    color="inherit"
+                    component={Link}
+                    to="/studies"
+                    startIcon={<ForumIcon />}
+                    />
+
                 <Button
                     color="inherit"
                     component={Link}

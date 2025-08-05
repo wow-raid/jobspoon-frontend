@@ -10,7 +10,6 @@ import MyApplicationsPage from "./pages/MyApplicationsPage.tsx";
 
 function App() {
     return (
-        <BrowserRouter>
             <div className="app-container">
                 <Routes>
                     <Route path="/" element={<StudyListPage />} />
@@ -19,7 +18,6 @@ function App() {
                     <Route path="/my-applications" element={<MyApplicationsPage />} />
                 </Routes>
             </div>
-        </BrowserRouter>
     );
 }
 
