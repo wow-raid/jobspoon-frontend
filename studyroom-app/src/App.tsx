@@ -1,5 +1,5 @@
 import React from 'react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import {MemoryRouter, Routes, Route, BrowserRouter} from 'react-router-dom';
 
 import StudyListPage from './pages/StudyListPage';
 import StudyDetailPage from './pages/StudyDetailPage';
@@ -10,7 +10,6 @@ import MyApplicationsPage from "./pages/MyApplicationsPage.tsx";
 
 function App() {
     return (
-        <MemoryRouter>
             <div className="app-container">
                 <Routes>
                     <Route path="/" element={<StudyListPage />} />
@@ -19,7 +18,6 @@ function App() {
                     <Route path="/my-applications" element={<MyApplicationsPage />} />
                 </Routes>
             </div>
-        </MemoryRouter>
     );
 }
 

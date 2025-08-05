@@ -1,5 +1,5 @@
 export const mfConfig = {
-  name: "studyroom_app",
+  name: "studyRoomApp",
   filename: "remoteEntry.js",
   exposes: {
     "./App": "./src/App",
