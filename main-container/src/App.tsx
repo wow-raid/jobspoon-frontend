@@ -12,6 +12,9 @@ import VueAccountAppWrapper from "./VueAccountWrapper.tsx";
 
 const eventBus = mitt();
 
+const StudyRoomApp = lazy(() => import("studyRoomApp/App"));
+// const VueAccountAppWrapper = lazy(() => import("./VueAccountAppWrapper.tsx"));
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -22,6 +25,10 @@ const App = () => {
             <Route
               path="/vue-account/*"
               element={<VueAccountAppWrapper eventBus={eventBus} />}
+            />
+            <Route
+              path="/studies/*"
+              element={<StudyRoomApp />}
             />
           </Route>
         </Routes>
