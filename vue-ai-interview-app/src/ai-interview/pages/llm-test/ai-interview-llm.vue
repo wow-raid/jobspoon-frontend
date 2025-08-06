@@ -1,6 +1,6 @@
 <template>
   <main>
-    <v-container v-if="!start" align="center" :style="containerStyle">
+    <v-container v-if="!start" align-center :style="containerStyle">
       <!-- 상단 탭 버튼 -->
       <v-row class="d-flex justify-center mb-4" dense :style="tabRowStyle">
         <v-btn
@@ -128,8 +128,8 @@
       <!-- 안내 및 제출 -->
       <h2 :style="mt16Style">안녕하십니까? AI 모의 면접 서비스입니다.</h2>
 
-      <v-container :style="drawLineStyle" align="start">
-        <v-card-title align="center">
+      <v-container :style="drawLineStyle" align-start>
+        <v-card-title align-center>
           <strong>※ 사전 공지 ※</strong>
         </v-card-title>
         <li :style="liStyle">
@@ -290,11 +290,13 @@ const handleKeywordSelect = (keyword) => {
 };
 
 // TTS 및 기타 로직
-const synth = process.client ? window.speechSynthesis : null;
+const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
 const handleBeforeUnload = () => {
   if (synth && synth.speaking) synth.cancel();
   localStorage.removeItem("interviewInfo");
 };
+
+
 onBeforeUnmount(() => {
   if (synth && synth.speaking) synth.cancel();
   window.removeEventListener("beforeunload", handleBeforeUnload);
@@ -308,18 +310,21 @@ const speakNotice = () => {
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utterance);
 };
-onMounted(() => {
-  if (process.client) {
-    const userToken = localStorage.getItem("userToken");
-    if (!userToken) {
-      alert("로그인이 필요합니다. 로그인 페이지로 이동합니다.");
-      router.push("/account/login");
-    } else {
-      speakNotice();
-    }
-    window.addEventListener("beforeunload", handleBeforeUnload);
-  }
-});
+
+// 로그인 구현 후 다시 해제 할 것
+
+// onMounted(() => {
+//   if (process.client) {
+//     const userToken = localStorage.getItem("userToken");
+//     if (!userToken) {
+//       alert("로그인이 필요합니다. 로그인 페이지로 이동합니다.");
+//       router.push("/account/login");
+//     } else {
+//       speakNotice();
+//     }
+//     window.addEventListener("beforeunload", handleBeforeUnload);
+//   }
+// });
 
 // 제출 버튼
 const startQuestion = () => {
@@ -335,7 +340,8 @@ const startQuestion = () => {
     return;
   }
 
-  const message = `선택한 회사: ${selectedCompany.value}
+  const message = `
+선택한 회사: ${selectedCompany.value}
 전공 여부: ${selectedAcademicBackground.value}
 선택한 경력: ${selectedCareer.value}
 프로젝트 경험: ${selectedProjectExperience.value}

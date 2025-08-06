@@ -421,7 +421,7 @@ const stopRecording = () => {
 };
 
 let recognition;
-const synth = process.client ? window.speechSynthesis : null;
+const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
 let currentUtteance = null;
 
 onMounted(async () => {
@@ -435,7 +435,7 @@ onMounted(async () => {
   } catch (err) {
     console.error("previewVideo 카메라 연결 실패:", err);
   }
-  if (process.client) {
+  if (typeof window !== "undefined") {
     speakStartMessage();
 
     await nextTick();
