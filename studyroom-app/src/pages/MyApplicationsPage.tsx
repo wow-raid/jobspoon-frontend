@@ -45,6 +45,7 @@ const MyApplicationsPage: React.FC = () => {
                     </button>
                 ))}
             </div>
+            {applications.length > 0 ? (
             <div className="applications-grid">
                 {filteredApplications.map(app => (
                     <ApplicationCard
@@ -54,6 +55,11 @@ const MyApplicationsPage: React.FC = () => {
                     />
                 ))}
             </div>
+            ) : (
+                <div className="empty-message-container">
+                    <p> 신청한 면접스터디 모임이 없습니다. </p>
+                </div>
+            )}
         </div>
     );
 };
