@@ -1,11 +1,13 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import '../styles/ApplicationCard.css';
 
 interface Application {
     id: number;
+    studyId: number;
     studyTitle: string;
     status: 'pending' | 'approved' | 'rejected';
-    appliedAt: sting;
+    appliedAt: string;
 }
 
 interface ApplicationCardProps {
@@ -14,7 +16,7 @@ interface ApplicationCardProps {
 }
 
 const ApplicationCard: React.FC<ApplicationCardProps> = ({application, onCancel}) => {
-    const {id, studyTitle, status, appliedAt} = application;
+    const {id, studyId, studyTitle, status, appliedAt} = application;
 
     const statusMap = {
         pending: {text: '대기중', className: 'pending'},
@@ -23,7 +25,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({application, onCancel}
     }
 
     return (
-        <div className="application-card">
+        <Link to={`/study/${studyId}`} className="application-card">
             <div className="card-content">
                 <h3 className="study-title">{studyTitle}</h3>
                 <div className="card-meta">
@@ -48,7 +50,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({application, onCancel}
             <div className={`status-tag ${statusMap[status].className}`}>
                 {statusMap[status].text}
             </div>
-        </div>
+        </Link>
     );
 };
 
