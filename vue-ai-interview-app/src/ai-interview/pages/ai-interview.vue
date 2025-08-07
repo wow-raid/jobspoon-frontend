@@ -1,5 +1,5 @@
 <template>
-  <v-container v-if="!start" align="center">
+  <v-container v-if="!start" align-center>
     <div :style="interviewContainerStyle">
       <v-icon>mdi-account-tie</v-icon><br />
       <div v-html="startMessage"></div>
@@ -491,6 +491,8 @@ const formattedAIMessage = computed(() => {
 });
 
 const replayQuestion = () => {
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  const synth = window.speechSynthesis;
   if (synth?.speaking) synth.cancel();
   const utterance = new SpeechSynthesisUtterance(currentAIMessage.value);
   utterance.lang = "ko-KR";
@@ -507,6 +509,8 @@ const handleBeforeUnload = (event) => {
 };
 
 const speakCurrentMessage = () => {
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  const synth = window.speechSynthesis;
   clearInterval(timer.value);
   remainingTime.value = 90;
   currentUtteance = new SpeechSynthesisUtterance(currentAIMessage.value);
@@ -608,8 +612,10 @@ const handleStartInterview = async () => {
   utterance.rate = 1;
   utterance.pitch = 1;
   utterance.onend = () => showStartMessage();
-  synth?.cancel();
-  synth?.speak(utterance);
+  if (typeof window !== "undefined" && window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  }
 };
 
 const onAnswerComplete = async () => {
@@ -698,7 +704,13 @@ const onAnswerComplete = async () => {
 };
 
 onBeforeUnmount(() => {
-  if (synth?.speaking) synth.cancel();
+if (
+    typeof window !== "undefined" &&
+    window.speechSynthesis &&
+    window.speechSynthesis.speaking
+  ) {
+    window.speechSynthesis.cancel();
+  }  
   localStorage.removeItem("interviewInfo");
   clearInterval(timer.value);
   window.removeEventListener("beforeunload", handleBeforeUnload);
