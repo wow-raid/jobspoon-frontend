@@ -20,7 +20,7 @@ const JoinedStudyRoomList: React.FC<JoinedStudyRoomListProps> = ({ room }) => {
                 </div>
             </div>
             <div className="item-actions">
-                <Link to={`/study/${room.id}`} className="go-to-study-btn">
+                <Link to={`/joined-study/${room.id}`} className="go-to-study-btn">
                     면접스터디룸 바로가기
                 </Link>
             </div>
