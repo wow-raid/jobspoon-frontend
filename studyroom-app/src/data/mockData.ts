@@ -30,6 +30,13 @@ export const FAKE_STUDY_ROOMS: StudyRoom[] = [
     { id: 20, status: 'recruiting', location: '온라인', job: 'CS', category: 'CS', title: '코딩 테스트 알고리즘', host: '알고리즘정복', postedAt: '1달 전', roles: ['누구나'], requirements: ['프로그래밍 언어 1개 이상'], tags: ['#알고리즘', '#코딩테스트'], currentMembers: 5, maxMembers: 10, description: '매주 정해진 문제를 풀고 코드 리뷰를 진행합니다.' },
 ];
 
+export interface Application {
+    id: number;
+    studyId: number;
+    studyTitle: string;
+    status: string;
+    appliedAt: string;
+}
 
 // === 내 신청 내역 데이터 (20개) ===
 export const MY_APPLICATIONS: Application[] = [
@@ -53,4 +60,18 @@ export const MY_APPLICATIONS: Application[] = [
     { id: 18, studyId: 18, studyTitle: 'CI/CD 파이프라인 구축 (마감)', status: 'rejected', appliedAt: '1주 전' },
     { id: 19, studyId: 19, studyTitle: 'SQL 쿼리 스터디', status: 'approved', appliedAt: '2일 전' },
     { id: 20, studyId: 20, studyTitle: '코딩 테스트 알고리즘', status: 'pending', appliedAt: '1일 전' },
+];
+
+export interface Announcement {
+    id: number;
+    title: string;
+    content: string;
+    author: string;
+    createdAt: string;
+}
+
+export const FAKE_ANNOUNCEMENTS: Announcement[] = [
+    { id: 1, title: '첫 스터디 일정 안내', content: '첫 스터디는 8월 15일 저녁 8시에 온라인으로 진행됩니다. 참여 링크는 시작 10분 전에 공유하겠습니다.', author: '모임장', createdAt: '2일 전' },
+    { id: 2, title: '스터디 규칙 안내', content: '서로 존중하는 분위기에서 진행했으면 합니다. 불참 시에는 최소 하루 전에 꼭 알려주세요.', author: '모임장', createdAt: '3일 전' },
+    { id: 3, title: '자료 공유 폴더 안내', content: '스터디 관련 자료는 구글 드라이브에 공유할 예정입니다. 모두에게 편집 권한을 부여했으니 자유롭게 자료를 올려주세요.', author: '모임장', createdAt: '5일 전' },
 ];

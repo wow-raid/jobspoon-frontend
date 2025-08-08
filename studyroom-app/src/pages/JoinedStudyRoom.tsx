@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { NavLink, Outlet, useParams} from 'react-router-dom';
 import { StudyRoom } from '../types/study';
 import { FAKE_STUDY_ROOMS } from '../data/mockData';
 import '../styles/JoinedStudyRoom.css';
@@ -26,6 +26,15 @@ const JoinedStudyRoom: React.FC = () => {
                 </p>
             </header>
 
+            <main className="room-main-content">
+                <nav className="room-sidebar">
+                    <NavLink to="" end className={({ isActive }) => isActive ? 'active' : ''}> 공지사항 </NavLink>
+                </nav>
+
+                <section className="room-content-area">
+                    <Outlet />
+                </section>
+            </main>
         </div>
     );
 };
