@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation} from "react-router-dom";
 
 const VueAccountAppWrapper = ({ eventBus }:{eventBus: any}) => {
     const vueModuleRef = useRef<HTMLDivElement>(null);
@@ -23,7 +23,11 @@ const VueAccountAppWrapper = ({ eventBus }:{eventBus: any}) => {
                     vueAccountAppUnmount?.(vueModuleRef.current!);
                     isMountedRef.current = false;
                 };              
-                
+                const iframeDoc = document;
+                iframeDoc.body.style.overflow = "hidden";
+                iframeDoc.documentElement.style.overflow = "hidden";
+                iframeDoc.body.style.margin = "0";
+                iframeDoc.body.style.padding = "0";
             }
 
         }
