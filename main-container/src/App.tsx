@@ -34,6 +34,7 @@ const App = () => {
               path="/vue-ai-interview/*"
               element={<VueAiInterviewAppWrapper eventBus={eventBus} />}
             />
+
           </Route>
         </Routes>
       </Suspense>

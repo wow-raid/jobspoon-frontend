@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 
-const VueAccountAppWrapper = ({ eventBus }) => {
+const VueAccountAppWrapper = ({ eventBus }:{eventBus: any}) => {
     const vueModuleRef = useRef<HTMLDivElement>(null);
     const isMountedRef = useRef(false);
     const unmountRef = useRef<(() => void) | null>(null);
@@ -10,43 +10,51 @@ const VueAccountAppWrapper = ({ eventBus }) => {
 
     useEffect(() => {
         console.log('preparing mount vuetify account remotes app')
+        console.log('[Host] VueAccountAppWrapper mounted at', window.location.pathname);
 
-        if (!isMountedRef.current) {
-            const loadRemoteComponent = async () => {
-                const { vueAccountAppMount } = await import("vueAccountApp/bootstrap");
+        const mountVueApp = async () =>{
+            const { vueAccountAppMount, vueAccountAppUnmount } = await import("vueAccountApp/bootstrap");
+
+            if (vueModuleRef.current && !isMountedRef.current) {
                 vueAccountAppMount(vueModuleRef.current, eventBus);
                 isMountedRef.current = true;
+
+                unmountRef.current = () => {
+                    vueAccountAppUnmount?.(vueModuleRef.current!);
+                    isMountedRef.current = false;
+                };              
+                
             }
 
-            loadRemoteComponent()
-            console.log("Vuetify Account Remotes App ready: " + vueModuleRef)
         }
+        mountVueApp();
 
         return () => {
+            if (unmountRef.current) {
+                unmountRef.current();
+                unmountRef.current = null;
+            }
             eventBus.off("routing-event");
         };
-    }, [])
+    }, []);
 
     useEffect(() => {
-        console.log('Vuetify Account 라우터 위치 바꿨어: ' + location.pathname)
-        const handleNavigation = () => {
-            console.log('handleNavigation()')
-            if (location.pathname === "/vuetify-typescript-account-app") {
-                console.log('라우터 변경')
-                eventBus.emit("vue-account-routing-event", "/") 
-            }
-        };
-
-        // 컴포넌트가 마운트될 때 호출되는 이벤트 핸들러 등록
-        handleNavigation();
+        if (location.pathname === "/vue-account/login") {
+            eventBus.emit("vue-account-routing-event", "/");
+        }
     }, [location]);
 
     return (
-        <div>
-            <div>
-                <div style={{ position: 'relative' }} ref={vueModuleRef} />
-            </div>
-        </div>
+        <div
+            id="vue-account-app"
+            ref={vueModuleRef}
+            style={{
+                width: "100vw",
+                height: "100vh",
+                margin: 0,
+                padding: 0,
+            }}
+        />
     )
 };
 
