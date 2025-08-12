@@ -30,8 +30,8 @@ onMounted(async () => {
     console.log('[KakaoCallback] userToken 저장 완료')
     console.log('토큰 :' + token)
     kakaoAuthenticationStore.isAuthenticated = true
-    await router.push('/')
-  } catch (e) {
+    window.location.replace('/');  
+} catch (e) {
     console.error('[KakaoCallback] 실패:', e)
   }
 })

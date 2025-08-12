@@ -18,23 +18,11 @@ const App: React.FC = () => {
     useEffect(() => {
         const token = localStorage.getItem("userToken");
 
-        if (!token) {
+        if (token) {
+            setIsLoggedIn(true);
+        }else{
             setIsLoggedIn(false);
-            return;
         }
-
-        axiosInstance.springAxiosInst.get("/authentication/validate", {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        })
-            .then(() => {
-                setIsLoggedIn(true);
-            })
-            .catch(() => {
-                localStorage.removeItem("userToken");
-                setIsLoggedIn(false);
-            });
     }, [location]);
 
     const handleAuthClick = () => {
