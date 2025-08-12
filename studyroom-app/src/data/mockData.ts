@@ -67,32 +67,31 @@ export interface Announcement {
     title: string;
     content: string;
     author: string;
-    createdAt: string;
+    createdAt: Date;
     pinned?: boolean; // 👈 1. 고정 상태(pinned)를 위한 optional 필드 추가
+    readBy?: string[];
 }
 
 export const FAKE_ANNOUNCEMENTS: Announcement[] = [
-    // 기존 데이터
-    { id: 1, title: '첫 스터디 일정 안내', content: '첫 스터디는 8월 15일 저녁 8시에 온라인으로 진행됩니다...', author: '모임장', createdAt: '2일 전'},
-    { id: 2, title: '스터디 규칙 안내', content: '서로 존중하는 분위기에서 진행했으면 합니다...', author: '모임장', createdAt: '3일 전'},
-    { id: 3, title: '자료 공유 폴더 안내', content: '스터디 관련 자료는 구글 드라이브에 공유할 예정입니다...', author: '모임장', createdAt: '5일 전' },
-    // 추가 데이터 17개
-    { id: 4, title: '이번 주 스터디 주제: React Hooks 심화', content: '이번 주에는 useEffect와 useReducer에 대해 깊이 있게 다뤄보겠습니다. 관련 예습 자료를 공유 폴더에 올려두었습니다.', author: '모임장', createdAt: '1주 전' },
-    { id: 5, title: '8월 22일 스터디 시간 변경 투표', content: '다음 주 금요일 스터디 시간을 저녁 9시로 변경하는 것에 대한 투표를 슬랙 채널에서 진행 중입니다. 참여 부탁드립니다.', author: '모임장', createdAt: '1주 전' },
-    { id: 6, title: '프로젝트 아이디어 모집', content: '사이드 프로젝트 아이디어가 있으신 분들은 노션 페이지에 자유롭게 작성해주세요.', author: '모임장', createdAt: '2주 전' },
-    { id: 7, title: '신규 멤버 OOO님을 환영합니다!', content: '새로운 멤버로 OOO님이 합류하셨습니다. 다들 따뜻하게 맞아주세요!', author: '모임장', createdAt: '2주 전' },
-    { id: 8, title: '회고록 작성 안내', content: '첫 스프린트가 끝났습니다. KPT 방식으로 회고록을 작성하여 공유해주세요.', author: '모임장', createdAt: '3주 전' },
-    { id: 9, title: '도움되는 아티클 공유', content: '최신 프론트엔드 동향에 대한 좋은 아티클이 있어 공유합니다. 링크는 슬랙을 확인해주세요.', author: '모임장', createdAt: '3주 전', },
-    { id: 10, title: '[필독] 추석 연휴 스터디 일정', content: '추석 연휴 기간에는 스터디를 한 주 쉬어갑니다. 일정에 참고해주세요.', author: '모임장', createdAt: '1달 전' },
-    { id: 11, title: '코드 리뷰 규칙', content: '코드 리뷰는 PR 생성 후 2일 이내에 최소 1명 이상이 리뷰하는 것을 원칙으로 합니다.', author: '모임장', createdAt: '1달 전' },
-    { id: 12, title: '다음 주 발표자 모집', content: '다음 주 스터디에서 15분 내외로 기술 공유를 해주실 발표자를 모집합니다.', author: '모임장', createdAt: '1달 전' },
-    { id: 13, title: '서버 점검 안내 (1시간)', content: '스터디 자료가 올라가 있는 테스트 서버가 오늘 자정부터 1시간 동안 점검에 들어갑니다.', author: '모임장', createdAt: '1달 전' },
-    { id: 14, title: '스터디 진행 방식 설문조사', content: '더 나은 스터디를 위해 진행 방식에 대한 간단한 설문조사를 진행합니다. 많은 참여 바랍니다.', author: '모임장', createdAt: '2달 전' },
-    { id: 15, title: '오프라인 모임 수요조사', content: '코로나도 잠잠해졌는데, 다같이 오프라인에서 한번 모이는 건 어떨까요? 가능한 날짜를 알려주세요.', author: '모임장', createdAt: '2달 전' },
-    { id: 16, title: '깃헙 레포지토리 주소', content: '우리 스터디 프로젝트의 깃헙 레포지토리 주소입니다: [링크]', author: '모임장', createdAt: '2달 전' },
-    { id: 17, title: '모르는 것 질문하는 방법', content: '질문할 때는 어떤 시도를 해봤는지, 어떤 부분이 막히는지 구체적으로 작성해주시면 더 좋습니다.', author: '모임장', createdAt: '3달 전' },
-    { id: 18, title: '스터디 목표 재확인', content: '우리의 초기 목표를 다시 한번 되새겨봅시다. 다들 지치지 말고 끝까지 화이팅!', author: '모임장', createdAt: '3달 전' },
-    { id: 19, title: 'VSCode 유용한 익스텐션 목록', content: '개발 효율을 높여주는 VSCode 익스텐션 목록을 공유합니다.', author: '모임장', createdAt: '3달 전' },
-    { id: 20, title: '스터디 1기 종료 및 2기 모집 안내', content: '어느덧 3개월간의 스터디가 마무리되었습니다. 스터디 2기 참여 여부를 알려주세요.', author: '모임장', createdAt: '4달 전' },
+    { id: 1, title: '첫 스터디 일정 안내', content: '첫 스터디는 8월 15일 저녁 8시에 온라인으로 진행됩니다...', author: '모임장', createdAt: new Date('2025-08-10T14:00:00Z'), pinned: true },
+    { id: 2, title: '스터디 규칙 안내', content: '서로 존중하는 분위기에서 진행했으면 합니다...', author: '모임장', createdAt: new Date('2025-08-09T11:00:00Z'), pinned: true },
+    { id: 3, title: '자료 공유 폴더 안내', content: '스터디 관련 자료는 구글 드라이브에 공유할 예정입니다...', author: '모임장', createdAt: new Date('2025-08-07T18:00:00Z') },
+    { id: 4, title: '이번 주 스터디 주제: React Hooks 심화', content: '이번 주에는 useEffect와 useReducer에 대해 깊이 있게 다뤄보겠습니다...', author: '모임장', createdAt: new Date('2025-08-05T10:00:00Z') },
+    { id: 5, title: '8월 22일 스터디 시간 변경 투표', content: '다음 주 금요일 스터디 시간을 저녁 9시로 변경하는 것에 대한 투표를 슬랙에서 진행 중입니다.', author: '모임장', createdAt: new Date('2025-08-04T20:00:00Z') },
+    { id: 6, title: '프로젝트 아이디어 모집', content: '사이드 프로젝트 아이디어가 있으신 분들은 노션 페이지에 자유롭게 작성해주세요.', author: '모임장', createdAt: new Date('2025-07-29T13:00:00Z') },
+    { id: 7, title: '신규 멤버 OOO님을 환영합니다!', content: '새로운 멤버로 OOO님이 합류하셨습니다. 다들 따뜻하게 맞아주세요!', author: '모임장', createdAt: new Date('2025-07-28T17:00:00Z') },
+    { id: 8, title: '회고록 작성 안내', content: '첫 스프린트가 끝났습니다. KPT 방식으로 회고록을 작성하여 공유해주세요.', author: '모임장', createdAt: new Date('2025-07-22T11:00:00Z') },
+    { id: 9, title: '도움되는 아티클 공유', content: '최신 프론트엔드 동향에 대한 좋은 아티클이 있어 공유합니다.', author: '모임장', createdAt: new Date('2025-07-21T16:00:00Z') },
+    { id: 10, title: '[필독] 휴가철 스터디 일정', content: '휴가철 기간에는 스터디를 한 주 쉬어갑니다.', author: '모임장', createdAt: new Date('2025-07-15T09:00:00Z') },
+    { id: 11, title: '코드 리뷰 규칙', content: '코드 리뷰는 PR 생성 후 2일 이내에 최소 1명 이상이 리뷰하는 것을 원칙으로 합니다.', author: '모임장', createdAt: new Date('2025-07-14T14:00:00Z') },
+    { id: 12, title: '다음 주 발표자 모집', content: '다음 주 스터디에서 15분 내외로 기술 공유를 해주실 발표자를 모집합니다.', author: '모임장', createdAt: new Date('2025-07-08T19:00:00Z') },
+    { id: 13, title: '서버 점검 안내 (1시간)', content: '스터디 자료가 올라가 있는 테스트 서버가 오늘 자정부터 1시간 동안 점검에 들어갑니다.', author: '모임장', createdAt: new Date('2025-07-01T23:00:00Z') },
+    { id: 14, title: '스터디 진행 방식 설문조사', content: '더 나은 스터디를 위해 진행 방식에 대한 간단한 설문조사를 진행합니다.', author: '모임장', createdAt: new Date('2025-06-24T12:00:00Z') },
+    { id: 15, title: '오프라인 모임 수요조사', content: '다같이 오프라인에서 한번 모이는 건 어떨까요? 가능한 날짜를 알려주세요.', author: '모임장', createdAt: new Date('2025-06-17T18:00:00Z') },
+    { id: 16, title: '깃헙 레포지토리 주소', content: '우리 스터디 프로젝트의 깃헙 레포지토리 주소입니다: [링크]', author: '모임장', createdAt: new Date('2025-06-10T10:00:00Z') },
+    { id: 17, title: '모르는 것 질문하는 방법', content: '질문할 때는 어떤 시도를 해봤는지 구체적으로 작성해주시면 더 좋습니다.', author: '모임장', createdAt: new Date('2025-06-03T15:00:00Z') },
+    { id: 18, title: '스터디 목표 재확인', content: '우리의 초기 목표를 다시 한번 되새겨봅시다. 다들 지치지 말고 끝까지 화이팅!', author: '모임장', createdAt: new Date('2025-05-27T11:00:00Z') },
+    { id: 19, title: 'VSCode 유용한 익스텐션 목록', content: '개발 효율을 높여주는 VSCode 익스텐션 목록을 공유합니다.', author: '모임장', createdAt: new Date('2025-05-20T14:00:00Z') },
+    { id: 20, title: '스터디 1기 종료 및 2기 모집 안내', content: '어느덧 3개월간의 스터디가 마무리되었습니다.', author: '모임장', createdAt: new Date('2025-05-13T10:00:00Z') },
 ];
 
