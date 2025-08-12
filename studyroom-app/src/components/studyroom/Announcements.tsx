@@ -60,6 +60,17 @@ const Announcements: React.FC = () => {
         setEditingAnnouncement(null);
     };
 
+    const handleDelete = () => {
+        if (!selectedAnnouncement) return;
+        if (window.confirm("공지사항을 삭지하시겠습니까?")){
+            setAnnouncements(prev =>
+                    prev.filter(item => item.id !== selectedAnnouncement.id)
+            );
+                  setIsDetailModalOpen(false);
+                  setSelectedAnnouncement(null)
+        }
+    };
+
     const displayedAnnouncements = useMemo(() => {
         return [...announcements]
             .sort((a, b) => {
@@ -121,6 +132,7 @@ const Announcements: React.FC = () => {
                     <AnnouncementDetail
                         announcement={selectedAnnouncement}
                         onEdit={handleEditClick}
+                        onDelete={handleDelete}
                     />
                 )}
             </Modal>

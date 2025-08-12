@@ -45,7 +45,14 @@
     transition: background-color 0.2s;
 }
 
+/* 수정 버튼 */
 .detail-actions .edit-btn {
     background-color: #4a5568;
+    color: white;
+}
+
+/* 삭제 버튼 */
+.detail-actions .delete-btn {
+    background-color: #ff6b6b;
     color: white;
 }
