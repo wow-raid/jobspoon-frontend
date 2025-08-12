@@ -106,3 +106,44 @@ export const vueAccountAppUnmount = () => {
         app = null;
     }
 };
+
+interface EventBus {
+    listeners: { [eventName: string]: Function[] };
+    on(eventName: string, callback: Function): void;
+    off(eventName: string, callback: Function): void;
+    emit(eventName: string, data: any): void;
+}
+
+const eventBus: EventBus = {
+    listeners: {},
+
+    on(eventName, callback) {
+        if (!this.listeners[eventName]) {
+            this.listeners[eventName] = [];
+        }
+        this.listeners[eventName].push(callback);
+    },
+
+    off(eventName, callback) {
+        if (!this.listeners[eventName]) {
+            return;
+        }
+        const index = this.listeners[eventName].indexOf(callback);
+        if (index !== -1) {
+            this.listeners[eventName].splice(index, 1);
+        }
+    },
+
+    emit(eventName, data) {
+        if (!this.listeners[eventName]) {
+            return;
+        }
+        this.listeners[eventName].forEach((callback) => {
+            callback(data);
+        });
+    },
+}
+
+const root = document.querySelector('#vue-account-app')
+
+if (root) { vueAccountAppMount(root, eventBus) }

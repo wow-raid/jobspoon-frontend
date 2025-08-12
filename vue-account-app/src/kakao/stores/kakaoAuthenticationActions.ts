@@ -49,18 +49,13 @@ export const kakaoAuthenticationAction = {
         }
     },
 
-    async requestAccessToken(code: string): Promise<string | null> {
+    async requestAccessToken(payload: { code: string }): Promise<string | null> {
         const { djangoAxiosInstance } = axiosUtility.createAxiosInstances();
-        try {
-            const response = await djangoAxiosInstance.post(
-                "/kakao-oauth/redirect-access-token",
-                code
-            );
-            return response.data.userToken;
-        } catch (error) {
-            console.log("Access Token 요청 중 문제 발생:", error);
-            throw error;
-        }
+        const res = await djangoAxiosInstance.post(
+            "/kakao-oauth/kakao-access-token",  // ← 하이픈/경로 주의
+            payload                                // ← { code }
+        );
+        return res.data.userToken;
     },
     async requestLogout(userToken: string): Promise<void> {
         const { djangoAxiosInstance } = axiosUtility.createAxiosInstances();

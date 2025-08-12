@@ -27,7 +27,7 @@ const routes: Array<RouteRecordRaw> = [
   { path: "/account/admin-login", component: GithubAdminLogin },
 
   // 소셜/게스트 인증 콜백
-  { path: "/kakao-oauth/redirect-access-token", component: KakaoRedirection },
+  { path: "/kakao_oauth/kakao-access-token", component: KakaoRedirection },
   { path: "/google-oauth/redirect-access-token", component: GoogleRedirection },
   { path: "/github-oauth/redirect-access-token", component: GithubRedirection },
   { path: "/guest-oauth/redirect-access-token", component: GuestRedirection },
@@ -38,7 +38,7 @@ const routes: Array<RouteRecordRaw> = [
 ];
 
 const router = createRouter({
-  history: createWebHistory("/vue-account/"),
+  history: createWebHistory("/vue-account"),
   routes,
 });
 

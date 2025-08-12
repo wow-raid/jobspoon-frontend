@@ -1,8 +1,9 @@
 import * as path from "node:path";
 import { defineConfig } from "@rspack/cli";
 import { rspack } from "@rspack/core";
-import * as RefreshPlugin from "@rspack/plugin-react-refresh";
 import { ModuleFederationPlugin } from "@module-federation/enhanced/rspack";
+
+const sveltePreprocess = require('svelte-preprocess');
 
 import { mfConfig } from "./module-federation.config";
 
@@ -21,21 +22,15 @@ export default defineConfig({
   },
 
   devServer: {
-    port: 80,
-    historyApiFallback: {
-      rewrites: [
-        { from: /^\/vue-account\/kakao_oauth\/kakao-access-token$/, to: '/index.html' },
-        { from: /^\/vue-account\/.*$/, to: '/index.html' },
-        { from: /./, to: '/index.html' },
-      ]
-    },
+    port: 3100,
+    historyApiFallback: true,
     watchFiles: [path.resolve(__dirname, "src")],
   },
   output: {
     // You need to set a unique value that is not equal to other applications
-    uniqueName: "main_container",
+    uniqueName: "svelte_review_app",
     // publicPath must be configured if using manifest
-    publicPath: "http://localhost:80/",
+    publicPath: "http://localhost:3100/",
   },
 
   experiments: {
@@ -64,15 +59,25 @@ export default defineConfig({
                   syntax: "typescript",
                   tsx: true,
                 },
-                transform: {
-                  react: {
-                    runtime: "automatic",
-                    development: isDev,
-                    refresh: isDev,
-                  },
-                },
               },
               env: { targets },
+            },
+          },
+        ],
+      },
+      {
+        test: /\.svelte$/,
+        use: [
+          {
+            loader: 'svelte-loader',
+            options: {
+              compilerOptions: {
+                dev: isDev,
+              },
+
+              emitCss: !isDev,
+              hotReload: isDev,
+              preprocess: sveltePreprocess({ sourceMap: isDev, postcss: true }),
             },
           },
         ],
@@ -84,7 +89,6 @@ export default defineConfig({
       template: "./index.html",
     }),
     new ModuleFederationPlugin(mfConfig),
-    isDev ? new RefreshPlugin() : null,
   ].filter(Boolean),
   optimization: {
     minimizer: [
