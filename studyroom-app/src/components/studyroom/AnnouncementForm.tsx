@@ -1,14 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../../styles/AnnouncementForm.css'
-
 
 interface AnnouncementFormProps {
     onSubmit: (formData: { title: string; content: string }) => void;
+    initialData?: { title: string; content: string };
 }
 
-const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ onSubmit }) => {
+const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ onSubmit, initialData }) => {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
+
+    useEffect(() => {
+        if (initialData) {
+            setTitle(initialData.title);
+            setContent(initialData.content);
+        }
+    }, [initialData]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();

@@ -14,6 +14,7 @@ import Announcements from "./components/studyroom/Announcements.tsx";
 const App: React.FC = () => {
     return (
             <div className="app-container">
+                <BrowserRouter>
                 <Routes>
                     <Route path="/" element={<StudyListPage />} />
                     <Route path="/study/:id" element={<StudyDetailPage />} />
@@ -26,6 +27,7 @@ const App: React.FC = () => {
 
                     </Route>
                 </Routes>
+                </BrowserRouter>
             </div>
     );
 }

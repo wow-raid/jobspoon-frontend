@@ -10,18 +10,28 @@ const Announcements: React.FC = () => {
     const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
+    const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
 
-    const handleAddAnnouncement = (formData: { title: string; content: string }) => {
-        const newAnnouncement: Announcement = {
-            id: Date.now(),
-            author: '모임장',
-            createdAt: '방금 전',
-            pinned: false,
-            ...formData,
-        };
-        setAnnouncements(prev => [newAnnouncement, ...prev]);
-        setIsWriteModalOpen(false);
+    // 👇 1. 폼 제출을 처리하는 함수 (새 글, 수정 모두 담당)
+    const handleFormSubmit = (formData: { title: string; content: string }) => {
+        if (editingAnnouncement) {
+            // 수정 모드일 경우
+            setAnnouncements(prev => prev.map(item =>
+                item.id === editingAnnouncement.id ? { ...item, ...formData } : item
+            ));
+        } else {
+            // 새 글 작성 모드일 경우
+            const newAnnouncement: Announcement = {
+                id: Date.now(),
+                author: '모임장',
+                createdAt: '방금 전',
+                pinned: false,
+                ...formData,
+            };
+            setAnnouncements(prev => [newAnnouncement, ...prev]);
+        }
+        closeFormModal(); // 폼 제출 후 모달 닫기
     };
 
     const handleViewDetail = (announcement: Announcement) => {
@@ -30,23 +40,31 @@ const Announcements: React.FC = () => {
     };
 
     const handlePinToggle = (id: number) => {
-        // pinned 상태만 변경하고, 정렬은 useMemo에 맡깁니다.
-        setAnnouncements(prevAnnouncements =>
-            prevAnnouncements.map(item =>
+        setAnnouncements(prev =>
+            prev.map(item =>
                 item.id === id ? { ...item, pinned: !item.pinned } : item
             )
         );
     };
 
+    const handleEditClick = () => {
+        if (!selectedAnnouncement) return;
+        setEditingAnnouncement(selectedAnnouncement);
+        setIsDetailModalOpen(false);
+        setIsWriteModalOpen(true);
+    };
+
+    // 👇 2. 폼 모달을 닫고 수정 상태를 초기화하는 함수
+    const closeFormModal = () => {
+        setIsWriteModalOpen(false);
+        setEditingAnnouncement(null);
+    };
+
     const displayedAnnouncements = useMemo(() => {
         return [...announcements]
             .sort((a, b) => {
-                // 1. 고정 상태가 다르면, 고정된 것이 항상 위로 (b.pinned가 true이면 1, a.pinned가 true이면 -1)
-                if (a.pinned !== b.pinned) {
-                    return a.pinned ? -1 : 1;
-                }
-                // 2. 고정 상태가 같으면, 최신 글(id가 높은)이 위로
-                return b.id - a.id;
+                if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(); // 최신순 정렬
             })
             .filter(item =>
                 item.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -57,7 +75,10 @@ const Announcements: React.FC = () => {
         <div className="announcements-container">
             <div className="announcements-header">
                 <h2>📢 공지사항</h2>
-                <button className="write-btn" onClick={() => setIsWriteModalOpen(true)}>글쓰기</button>
+                <button className="write-btn" onClick={() => {
+                    setEditingAnnouncement(null); // 새 글쓰기 모드로 설정
+                    setIsWriteModalOpen(true);
+                }}>글쓰기</button>
             </div>
 
             <div className="search-bar">
@@ -78,7 +99,6 @@ const Announcements: React.FC = () => {
                                 <span className="item-meta">{item.author} · {item.createdAt}</span>
                             </div>
                         </div>
-
                         <button className="pin-button" onClick={(e) => {
                             e.stopPropagation();
                             handlePinToggle(item.id);
@@ -89,12 +109,20 @@ const Announcements: React.FC = () => {
                 ))}
             </div>
 
-            <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)}>
-                <AnnouncementForm onSubmit={handleAddAnnouncement} />
+            <Modal isOpen={isWriteModalOpen} onClose={closeFormModal}>
+                <AnnouncementForm
+                    onSubmit={handleFormSubmit}
+                    initialData={editingAnnouncement ? { title: editingAnnouncement.title, content: editingAnnouncement.content } : undefined}
+                />
             </Modal>
 
             <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)}>
-                {selectedAnnouncement && <AnnouncementDetail announcement={selectedAnnouncement} />}
+                {selectedAnnouncement && (
+                    <AnnouncementDetail
+                        announcement={selectedAnnouncement}
+                        onEdit={handleEditClick}
+                    />
+                )}
             </Modal>
         </div>
     );
