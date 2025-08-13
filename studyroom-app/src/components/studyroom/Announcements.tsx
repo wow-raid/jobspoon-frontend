@@ -6,7 +6,7 @@ import AnnouncementForm from './AnnouncementForm';
 import AnnouncementDetail from "./AnnouncementDetail";
 
 // 로그인 되었다는 가정하에 버튼 유무, 읽음 유무 테스트
-const CURRENT_USER_ROLE = 'member';     // leader | member 로 화면별로 테스트 가능
+const CURRENT_USER_ROLE = 'leader';     // leader | member 로 화면별로 테스트 가능
 const CURRENT_USER_ID = '모임장'         // 모임장, 참가자A, 참가자B 등 이건 아무렇게나 써도 상관없음
 
 const Announcements: React.FC = () => {

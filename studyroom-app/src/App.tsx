@@ -9,7 +9,8 @@ import SuccessPage from "./pages/SuccessPage";
 import MyApplicationsPage from "./pages/MyApplicationsPage";
 import MyStudiesPage from "./pages/MyStudiesPage";
 import JoinedStudyRoom from "./pages/JoinedStudyRoom";
-import Announcements from "./components/studyroom/Announcements.tsx";
+import Announcements from "./components/studyroom/Announcements";
+import Schedule from "./components/studyroom/Schedule";
 
 const App: React.FC = () => {
     return (
@@ -22,7 +23,7 @@ const App: React.FC = () => {
                     <Route path="/my-studies" element={<MyStudiesPage />} />
                     <Route path="/joined-study/:id" element={<JoinedStudyRoom />}>
                         <Route index element={<Announcements />} />
-
+                        <Route path="schedule" element={<Schedule />} />
 
                     </Route>
                 </Routes>
