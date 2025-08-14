@@ -18,7 +18,7 @@ import GuestRedirection from "./guest/redirection/GuestRedirection.vue";
 import NaverRedirection from "./naver/redirection/NaverRedirection.vue";
 
 const routes: Array<RouteRecordRaw> = [
-  { path: "/account/login", component: AccountLogin },
+  { path: "/account/login", name: "VueAccountLogin", component: AccountLogin },
   { path: "/account/privacy", component: PrivacyAgreement },
   { path: "/account/mypage", component: AccountMy },
   { path: "/account/modify/modify-profile", component: ModifyIndex },
@@ -38,7 +38,7 @@ const routes: Array<RouteRecordRaw> = [
 ];
 
 const router = createRouter({
-  history: createWebHistory("/vue-account"),
+  history: createWebHistory("/vue-account/"),
   routes,
 });
 

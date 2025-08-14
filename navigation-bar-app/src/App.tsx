@@ -6,9 +6,6 @@ import HomeIcon from "@mui/icons-material/Home";
 import ForumIcon from "@mui/icons-material/Forum";
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
-import CasinoOutlined from '@mui/icons-material/CasinoOutlined'
-import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
-import axiosInstance from "./utility/AxiosInst.ts"
 
 const App: React.FC = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -31,7 +28,7 @@ const App: React.FC = () => {
             setIsLoggedIn(false);
             navigate("/");
         } else {
-            navigate("/vue-account/login");
+            navigate("/vue-account/account/login");
         }
     };
 
@@ -63,6 +60,13 @@ const App: React.FC = () => {
                     color="inherit"
                     component={Link}
                     to="/"
+                    startIcon={<HomeIcon />}
+                />
+
+                <Button
+                    color="inherit"
+                    component={Link}
+                    to="/vue-ai-interview/ai-interview/llm-test"
                     startIcon={<HomeIcon />}
                 />
               
