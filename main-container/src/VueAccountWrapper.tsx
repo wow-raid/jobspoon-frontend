@@ -9,9 +9,6 @@ const VueAccountAppWrapper = ({ eventBus }:{eventBus: any}) => {
     const location = useLocation()
 
     useEffect(() => {
-        console.log('preparing mount vuetify account remotes app')
-        console.log('[Host] VueAccountAppWrapper mounted at', window.location.pathname);
-
         const mountVueApp = async () =>{
             const { vueAccountAppMount, vueAccountAppUnmount } = await import("vueAccountApp/bootstrap");
 
@@ -50,7 +47,7 @@ const VueAccountAppWrapper = ({ eventBus }:{eventBus: any}) => {
 
     return (
         <div
-            id="vue-account-app"
+            id="vue-account-wrapper"
             ref={vueModuleRef}
             style={{
                 width: "100vw",

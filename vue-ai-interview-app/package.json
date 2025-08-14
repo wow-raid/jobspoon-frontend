@@ -2,6 +2,7 @@
   "name": "vue-ai-interview-app",
   "version": "0.0.1",
   "scripts": {
+    "clean": "rimraf dist",
     "build": "NODE_ENV=production rspack build",
     "build:dev": "NODE_ENV=development rspack build",
     "build:start": "cd dist && rspack serve",

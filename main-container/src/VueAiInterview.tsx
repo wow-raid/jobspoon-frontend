@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 
-const VueAiInterviewAppWrapper = ({ eventBus }) => {
+const VueAiInterviewAppWrapper = ({ eventBus }: { eventBus: any }) => {
     const vueModuleRef = useRef<HTMLDivElement>(null);
     const isMountedRef = useRef(false);
     const unmountRef = useRef<(() => void) | null>(null);
@@ -9,44 +9,57 @@ const VueAiInterviewAppWrapper = ({ eventBus }) => {
     const location = useLocation()
 
     useEffect(() => {
-        console.log('preparing mount vuetify aiInterview remotes app')
+        const mountVueApp = async () => {
+            const { vueAiInterviewAppMount, vueAiInterviewAppUnmount } = await import("vueAiInterviewApp/bootstrap");
 
-        if (!isMountedRef.current) {
-            const loadRemoteComponent = async () => {
-                const { vueAiInterviewAppMount } = await import("vueAiInterviewApp/bootstrap");
+            if (vueModuleRef.current && !isMountedRef.current) {
                 vueAiInterviewAppMount(vueModuleRef.current, eventBus);
                 isMountedRef.current = true;
+
+                unmountRef.current = () => {
+                    vueAiInterviewAppUnmount?.(vueModuleRef.current!);
+                    isMountedRef.current = false;
+                };
+                const iframeDoc = document;
+                iframeDoc.body.style.overflow = "hidden";
+                iframeDoc.documentElement.style.overflow = "hidden";
+                iframeDoc.body.style.margin = "0";
+                iframeDoc.body.style.padding = "0";
             }
 
-            loadRemoteComponent()
-            console.log("Vuetify AiInterview Remotes App ready: " + vueModuleRef)
         }
+        mountVueApp();
 
         return () => {
+            if (unmountRef.current) {
+                unmountRef.current();
+                unmountRef.current = null;
+            }
             eventBus.off("routing-event");
         };
     }, [])
 
-    useEffect(() => {
-        console.log('Vuetify AiInterview 라우터 위치 바꿨어: ' + location.pathname)
-        const handleNavigation = () => {
-            console.log('handleNavigation()')
-            if (location.pathname === "/vuetify-typescript-ai-interview-app") {
-                console.log('라우터 변경')
-                eventBus.emit("vue-ai-interview-routing-event", "/") 
-            }
-        };
 
-        // 컴포넌트가 마운트될 때 호출되는 이벤트 핸들러 등록
-        handleNavigation();
+
+    useEffect(() => {
+        console.log('handleNavigation()')
+        if (location.pathname === "/vue-ai-interview/llm-test") {
+            console.log('라우터 변경')
+            eventBus.emit("vue-ai-interview-routing-event", "/")
+        }
     }, [location]);
 
     return (
-        <div>
-            <div>
-                <div style={{ position: 'relative' }} ref={vueModuleRef} />
-            </div>
-        </div>
+        <div
+            id="vue-ai-interview-wrapper"
+            ref={vueModuleRef}
+            style={{
+                width: "100vw",
+                height: "100vh",
+                margin: 0,
+                padding: 0,
+            }}
+        />
     )
 };
 

@@ -1,3 +1,4 @@
+//rspack.config.ts
 import * as path from "node:path";
 import { defineConfig } from "@rspack/cli";
 import { DefinePlugin, rspack } from "@rspack/core";

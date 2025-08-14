@@ -19,7 +19,7 @@ const routes: Array<RouteRecordRaw> = [
         component: AiInterviewAnswerResult,
     },
     // 필요하다면 기타 라우트 추가
-    { path: "/:pathMatch(.*)*", redirect: "/ai-interview/llm-test" },
+    { path: "/", redirect: "/ai-interview/llm-test" },
 ];
 
 const router = createRouter({

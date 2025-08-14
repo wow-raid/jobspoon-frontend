@@ -15,20 +15,19 @@ import { createPinia } from "pinia";
 import router from './router'
 
 let app: VueApp<Element> | null = null;
+let aiRoutingHandler: ((path: string) => void) | null = null;
+
 
 export const vueAiInterviewAppMount = (el: string | Element, eventBus: any) => {
     const container = typeof el === "string" ? document.querySelector(el) : el;
     if (!container) return;
     container.innerHTML = "";
     const shadowRoot = container.attachShadow({ mode: "open" });
-
-    // Vuetify/mdi CSS를 ShadowRoot에 동적으로 fetch/주입
-    injectVuetifyCssIntoShadow(shadowRoot);
-
     // Vue mount용 div
     const shadowAppRoot = document.createElement("div");
     shadowAppRoot.classList.add("v-application", "v-theme--light");
     shadowRoot.appendChild(shadowAppRoot);
+    injectVuetifyCssIntoShadow(shadowRoot);
 
     loadFonts().then(() => {
         const vuetify = createVuetify({
@@ -66,7 +65,7 @@ export const vueAiInterviewAppMount = (el: string | Element, eventBus: any) => {
         app.use(vuetify).use(router).use(pinia);
         app.provide("eventBus", eventBus);
 
-        eventBus.on("vue-ai-interview-routing-event", (path: string) => {
+        eventBus.on('vue-board-routing-event', (path: string) => {
             if (router.currentRoute.value.fullPath !== path) {
                 router.push(path);
             }
@@ -105,3 +104,44 @@ export const vueAiInterviewAppUnmount = () => {
         app = null;
     }
 };
+
+interface EventBus {
+    listeners: { [eventName: string]: Function[] };
+    on(eventName: string, callback: Function): void;
+    off(eventName: string, callback: Function): void;
+    emit(eventName: string, data: any): void;
+}
+
+const eventBus: EventBus = {
+    listeners: {},
+
+    on(eventName, callback) {
+        if (!this.listeners[eventName]) {
+            this.listeners[eventName] = [];
+        }
+        this.listeners[eventName].push(callback);
+    },
+
+    off(eventName, callback) {
+        if (!this.listeners[eventName]) {
+            return;
+        }
+        const index = this.listeners[eventName].indexOf(callback);
+        if (index !== -1) {
+            this.listeners[eventName].splice(index, 1);
+        }
+    },
+
+    emit(eventName, data) {
+        if (!this.listeners[eventName]) {
+            return;
+        }
+        this.listeners[eventName].forEach((callback) => {
+            callback(data);
+        });
+    },
+}
+
+const root = document.querySelector('#vue-ai-interview-app')
+
+if (root) { vueAiInterviewAppMount(root, eventBus) }

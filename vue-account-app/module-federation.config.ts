@@ -1,3 +1,4 @@
+//module-federation.config.ts
 export const mfConfig = {
   name: "vueAccountApp",
   filename: "remoteEntry.js",
