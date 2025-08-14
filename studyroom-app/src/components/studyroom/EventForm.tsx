@@ -1,26 +1,29 @@
+import React, {useEffect, useState} from "react";
 import {ScheduleEvent} from "../../data/mockData.ts";
-import {useEffect, useState} from "react";
 import '../../styles/EventForm.css';
 
 
 interface EventFormProps {
-    onSubmit: (eventData: Omit<ScheduleEvent, 'id'>) => void;
-    initialDate?: Date;     // 날짜를 더블클릭 했을 때 전달받을 초기 날짜
+    onSubmit: (eventData: Omit<ScheduleEvent, 'id' | 'authorId' >) => void;
+    initialData?: ScheduleEvent;     // 날짜를 더블클릭 했을 때 전달받을 초기 날짜
 }
 
-const EventForm: React.FC<EventFormProps> = ({ onSubmit, initialDate }) => {
+const EventForm: React.FC<EventFormProps> = ({ onSubmit, initialData }) => {
     const [title, setTitle] = useState('');
     const [start, setStart] = useState<Date | null>(null);
     const [end, setEnd] = useState<Date | null>(null);
 
     useEffect(() => {
-        if (initialDate) {
-            setStart(initialDate);
-            const endDate = new Date(initialDate);
-            endDate.setHours(endDate.getHours() + 1);
-            setEnd(endDate);
+        if (initialData){
+            setTitle(initialData.title);
+            setStart(initialData.start);
+            setEnd(initialData.end);
+        } else {
+            setTitle('');
+            setStart(null);
+            setEnd(null);
         }
-    }, [initialDate]);
+    }, [initialData]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -33,7 +36,7 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit, initialDate }) => {
 
     return (
         <form onSubmit={handleSubmit} className="event-form">
-            <h3> 새 일정 등록 </h3>
+            <h3>{initialData ? '일정 수정' : '새 일정 등록'} </h3>
             <div className="form-group">
                 <label> 일정 등록 </label>
                 <input type="text" value={title} onChange={e => setTitle(e.target.value)} required />
@@ -46,10 +49,9 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit, initialDate }) => {
                 <label> 종료 시간 </label>
                 <input type="datetime-local" value={end ? new Date(end.getTime() - end.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''} onChange={e => setEnd(new Date(e.target.value))} required />
             </div>
-            <button type="submit" className="submit-btn">등록하기</button>
+            <button type="submit" className="submit-btn">{initialData ? '수정 완료' : '등록하기'} </button>
         </form>
     );
 };
 
 export default EventForm;
-
