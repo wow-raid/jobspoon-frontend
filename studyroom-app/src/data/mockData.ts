@@ -101,30 +101,28 @@ export interface ScheduleEvent {
     start: Date;
     end: Date;
     description?: string;
+    authorId: string;
 }
 
 export const FAKE_EVENTS: ScheduleEvent[] = [
-    // 기존 데이터
-    { id: 1, title: '1차 모의면접 (CS)', start: new Date(2025, 7, 18, 10, 0, 0), end: new Date(2025, 7, 18, 12, 0, 0) },
-    { id: 2, title: '알고리즘 문제 풀이', start: new Date(2025, 7, 20, 19, 0, 0), end: new Date(2025, 7, 20, 21, 0, 0) },
-    { id: 3, title: '프로젝트 회고', start: new Date(2025, 7, 25, 14, 0, 0), end: new Date(2025, 7, 25, 15, 30, 0) },
-    { id: 4, title: '다음 달 계획 회의', start: new Date(2025, 8, 2, 11, 0, 0), end: new Date(2025, 8, 2, 12, 0, 0) },
-
-    // 추가 데이터 16개 (8월과 9월에 걸쳐 생성)
-    { id: 5, title: '코드 리뷰 세션', start: new Date(2025, 7, 15, 18, 0, 0), end: new Date(2025, 7, 15, 19, 0, 0) },
-    { id: 6, title: '기술 발표 (주제: SSR)', start: new Date(2025, 7, 22, 20, 0, 0), end: new Date(2025, 7, 22, 21, 0, 0) },
-    { id: 7, title: '개인별 진행상황 공유', start: new Date(2025, 7, 29, 19, 0, 0), end: new Date(2025, 7, 29, 20, 0, 0) },
-    { id: 8, title: '2차 모의면접 (직무)', start: new Date(2025, 8, 5, 10, 0, 0), end: new Date(2025, 8, 5, 12, 0, 0) },
-    { id: 9, title: '팀 빌딩 온라인 게임', start: new Date(2025, 8, 1, 21, 0, 0), end: new Date(2025, 8, 1, 22, 0, 0) },
-    { id: 10, title: '네트워크 기초 스터디', start: new Date(2025, 8, 8, 19, 0, 0), end: new Date(2025, 8, 8, 20, 30, 0) },
-    { id: 11, title: '프로젝트 중간 점검', start: new Date(2025, 8, 12, 15, 0, 0), end: new Date(2025, 8, 12, 16, 0, 0) },
-    { id: 12, title: '운영체제 스터디', start: new Date(2025, 8, 15, 19, 0, 0), end: new Date(2025, 8, 15, 20, 30, 0) },
-    { id: 13, title: '추석 연휴 휴식', start: new Date(2025, 8, 17), end: new Date(2025, 8, 19) },
-    { id: 14, title: '3차 모의면접 (인성)', start: new Date(2025, 8, 22, 10, 0, 0), end: new Date(2025, 8, 22, 12, 0, 0) },
-    { id: 15, title: '데이터베이스 스터디', start: new Date(2025, 8, 24, 19, 0, 0), end: new Date(2025, 8, 24, 20, 30, 0) },
-    { id: 16, title: '최종 프로젝트 발표 준비', start: new Date(2025, 8, 26, 14, 0, 0), end: new Date(2025, 8, 26, 17, 0, 0) },
-    { id: 17, title: '최종 발표 및 회고', start: new Date(2025, 8, 29, 19, 0, 0), end: new Date(2025, 8, 29, 21, 0, 0) },
-    { id: 18, title: 'React 심화 개념', start: new Date(2025, 7, 27, 19, 0, 0), end: new Date(2025, 7, 27, 20, 0, 0) },
-    { id: 19, title: 'JavaScript 이벤트 루프', start: new Date(2025, 7, 28, 19, 0, 0), end: new Date(2025, 7, 28, 20, 0, 0) },
-    { id: 20, title: '오프라인 뒷풀이', start: new Date(2025, 8, 30, 19, 0, 0), end: new Date(2025, 8, 30, 22, 0, 0) },
+    { id: 1, authorId: '모임장', title: '1차 모의면접 (CS)', start: new Date(2025, 7, 18, 10, 0, 0), end: new Date(2025, 7, 18, 12, 0, 0) },
+    { id: 2, authorId: '모임장', title: '알고리즘 문제 풀이', start: new Date(2025, 7, 20, 19, 0, 0), end: new Date(2025, 7, 20, 21, 0, 0) },
+    { id: 3, authorId: '참가자A', title: '프로젝트 회고', start: new Date(2025, 7, 25, 14, 0, 0), end: new Date(2025, 7, 25, 15, 30, 0) },
+    { id: 4, authorId: '모임장', title: '다음 달 계획 회의', start: new Date(2025, 8, 2, 11, 0, 0), end: new Date(2025, 8, 2, 12, 0, 0) },
+    { id: 5, authorId: '참가자A', title: '코드 리뷰 세션', start: new Date(2025, 7, 15, 18, 0, 0), end: new Date(2025, 7, 15, 19, 0, 0) },
+    { id: 6, authorId: '모임장', title: '기술 발표 (주제: SSR)', start: new Date(2025, 7, 22, 20, 0, 0), end: new Date(2025, 7, 22, 21, 0, 0) },
+    { id: 7, authorId: '모임장', title: '개인별 진행상황 공유', start: new Date(2025, 7, 29, 19, 0, 0), end: new Date(2025, 7, 29, 20, 0, 0) },
+    { id: 8, authorId: '모임장', title: '2차 모의면접 (직무)', start: new Date(2025, 8, 5, 10, 0, 0), end: new Date(2025, 8, 5, 12, 0, 0) },
+    { id: 9, authorId: '참가자A', title: '팀 빌딩 온라인 게임', start: new Date(2025, 8, 1, 21, 0, 0), end: new Date(2025, 8, 1, 22, 0, 0) },
+    { id: 10, authorId: '모임장', title: '네트워크 기초 스터디', start: new Date(2025, 8, 8, 19, 0, 0), end: new Date(2025, 8, 8, 20, 30, 0) },
+    { id: 11, authorId: '모임장', title: '프로젝트 중간 점검', start: new Date(2025, 8, 12, 15, 0, 0), end: new Date(2025, 8, 12, 16, 0, 0) },
+    { id: 12, authorId: '참가자A', title: '운영체제 스터디', start: new Date(2025, 8, 15, 19, 0, 0), end: new Date(2025, 8, 15, 20, 30, 0) },
+    { id: 13, authorId: '모임장', title: '추석 연휴 휴식', start: new Date(2025, 8, 17), end: new Date(2025, 8, 19) },
+    { id: 14, authorId: '모임장', title: '3차 모의면접 (인성)', start: new Date(2025, 8, 22, 10, 0, 0), end: new Date(2025, 8, 22, 12, 0, 0) },
+    { id: 15, authorId: '참가자A', title: '데이터베이스 스터디', start: new Date(2025, 8, 24, 19, 0, 0), end: new Date(2025, 8, 24, 20, 30, 0) },
+    { id: 16, authorId: '모임장', title: '최종 프로젝트 발표 준비', start: new Date(2025, 8, 26, 14, 0, 0), end: new Date(2025, 8, 26, 17, 0, 0) },
+    { id: 17, authorId: '모임장', title: '최종 발표 및 회고', start: new Date(2025, 8, 29, 19, 0, 0), end: new Date(2025, 8, 29, 21, 0, 0) },
+    { id: 18, authorId: '참가자A', title: 'React 심화 개념', start: new Date(2025, 7, 27, 19, 0, 0), end: new Date(2025, 7, 27, 20, 0, 0) },
+    { id: 19, authorId: '모임장', title: 'JavaScript 이벤트 루프', start: new Date(2025, 7, 28, 19, 0, 0), end: new Date(2025, 7, 28, 20, 0, 0) },
+    { id: 20, authorId: '모임장', title: '오프라인 뒷풀이', start: new Date(2025, 8, 30, 19, 0, 0), end: new Date(2025, 8, 30, 22, 0, 0) },
 ];
