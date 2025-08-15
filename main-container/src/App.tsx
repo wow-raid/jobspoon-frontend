@@ -7,7 +7,8 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import mitt from "mitt";
 
 import VueAccountAppWrapper from "./VueAccountWrapper.tsx";
-import VueAiInterviewAppWrapper from "./VueAiInterview.tsx";
+import VueAiInterviewAppWrapper from "./VueAiInterviewWrapper.tsx";
+import SvelteReviewAppWrapper from "./SvelteReviewWrapper.tsx";
 
 const eventBus = mitt();
 
@@ -44,6 +45,10 @@ const App = () => {
             path="/vue-ai-interview/*"
             element={<VueAiInterviewAppWrapper eventBus={eventBus} />}
           />
+          <Route
+            path="/svelte-review/*"
+            element={<SvelteReviewAppWrapper />}
+          />  
         </Routes>
       </Suspense>
     </BrowserRouter>
