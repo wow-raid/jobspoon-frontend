@@ -5,6 +5,7 @@ export const mfConfig = {
     navigationBarApp: `navigationBarApp@${process.env.REACT_NAVIGATION_APP}/remoteEntry.js`,
     studyRoomApp: `studyRoomApp@${process.env.REACT_STUDYROOM_APP}/remoteEntry.js`,
     vueAiInterviewApp: `vueAiInterviewApp@${process.env.VUE_AI_INTERVIEW_APP}/remoteEntry.js`,
+    svelteReviewApp: `svelteReviewApp@${process.env.SVELTE_REVIEW_APP}/remoteEntry.js`,
   },
   shared: {
     react: { singleton: true, requiredVersion: "^18.2.0" },

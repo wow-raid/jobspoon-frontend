@@ -1,5 +1,9 @@
 export const mfConfig = {
-  name: "svelte_review_app",
-  exposes: {},
+  name: "svelteReviewApp",
+  filename: "remoteEntry.js",
+  exposes: {
+    "./App": "./src/App.svelte",
+  },
   shared: ["svelte"],
+  dts: false,
 };
