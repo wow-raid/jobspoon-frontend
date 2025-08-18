@@ -12,6 +12,7 @@ import JoinedStudyRoom from "./pages/JoinedStudyRoom";
 import Announcements from "./components/studyroom/Announcements";
 import Schedule from "./components/studyroom/Schedule";
 import TestInterview from "./components/studyroom/TestInterview.tsx";
+import Participants from "./components/studyroom/Participants.tsx";
 
 const App: React.FC = () => {
     return (
@@ -26,6 +27,7 @@ const App: React.FC = () => {
                         <Route index element={<Announcements />} />
                         <Route path="schedule" element={<Schedule />} />
                         <Route path="interview" element={<TestInterview />} />
+                        <Route path="members" element={<Participants />} />
 
                     </Route>
                 </Routes>
