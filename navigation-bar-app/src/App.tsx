@@ -6,6 +6,8 @@ import HomeIcon from "@mui/icons-material/Home";
 import ForumIcon from "@mui/icons-material/Forum";
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
+import Interview from '@mui/icons-material/InterpreterMode';
+import ReviewIcon from '@mui/icons-material/RateReview';
 
 const App: React.FC = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -67,7 +69,14 @@ const App: React.FC = () => {
                     color="inherit"
                     component={Link}
                     to="/vue-ai-interview/ai-interview/llm-test"
-                    startIcon={<HomeIcon />}
+                    startIcon={<Interview />}
+                />
+
+                <Button
+                    color="inherit"
+                    component={Link}
+                    to="/svelte-review/review"
+                    startIcon={<ReviewIcon />}
                 />
               
                

@@ -46,7 +46,7 @@ const App = () => {
           <Route
             path="/vue-ai-interview/*"
             element={
-              <RequireToken redirectTo="/vue-account/account/login">
+              <RequireToken loginPath="/vue-account/account/login">
                 <VueAiInterviewAppWrapper eventBus={eventBus} />
               </RequireToken>
             }
