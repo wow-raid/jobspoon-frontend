@@ -45,7 +45,7 @@ const StudyRoomCard: React.FC<StudyRoomCardProps> = ({ room }) => {
     }
 
     return (
-        <Link to={`/study/${room.id}`} className={wrapperClassName}>
+        <Link to={`study/${room.id}`} className={wrapperClassName}>
             {content}
         </Link>
     );

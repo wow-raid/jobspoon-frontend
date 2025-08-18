@@ -8,7 +8,6 @@ import zoomLogo from '../../assets/zoom_logo.png';
 import discordLogo from '../../assets/discord_logo.png';
 import naverLogo from '../../assets/naver_logo.png';
 
-// 스터디마다 다른 링크를 가질 수 있도록, 나중에는 props로 링크를 받아옵니다.
 const INITIAL_LINKS = [
     {
         name: 'Kakao',
@@ -22,7 +21,7 @@ const INITIAL_LINKS = [
     },
     {
         name: 'Zoom',
-        url: 'https://zoom.us/j/',
+        url: '',
         icon: zoomLogo,
     },
     {
@@ -32,7 +31,7 @@ const INITIAL_LINKS = [
     },
     {
         name: 'Naver',
-        url: 'https://whale.naver.com/ko/',
+        url: '',
         icon: naverLogo,
     },
 ];
@@ -75,18 +74,28 @@ const TestInterview: React.FC = () => {
                 링크를 등록하거나 수정할 수 있습니다.
             </p>
             <div className="channel-btns">
-                {channels.map((channel) => (
-                    <div key={channel.name} className="channel-item">
-                        <a href={channel.url} target="_blank" rel="noopener noreferrer" className="channel-btn">
-                            <img src={channel.icon} alt={channel.name} className="channel-icon" />
-                            <span className="channel-name">{channel.name}</span>
-                        </a>
-                        <button className="edit-link-btn" onClick={() => handleOpenModal(channel)}>
-                            링크 수정
-                        </button>
-                    </div>
-                ))}
-            </div>
+                    {channels.map((channel) => {
+                        const isDisabled = !channel.url;
+                        const ChannelTag = isDisabled ? 'div' : 'a';
+
+                        return (
+                            <div key={channel.name} className="channel-item">
+                                <ChannelTag
+                                    href={isDisabled ? undefined : channel.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`channel-btn ${isDisabled ? 'disabled' : ''}`}
+                                >
+                                    <img src={channel.icon} alt={channel.name} className="channel-icon" />
+                                    <span className="channel-name">{channel.name}</span>
+                                </ChannelTag>
+                                <button className="edit-link-btn" onClick={() => handleOpenModal(channel)}>
+                                    {isDisabled ? '링크 등록' : '링크 수정'}
+                                </button>
+                            </div>
+                        );
+                    })}
+                </div>
 
             {/* 링크 수정 모달 */}
             <Modal isOpen={isModalOpen} onClose={handleCloseModal}>
