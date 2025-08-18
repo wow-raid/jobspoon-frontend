@@ -246,7 +246,7 @@ const projectExperienceMap = { 있음: 2, 없음: 1 };
 const selectedProjectExperience = ref("");
 
 // 직무
-const keywords = ref(["Backend", "Frontend", "App·Web", "AI", "Embeddeed", "DevOps"]);
+const keywords = ref(["Backend", "Frontend", "App·Web", "AI", "Embedded", "DevOps"]);
 const keywordMap = { Backend: 1, Frontend: 2, Embedded: 3, AI: 4, DevOps: 5, "App·Web": 6 };
 const selectedKeyword = ref("");
 
@@ -313,18 +313,17 @@ const speakNotice = () => {
 
 // 로그인 구현 후 다시 해제 할 것
 
-// onMounted(() => {
-//   if (process.client) {
-//     const userToken = localStorage.getItem("userToken");
-//     if (!userToken) {
-//       alert("로그인이 필요합니다. 로그인 페이지로 이동합니다.");
-//       router.push("/account/login");
-//     } else {
-//       speakNotice();
-//     }
-//     window.addEventListener("beforeunload", handleBeforeUnload);
-//   }
-// });
+onMounted(() => {
+  // onMounted는 클라이언트에서만 실행되므로 process.client 불필요
+  const userToken = localStorage.getItem("userToken");
+  if (!userToken) {
+    alert("로그인이 필요합니다. 로그인 페이지로 이동합니다.");
+     window.location.replace("/vue-account/account/login");
+    return;
+  }
+  speakNotice();
+  window.addEventListener("beforeunload", handleBeforeUnload);
+});
 
 // 제출 버튼
 const startQuestion = () => {

@@ -10,6 +10,8 @@ import VueAccountAppWrapper from "./VueAccountWrapper.tsx";
 import VueAiInterviewAppWrapper from "./VueAiInterviewWrapper.tsx";
 import SvelteReviewAppWrapper from "./SvelteReviewWrapper.tsx";
 
+import RequireToken from "./RequireToken";
+
 const eventBus = mitt();
 
 const NavigationBarApp = lazy(() => import("navigationBarApp/App"));
@@ -43,7 +45,11 @@ const App = () => {
           />
           <Route
             path="/vue-ai-interview/*"
-            element={<VueAiInterviewAppWrapper eventBus={eventBus} />}
+            element={
+              <RequireToken redirectTo="/vue-account/account/login">
+                <VueAiInterviewAppWrapper eventBus={eventBus} />
+              </RequireToken>
+            }
           />
           <Route
             path="/svelte-review/*"
