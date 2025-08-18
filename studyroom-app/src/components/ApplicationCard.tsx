@@ -25,7 +25,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({application, onCancel}
     }
 
     return (
-        <Link to={`/study/${studyId}`} className="application-card">
+        <Link to={`../study/${studyId}`} className="application-card">
             <div className="card-content">
                 <h3 className="study-title">{studyTitle}</h3>
                 <div className="card-meta">

@@ -43,10 +43,10 @@ const StudyListPage: React.FC = () => {
             <div className="list-page-header">
                 <h2>모든 스터디 <span>({filteredRooms.length})</span></h2>
                 <div className="header-actions">
-                    <Link to="/my-studies" className="nav-btn-secondary">
+                    <Link to="my-studies" className="nav-btn-secondary">
                         나의 스터디
                     </Link>
-                    <Link to="/my-applications" className="nav-btn-secondary">
+                    <Link to="my-applications" className="nav-btn-secondary">
                         신청 내역
                     </Link>
                     <button className="create-study-btn" onClick={() => setIsModalOpen(true)}>

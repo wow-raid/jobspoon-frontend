@@ -25,7 +25,7 @@ const StudyDetailPage: React.FC = () => {
         console.log(`스터디 ID: ${study?.id}`);
         console.log(`신청 메시지: ${message}`);
 
-        navigate('/success', { state: { title: study?.title}});
+        navigate('../success', { state: { title: study?.title}});
     };
 
     if (loading) {
