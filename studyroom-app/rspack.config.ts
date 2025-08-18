@@ -49,6 +49,10 @@ export default defineConfig({
         type: "css",
       },
       {
+        test: /\.(png|jpe?g|gif|svg|webp|ico)$/i,
+        type: "asset",
+      },
+      {
         test: /\.(jsx?|tsx?)$/,
         use: [
           {
