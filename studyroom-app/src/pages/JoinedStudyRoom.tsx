@@ -31,6 +31,7 @@ const JoinedStudyRoom: React.FC = () => {
                     <NavLink to="" end className={({ isActive }) => isActive ? 'active' : ''}> 공지사항 </NavLink>
                     <NavLink to="schedule" end className={({ isActive }) => isActive ? 'active' : ''}> 일정관리 </NavLink>
                     <NavLink to="interview" end className={({ isActive }) => isActive ? 'active' : ''}> 모의면접 </NavLink>
+                    <NavLink to="members" end className={({ isActive }) => isActive ? 'active' : ''}> 참여인원 </NavLink>
                 </nav>
 
                 <section className="room-content-area">

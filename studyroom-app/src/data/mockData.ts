@@ -126,3 +126,17 @@ export const FAKE_EVENTS: ScheduleEvent[] = [
     { id: 19, authorId: '모임장', title: 'JavaScript 이벤트 루프', start: new Date(2025, 7, 28, 19, 0, 0), end: new Date(2025, 7, 28, 20, 0, 0) },
     { id: 20, authorId: '모임장', title: '오프라인 뒷풀이', start: new Date(2025, 8, 30, 19, 0, 0), end: new Date(2025, 8, 30, 22, 0, 0) },
 ];
+
+export interface StudyMember {
+    id: string;
+    name: string;
+    role: 'leader' | 'member';
+    avatarUrl?: string; // 프로필 이미지 URL (optional)
+}
+
+export const FAKE_STUDY_MEMBERS: StudyMember[] = [
+    { id: 'leader', name: '리액트초보', role: 'leader' },
+    { id: 'memberA', name: '참가자A', role: 'member' },
+    { id: 'memberB', name: '참가자B', role: 'member' },
+    { id: 'memberC', name: '참가자C', role: 'member' },
+];
