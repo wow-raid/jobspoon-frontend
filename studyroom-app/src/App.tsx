@@ -11,10 +11,12 @@ import MyStudiesPage from "./pages/MyStudiesPage";
 import JoinedStudyRoom from "./pages/JoinedStudyRoom";
 import Announcements from "./components/studyroom/Announcements";
 import Schedule from "./components/studyroom/Schedule";
+import TestInterview from "./components/studyroom/TestInterview.tsx";
 
 const App: React.FC = () => {
     return (
             <div className="app-container">
+                <BrowserRouter>
                 <Routes>
                     <Route path="/" element={<StudyListPage />} />
                     <Route path="/study/:id" element={<StudyDetailPage />} />
@@ -24,9 +26,11 @@ const App: React.FC = () => {
                     <Route path="/joined-study/:id" element={<JoinedStudyRoom />}>
                         <Route index element={<Announcements />} />
                         <Route path="schedule" element={<Schedule />} />
+                        <Route path="interview" element={<TestInterview />} />
 
                     </Route>
                 </Routes>
+                </BrowserRouter>
             </div>
     );
 }
