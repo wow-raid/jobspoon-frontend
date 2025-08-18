@@ -21,7 +21,16 @@ const JoinedStudyRoom: React.FC = () => {
         return <div>스터디 정보를 불러오는 중...</div>;
     }
 
-    return (
+    const handleLeaveOrClose = () => {
+        if (CURRENT_USER_ROLE === 'leader') {
+            if (window.confirm("정말로 스터디를 폐쇄하시겠습니까?")) {
+                console.log(`스터디 ${id} 폐쇄됨`);
+                alert('스터디가 폐쇄되었습니다.');
+                navigate('/');
+            }
+        }
+    }
+        return (
         <div className="study-room-container">
             <header className="room-header">
                 <h2>{study.title}</h2>
@@ -39,7 +48,7 @@ const JoinedStudyRoom: React.FC = () => {
                 </nav>
                 <section className="room-content-area">
                     {/* context를 통해 자식에게 필요한 데이터와 함수를 전달합니다. */}
-                    <Outlet context={{ userRole: CURRENT_USER_ROLE}} />
+                    <Outlet context={{ userRole: CURRENT_USER_ROLE, onLeaveOrClose: handleLeaveOrClose}} />
                 </section>
             </main>
         </div>
