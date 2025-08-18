@@ -5,7 +5,7 @@ import { FAKE_STUDY_ROOMS } from '../data/mockData';
 import '../styles/JoinedStudyRoom.css';
 
 // 현재 사용자 역할을 시뮬레이션합니다.
-const CURRENT_USER_ROLE = 'leader';
+const CURRENT_USER_ROLE = 'member';
 
 const JoinedStudyRoom: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -17,10 +17,7 @@ const JoinedStudyRoom: React.FC = () => {
         setStudy(foundStudy);
     }, [id]);
 
-    if (!study) {
-        return <div>스터디 정보를 불러오는 중...</div>;
-    }
-
+    // 탈퇴/폐쇄 핸들러 함수
     const handleLeaveOrClose = () => {
         if (CURRENT_USER_ROLE === 'leader') {
             if (window.confirm("정말로 스터디를 폐쇄하시겠습니까?")) {
@@ -28,9 +25,20 @@ const JoinedStudyRoom: React.FC = () => {
                 alert('스터디가 폐쇄되었습니다.');
                 navigate('/');
             }
+        } else {
+            if (window.confirm("정말로 스터디에서 탈퇴하시겠습니까?")) {
+                console.log(`스터디 ${id}에서 탈퇴함`);
+                alert('스터디에서 탈퇴 처리되었습니다.');
+                navigate('/');
+            }
         }
+    };
+
+    if (!study) {
+        return <div>스터디 정보를 불러오는 중...</div>;
     }
-        return (
+
+    return (
         <div className="study-room-container">
             <header className="room-header">
                 <h2>{study.title}</h2>
@@ -48,7 +56,7 @@ const JoinedStudyRoom: React.FC = () => {
                 </nav>
                 <section className="room-content-area">
                     {/* context를 통해 자식에게 필요한 데이터와 함수를 전달합니다. */}
-                    <Outlet context={{ userRole: CURRENT_USER_ROLE, onLeaveOrClose: handleLeaveOrClose}} />
+                    <Outlet context={{ userRole: CURRENT_USER_ROLE, onLeaveOrClose: handleLeaveOrClose }} />
                 </section>
             </main>
         </div>

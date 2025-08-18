@@ -69,9 +69,10 @@ const Participants: React.FC = () => {
                     )}
                 </div>
             </div>
+
             <footer className="room-footer">
                 <button className="leave-button" onClick={onLeaveOrClose}>
-                    {userRole === 'leader' ? '스터디 폐쇄하기' : ''}
+                    {userRole === 'leader' ? '스터디 폐쇄하기' : '탈퇴하기'}
                 </button>
             </footer>
         </div>
