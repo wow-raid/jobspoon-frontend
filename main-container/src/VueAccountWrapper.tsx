@@ -21,8 +21,6 @@ const VueAccountAppWrapper = ({ eventBus }:{eventBus: any}) => {
                     isMountedRef.current = false;
                 };              
                 const iframeDoc = document;
-                iframeDoc.body.style.overflow = "hidden";
-                iframeDoc.documentElement.style.overflow = "hidden";
                 iframeDoc.body.style.margin = "0";
                 iframeDoc.body.style.padding = "0";
             }
