@@ -1,7 +1,21 @@
 import React, { useEffect, useRef } from "react";
+import { getTheme, onThemeChange } from "@jobspoon/theme-bridge";
 
 const SvelteReviewAppWrapper: React.FC = () => {
     const containerRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+
+        const apply = (t: "light" | "dark") => {
+            el.setAttribute("data-theme", t);
+            (el.style as any).colorScheme = t;
+        };
+        apply(getTheme());
+        const off = onThemeChange(apply);
+        return off;
+    }, []);
 
     useEffect(() => {
         let app: any;

@@ -38,6 +38,7 @@
     "vue": "^3.2.19",
     "vue-router": "^4.5.1",
     "vuetify": "^3.8.8",
-    "webfontloader": "^1.6.28"
+    "webfontloader": "^1.6.28",
+    "@jobspoon/theme-bridge": "0.1.0"
   }
 }
