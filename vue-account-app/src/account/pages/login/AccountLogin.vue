@@ -3,9 +3,12 @@
     <div class="login-wrapper" :style="loginWrapperStyle">
       <div>
         <div class="login_logo" :style="logoStyle"></div>
-        <div class="introduction" style="color: black">
+
+        <!-- [변경] 인라인 color 제거 -->
+        <div class="introduction">
           <p>기업 분석과 AI 모의면접 | 취업 준비는 <b>JOBSTICK</b>에서</p>
         </div>
+
         <v-divider class="mt-5 mb-7" :thickness="3"></v-divider>
 
         <!-- 로그인 버튼들 -->
@@ -75,8 +78,11 @@ const containerStyle = computed(() => ({
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  background: `url('${loginBg}') no-repeat center center`,
+  // background: `url('${loginBg}') no-repeat center center`,
   backgroundSize: '900px auto',
+
+  // [변경] 전역 글자색: host 변수(--text) 우선, 없으면 Vuetify on-background 사용
+  color: 'var(--text, rgb(var(--v-theme-on-background)))',
 }))
 
 const logoStyle = computed(() => ({
@@ -175,3 +181,10 @@ const goToAdminLogin = () => {
   router.push("/account/admin-code")
 }
 </script>
+
+<style scoped>
+/* [추가] 안전망: 소개 문단도 다크/라이트 따라가게 */
+.introduction {
+  color: var(--text, rgb(var(--v-theme-on-background)));
+}
+</style>

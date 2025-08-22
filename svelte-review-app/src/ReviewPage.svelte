@@ -304,15 +304,57 @@
 </section>
 
 <style>
-  .review-widget {
-    --bg: #111;
-    --card: #1a1a1a;
+  /* ── 1) 테마 변수 매핑: wrapper가 준 [data-theme]에 반응 ───────────── */
+  :global([data-theme="light"]) .review-widget {
+    --bg: #ffffff;
+    --card: #f7f8fa;
+    --muted: #666;
+    --text: #111;
+    --accent: #1d4ed8; /* 파랑(라이트용) */
+    --accent-weak: #c7d2fe;
+    --bar-bg: #e5e7eb;
+    --border: #d1d5db;
+    --input-bg: #fff;
+    --star-muted: #d4d4d8;
+
+    color-scheme: light;
+  }
+
+  :global([data-theme="dark"]) .review-widget {
+    --bg: #0f1115;
+    --card: #151922;
     --muted: #a0a0a0;
     --text: #eaeaea;
-    --accent: #5b8cff;
+    --accent: #5b8cff; /* 파랑(다크용) */
     --accent-weak: #2a3f7a;
     --bar-bg: #2a2a2a;
+    --border: #333;
+    --input-bg: #121212;
+    --star-muted: #3a3a3a;
 
+    color-scheme: dark;
+  }
+
+  /* (옵션) 호스트가 아직 data-theme를 안 넣었을 때, OS 다크모드 따라가기 */
+  @media (prefers-color-scheme: dark) {
+    .review-widget:not(:global([data-theme])) {
+      --bg: #0f1115;
+      --card: #151922;
+      --muted: #a0a0a0;
+      --text: #eaeaea;
+      --accent: #5b8cff;
+      --accent-weak: #2a3f7a;
+      --bar-bg: #2a2a2a;
+      --border: #333;
+      --input-bg: #121212;
+      --star-muted: #3a3a3a;
+
+      color-scheme: dark;
+    }
+  }
+
+  /* ── 2) 컴포넌트 기본 ─────────────────────────────────────────────── */
+  .review-widget {
     color: var(--text);
     background: transparent;
     font-family:
@@ -389,6 +431,7 @@
     text-align: right;
   }
 
+  /* 별 아이콘 */
   .stars {
     display: inline-flex;
     gap: 2px;
@@ -402,7 +445,6 @@
     width: 16px;
     height: 16px;
   }
-
   .star-wrap {
     position: relative;
     width: 20px;
@@ -414,8 +456,8 @@
     display: block;
   }
   .star .bg {
-    fill: #3a3a3a;
-  }
+    fill: var(--star-muted);
+  } /* ⬅️ 다크/라이트 변수 적용 */
   .star .fg {
     fill: var(--accent);
   }
@@ -454,11 +496,12 @@
     font-size: 13px;
   }
 
+  /* 입력 */
   .text-input {
     width: 100%;
     resize: vertical;
-    border: 1px solid #333;
-    background: #121212;
+    border: 1px solid var(--border); /* ⬅️ 변수로 변경 */
+    background: var(--input-bg); /* ⬅️ 변수로 변경 */
     color: var(--text);
     border-radius: 10px;
     padding: 10px 12px;
@@ -513,7 +556,7 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: #2a2a2a;
+    background: var(--bar-bg);
     display: grid;
     place-items: center;
     font-weight: 700;

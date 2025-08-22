@@ -7,6 +7,7 @@
     "vue-account-app",
     "vue-ai-interview-app",
     "svelte-review-app",
-    "studyroom-app"
+    "studyroom-app",
+    "theme-bridge"
   ]
 }

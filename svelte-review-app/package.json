@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@module-federation/enhanced": "^0.8.9",
-    "svelte": "^4.2.9"
+    "svelte": "^4.2.9",
+    "@jobspoon/theme-bridge": "0.1.0"
   }
 }
