@@ -1,12 +1,92 @@
-import React, { useState, useMemo } from 'react';
+// StudyListPage.tsx
+import React, { useMemo, useState } from 'react';
+import styled from 'styled-components';
 import { Link } from 'react-router-dom';
-import { StudyRoom } from '../types/study';
 import { FAKE_STUDY_ROOMS } from '../data/mockData';
 import StudyRoomCard from '../components/StudyRoomCard';
 import Modal from '../components/Modal';
-import CreateStudyForm from "../components/CreateStudyForm";
+import CreateStudyForm from '../components/CreateStudyForm';
 import FilterBar, { FilterValues } from '../components/FilterBar';
-import '../styles/StudyListPage.css';
+
+const PageTop = styled.div`
+  text-align: center;
+  padding: 20px 0 40px 0;
+  border-bottom: 1px solid #3e414f;
+  margin-bottom: 32px;
+`;
+
+const PageMainTitle = styled.h1`
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  color: #fff;
+`;
+
+const PageSubtitle = styled.p`
+  font-size: 1rem;
+  color: #a0a0a0;
+  margin: 0;
+`;
+
+const ListHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+
+  h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+    color: #fff;
+  }
+
+  h2 span {
+    font-size: 20px;
+    color: #a0a0a0;
+  }
+`;
+
+const HeaderActions = styled.div`
+  display: flex;
+  gap: 12px;
+`;
+
+const NavBtnSecondary = styled(Link)`
+  background-color: #3a3f4c;
+  color: white;
+  text-decoration: none;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #4b5563;
+  }
+`;
+
+const CreateStudyBtn = styled.button`
+  background-color: #5865f2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+`;
+
+const StudyListContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 30px;
+`;
 
 const StudyListPage: React.FC = () => {
     const [filters, setFilters] = useState<FilterValues>({
@@ -20,48 +100,47 @@ const StudyListPage: React.FC = () => {
     const filteredRooms = useMemo(() => {
         let rooms = FAKE_STUDY_ROOMS;
         if (filters.showRecruitingOnly) {
-            rooms = rooms.filter(room => room.status === 'recruiting');
+            rooms = rooms.filter((room) => room.status === 'recruiting');
         }
         if (filters.location !== '전체') {
-            rooms = rooms.filter(room => room.location === filters.location);
+            rooms = rooms.filter((room) => room.location === filters.location);
         }
         if (filters.job !== '전체') {
-            rooms = rooms.filter(room => room.job === filters.job);
+            rooms = rooms.filter((room) => room.job === filters.job);
         }
         if (filters.searchTerm) {
-            rooms = rooms.filter(room => room.title.toLowerCase().includes(filters.searchTerm.toLowerCase()));
+            const q = filters.searchTerm.toLowerCase();
+            rooms = rooms.filter((room) => room.title.toLowerCase().includes(q));
         }
         return rooms;
     }, [filters]);
 
     return (
-        <div className="study-list-page">
-            <div className="page-top">
-                <h1 className="page-main-title">면접스터디 찾기</h1>
-                <p className="page-subtitle">지금 바로 나에게 맞는 스터디를 찾아보세요!</p>
-            </div>
-            <div className="list-page-header">
-                <h2>모든 스터디 <span>({filteredRooms.length})</span></h2>
-                <div className="header-actions">
-                    <Link to="my-studies" className="nav-btn-secondary">
-                        나의 스터디
-                    </Link>
-                    <Link to="my-applications" className="nav-btn-secondary">
-                        신청 내역
-                    </Link>
-                    <button className="create-study-btn" onClick={() => setIsModalOpen(true)}>
-                        스터디 생성
-                    </button>
-                </div>
-            </div>
+        <div>
+            <PageTop>
+                <PageMainTitle>면접스터디 찾기</PageMainTitle>
+                <PageSubtitle>지금 바로 나에게 맞는 스터디를 찾아보세요!</PageSubtitle>
+            </PageTop>
+
+            <ListHeader>
+                <h2>
+                    모든 스터디 <span>({filteredRooms.length})</span>
+                </h2>
+                <HeaderActions>
+                    <NavBtnSecondary to="my-studies">나의 스터디</NavBtnSecondary>
+                    <NavBtnSecondary to="my-applications">신청 내역</NavBtnSecondary>
+                    <CreateStudyBtn onClick={() => setIsModalOpen(true)}>스터디 생성</CreateStudyBtn>
+                </HeaderActions>
+            </ListHeader>
 
             <FilterBar onFilterChange={setFilters} />
 
-            <div className="study-list-container">
+            <StudyListContainer>
                 {filteredRooms.map((room) => (
                     <StudyRoomCard key={room.id} room={room} />
                 ))}
-            </div>
+            </StudyListContainer>
+
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
                 <CreateStudyForm />
             </Modal>
