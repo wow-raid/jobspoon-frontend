@@ -1,14 +1,87 @@
-import React, { useState, useEffect } from 'react';
-import '../../styles/AnnouncementForm.css'
+// AnnouncementForm.tsx
+import React, { useEffect, useState } from "react";
+import styled from "styled-components";
 
 interface AnnouncementFormProps {
     onSubmit: (formData: { title: string; content: string }) => void;
     initialData?: { title: string; content: string };
 }
 
+/* ─ styled-components (scoped) ─ */
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+`;
+
+const Title = styled.h3`
+  text-align: center;
+  font-size: 20px;
+  margin: 0;
+  color: #fff;
+`;
+
+const Group = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const Label = styled.label`
+  font-weight: 600;
+  color: #d1d5db;
+`;
+
+const TextInput = styled.input`
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #4a5568;
+  background-color: #1f2937;
+  color: #d1d5db;
+  font-size: 14px;
+
+  &:focus {
+    outline: none;
+    border-color: #5865f2;
+    box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.35);
+  }
+`;
+
+const TextArea = styled.textarea`
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #4a5568;
+  background-color: #1f2937;
+  color: #d1d5db;
+  font-size: 14px;
+  min-height: 160px;
+  resize: vertical;
+
+  &:focus {
+    outline: none;
+    border-color: #5865f2;
+    box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.35);
+  }
+`;
+
+const SubmitBtn = styled.button`
+  background-color: #5865f2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+
+  &:hover {
+    filter: brightness(0.95);
+  }
+`;
+
 const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ onSubmit, initialData }) => {
-    const [title, setTitle] = useState('');
-    const [content, setContent] = useState('');
+    const [title, setTitle] = useState("");
+    const [content, setContent] = useState("");
 
     useEffect(() => {
         if (initialData) {
@@ -19,19 +92,20 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ onSubmit, initialDa
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!title.trim() || !content.trim()){
-            alert('제목과 내용을 모두 입력해주세요.');
-            return
+        if (!title.trim() || !content.trim()) {
+            alert("제목과 내용을 모두 입력해주세요.");
+            return;
         }
         onSubmit({ title, content });
     };
 
     return (
-        <form onSubmit={handleSubmit} className="announcement-form">
-            <h3 className="form-title"> 새 공지사항 작성 </h3>
-            <div className="form-group">
-                <label htmlFor="announcement-title"> 제목 </label>
-                <input
+        <Form onSubmit={handleSubmit}>
+            <Title>새 공지사항 작성</Title>
+
+            <Group>
+                <Label htmlFor="announcement-title">제목</Label>
+                <TextInput
                     id="announcement-title"
                     type="text"
                     value={title}
@@ -39,19 +113,21 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ onSubmit, initialDa
                     placeholder="제목을 입력해주세요."
                     required
                 />
-            </div>
-            <div className="form-group">
-                <label htmlFor="announcement-content"> 내용 </label>
-                <textarea
+            </Group>
+
+            <Group>
+                <Label htmlFor="announcement-content">내용</Label>
+                <TextArea
                     id="announcement-content"
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     placeholder="내용을 입력해주세요."
                     required
                 />
-            </div>
-            <button type="submit" className="submit-btn"> 등록하기 </button>
-        </form>
+            </Group>
+
+            <SubmitBtn type="submit">등록하기</SubmitBtn>
+        </Form>
     );
 };
 

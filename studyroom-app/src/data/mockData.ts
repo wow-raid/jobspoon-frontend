@@ -28,6 +28,8 @@ export const FAKE_STUDY_ROOMS: StudyRoom[] = [
     { id: 18, status: 'closed', location: '경기', job: 'DevOps', category: '기타', title: 'CI/CD 파이프라인 구축 (마감)', host: '젠킨스맨', postedAt: '1달 전', roles: ['개발자'], requirements: ['Git 사용 경험'], tags: ['#CI/CD', '#Jenkins'], currentMembers: 4, maxMembers: 4, description: 'Jenkins와 Github Actions를 이용한 자동 배포 파이프라인을 구축합니다.' },
     { id: 19, status: 'recruiting', location: '온라인', job: '데이터', category: '데이터', title: 'SQL 쿼리 스터디', host: 'DB마스터', postedAt: '2일 전', roles: ['데이터 분석가', '백엔드'], requirements: ['데이터에 대한 관심'], tags: ['#SQL', '#데이터베이스'], currentMembers: 3, maxMembers: 6, description: '복잡한 SQL 쿼리 작성 능력을 향상시키는 스터디입니다.' },
     { id: 20, status: 'recruiting', location: '온라인', job: 'CS', category: 'CS', title: '코딩 테스트 알고리즘', host: '알고리즘정복', postedAt: '1달 전', roles: ['누구나'], requirements: ['프로그래밍 언어 1개 이상'], tags: ['#알고리즘', '#코딩테스트'], currentMembers: 5, maxMembers: 10, description: '매주 정해진 문제를 풀고 코드 리뷰를 진행합니다.' },
+    { id: 21, status: 'recruiting', location: '온라인', job: 'CS', category: 'CS', title: '참새테스트', host: '알고리즘정복', postedAt: '1달 전', roles: ['누구나'], requirements: ['프로그래밍 언어 1개 이상'], tags: ['#알고리즘', '#코딩테스트'], currentMembers: 5, maxMembers: 10, description: '매주 정해진 문제를 풀고 코드 리뷰를 진행합니다.' },
+
 ];
 
 export interface Application {

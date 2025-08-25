@@ -1,6 +1,7 @@
+// EventDetail.tsx
 import React from 'react';
+import styled from 'styled-components';
 import { ScheduleEvent } from '../../data/mockData';
-import '../../styles/EventDetail.css';
 
 interface EventDetailProps {
     event: ScheduleEvent;
@@ -9,23 +10,78 @@ interface EventDetailProps {
     onDelete: () => void;
 }
 
+const Container = styled.div`
+  padding: 16px;
+  color: #e0e0e0;
+`;
+
+const Title = styled.h3`
+  font-size: 20px;
+  margin-top: 0;
+  margin-bottom: 8px;
+  color: #fff;
+`;
+
+const Info = styled.p`
+  font-size: 14px;
+  margin: 8px 0;
+`;
+
+const Actions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #3e414f;
+`;
+
+const Btn = styled.button`
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #fff;
+`;
+
+const EditBtn = styled(Btn)`
+  background-color: #4a5568;
+  &:hover {
+    filter: brightness(1.05);
+  }
+`;
+
+const DeleteBtn = styled(Btn)`
+  background-color: #ff6b6b;
+  &:hover {
+    filter: brightness(0.95);
+  }
+`;
+
 const EventDetail: React.FC<EventDetailProps> = ({ event, currentUser, onEdit, onDelete }) => {
     const isOwner = currentUser.id === event.authorId;
 
     return (
-        <div className="event-detail-container">
-            <h3>{event.title}</h3>
-            <p><strong>시간:</strong> {new Date(event.start).toLocaleString()} ~ {new Date(event.end).toLocaleString()}</p>
-            {event.description && <p><strong>설명:</strong> {event.description}</p>}
-
-            {/* 👇 본인이 작성한 글일 경우에만 수정/삭제 버튼 표시 */}
-            {isOwner && (
-                <div className="detail-actions">
-                    <button className="edit-btn" onClick={onEdit}>수정</button>
-                    <button className="delete-btn" onClick={onDelete}>삭제</button>
-                </div>
+        <Container>
+            <Title>{event.title}</Title>
+            <Info>
+                <strong>시간:</strong> {new Date(event.start).toLocaleString()} ~ {new Date(event.end).toLocaleString()}
+            </Info>
+            {event.description && (
+                <Info>
+                    <strong>설명:</strong> {event.description}
+                </Info>
             )}
-        </div>
+
+            {isOwner && (
+                <Actions>
+                    <EditBtn onClick={onEdit}>수정</EditBtn>
+                    <DeleteBtn onClick={onDelete}>삭제</DeleteBtn>
+                </Actions>
+            )}
+        </Container>
     );
 };
 
