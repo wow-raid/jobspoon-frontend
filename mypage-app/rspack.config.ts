@@ -1,9 +1,9 @@
 import * as path from "node:path";
 import { defineConfig } from "@rspack/cli";
-import { DefinePlugin, rspack } from "@rspack/core";
+import { rspack } from "@rspack/core";
+import * as RefreshPlugin from "@rspack/plugin-react-refresh";
 import { ModuleFederationPlugin } from "@module-federation/enhanced/rspack";
 
-const sveltePreprocess = require('svelte-preprocess');
 
 import { mfConfig } from "./module-federation.config";
 
@@ -22,42 +22,15 @@ export default defineConfig({
   },
 
   devServer: {
-    port: 3100,
+    port: 3020,
     historyApiFallback: true,
     watchFiles: [path.resolve(__dirname, "src")],
-    setupMiddlewares: (middlewares, devServer) => {
-      const envOrigins = process.env.MFE_CORS_ORIGIN ?? "";
-      const allowedOrigins = envOrigins
-        .split(",")
-        .map(o => o.trim())
-        .filter(Boolean);
-
-      if (devServer?.app) {
-        devServer.app.use((req, res, next) => {
-          const origin = req.headers.origin;
-          if (origin && allowedOrigins.includes(origin)) {
-            res.setHeader("Access-Control-Allow-Origin", origin);
-          }
-
-          res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST,PUT,DELETE");
-          res.setHeader("Access-Control-Allow-Headers", "*");
-
-          if (req.method === "OPTIONS") {
-            res.sendStatus(200);
-          } else {
-            next();
-          }
-        });
-      }
-
-      return middlewares;
-    },
   },
   output: {
     // You need to set a unique value that is not equal to other applications
-    uniqueName: "svelte_review_app",
+    uniqueName: "mypage_app",
     // publicPath must be configured if using manifest
-    publicPath: "http://localhost:3100/",
+    publicPath: "http://localhost:3020/",
   },
 
   experiments: {
@@ -86,25 +59,15 @@ export default defineConfig({
                   syntax: "typescript",
                   tsx: true,
                 },
+                transform: {
+                  react: {
+                    runtime: "automatic",
+                    development: isDev,
+                    refresh: isDev,
+                  },
+                },
               },
               env: { targets },
-            },
-          },
-        ],
-      },
-      {
-        test: /\.svelte$/,
-        use: [
-          {
-            loader: 'svelte-loader',
-            options: {
-              compilerOptions: {
-                dev: isDev,
-              },
-
-              emitCss: !isDev,
-              hotReload: isDev,
-              preprocess: sveltePreprocess({ sourceMap: isDev, postcss: true }),
             },
           },
         ],
@@ -116,6 +79,7 @@ export default defineConfig({
       template: "./index.html",
     }),
     new ModuleFederationPlugin(mfConfig),
+    isDev ? new RefreshPlugin() : null,
   ].filter(Boolean),
   optimization: {
     minimizer: [
