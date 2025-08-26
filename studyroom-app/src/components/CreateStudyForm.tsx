@@ -3,6 +3,7 @@ import styled from "styled-components";
 import FormField from "./FormField";
 import TagInput from "./TagInput";
 import { REGIONS, DEV_JOBS, SKILL } from "../types/filter";
+import {StudyRoom} from "../types/study.ts";
 
 // 옵션 상수
 const JOB_OPTIONS = DEV_JOBS;
@@ -18,6 +19,10 @@ interface FormData {
     roles: string[];
     requirements: string;
     tags: string[];
+}
+
+interface CreateStudyFormProps {
+    onSuccess: (newStudy: StudyRoom) => void;
 }
 
 /* ───────────────── styled-components ───────────────── */
@@ -115,7 +120,7 @@ const ErrorMessage = styled.p`
 `;
 
 /* ───────────────── Component ───────────────── */
-const CreateStudyForm: React.FC = () => {
+const CreateStudyForm: React.FC<CreateStudyFormProps> = ({onSuccess}) => {
     const [formData, setFormData] = useState<FormData>({
         title: "",
         description: "",
@@ -157,9 +162,14 @@ const CreateStudyForm: React.FC = () => {
 
         const submissionData = {
             ...formData,
+            id: Date.now(),
+            status: 'recruiting',
+            currentMembers: 1,
+            host: 'currentUser',
+            postedAt: '방금 전',
         };
         console.log(submissionData);
-        alert("스터디가 생성되었습니다!");
+        onSuccess(submissionData)
     };
 
     return (
