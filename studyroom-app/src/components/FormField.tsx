@@ -8,7 +8,7 @@ interface FormFieldProps {
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
     as?: 'input' | 'textarea' | 'select';
     type?: string;
-    options?: string[];
+    options?: (string | { label: string; value: string})[];
     [x: string]: any;
 }
 
@@ -31,7 +31,17 @@ const FormField: React.FC<FormFieldProps> = ({
         if (as === 'select') {
             return (
                 <select id={id} name={name} value={value} onChange={onChange} {...rest}>
-                    {options.map(option => <option key={option} value={option}>{option}</option>)}
+                    {options.map((option, idx) =>
+                        typeof option === 'string' ? (
+                            <option key={idx} value={option}>
+                                {option}
+                            </option>
+                        ) : (
+                            <option key={idx} value={option.value}>
+                                {option.label}
+                            </option>
+                        )
+                    )}
                 </select>
             );
         }

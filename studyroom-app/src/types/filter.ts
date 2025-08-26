@@ -1,7 +1,22 @@
-export const REGIONS = [
-    '온라인', '서울', '경기', '인천', '강원',
-    '충북', '충남', '대전', '세종', '전북', '전남', '광주',
-    '경북', '경남', '대구', '울산', '부산', '제주'
+export const LOCATION = [
+    { label: "온라인", value: "ONLINE" },
+    { label: "서울", value: "SEOUL" },
+    { label: "경기", value: "GYEONGGI" },
+    { label: "인천", value: "INCHEON" },
+    { label: "강원", value: "GANGWON" },
+    { label: "충북", value: "CHUNGBUK" },
+    { label: "충남", value: "CHUNGNAM" },
+    { label: "대전", value: "DAEJEON" },
+    { label: "세종", value: "SEJONG" },
+    { label: "전북", value: "JEONBUK" },
+    { label: "전남", value: "JEONNAM" },
+    { label: "광주", value: "GWANGJU" },
+    { label: "경북", value: "GYEONGBUK" },
+    { label: "경남", value: "GYEONGNAM" },
+    { label: "대구", value: "DAEGU" },
+    { label: "울산", value: "ULSAN" },
+    { label: "부산", value: "BUSAN" },
+    { label: "제주", value: "JEJU" },
 ];
 
 export const DEV_JOBS = [
@@ -12,6 +27,10 @@ export const DEV_JOBS = [
 export const SKILL = [
     'Java', 'Spring Boot', 'JPA', 'MySQL', 'Redis', 'Kafka', 'AWS', 'Docker', 'Jenkins',
     'HTML', 'CSS', 'JavaScript', 'React', 'TypeScript', 'Redux', 'Next.js', 'Tailwind CSS', 'Webpack',
-    'Kotlin', 'Java', 'Swift', 'Flutter', 'React Native', 'Firebase', 'Realm', 'MVVM', 'Jetpack Compose',
-    'Docker', 'Kubernetes', 'AWS', 'Terraform', 'Ansible', 'Linux', 'Jenkins', 'Prometheus', 'Grafana',
+    'Kotlin', 'Swift', 'Flutter', 'React Native', 'Firebase', 'Realm', 'MVVM', 'Jetpack Compose',
+    'Kubernetes', 'Terraform', 'Ansible', 'Linux', 'Prometheus', 'Grafana',
 ];
+
+export const STUDY_LEVELS = [
+    'ALL', 'NEWBIE', 'JUNIOR', 'MID', 'SENIOR'
+]
