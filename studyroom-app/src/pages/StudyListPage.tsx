@@ -1,13 +1,14 @@
 // StudyListPage.tsx
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
-import { FAKE_STUDY_ROOMS } from '../data/mockData';
+// import { FAKE_STUDY_ROOMS } from '../data/mockData';
 import StudyRoomCard from '../components/StudyRoomCard';
 import Modal from '../components/Modal';
 import CreateStudyForm from '../components/CreateStudyForm';
 import FilterBar, { FilterValues } from '../components/FilterBar';
 import {StudyRoom} from "../types/study";
+import axiosInstance from "../api/axiosInstance";
 
 const PageTop = styled.div`
   text-align: center;
@@ -90,7 +91,7 @@ const StudyListContainer = styled.div`
 `;
 
 const StudyListPage: React.FC = () => {
-    const [studyRooms, setStudyRooms] = useState<StudyRoom[]>(FAKE_STUDY_ROOMS)
+    const [studyRooms, setStudyRooms] = useState<StudyRoom[]>([]);
     const [filters, setFilters] = useState<FilterValues>({
         searchTerm: '',
         location: '전체',
@@ -98,6 +99,21 @@ const StudyListPage: React.FC = () => {
         showRecruitingOnly: false,
     });
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    useEffect(() => {
+        const fetchStudyRooms = async () => {
+            try {
+                const response = await axiosInstance.get('/study-rooms', {
+                    params: {size: 20}
+                });
+                setStudyRooms(response.data.studyRoomList);
+            } catch (error) {
+                console.error("스터디모임 목록을 불러오는 데 실패했습니다:", error);
+            }
+        };
+        fetchStudyRooms();
+    }, []);
+
 
     const filteredRooms = useMemo(() => {
         let rooms = studyRooms;
@@ -118,10 +134,15 @@ const StudyListPage: React.FC = () => {
     }, [filters, studyRooms]);
 
     const handleCreateSuccess = (newStudy: StudyRoom) => {
-        setStudyRooms(prevRooms => [newStudy, ...prevRooms]);
-        setIsModalOpen(false);
-        alert('스터디 모임이 성공적으로 생성되었습니다.')
-    }
+        if (!newStudy || !newStudy.id) {
+            console.warn("생성된 스터디 데이터가 유효하지 않습니다:", newStudy);
+            return;
+        }
+
+        setStudyRooms(prevRooms => [newStudy, ...prevRooms]); // 리스트 최상단에 추가
+        setIsModalOpen(false); // 모달 닫기
+        alert('스터디 모임이 성공적으로 생성되었습니다.');
+    };
 
     return (
         <div>
