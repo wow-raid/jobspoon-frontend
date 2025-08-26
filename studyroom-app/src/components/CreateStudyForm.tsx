@@ -2,23 +2,23 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import FormField from "./FormField";
 import TagInput from "./TagInput";
-import { REGIONS, DEV_JOBS, SKILL } from "../types/filter";
+import { LOCATION, DEV_JOBS, SKILL, STUDY_LEVELS } from "../types/filter";
 import {StudyRoom} from "../types/study.ts";
+import axiosInstance from "../api/axiosInstance";
 
 // 옵션 상수
 const JOB_OPTIONS = DEV_JOBS;
-const REGION_OPTIONS = REGIONS;
+const LOCATION_OPTIONS = LOCATION;
+const LEVEL_OPTIONS = STUDY_LEVELS;
 
 interface FormData {
     title: string;
     description: string;
-    category: string;
-    job: string;
     location: string;
+    studyLevel: string; // level -> studyLevel
     maxMembers: number;
-    roles: string[];
-    requirements: string;
-    tags: string[];
+    recruitingRoles: string[]; // roles -> recruitingRoles
+    skillStack: string[]; // tags -> skillStack
 }
 
 interface CreateStudyFormProps {
@@ -124,15 +124,12 @@ const CreateStudyForm: React.FC<CreateStudyFormProps> = ({onSuccess}) => {
     const [formData, setFormData] = useState<FormData>({
         title: "",
         description: "",
-        category: "프로그래밍",
-        job: JOB_OPTIONS[0] ?? "",
-        location: REGION_OPTIONS[0] ?? "",
+        location: LOCATION_OPTIONS[0]?.value ?? "", // 👈 .value로 정확히 초기값 설정
+        studyLevel: LEVEL_OPTIONS[0] ?? "", // studyLevel 초기값 설정
         maxMembers: 2,
-        roles: [],
-        requirements: "",
-        tags: [],
+        recruitingRoles: [],
+        skillStack: [],
     });
-
     const [rolesError, setRolesError] = useState<string | null>(null);
 
     const handleChange = (
@@ -147,29 +144,51 @@ const CreateStudyForm: React.FC<CreateStudyFormProps> = ({onSuccess}) => {
         }));
     };
 
-    const handleTagsChange = (fieldName: "roles" | "tags", newTags: string[]) => {
+    const handleTagsChange = (fieldName: "recruitingRoles" | "skillStack", newTags: string[]) => {
         setFormData((prev) => ({ ...prev, [fieldName]: newTags }));
-        if (fieldName === "roles" && newTags.length > 0) setRolesError(null);
+        if (fieldName === "recruitingRoles" && newTags.length > 0) setRolesError(null);
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (formData.roles.length === 0) {
+        if (formData.recruitingRoles.length === 0) {
             setRolesError("모집 직무를 1개 이상 선택해주세요.");
             return;
         }
         setRolesError(null);
 
-        const submissionData = {
-            ...formData,
-            id: Date.now(),
-            status: 'recruiting',
-            currentMembers: 1,
-            host: 'currentUser',
-            postedAt: '방금 전',
+        const selectedLocationObject = LOCATION_OPTIONS.find(opt => opt.label === formData.location);
+
+        const apiRequestData = {
+            title: formData.title,
+            description: formData.description,
+            maxMembers: formData.maxMembers,
+            location: selectedLocationObject?.value || 'ONLINE', // 찾은 객체의 value를 사용
+            studyLevel: formData.studyLevel.toUpperCase(),
+            recruitingRoles: formData.recruitingRoles,
+            skillStack: formData.skillStack,
         };
-        console.log(submissionData);
-        onSuccess(submissionData)
+
+        try {
+            const response = await axiosInstance.post('/study-rooms', apiRequestData);
+
+            if (response.status === 201) { // 생성 성공 확인
+                // 👇 백엔드 응답 대신, 우리가 보낸 데이터를 기반으로 새 스터디 객체를 만듭니다.
+                const newStudy: StudyRoom = {
+                    ...formData,
+                    id: Date.now(), // 임시 ID, 실제로는 Location 헤더에서 파싱해야 함
+                    status: 'RECRUITING',
+                    createdAt: new Date().toISOString(),
+                    // host, currentMembers 등은 목록 조회 시 받아오므로 여기서 필요 X
+                };
+
+                onSuccess(newStudy); // 리스트 업데이트 및 모달 닫기
+                alert("스터디 모임이 성공적으로 생성되었습니다.");
+            }
+        } catch (error) {
+            console.error("스터디모임 생성에 실패했습니다:", error);
+            alert("스터디모임 생성 중 오류가 발생했습니다.");
+        }
     };
 
     return (
@@ -204,11 +223,22 @@ const CreateStudyForm: React.FC<CreateStudyFormProps> = ({onSuccess}) => {
                         id="location"
                         name="location"
                         label="지역"
-                        value={formData.location}
+                        value={formData.location}  // <- value로 변경
                         onChange={handleChange}
                         as="select"
-                        options={REGION_OPTIONS}
+                        options={LOCATION_OPTIONS}
                     />
+
+                    <FormField
+                        id="studyLevel"
+                        name="studyLevel"
+                        label="경력 수준"
+                        value={formData.studyLevel}
+                        onChange={handleChange}
+                        as="select"
+                        options={LEVEL_OPTIONS}
+                    />
+
                     <FormField
                         id="maxMembers"
                         name="maxMembers"
@@ -226,8 +256,8 @@ const CreateStudyForm: React.FC<CreateStudyFormProps> = ({onSuccess}) => {
                 <TagInput
                     label="모집 직무"
                     availableTags={DEV_JOBS}
-                    selectedTags={formData.roles}
-                    onTagsChange={(newTags) => handleTagsChange("roles", newTags)}
+                    selectedTags={formData.recruitingRoles}
+                    onTagsChange={(newTags) => handleTagsChange("recruitingRoles", newTags)}
                 />
                 {rolesError && <ErrorMessage>{rolesError}</ErrorMessage>}
             </Section>
@@ -235,20 +265,11 @@ const CreateStudyForm: React.FC<CreateStudyFormProps> = ({onSuccess}) => {
             <Section>
                 <SectionTitle>선택 정보</SectionTitle>
 
-                <FormField
-                    id="requirements"
-                    name="requirements"
-                    label="요구 조건"
-                    value={formData.requirements}
-                    onChange={handleChange}
-                    placeholder="쉼표(,)로 구분하여 입력"
-                />
-
                 <TagInput
                     label="기술 스택"
                     availableTags={SKILL}
-                    selectedTags={formData.tags}
-                    onTagsChange={(newTags) => handleTagsChange("tags", newTags)}
+                    selectedTags={formData.skillStack}
+                    onTagsChange={(newTags) => handleTagsChange("skillStack", newTags)}
                 />
             </Section>
 

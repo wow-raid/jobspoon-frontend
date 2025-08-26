@@ -124,7 +124,8 @@ const ClosedCardOverlay = styled(Card)`
 
 /* ─ Component ─ */
 const StudyRoomCard: React.FC<StudyRoomCardProps> = ({ room }) => {
-    const isClosed = room.status === "closed";
+    if (!room || !room.id) return null;
+    const isClosed = room.status === "CLOSED";
 
     const content = (
         <>
@@ -136,18 +137,20 @@ const StudyRoomCard: React.FC<StudyRoomCardProps> = ({ room }) => {
             </CardTop>
 
             <CardBody>
-                <JobCategory>{room.job}</JobCategory>
+                <JobCategory>{room.recruitingRoles?.[0] || '기타'}</JobCategory>
                 <Title>{room.title}</Title>
-                <HostInfo>by {room.host}</HostInfo>
+                <HostInfo>by {room.host?.nickname || '모임장'}</HostInfo>
             </CardBody>
 
             <CardFooter>
                 <Tags>
-                    {room.tags.slice(0, 2).map((tag) => (
-                        <TagItem key={tag}>{tag}</TagItem>
+                    {room.skillStack?.slice(0, 2).map((tag, idx) => (
+                        <TagItem key={`${tag}-${idx}`}>{tag}</TagItem>
                     ))}
                 </Tags>
-                <PostedAt>{isClosed ? "종료됨" : room.postedAt}</PostedAt>
+                <PostedAt>
+                    {new Date(room.createdAt).toLocaleDateString()}
+                </PostedAt>
             </CardFooter>
         </>
     );

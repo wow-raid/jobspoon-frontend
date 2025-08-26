@@ -1,7 +1,7 @@
 // FilterBar.tsx
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { REGIONS, DEV_JOBS } from "../types/filter";
+import {REGIONS, DEV_JOBS, LOCATION} from "../types/filter";
 
 export interface FilterValues {
     searchTerm: string;
@@ -102,10 +102,14 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange }) => {
                 aria-label="스터디 제목 검색"
             />
 
-            <Select value={location} onChange={(e) => setLocation(e.target.value)} aria-label="지역 선택">
-                {REGIONS.map((region) => (
-                    <option key={region} value={region}>
-                        {region === "전체" ? "지역 (전체)" : region}
+            <Select
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                aria-label="지역 선택"
+            >
+                {LOCATION.map((region) => (
+                    <option key={region.value} value={region.value}>
+                        {region.value === "전체" ? "지역 (전체)" : region.label}
                     </option>
                 ))}
             </Select>
