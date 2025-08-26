@@ -7,6 +7,7 @@ import StudyRoomCard from '../components/StudyRoomCard';
 import Modal from '../components/Modal';
 import CreateStudyForm from '../components/CreateStudyForm';
 import FilterBar, { FilterValues } from '../components/FilterBar';
+import {StudyRoom} from "../types/study";
 
 const PageTop = styled.div`
   text-align: center;
@@ -89,6 +90,7 @@ const StudyListContainer = styled.div`
 `;
 
 const StudyListPage: React.FC = () => {
+    const [studyRooms, setStudyRooms] = useState<StudyRoom[]>(FAKE_STUDY_ROOMS)
     const [filters, setFilters] = useState<FilterValues>({
         searchTerm: '',
         location: '전체',
@@ -98,7 +100,7 @@ const StudyListPage: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const filteredRooms = useMemo(() => {
-        let rooms = FAKE_STUDY_ROOMS;
+        let rooms = studyRooms;
         if (filters.showRecruitingOnly) {
             rooms = rooms.filter((room) => room.status === 'recruiting');
         }
@@ -113,7 +115,13 @@ const StudyListPage: React.FC = () => {
             rooms = rooms.filter((room) => room.title.toLowerCase().includes(q));
         }
         return rooms;
-    }, [filters]);
+    }, [filters, studyRooms]);
+
+    const handleCreateSuccess = (newStudy: StudyRoom) => {
+        setStudyRooms(prevRooms => [newStudy, ...prevRooms]);
+        setIsModalOpen(false);
+        alert('스터디 모임이 성공적으로 생성되었습니다.')
+    }
 
     return (
         <div>
@@ -142,7 +150,7 @@ const StudyListPage: React.FC = () => {
             </StudyListContainer>
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-                <CreateStudyForm />
+                <CreateStudyForm onSuccess={handleCreateSuccess}/>
             </Modal>
         </div>
     );
