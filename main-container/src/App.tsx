@@ -20,7 +20,7 @@ const eventBus = mitt();
 
 const NavigationBarApp = lazy(() => import("navigationBarApp/App"));
 const StudyRoomApp = lazy(() => import("studyRoomApp/App"));
-const MyPageApp = lazy(() => import("mypage-app/App"));
+const MyPageApp = lazy(() => import("myPageApp/App"));
 
 function InnerApp() {
   const [isNavigationBarLoaded, setIsNavigationBarLoaded] = useState(false);
