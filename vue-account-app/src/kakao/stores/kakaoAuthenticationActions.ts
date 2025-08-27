@@ -40,10 +40,10 @@ export const kakaoAuthenticationAction = {
                     return;
                 }
 
-                localStorage.setItem('userToken', accessToken);
                 window.dispatchEvent(new Event("user-token-changed"));
 
                 window.removeEventListener('message', receiveMessage);
+
 
                 if(isNewUser) {
                     console.log("신규 유저 진입");
@@ -52,7 +52,8 @@ export const kakaoAuthenticationAction = {
                     router.push("/account/privacy");
                 } else{
                     console.log("기존 유저 진입");
-                    router.push("/");
+                    localStorage.setItem("userToken", accessToken);
+                    window.location.href = "http://localhost/";
                 }
 
 
@@ -74,7 +75,33 @@ export const kakaoAuthenticationAction = {
         }
     },
 
+    async requestRegister(): Promise<void> {
+        console.log("회원 가입 시도 !!!")
+        const { springAxiosInstance } = axiosUtility.createAxiosInstances();
+        const accessToken = sessionStorage.getItem("tempToken");
+        let userInfo = null;
+        const user = sessionStorage.getItem("userInfo");
+        if (user) {
+            userInfo = JSON.parse(user);
+            userInfo.loginType = "KAKAO";
+        }
 
+        const res = await springAxiosInstance.post(
+            "/api/account/signup",
+            userInfo,
+            {
+                headers: {
+                    "Authorization": `Bearer ${accessToken}`,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+
+        localStorage.setItem("userToken", res.data.userToken);
+        localStorage.removeItem("tempToken");
+        window.location.href = "http://localhost/";
+
+    },
 
 
     async requestKakaoWithdrawToDjango(): Promise<void> {
