@@ -31,7 +31,7 @@ export const kakaoAuthenticationAction = {
 
                 sessionStorage.setItem("tempLoginType", loginType);
                 const { accessToken, isNewUser, user } = event.data;
-                const MAIN_CONTAINER_URL = process.env.VUE_APP_MAIN_CONTAINER_URL as string;
+                const MAIN_CONTAINER_URL = process.env.MAIN_CONTAINER_URL as string;
 
                 console.log("팝업 유저 정보 user:", user);
 
