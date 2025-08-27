@@ -32,6 +32,8 @@ export const kakaoAuthenticationAction = {
                 sessionStorage.setItem("tempLoginType", loginType);
                 const { accessToken, isNewUser, user } = event.data;
 
+                console.log("팝업 유저 정보 user:", user);
+
 
                 if (!accessToken) {
                     console.warn('❌ accessToken 없음');
@@ -43,7 +45,16 @@ export const kakaoAuthenticationAction = {
 
                 window.removeEventListener('message', receiveMessage);
 
-             
+                if(isNewUser) {
+                    console.log("신규 유저 진입");
+                    sessionStorage.setItem("tempToken", accessToken);
+                    sessionStorage.setItem("userInfo", JSON.stringify(user));
+                    router.push("/account/privacy");
+                } else{
+                    console.log("기존 유저 진입");
+                    router.push("/");
+                }
+
 
                 try {
                     popup.close();
@@ -62,6 +73,8 @@ export const kakaoAuthenticationAction = {
             throw error;
         }
     },
+
+    
 
 
     async requestKakaoWithdrawToDjango(): Promise<void> {
