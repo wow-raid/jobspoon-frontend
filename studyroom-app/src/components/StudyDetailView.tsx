@@ -109,15 +109,15 @@ const StudyDetailView: React.FC<StudyDetailViewProps> = ({
     return (
         <Wrapper>
             <Header>
-                <Category>{room.category}</Category>
+                <Category>{room.studyLevel}</Category>
                 <Title>{room.title}</Title>
                 <Meta>
                     <span>
-                        <strong>멤버:</strong> {room.currentMembers} / {room.maxMembers}
+                        <strong>멤버:</strong> {room.maxMembers}명
                     </span>
                     <span>
                         <strong>상태:</strong>{" "}
-                        {room.status === "recruiting" ? "모집 중" : "모집 완료"}
+                        {room.status === "RECRUITING" ? "모집 중" : "모집 완료"}
                     </span>
                 </Meta>
             </Header>
@@ -128,18 +128,9 @@ const StudyDetailView: React.FC<StudyDetailViewProps> = ({
             </Section>
 
             <Section>
-                <h3>요구 조건</h3>
-                <ReqList>
-                    {room.requirements.map((req, idx) => (
-                        <li key={idx}>{req}</li>
-                    ))}
-                </ReqList>
-            </Section>
-
-            <Section>
-                <h3>모집 역할</h3>
+                <h3>모집 직군</h3>
                 <TagList>
-                    {room.roles.map((role) => (
+                    {room.recruitingRoles.map((role) => (
                         <Tag key={role} text={role} />
                     ))}
                 </TagList>
@@ -148,20 +139,20 @@ const StudyDetailView: React.FC<StudyDetailViewProps> = ({
             <Section>
                 <h3>기술 스택</h3>
                 <TagList>
-                    {room.tags.map((tag) => (
+                    {room.skillStack.map((tag) => (
                         <Tag key={tag} text={tag} />
                     ))}
                 </TagList>
             </Section>
 
             <Footer>
-                {room.status === "recruiting" && (
+                {room.status === "RECRUITING" && (
                     <ApplyBtn
                         $applied={hasApplied}
                         onClick={onApplyClick}
                         disabled={hasApplied}
                     >
-                        {hasApplied ? "참가 완료" : "참가하기"}
+                        {hasApplied ? "신청완료" : "참가 신청하기"}
                     </ApplyBtn>
                 )}
             </Footer>
