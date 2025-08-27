@@ -163,7 +163,7 @@ const adminBtnStyle = computed(() => ({
 
 const goToPrivacyAgreementPage = async (loginType) => {
   sessionStorage.setItem("tempLoginType", loginType)
-  await kakaoAuthentication.requestKakaoLoginToDjango(router);
+  await kakaoAuthentication.requestKakaoLoginToSpring(router);
   // router.push("/account/privacy")
 }
 
