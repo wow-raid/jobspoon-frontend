@@ -2,7 +2,7 @@ import * as axiosUtility from "../../account/utility/axiosInstance";
 import env from "navigation-bar-app/src/env.ts";
 
 export const kakaoAuthenticationAction = {
-    async requestKakaoLoginToDjango(router: any): Promise<void> {
+    async requestKakaoLoginToSrping(router: any): Promise<void> {
         const { djangoAxiosInstance,springAxiosInstance} = axiosUtility.createAxiosInstances();
         try {
             const res = await springAxiosInstance.get("/kakao-authentication/kakao/link");
@@ -74,7 +74,7 @@ export const kakaoAuthenticationAction = {
         }
     },
 
-    
+
 
 
     async requestKakaoWithdrawToDjango(): Promise<void> {
