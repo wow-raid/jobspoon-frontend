@@ -131,6 +131,9 @@ const loginType = ref(null);
 const router = useRouter();
 
 onMounted(() => {
+  const user = sessionStorage.getItem("userInfo");
+  const userInfo = JSON.parse(user);
+
   const tempType = sessionStorage.getItem("tempLoginType");
   const validTypes = ["KAKAO", "GOOGLE", "NAVER"];
   if (!tempType || !validTypes.includes(tempType)) {
@@ -150,8 +153,7 @@ const agreeAndLogin = async () => {
 
   try {
     if (loginType.value === "KAKAO") {
-      // await kakaoAuthentication.requestKakaoLoginToDjango();
-      alert("카카오 로그인 접근 성공");
+      await kakaoAuthentication.requestRegister();
     } else if (loginType.value === "GOOGLE") {
       await googleAuthentication.requestGoogleLoginToDjango();
     } else if (loginType.value === "NAVER") {
