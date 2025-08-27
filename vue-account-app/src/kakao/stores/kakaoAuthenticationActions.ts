@@ -50,10 +50,11 @@ export const kakaoAuthenticationAction = {
                     sessionStorage.setItem("tempToken", accessToken);
                     sessionStorage.setItem("userInfo", JSON.stringify(user));
                     router.push("/account/privacy");
-                } else{
-                    console.log("기존 유저 진입");
+                } else if(!isNewUser) {
                     localStorage.setItem("userToken", accessToken);
                     window.location.href = "http://localhost/";
+                } else{
+                    alert("로그인중 문제가 발생하였습니다.")
                 }
 
 
