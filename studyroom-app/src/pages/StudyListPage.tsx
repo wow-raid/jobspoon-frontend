@@ -21,7 +21,6 @@ const PageMainTitle = styled.h1`
   font-size: 2.5rem;
   font-weight: 700;
   margin: 0 0 12px 0;
-  color: #fff;
 `;
 
 const PageSubtitle = styled.p`
@@ -40,7 +39,6 @@ const ListHeader = styled.div`
     font-size: 24px;
     font-weight: 600;
     margin: 0;
-    color: #fff;
   }
 
   h2 span {

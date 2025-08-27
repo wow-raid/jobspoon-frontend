@@ -78,63 +78,69 @@ const AuthButton = styled.button`
 `;
 
 const App: React.FC = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const navigate = useNavigate();
-    const location = useLocation();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-    useEffect(() => {
-        const token = localStorage.getItem("userToken");
-        setIsLoggedIn(!!token);
-    }, [location]);
+  useEffect(() => {
+    const token = localStorage.getItem("userToken");
+    setIsLoggedIn(!!token);
+  }, [location]);
 
-    const handleLogout = () => {
-        localStorage.removeItem("userToken");
-        setIsLoggedIn(false);
-        navigate("/");
-    };
+  const handleLogout = () => {
+    localStorage.removeItem("userToken");
+    setIsLoggedIn(false);
+    navigate("/");
+  };
 
-    const isActive = (to: string) =>
-        to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
+  const isActive = (to: string) =>
+    to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
 
-    return (
-        <Header>
-            <Inner>
-                <Brand to="/">
-                    {/* <img src="/logo.svg" alt="JobSpoon" style={{ height: 28 }} /> */}
-                    JobSpoon
-                </Brand>
+  return (
+    <Header>
+      <Inner>
+        <Brand to="/">
+          {/* <img src="/logo.svg" alt="JobSpoon" style={{ height: 28 }} /> */}
+          JobSpoon
+        </Brand>
 
-                <Nav>
-                    <NavLink to="/" $active={isActive("/")}>홈</NavLink>
-                    <NavLink to="/studies" $active={isActive("/studies")}>스터디모임</NavLink>
-                    <NavLink
-                        to="/vue-ai-interview/ai-interview/llm-test"
-                        $active={isActive("/vue-ai-interview")}
-                    >
-                        AI 인터뷰
-                    </NavLink>
-                    <NavLink
-                        to="/svelte-review/review"
-                        $active={isActive("/svelte-review")}
-                    >
-                        리뷰
-                    </NavLink>
+        <Nav>
+          <NavLink to="/" $active={isActive("/")}>홈</NavLink>
+          <NavLink to="/studies" $active={isActive("/studies")}>스터디모임</NavLink>
+          <NavLink
+            to="/vue-ai-interview/ai-interview/llm-test"
+            $active={isActive("/vue-ai-interview")}
+          >
+            AI 인터뷰
+          </NavLink>
+          <NavLink
+            to="/mypage"
+            $active={isActive("/mypage")}
+          >
+            MyPage
+          </NavLink>
+          <NavLink
+            to="/svelte-review/review"
+            $active={isActive("/svelte-review")}
+          >
+            리뷰
+          </NavLink>
 
-                    {/* ✅ 비로그인: 링크로 렌더 → active 밑줄 표시 / 로그인: 로그아웃 버튼 */}
-                    {!isLoggedIn ? (
-                        <NavLink
-                            to="/vue-account/account/login"
-                            $active={isActive("/vue-account")}
-                        >
-                            로그인
-                        </NavLink>
-                    ) : (
-                        <AuthButton onClick={handleLogout}>로그아웃</AuthButton>
-                    )}
-                </Nav>
-            </Inner>
-        </Header>
-    );
+          {/* ✅ 비로그인: 링크로 렌더 → active 밑줄 표시 / 로그인: 로그아웃 버튼 */}
+          {!isLoggedIn ? (
+            <NavLink
+              to="/vue-account/account/login"
+              $active={isActive("/vue-account")}
+            >
+              로그인
+            </NavLink>
+          ) : (
+            <AuthButton onClick={handleLogout}>로그아웃</AuthButton>
+          )}
+        </Nav>
+      </Inner>
+    </Header>
+  );
 };
 
 export default App;
