@@ -1,31 +1,68 @@
 import * as axiosUtility from "../../account/utility/axiosInstance";
+import env from "navigation-bar-app/src/env.ts";
 
 export const kakaoAuthenticationAction = {
-    async requestKakaoLoginToDjango(): Promise<void> {
-        const { djangoAxiosInstance } = axiosUtility.createAxiosInstances();
+    async requestKakaoLoginToDjango(router: any): Promise<void> {
+        const { djangoAxiosInstance,springAxiosInstance} = axiosUtility.createAxiosInstances();
         try {
-            // try-catch 블록은 .then() 안에 있는 promise 체인과 섞여 실제 에러가
-            // try-catch로 잡히지 않을 수 있습니다. 
-            const res = await djangoAxiosInstance.get("/kakao-oauth/request-login-url");
+            const res = await springAxiosInstance.get("/kakao-authentication/kakao/link");
             console.log("res.data:", res.data);
+            const loginType = "KAKAO";
 
-            if (!res.data?.url) {
+            if (!res.data) {
                 throw new Error("응답에 URL이 없습니다.");
             }
 
-            window.location.href = res.data.url;
+            // 팝업으로 열기
+            const popup = window.open(res.data, '_blank', 'width=500,height=600');
+            if (!popup) {
+                alert('팝업 차단되어 있습니다. 팝업 허용 후 다시 시도하세요.');
+                return;
+            }
 
-            // return djangoAxiosInstance
-            //   .get("/kakao-oauth/request-login-url")
-            //   .then((res) => {
-            //     console.log(`res: ${res}`);
-            //     window.location.href = res.data.url;
-            //   });
+            // 팝업 메시지 받기
+            const receiveMessage = (event: MessageEvent) => {
+                console.log('📨 받은 메시지:', event.origin, event.data);
+
+                // if (!event.origin.startsWith(env.origin)) {
+                //     console.warn('❌ 허용되지 않은 origin:', event.origin);
+                //     return;
+                // }
+
+                sessionStorage.setItem("tempLoginType", loginType);
+                const { accessToken, isNewUser, user } = event.data;
+
+
+                if (!accessToken) {
+                    console.warn('❌ accessToken 없음');
+                    return;
+                }
+
+                localStorage.setItem('userToken', accessToken);
+                window.dispatchEvent(new Event("user-token-changed"));
+
+                window.removeEventListener('message', receiveMessage);
+
+             
+
+                try {
+                    popup.close();
+                } catch (e) {
+                    console.warn('팝업 닫기 실패:', e);
+                }
+            };
+
+            window.addEventListener('message', receiveMessage);
+
+
+
+
         } catch (error) {
             console.log("requestKakaoOauthRedirectionToDjango() 중 에러:", error);
-            throw error;  // 상위 함수에서 에러가 잡히도록 재전파합니다. 
+            throw error;
         }
     },
+
 
     async requestKakaoWithdrawToDjango(): Promise<void> {
         const { djangoAxiosInstance } = axiosUtility.createAxiosInstances();

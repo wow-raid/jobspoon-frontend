@@ -121,6 +121,9 @@ export default defineConfig({
       "process.env.VUE_APP_BASE_URL": JSON.stringify(
         process.env.VUE_APP_BASE_URL
       ),
+      "process.env.VUE_APP_DJANGO_API_BASE_URL": JSON.stringify(process.env.VUE_APP_DJANGO_API_BASE_URL),
+      "process.env.VUE_APP_SPRING_API_BASE_URL": JSON.stringify(process.env.VUE_APP_SPRING_API_BASE_URL),
+      "process.env.VUE_APP_AI_API_BASE_URL": JSON.stringify(process.env.VUE_APP_AI_API_BASE_URL),
       // "process.env.MFE_CORS_ORIGIN": JSON.stringify(process.env.MFE_CORS_ORIGIN),
       "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
     }),
