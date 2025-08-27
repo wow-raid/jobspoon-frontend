@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =============== */
+/* 디버깅 모드용  */
+/* =============== */
+.debug * {
+    border: 1px solid rgba(0, 0, 0, 0.2);
+}

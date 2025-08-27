@@ -8,6 +8,7 @@
     "vue-ai-interview-app",
     "svelte-review-app",
     "studyroom-app",
-    "theme-bridge"
+    "theme-bridge",
+    "mypage-app"
   ]
 }
