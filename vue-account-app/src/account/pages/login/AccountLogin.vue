@@ -59,6 +59,7 @@ import kakaoBtn from '@/assets/images/fixed/btn_login_kakao.png'
 import googleBtn from '@/assets/images/fixed/btn_login_google.png'
 import naverBtn from '@/assets/images/fixed/btn_login_naver.png'
 import githubIcon from '@/assets/images/fixed/icon-github.svg'
+import {kakaoAuthenticationAction as kakaoAuthentication} from "@/kakao/stores/kakaoAuthenticationActions";
 
 // SEO meta 생략 (그대로 사용)
 
@@ -160,9 +161,10 @@ const adminBtnStyle = computed(() => ({
   backgroundPosition: 'center',
 }))
 
-const goToPrivacyAgreementPage = (loginType) => {
+const goToPrivacyAgreementPage = async (loginType) => {
   sessionStorage.setItem("tempLoginType", loginType)
-  router.push("/account/privacy")
+  await kakaoAuthentication.requestKakaoLoginToDjango(router);
+  // router.push("/account/privacy")
 }
 
 const handleGuestLogin = async () => {
