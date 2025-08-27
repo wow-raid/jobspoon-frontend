@@ -116,13 +116,13 @@ const StudyListPage: React.FC = () => {
     const filteredRooms = useMemo(() => {
         let rooms = studyRooms;
         if (filters.showRecruitingOnly) {
-            rooms = rooms.filter((room) => room.status === 'recruiting');
+            rooms = rooms.filter((room) => room.status === 'RECRUITING');
         }
         if (filters.location !== '전체') {
             rooms = rooms.filter((room) => room.location === filters.location);
         }
         if (filters.job !== '전체') {
-            rooms = rooms.filter((room) => room.job === filters.job);
+            rooms = rooms.filter((room) => room.recruitingRoles.includes(filters.job));
         }
         if (filters.searchTerm) {
             const q = filters.searchTerm.toLowerCase();
