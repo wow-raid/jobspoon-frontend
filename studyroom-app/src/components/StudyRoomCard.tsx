@@ -49,12 +49,12 @@ const CardTop = styled.div`
   font-size: 13px;
 `;
 
-const StatusBadge = styled.span<{ $status: "recruiting" | "closed" }>`
+const StatusBadge = styled.span<{ $status: "RECRUITING" | "CLOSED" }>`
   padding: 4px 10px;
   border-radius: 12px;
   font-weight: bold;
   ${({ $status }) =>
-        $status === "recruiting"
+        $status === "RECRUITING"
             ? `background-color: rgba(4,199,114,0.2); color:#04c772;`
             : `background-color: rgba(135,142,153,0.2); color:#878e99;`}
 `;
