@@ -20,6 +20,7 @@ const eventBus = mitt();
 
 const NavigationBarApp = lazy(() => import("navigationBarApp/App"));
 const StudyRoomApp = lazy(() => import("studyRoomApp/App"));
+const MyPageApp = lazy(() => import("mypage-app/App"));
 
 function InnerApp() {
   const [isNavigationBarLoaded, setIsNavigationBarLoaded] = useState(false);
@@ -99,6 +100,7 @@ function InnerApp() {
               }
             />
             <Route path="/svelte-review/*" element={<SvelteReviewAppWrapper />} />
+              <Route path="/mypage/*" element={<MyPageApp />} />
           </Routes>
         </Suspense>
       </BrowserRouter>
