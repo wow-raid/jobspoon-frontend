@@ -31,6 +31,7 @@ export const kakaoAuthenticationAction = {
 
                 sessionStorage.setItem("tempLoginType", loginType);
                 const { accessToken, isNewUser, user } = event.data;
+                const MAIN_CONTAINER_URL = process.env.VUE_APP_MAIN_CONTAINER_URL as string;
 
                 console.log("팝업 유저 정보 user:", user);
 
@@ -41,8 +42,8 @@ export const kakaoAuthenticationAction = {
                 }
 
                 window.dispatchEvent(new Event("user-token-changed"));
-
                 window.removeEventListener('message', receiveMessage);
+
 
 
                 if(isNewUser) {
@@ -52,7 +53,8 @@ export const kakaoAuthenticationAction = {
                     router.push("/account/privacy");
                 } else if(!isNewUser) {
                     localStorage.setItem("userToken", accessToken);
-                    window.location.href = "http://localhost/";
+                    window.location.href = MAIN_CONTAINER_URL;
+
                 } else{
                     alert("로그인중 문제가 발생하였습니다.")
                 }
