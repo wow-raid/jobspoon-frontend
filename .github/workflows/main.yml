@@ -1,0 +1,76 @@
+name: Docker Build and Deploy
+
+on:
+  push:
+    branches: [ main ]  
+  workflow_dispatch:    
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+          cache: 'npm'
+      
+      - name: Create .env files
+        run: |
+          # 메인 컨테이너 환경변수
+          echo "${{ secrets.MAIN_CONTAINER_ENV }}" > main-container/.env
+          
+          # 계정 앱 환경변수
+          echo "${{ secrets.ACCOUNT_ENV }}" > vue-account-app/.env
+          
+          # 면접 앱 환경변수
+          echo "${{ secrets.INTERVIEW_ENV }}" > vue-ai-interview-app/.env
+          
+          # 마이페이지 앱 환경변수
+          echo "${{ secrets.MY_PAGE_ENV }}" > mypage-app/.env
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/jobspoon-frontend:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/jobspoon-frontend:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/jobspoon-frontend:buildcache,mode=max
+      
+  deploy:
+    needs: build
+    name: Deploy
+    runs-on: [ self-hosted, deploy-mfe-front ]
+    steps:
+      - name: Deploy to production
+        run: |
+          # GitHub Container Registry 로그인
+          echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ secrets.ACTOR }} --password-stdin
+          
+          # 기존 컨테이너 중지 및 삭제
+          docker stop jobspoon-frontend-container || true
+          docker rm jobspoon-frontend-container || true
+          
+          # 최신 이미지 가져오기
+          docker pull ghcr.io/${{ secrets.ACTOR }}/jobspoon-frontend:latest
+          
+          # 새 컨테이너 실행
+          docker run -d -p 80:80 --name jobspoon-frontend-container ghcr.io/${{ secrets.ACTOR }}/jobspoon-frontend:latest
+          
+          # 사용하지 않는 이미지 정리
+          docker image prune -af
