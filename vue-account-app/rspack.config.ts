@@ -68,7 +68,7 @@ export default defineConfig({
     // You need to set a unique value that is not equal to other applications
     uniqueName: "vue_account_app",
     // publicPath must be configured if using manifest
-    publicPath: `${process.env.MFE_PUBLIC_SERVICE}/`,
+    publicPath: "/vue-account-app/",
   },
 
   experiments: {
@@ -121,6 +121,7 @@ export default defineConfig({
       "process.env.VUE_APP_BASE_URL": JSON.stringify(
         process.env.VUE_APP_BASE_URL
       ),
+      "process.env.MAIN_CONTAINER_URL": JSON.stringify(process.env.MAIN_CONTAINER_URL),
       "process.env.VUE_APP_DJANGO_API_BASE_URL": JSON.stringify(process.env.VUE_APP_DJANGO_API_BASE_URL),
       "process.env.VUE_APP_SPRING_API_BASE_URL": JSON.stringify(process.env.VUE_APP_SPRING_API_BASE_URL),
       "process.env.VUE_APP_AI_API_BASE_URL": JSON.stringify(process.env.VUE_APP_AI_API_BASE_URL),

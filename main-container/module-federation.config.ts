@@ -1,12 +1,13 @@
 export const mfConfig = {
   name: "html_container",
   remotes: {
-    vueAccountApp: `vueAccountApp@${process.env.VUE_ACCOUNT_APP}/remoteEntry.js`,
-    navigationBarApp: `navigationBarApp@${process.env.REACT_NAVIGATION_APP}/remoteEntry.js`,
-    studyRoomApp: `studyRoomApp@${process.env.REACT_STUDYROOM_APP}/remoteEntry.js`,
-    vueAiInterviewApp: `vueAiInterviewApp@${process.env.VUE_AI_INTERVIEW_APP}/remoteEntry.js`,
-    svelteReviewApp: `svelteReviewApp@${process.env.SVELTE_REVIEW_APP}/remoteEntry.js`,
-    myPageApp: `myPageApp@${process.env.REACT_MYPAGE_APP}/remoteEntry.js`
+    // Docker 컨테이너 내에서는 상대 경로를 사용
+    vueAccountApp: `vueAccountApp@/vue-account-app/remoteEntry.js`,
+    navigationBarApp: `navigationBarApp@/navigation-bar-app/remoteEntry.js`,
+    studyRoomApp: `studyRoomApp@/studyroom-app/remoteEntry.js`,
+    vueAiInterviewApp: `vueAiInterviewApp@/vue-ai-interview-app/remoteEntry.js`,
+    svelteReviewApp: `svelteReviewApp@/svelte-review-app/remoteEntry.js`,
+    myPageApp: `myPageApp@/mypage-app/remoteEntry.js`
   },
   shared: {
     react: { singleton: true, requiredVersion: "^18.2.0" },
