@@ -20,6 +20,9 @@ FROM nginx:alpine
 # nginx 설정 복사
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 
+# 기본 conf 제거 (중요!)
+RUN rm -f /etc/nginx/conf.d/default.conf
+
 # 각 앱 dist를 nginx 경로에 맞게 복사
 COPY --from=builder /app/main-container/dist /usr/share/nginx/html/html-container
 COPY --from=builder /app/mypage-app/dist /usr/share/nginx/html/mypage-app
