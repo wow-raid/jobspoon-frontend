@@ -68,7 +68,7 @@ export default defineConfig({
     // You need to set a unique value that is not equal to other applications
     uniqueName: "vue_account_app",
     // publicPath must be configured if using manifest
-    publicPath: "/vue-account-app/",
+    publicPath: `${ process.env.MFE_PUBLIC_SERVICE }/` ,
   },
 
   experiments: {
