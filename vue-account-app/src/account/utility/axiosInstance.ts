@@ -31,6 +31,7 @@ export function createAxiosInstances() {
         });
     }
 
+
     if (!fastapiAxiosInst) {
         fastapiAxiosInst = axios.create({
             baseURL: aiBaseUrl,
