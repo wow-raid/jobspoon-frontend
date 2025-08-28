@@ -14,7 +14,7 @@ import SvelteReviewAppWrapper from "./SvelteReviewWrapper.tsx";
 import RequireToken from "./RequireToken";
 import ThemeSync from "./ThemeSync";
 import ThemeToggleButton from "./ThemeToggleButton";
-import { themeAtom } from "./state/themeAtom";
+import { themeAtom } from "@jobspoon/app-state";
 
 const eventBus = mitt();
 

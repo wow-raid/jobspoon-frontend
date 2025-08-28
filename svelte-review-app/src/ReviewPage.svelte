@@ -437,7 +437,7 @@
     gap: 2px;
     margin-top: 8px;
   }
-  .stars.large .star-wrap {
+  .stars.large .star {
     width: 28px;
     height: 28px;
   }

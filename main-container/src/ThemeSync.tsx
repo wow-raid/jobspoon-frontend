@@ -1,20 +1,19 @@
 import { useEffect } from 'react';
-import { useRecoilValue } from 'recoil';
-import { themeAtom } from './state/themeAtom';
-import { setTheme, getTheme } from '@jobspoon/theme-bridge';
+import { useRecoilState } from 'recoil';
+import { themeAtom } from '@jobspoon/app-state';
+import { setTheme, getTheme, onThemeChange } from '@jobspoon/theme-bridge';
 
 export default function ThemeSync() {
-    const mode = useRecoilValue(themeAtom);
+    const [mode, setMode] = useRecoilState(themeAtom);
 
-    // Recoil 값이 바뀔 때마다 브리지/DOM에 반영
-    useEffect(() => {
-        setTheme(mode);
-    }, [mode]);
+    // Recoil → Bridge
+    useEffect(() => { setTheme(mode); }, [mode]);
 
-    // 최초 렌더 시 한 번 더 보정
-    useEffect(() => {
-        setTheme(getTheme());
-    }, []);
+    // 초기 Bridge(localStorage) → Recoil
+    useEffect(() => { setMode(getTheme()); }, [setMode]);
+
+    // 외부(Vue/Svelte/다른 탭) → Bridge → Recoil
+    useEffect(() => onThemeChange(setMode), [setMode]);
 
     return null;
 }

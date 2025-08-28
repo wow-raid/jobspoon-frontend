@@ -11,7 +11,9 @@ export const mfConfig = {
     "@mui/icons-material": { singleton: true, requiredVersion: "^7.0.1" },
     "react-router-dom": { singleton: true, requiredVersion: "^6.30.0" },
     three: { singleton: true, requiredVersion: "^0.177.0" },
-    '@jobspoon/theme-bridge': { singleton: true, eager: false },
+    '@jobspoon/app-state': { singleton: true, eager: true },
+    '@jobspoon/theme-bridge': { singleton: true },
+    "styled-components": { singleton: true, requiredVersion: "^6.1.19" },
   },
   dts: false
 };

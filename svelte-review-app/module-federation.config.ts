@@ -7,7 +7,7 @@ export const mfConfig = {
   shared: {
     svelte: { singleton: true, requiredVersion: "^4.2.9", },
     three: { singleton: true, requiredVersion: "^0.177.0", },
-    '@jobspoon/theme-bridge': { singleton: true, eager: false },
+    '@jobspoon/theme-bridge': { singleton: true },
   },
   dts: false,
 };
