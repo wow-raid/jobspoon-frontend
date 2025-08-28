@@ -10,22 +10,22 @@ const VueAiInterviewAppWrapper = ({ eventBus }: { eventBus: any }) => {
     const location = useLocation()
 
     useEffect(() => {
-            const el = vueModuleRef.current;
-            if (!el) return;
-            const apply = (t: "light" | "dark") => {
-                el.setAttribute("data-theme", t);
-                (el.style as any).colorScheme = t;
+        const el = vueModuleRef.current;
+        if (!el) return;
+        const apply = (t: "light" | "dark") => {
+            el.setAttribute("data-theme", t);
+            (el.style as any).colorScheme = t;
 
-                // 최소 공통 토큰 주입(원하면 확장)
-                const light = { '--text': '#111', '--card': '#ffffffc0' };
-                const dark = { '--text': '#eaeaea', '--card': '#00000000' };
-                const tokens = t === 'dark' ? dark : light;
-                Object.entries(tokens).forEach(([k, v]) => el.style.setProperty(k, v));
-            };
-            apply(getTheme());
-            const off = onThemeChange(apply);
+            // 최소 공통 토큰 주입(원하면 확장)
+            const light = { '--text': '#111', '--card': '#ffffffc0' };
+            const dark = { '--text': '#eaeaea', '--card': '#00000000' };
+            const tokens = t === 'dark' ? dark : light;
+            Object.entries(tokens).forEach(([k, v]) => el.style.setProperty(k, v));
+        };
+        apply(getTheme());
+        const off = onThemeChange(apply);
         return () => { off(); };
-        }, []);
+    }, []);
 
     useEffect(() => {
         const mountVueApp = async () => {
