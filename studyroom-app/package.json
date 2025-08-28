@@ -27,6 +27,8 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@jobspoon/theme-bridge": "0.1.0",
+    "@jobspoon/app-state": "0.1.0",
     "@module-federation/enhanced": "^0.8.9",
     "@mui/material": "^7.0.1",
     "moment": "^2.30.1",
@@ -34,6 +36,6 @@
     "react-big-calendar": "^1.19.4",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.30.0",
-    "@jobspoon/theme-bridge": "0.1.0"
+    "styled-components": "^6.1.19"
   }
 }

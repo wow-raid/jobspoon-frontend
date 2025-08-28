@@ -1,6 +1,6 @@
 import { Fab } from '@mui/material';
 import { useRecoilState } from 'recoil';
-import { themeAtom } from './state/themeAtom';
+import { themeAtom } from '@jobspoon/app-state';
 
 export default function ThemeToggleButton() {
     const [mode, setMode] = useRecoilState(themeAtom);

@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from "react";
-import { useLocation} from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { getTheme, onThemeChange } from "@jobspoon/theme-bridge";
 
-const VueAccountAppWrapper = ({ eventBus }:{eventBus: any}) => {
+const VueAccountAppWrapper = ({ eventBus }: { eventBus: any }) => {
     const vueModuleRef = useRef<HTMLDivElement>(null);
     const isMountedRef = useRef(false);
     const unmountRef = useRef<(() => void) | null>(null);
@@ -28,7 +28,7 @@ const VueAccountAppWrapper = ({ eventBus }:{eventBus: any}) => {
     }, []);
 
     useEffect(() => {
-        const mountVueApp = async () =>{
+        const mountVueApp = async () => {
             const { vueAccountAppMount, vueAccountAppUnmount } = await import("vueAccountApp/bootstrap");
 
             if (vueModuleRef.current && !isMountedRef.current) {
@@ -38,7 +38,7 @@ const VueAccountAppWrapper = ({ eventBus }:{eventBus: any}) => {
                 unmountRef.current = () => {
                     vueAccountAppUnmount?.(vueModuleRef.current!);
                     isMountedRef.current = false;
-                };              
+                };
                 const iframeDoc = document;
                 iframeDoc.body.style.margin = "0";
                 iframeDoc.body.style.padding = "0";
