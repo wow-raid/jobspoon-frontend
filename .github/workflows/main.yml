@@ -52,11 +52,12 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: ./main-container
+          file: ./main-container/Dockerfile
           push: true
           tags: ghcr.io/${{ secrets.ACTOR }}/jobspoon-frontend:latest
-          cache-from: type=registry,ref=ghcr.io/${{ secrets.ACTOR}}/jobspoon-frontend:buildcache
-          cache-to: type=registry,ref=ghcr.io/${{ secrets.ACTOR }}/jobspoon-frontend:buildcache,mode=max
+          platforms: linux/amd64,linux/arm64
+
 
   deploy:
     needs: build
