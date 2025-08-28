@@ -102,9 +102,7 @@ const CalendarWrapper = styled.div`
   }
 `;
 
-const StyledCalendar = styled(Calendar as any)`
-  height: 600px;
-`;
+
 
 const MonthlyList = styled.div`
   margin-top: 32px;
@@ -148,135 +146,136 @@ const MonthlyTime = styled.div`
 `;
 
 const Schedule: React.FC = () => {
-    const [events, setEvents] = useState<ScheduleEvent[]>(FAKE_EVENTS);
-    const [currentDate, setCurrentDate] = useState(new Date());
-    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [events, setEvents] = useState<ScheduleEvent[]>(FAKE_EVENTS);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-    const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
-    const [editingEvent, setEditingEvent] = useState<ScheduleEvent | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
+  const [editingEvent, setEditingEvent] = useState<ScheduleEvent | null>(null);
 
-    const handleSelectSlot = (slotInfo: { start: Date; action: "select" | "click" | "doubleClick" }) => {
-        if (slotInfo.action === "doubleClick") {
-            openFormModal(slotInfo.start);
-        } else {
-            setSelectedDate(slotInfo.start);
-        }
-    };
+  const handleSelectSlot = (slotInfo: { start: Date; action: "select" | "click" | "doubleClick" }) => {
+    if (slotInfo.action === "doubleClick") {
+      openFormModal(slotInfo.start);
+    } else {
+      setSelectedDate(slotInfo.start);
+    }
+  };
 
-    const handleSelectEvent = (event: ScheduleEvent) => {
-        setSelectedEvent(event);
-        setIsDetailModalOpen(true);
-    };
+  const handleSelectEvent = (event: ScheduleEvent) => {
+    setSelectedEvent(event);
+    setIsDetailModalOpen(true);
+  };
 
-    const handleFormSubmit = (eventData: Omit<ScheduleEvent, "id" | "authorId">) => {
-        if (editingEvent) {
-            setEvents(prev => prev.map(e => (e.id === editingEvent.id ? { ...editingEvent, ...eventData } : e)));
-        } else {
-            const newEvent: ScheduleEvent = { id: Date.now(), authorId: CURRENT_USER_ID, ...eventData };
-            setEvents(prev => [...prev, newEvent]);
-        }
-        closeFormModal();
-    };
+  const handleFormSubmit = (eventData: Omit<ScheduleEvent, "id" | "authorId">) => {
+    if (editingEvent) {
+      setEvents(prev => prev.map(e => (e.id === editingEvent.id ? { ...editingEvent, ...eventData } : e)));
+    } else {
+      const newEvent: ScheduleEvent = { id: Date.now(), authorId: CURRENT_USER_ID, ...eventData };
+      setEvents(prev => [...prev, newEvent]);
+    }
+    closeFormModal();
+  };
 
-    const handleDeleteEvent = () => {
-        if (!selectedEvent) return;
-        if (window.confirm("정말로 일정을 삭제하시겠습니까?")) {
-            setEvents(prev => prev.filter(e => e.id !== selectedEvent.id));
-            setIsDetailModalOpen(false);
-        }
-    };
+  const handleDeleteEvent = () => {
+    if (!selectedEvent) return;
+    if (window.confirm("정말로 일정을 삭제하시겠습니까?")) {
+      setEvents(prev => prev.filter(e => e.id !== selectedEvent.id));
+      setIsDetailModalOpen(false);
+    }
+  };
 
-    const handleEditEvent = () => {
-        if (!selectedEvent) return;
-        setEditingEvent(selectedEvent);
-        setIsDetailModalOpen(false);
-        setIsFormModalOpen(true);
-    };
+  const handleEditEvent = () => {
+    if (!selectedEvent) return;
+    setEditingEvent(selectedEvent);
+    setIsDetailModalOpen(false);
+    setIsFormModalOpen(true);
+  };
 
-    const openFormModal = (date?: Date) => {
-        setEditingEvent(null);
-        setSelectedDate(date || new Date());
-        setIsFormModalOpen(true);
-    };
-    const closeFormModal = () => {
-        setIsFormModalOpen(false);
-        setEditingEvent(null);
-    };
+  const openFormModal = (date?: Date) => {
+    setEditingEvent(null);
+    setSelectedDate(date || new Date());
+    setIsFormModalOpen(true);
+  };
+  const closeFormModal = () => {
+    setIsFormModalOpen(false);
+    setEditingEvent(null);
+  };
 
-    const monthlyEvents = useMemo(
-        () =>
-            events
-                .filter(event => moment(event.start).isSame(currentDate, "month"))
-                .sort((a, b) => a.start.getTime() - b.start.getTime()),
-        [events, currentDate]
-    );
+  const monthlyEvents = useMemo(
+    () =>
+      events
+        .filter(event => moment(event.start).isSame(currentDate, "month"))
+        .sort((a, b) => a.start.getTime() - b.start.getTime()),
+    [events, currentDate]
+  );
 
-    const dayPropGetter = useCallback(
-        (date: Date) => ({
-            className: moment(date).isSame(selectedDate, "day") ? "selected-day" : "",
-        }),
-        [selectedDate]
-    );
+  const dayPropGetter = useCallback(
+    (date: Date) => ({
+      className: moment(date).isSame(selectedDate, "day") ? "selected-day" : "",
+    }),
+    [selectedDate]
+  );
 
-    return (
-        <Container>
-            <Header>
-                <h2>🗓️ 일정관리</h2>
-                <AddEventBtn onClick={() => openFormModal()}>일정 등록</AddEventBtn>
-            </Header>
+  return (
+    <Container>
+      <Header>
+        <h2>🗓️ 일정관리</h2>
+        <AddEventBtn onClick={() => openFormModal()}>일정 등록</AddEventBtn>
+      </Header>
 
-            <CalendarWrapper>
-                <StyledCalendar
-                    localizer={localizer}
-                    events={events}
-                    startAccessor="start"
-                    endAccessor="end"
-                    views={[Views.MONTH, Views.WEEK, Views.DAY]}
-                    selectable
-                    onSelectSlot={handleSelectSlot}
-                    onSelectEvent={handleSelectEvent}
-                    dayPropGetter={dayPropGetter}
-                    messages={{ next: "다음", previous: "이전", today: "오늘", month: "월", week: "주", day: "일" }}
-                    onNavigate={date => setCurrentDate(date)}
-                />
-            </CalendarWrapper>
+      <CalendarWrapper>
+        <Calendar
+          localizer={localizer}
+          events={events}
+          startAccessor="start"
+          endAccessor="end"
+          views={[Views.MONTH, Views.WEEK, Views.DAY]}
+          selectable
+          onSelectSlot={handleSelectSlot}
+          onSelectEvent={handleSelectEvent}
+          dayPropGetter={dayPropGetter}
+          messages={{ next: "다음", previous: "이전", today: "오늘", month: "월", week: "주", day: "일" }}
+          onNavigate={date => setCurrentDate(date)}
+          style={{ height: 600 }}
+        />
+      </CalendarWrapper>
 
-            <MonthlyList>
-                <h3>{moment(currentDate).format("YYYY년 M월")} 일정 목록</h3>
-                {monthlyEvents.length > 0 ? (
-                    monthlyEvents.map(event => (
-                        <MonthlyItem key={event.id}>
-                            <MonthlyDate>{moment(event.start).format("D일 (ddd)")}</MonthlyDate>
-                            <MonthlyTitle>{event.title}</MonthlyTitle>
-                            <MonthlyTime>
-                                {moment(event.start).format("HH:mm")} - {moment(event.end).format("HH:mm")}
-                            </MonthlyTime>
-                        </MonthlyItem>
-                    ))
-                ) : (
-                    <p>이번 달에는 등록된 일정이 없습니다.</p>
-                )}
-            </MonthlyList>
+      <MonthlyList>
+        <h3>{moment(currentDate).format("YYYY년 M월")} 일정 목록</h3>
+        {monthlyEvents.length > 0 ? (
+          monthlyEvents.map(event => (
+            <MonthlyItem key={event.id}>
+              <MonthlyDate>{moment(event.start).format("D일 (ddd)")}</MonthlyDate>
+              <MonthlyTitle>{event.title}</MonthlyTitle>
+              <MonthlyTime>
+                {moment(event.start).format("HH:mm")} - {moment(event.end).format("HH:mm")}
+              </MonthlyTime>
+            </MonthlyItem>
+          ))
+        ) : (
+          <p>이번 달에는 등록된 일정이 없습니다.</p>
+        )}
+      </MonthlyList>
 
-            <Modal isOpen={isFormModalOpen} onClose={closeFormModal}>
-                <EventForm onSubmit={handleFormSubmit} initialData={editingEvent || undefined} />
-            </Modal>
+      <Modal isOpen={isFormModalOpen} onClose={closeFormModal}>
+        <EventForm onSubmit={handleFormSubmit} initialData={editingEvent || undefined} />
+      </Modal>
 
-            <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)}>
-                {selectedEvent && (
-                    <EventDetail
-                        event={selectedEvent}
-                        currentUser={{ id: CURRENT_USER_ID }}
-                        onEdit={handleEditEvent}
-                        onDelete={handleDeleteEvent}
-                    />
-                )}
-            </Modal>
-        </Container>
-    );
+      <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)}>
+        {selectedEvent && (
+          <EventDetail
+            event={selectedEvent}
+            currentUser={{ id: CURRENT_USER_ID }}
+            onEdit={handleEditEvent}
+            onDelete={handleDeleteEvent}
+          />
+        )}
+      </Modal>
+    </Container>
+  );
 };
 
 export default Schedule;
