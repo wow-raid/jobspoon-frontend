@@ -25,7 +25,7 @@ jobs:
           echo "${{ secrets.MAIN_CONTAINER_ENV }}" > main-container/.env
           
           # 계정 앱 환경변수
-          echo "${{ secrets.ACCOUNT_PRODUCTION_ENV }}" > vue-account-app/.env.production
+          echo "${{ secrets.ACCOUNT_ENV }}" > vue-account-app/.env
           
           # 면접 앱 환경변수
           echo "${{ secrets.INTERVIEW_ENV }}" > vue-ai-interview-app/.env
