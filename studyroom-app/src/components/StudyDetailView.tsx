@@ -6,7 +6,9 @@ import Tag from "./Tag";
 
 interface StudyDetailViewProps {
     room: StudyRoom;
+    isOwner: boolean; // 👈 모임장 여부 prop 추가
     onApplyClick: () => void;
+    onEditClick: () => void; // 👈 수정 버튼 클릭 핸들러 prop 추가
     hasApplied: boolean;
 }
 
@@ -100,10 +102,30 @@ const ApplyBtn = styled.button<{ $applied?: boolean }>`
   }
 `;
 
+const BaseButton = styled.button`
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 32px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+`;
+
+const EditBtn = styled(BaseButton)`
+  background-color: #3a3f4c;
+  &:hover {
+    background-color: #4b5563;
+  }
+`;
+
 /* ─ Component ─ */
 const StudyDetailView: React.FC<StudyDetailViewProps> = ({
     room,
+    isOwner,
     onApplyClick,
+    onEditClick,
     hasApplied,
 }) => {
     return (
@@ -146,14 +168,20 @@ const StudyDetailView: React.FC<StudyDetailViewProps> = ({
             </Section>
 
             <Footer>
-                {room.status === "RECRUITING" && (
-                    <ApplyBtn
-                        $applied={hasApplied}
-                        onClick={onApplyClick}
-                        disabled={hasApplied}
-                    >
-                        {hasApplied ? "신청완료" : "참가 신청하기"}
-                    </ApplyBtn>
+                {isOwner ? (
+                    // 모임장일 경우 '수정하기' 버튼 표시
+                    <EditBtn onClick={onEditClick}>수정하기</EditBtn>
+                ) : (
+                    // 참가자일 경우 '참가 신청하기' 버튼 표시
+                    room.status === "RECRUITING" && (
+                        <ApplyBtn
+                            $applied={hasApplied}
+                            onClick={onApplyClick}
+                            disabled={hasApplied}
+                        >
+                            {hasApplied ? "신청완료" : "참가 신청하기"}
+                        </ApplyBtn>
+                    )
                 )}
             </Footer>
         </Wrapper>

@@ -8,11 +8,14 @@ import { FAKE_STUDY_ROOMS } from '../data/mockData';
 import StudyDetailView from '../components/StudyDetailView';
 import Modal from '../components/Modal';
 import ApplicationForm from '../components/ApplicationForm';
+import CreateStudyForm from "../components/CreateStudyForm";        // 생성폼을 재사용함
 
 const PageContainer = styled.div`
   max-width: 800px;
   margin: 0 auto;
 `;
+
+const CURRENT_USER_ID = 1;
 
 const StudyDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -20,36 +23,34 @@ const StudyDetailPage: React.FC = () => {
     const [study, setStudy] = useState<StudyRoom | null>(null);
     const [loading, setLoading] = useState(true);
     const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);  // 수정 모달
 
     // 👇 2. useEffect를 API 호출 로직으로 변경
     useEffect(() => {
         const fetchStudyDetail = async () => {
-            if (!id) return; // id가 없으면 실행하지 않음
+            if (!id) return;
             setLoading(true);
             try {
-                // 백엔드에 특정 스터디의 상세 정보를 요청
                 const response = await axiosInstance.get(`/study-rooms/${id}`);
+                console.log("서버 응답 원본!!:", response.data);
 
-                // 👇 1. 실제 응답 데이터 구조를 확인합니다.
-                console.log("백엔드 응답:", response.data);
-
-                // 👇 2. 확인된 구조에 맞춰 데이터를 꺼내 setStudy에 넣어줍니다.
-                //    만약 { "studyRoom": { ... } } 형태로 온다면 아래와 같이 수정합니다.
-                setStudy(response.data.studyRoom || response.data);
-
-
-
-
-                // setStudy(response.data); // 받아온 데이터로 state 업데이트
+                // 👇 백엔드 응답 데이터를 그대로 study 상태에 저장합니다.
+                setStudy(response.data);
             } catch (error) {
                 console.error("스터디 상세 정보를 불러오는데 실패했습니다:", error);
-                setStudy(null); // 에러 발생 시 study를 null로 설정
+                setStudy(null);
             } finally {
                 setLoading(false);
             }
         };
         fetchStudyDetail();
-    }, [id]); // id가 변경될 때마다 다시 데이터를 불러옴
+    }, [id]);
+
+    const handleUpdateSuccess = (updateStudy: StudyRoom) => {
+        setStudy(updateStudy);
+        setIsEditModalOpen(false);
+        alert('스터디모임 정보가 성공적으로 수정되었습니다.');
+    }
 
     const handleApplicationSubmit = (message: string) => {
         console.log(`--- 스터디 참가 신청 ---`);
@@ -62,21 +63,40 @@ const StudyDetailPage: React.FC = () => {
     if (loading) return <div>로딩 중...</div>;
     if (!study) return <div>스터디 정보를 찾을 수 없습니다.</div>;
 
+    const isOwner = study.hostId === CURRENT_USER_ID;
+
     return (
         <PageContainer>
+            {/* 상세보기 */}
             <StudyDetailView
                 room={study}
+                isOwner={isOwner}
                 onApplyClick={() => setIsApplyModalOpen(true)}
+                onEditClick={() => setIsEditModalOpen(true)}
                 hasApplied={false}
             />
 
-            <Modal isOpen={isApplyModalOpen} onClose={() => setIsApplyModalOpen(false)}>
-                <ApplicationForm
-                    studyTitle={study.title}
-                    onSubmit={handleApplicationSubmit}
-                    onClose={() => setIsApplyModalOpen(false)}
-                />
-            </Modal>
+            {/* 참가 신청 모달 */}
+            {isApplyModalOpen && study && (
+                <Modal isOpen={isApplyModalOpen} onClose={() => setIsApplyModalOpen(false)}>
+                    <ApplicationForm
+                        studyTitle={study.title}
+                        onSubmit={handleApplicationSubmit}
+                        onClose={() => setIsApplyModalOpen(false)}
+                    />
+                </Modal>
+            )}
+
+            {/* 스터디 수정 모달 */}
+            {isEditModalOpen && study && (
+                <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
+                    <CreateStudyForm
+                        isEditMode={true}
+                        initialData={study} // 👈 study 객체를 그대로 전달
+                        onSuccess={handleUpdateSuccess}
+                    />
+                </Modal>
+            )}
         </PageContainer>
     );
 };
