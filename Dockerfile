@@ -9,7 +9,8 @@ COPY . .
 ENV NODE_ENV=production
 
 # 빌드 실행
-RUN npm install \
+RUN npm install -g lerna && \
+    npm install \
   && echo "\n// 각 앱의 rspack.config.ts 파일에서 publicPath 수정" \
   && find . -name "rspack.config.ts" -exec sed -i 's|publicPath: "auto"|publicPath: "/"+__dirname.split("/").pop()+"/"|g' {} \; \
   && find . -name "rspack.config.ts" -exec sed -i 's|publicPath: "http://localhost:[0-9]\+/"|publicPath: "/"+__dirname.split("/").pop()+"/"|g' {} \; \
