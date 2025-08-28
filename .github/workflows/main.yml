@@ -54,9 +54,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/jobspoon-frontend:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/jobspoon-frontend:buildcache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/jobspoon-frontend:buildcache,mode=max
+          tags: ghcr.io/${{ secrets.ACTOR }}/jobspoon-frontend:latest
+          cache-from: type=registry,ref=ghcr.io/${{ secrets.ACTOR}}/jobspoon-frontend:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ secrets.ACTOR }}/jobspoon-frontend:buildcache,mode=max
       
   deploy:
     needs: build
