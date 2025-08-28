@@ -2,23 +2,23 @@ name: Docker Build and Deploy
 
 on:
   push:
-    branches: [ main ]  
-  workflow_dispatch:    
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '22'
           cache: 'npm'
-      
+
       - name: Create .env files
         run: |
           # 메인 컨테이너 환경변수
@@ -32,7 +32,7 @@ jobs:
           
           # 마이페이지 앱 환경변수
           echo "${{ secrets.MY_PAGE_ENV }}" > mypage-app/.env
-      
+
       - name: Install dependencies
         run: npm install
 
@@ -48,7 +48,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
-      
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
@@ -57,11 +57,11 @@ jobs:
           tags: ghcr.io/${{ secrets.ACTOR }}/jobspoon-frontend:latest
           cache-from: type=registry,ref=ghcr.io/${{ secrets.ACTOR}}/jobspoon-frontend:buildcache
           cache-to: type=registry,ref=ghcr.io/${{ secrets.ACTOR }}/jobspoon-frontend:buildcache,mode=max
-      
+
   deploy:
     needs: build
     name: Deploy
-    runs-on: [ self-hosted, deploy-mfe-front ]
+    runs-on: [ self-hosted, deploy-mfe-frontend ]
     steps:
       - name: Deploy to production
         run: |
