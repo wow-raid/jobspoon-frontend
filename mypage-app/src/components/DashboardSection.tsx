@@ -26,12 +26,20 @@ export default function DashboardSection() {
     const [attendance, setAttendance] = useState<AttendanceRateResponse | null>(null);
     const [interview, setInterview] = useState<InterviewCompletionResponse | null>(null);
 
+    // TODO: 👉 로그인 연동 전까지는 임시 하드코딩
     useEffect(() => {
-        const token = "test-token2"; // TODO: 로그인 연동 시 교체
-
+        const token = "test-token2";
         getAttendanceRate(token).then(setAttendance).catch(console.error);
         getInterviewCompletion(token).then(setInterview).catch(console.error);
     }, []);
+
+    // TODO: 👉 실제 로그인 붙었을 때 사용할 버전 (주석으로 보관)
+    // useEffect(() => {
+    //     const token = localStorage.getItem("userToken") || "";
+    //     if (!token) return;
+    //     getAttendanceRate(token).then(setAttendance).catch(console.error);
+    //     getInterviewCompletion(token).then(setInterview).catch(console.error);
+    // }, []);
 
     // 아직 API 로드 전이면 로딩 표시
     if (!attendance || !interview) {
