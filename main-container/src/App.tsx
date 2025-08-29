@@ -8,6 +8,9 @@ import { RecoilRoot, useRecoilValue } from "recoil";
 
 import mitt from "mitt";
 
+import Main from "./components/Main.tsx";
+import Footer from "./components/Footer";
+
 import VueAccountAppWrapper from "./VueAccountWrapper.tsx";
 import VueAiInterviewAppWrapper from "./VueAiInterviewWrapper.tsx";
 import SvelteReviewAppWrapper from "./SvelteReviewWrapper.tsx";
@@ -85,7 +88,7 @@ function InnerApp() {
         <Suspense fallback={<CircularProgress />}>
           <NavigationBarApp />
           <Routes>
-            <Route path="/" element={<div>Home Page</div>} />
+            <Route path="/" element={<Main/>} />
             <Route
               path="/vue-account/*"
               element={<VueAccountAppWrapper eventBus={eventBus} />}
@@ -102,6 +105,7 @@ function InnerApp() {
             <Route path="/svelte-review/*" element={<SvelteReviewAppWrapper />} />
               <Route path="/mypage/*" element={<MyPageApp />} />
           </Routes>
+          <Footer />
         </Suspense>
       </BrowserRouter>
 
