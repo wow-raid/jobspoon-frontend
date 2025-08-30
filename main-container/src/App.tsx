@@ -24,6 +24,7 @@ const eventBus = mitt();
 const NavigationBarApp = lazy(() => import("navigationBarApp/App"));
 const StudyRoomApp = lazy(() => import("studyRoomApp/App"));
 const MyPageApp = lazy(() => import("myPageApp/App"));
+const SpoonLabApp = lazy(() => import("spoonLabApp/App"));
 
 function InnerApp() {
   const [isNavigationBarLoaded, setIsNavigationBarLoaded] = useState(false);
@@ -94,6 +95,7 @@ function InnerApp() {
               element={<VueAccountAppWrapper eventBus={eventBus} />}
             />
             <Route path="/studies/*" element={<StudyRoomApp />} />
+            <Route path="/spoonlab/*" element={<SpoonLabApp />} />
             <Route
               path="/vue-ai-interview/*"
               element={
