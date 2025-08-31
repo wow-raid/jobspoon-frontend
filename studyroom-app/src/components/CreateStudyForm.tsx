@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+//CreateStudyForm.tsx
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import FormField from "./FormField";
 import TagInput from "./TagInput";
@@ -15,14 +16,16 @@ interface FormData {
     title: string;
     description: string;
     location: string;
-    studyLevel: string; // level -> studyLevel
+    studyLevel: string;
     maxMembers: number;
-    recruitingRoles: string[]; // roles -> recruitingRoles
-    skillStack: string[]; // tags -> skillStack
+    recruitingRoles: string[];
+    skillStack: string[];
 }
 
 interface CreateStudyFormProps {
-    onSuccess: (newStudy: StudyRoom) => void;
+    onSuccess: (studyData: StudyRoom) => void;
+    isEditMode?: boolean;
+    initialData?: StudyRoom | null; // 👈 수정할 데이터를 받을 prop 추가
 }
 
 /* ───────────────── styled-components ───────────────── */
@@ -120,17 +123,36 @@ const ErrorMessage = styled.p`
 `;
 
 /* ───────────────── Component ───────────────── */
-const CreateStudyForm: React.FC<CreateStudyFormProps> = ({onSuccess}) => {
+const CreateStudyForm: React.FC<CreateStudyFormProps> = ({
+              onSuccess,
+              isEditMode = false,
+              initialData
+}) => {
     const [formData, setFormData] = useState<FormData>({
         title: "",
         description: "",
-        location: LOCATION_OPTIONS[0]?.value ?? "", // 👈 .value로 정확히 초기값 설정
-        studyLevel: LEVEL_OPTIONS[0] ?? "", // studyLevel 초기값 설정
+        location: LOCATION_OPTIONS[0]?.value ?? "",
+        studyLevel: LEVEL_OPTIONS[0] ?? "",
         maxMembers: 2,
         recruitingRoles: [],
         skillStack: [],
     });
     const [rolesError, setRolesError] = useState<string | null>(null);
+
+    // 👇 1. 수정 모드일 때 폼 데이터를 initialData로 채우는 로직 추가
+    useEffect(() => {
+        if (isEditMode && initialData) {
+            setFormData({
+                title: initialData.title,
+                description: initialData.description,
+                location: initialData.location,
+                studyLevel: initialData.studyLevel,
+                maxMembers: initialData.maxMembers,
+                recruitingRoles: initialData.recruitingRoles,
+                skillStack: initialData.skillStack,
+            });
+        }
+    }, [isEditMode, initialData]);
 
     const handleChange = (
         e: React.ChangeEvent<
@@ -157,44 +179,47 @@ const CreateStudyForm: React.FC<CreateStudyFormProps> = ({onSuccess}) => {
         }
         setRolesError(null);
 
-        const selectedLocationObject = LOCATION_OPTIONS.find(opt => opt.label === formData.location);
-
         const apiRequestData = {
             title: formData.title,
             description: formData.description,
             maxMembers: formData.maxMembers,
-            location: selectedLocationObject?.value || 'ONLINE', // 찾은 객체의 value를 사용
+            location: formData.location.toUpperCase(),
             studyLevel: formData.studyLevel.toUpperCase(),
             recruitingRoles: formData.recruitingRoles,
             skillStack: formData.skillStack,
         };
 
         try {
-            const response = await axiosInstance.post('/study-rooms', apiRequestData);
+            if (isEditMode) {
+                // --- 수정 모드 ---
+                if (!initialData?.id) {
+                    alert("수정할 스터디 정보가 올바르지 않습니다.");
+                    return;
+                }
+                const response = await axiosInstance.put(`/study-rooms/${initialData.id}`, apiRequestData);
 
-            if (response.status === 201) { // 생성 성공 확인
-                // 👇 백엔드 응답 대신, 우리가 보낸 데이터를 기반으로 새 스터디 객체를 만듭니다.
-                const newStudy: StudyRoom = {
-                    ...formData,
-                    id: Date.now(), // 임시 ID, 실제로는 Location 헤더에서 파싱해야 함
-                    status: 'RECRUITING',
-                    createdAt: new Date().toISOString(),
-                    // host, currentMembers 등은 목록 조회 시 받아오므로 여기서 필요 X
-                };
+                // PUT 요청은 보통 200 OK를 반환합니다.
+                if (response.status === 200) {
+                    onSuccess(response.data);
+                }
+            } else {
+                // --- 생성 모드 ---
+                const response = await axiosInstance.post('/study-rooms', apiRequestData);
 
-                onSuccess(newStudy); // 리스트 업데이트 및 모달 닫기
-                alert("스터디 모임이 성공적으로 생성되었습니다.");
+                // POST 요청은 201 Created를 반환합니다.
+                if (response.status === 201) {
+                    onSuccess(response.data);
+                }
             }
         } catch (error) {
-            console.error("스터디모임 생성에 실패했습니다:", error);
-            alert("스터디모임 생성 중 오류가 발생했습니다.");
+            console.error("작업 처리 중 오류가 발생했습니다:", error);
+            alert("오류가 발생했습니다.");
         }
     };
 
     return (
         <Form onSubmit={handleSubmit}>
-            <Title>새 스터디 생성</Title>
-
+            <Title>{isEditMode ? '스터디 정보 수정' : '새 스터디 생성'}</Title>
             <Section>
                 <SectionTitle>필수 정보</SectionTitle>
 
@@ -274,7 +299,7 @@ const CreateStudyForm: React.FC<CreateStudyFormProps> = ({onSuccess}) => {
             </Section>
 
             <Actions>
-                <SubmitBtn type="submit">생성하기</SubmitBtn>
+                <SubmitBtn type="submit">{isEditMode ? '수정 완료' : '생성하기'}</SubmitBtn>
             </Actions>
         </Form>
     );
