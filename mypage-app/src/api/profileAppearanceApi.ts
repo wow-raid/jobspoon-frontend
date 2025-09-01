@@ -4,7 +4,7 @@ const API_BASE_URL = "http://localhost:8080"; // 마지막 '/' 제거!
 
 export interface ProfileAppearanceResponse {
     photoUrl: string | null;
-    nickname: string;
+    customNickname: string;
     rank?: { code: string; displayName: string };
     title?: { code: string; displayName: string };
 }

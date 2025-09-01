@@ -2,6 +2,17 @@ import axios from 'axios';
 
 const API_BASE_URL = "http://localhost:8080";
 
+export interface AttendanceRateResponse {
+    attendanceRate: number;
+    attended: number;
+    totalDays: number;
+}
+
+export interface InterviewCompletionResponse {
+    interviewTotalCount: number;
+    interviewMonthlyCount: number;
+}
+
 // 출석률(get)
 export const getAttendanceRate = async (token: string) => {
     const res = await axios.get(`${API_BASE_URL}/user-dashboard/attendance/rate`, {

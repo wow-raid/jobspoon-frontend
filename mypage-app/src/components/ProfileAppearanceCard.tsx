@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { fetchMyProfile, ProfileAppearanceResponse } from "../api/profileAppearanceApi.ts";
-
-export interface ProfileAppearanceResponse {
-    photoUrl: string | null;
-    customNickname: string;   // ✅ nickname → customNickname
-    rank?: { code: string; displayName: string };
-    title?: { code: string; displayName: string };
-}
+import '../assets/tailwind.css'
 
 export default function ProfileAppearanceCard() {
     const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
@@ -35,11 +29,14 @@ export default function ProfileAppearanceCard() {
     return (
         <div className="p-6 bg-white border rounded shadow text-center space-y-4">
             {/* 프로필 이미지 */}
-            <div className="flex justify-center">
+            <div className=" max-w-md flex justify-center">
                 <img
-                    src={profile.photoUrl || "/default-profile.png"}
+                    src={profile.photoUrl || "/default_profile.png"}
                     alt="profile"
-                    className="w-full max-w-[200px] aspect-square rounded-full object-cover border mx-auto"
+                    className="w-full max-w-[150px] rounded-full object-cover border mx-auto"
+                    onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/default_profile.png";
+                    }}
                 />
             </div>
 
