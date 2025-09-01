@@ -52,8 +52,10 @@ const HeaderActions = styled.div`
 `;
 
 const NavBtnSecondary = styled(Link)`
-  background-color: ${({ theme }) => theme.surface};
-  color: ${({ theme }) => theme.fg};
+  background-color: #3A3F4B;
+  &&, &&:link, &&:visited, &&:hover, &&:active {
+    color: #fff;
+  }
   text-decoration: none;
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: 6px;
@@ -72,7 +74,7 @@ const NavBtnSecondary = styled(Link)`
 `;
 
 const CreateStudyBtn = styled.button`
-  background-color: ${({ theme }) => theme.primary};
+  background-color: #01B0F1;
   color: #ffffff;
   border: none;
   border-radius: 6px;
