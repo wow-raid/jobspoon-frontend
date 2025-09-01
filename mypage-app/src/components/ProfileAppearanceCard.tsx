@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { fetchMyProfile, ProfileAppearanceResponse } from "../api/profileAppearanceApi.ts";
 import '../assets/tailwind.css'
 
-import { FaChevronLeft, FaEdit } from "react-icons/fa";
+import { FaEdit } from "react-icons/fa";
 
 export default function ProfileAppearanceCard() {
     const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
@@ -29,8 +29,7 @@ export default function ProfileAppearanceCard() {
     }
 
     return (
-        <div className="bg-[white] rounded-[12px] shadow p-[24px] text-center space-y-[16px]">
-
+        <div className="rounded-[12px] shadow p-[24px] text-center space-y-[16px]">
             {/* 프로필 이미지 */}
             <div className="flex justify-center mb-[20px]">
                 <img
@@ -77,7 +76,7 @@ export default function ProfileAppearanceCard() {
                 <button
                     className="flex items-center gap-[6px] px-[16px] py-[8px]
                                bg-[rgb(59,130,246)] text-[white] text-[13px] rounded-[6px]
-                               hover:bg-[rgb(37,99,235)] hover:text-[white] cursor-pointer
+                               hover:bg-[rgb(37,99,235)] cursor-pointer
                                transition-colors duration-200"
                     onClick={() => console.log("수정하기 클릭!")}>
                     <FaEdit />
