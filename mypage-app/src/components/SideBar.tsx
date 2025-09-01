@@ -15,72 +15,119 @@ import '../assets/tailwind.css'
 
 export default function SideBar() {
     return (
-        <div className="h-full flex flex-col p-4 space-y-6 bg-white border-r shadow-sm">
+        <div className="h-full flex flex-col p-[16px] space-y-[24px] bg-white border-r shadow-sm">
             {/* 프로필 카드 */}
             <ProfileAppearanceCard />
 
             {/* 메뉴 리스트 */}
             <nav className="flex-1">
-                <ul className="space-y-1 text-sm">
-                    {/* 공통 스타일: group + hover 효과 */}
-                    <li className="group flex items-center gap-3 px-3 py-2 rounded transition-colors duration-200 cursor-pointer hover:bg-gray-100">
-                        <FaUser className="text-gray-600 group-hover:text-blue-600" />
-                        <span className="group-hover:text-blue-600">회원정보 수정</span>
+                <ul className="space-y-[8px] text-sm">
+                    <li>
+                        <button className="w-full flex items-center gap-[12px] px-[16px] py-[10px]
+                                text-[14px] text-[rgb(55,65,81)] rounded-[8px]
+                                hover:bg-[rgb(239,246,255)] hover:text-[rgb(37,99,235)]
+                                transition-colors duration-200 cursor-pointer">
+                            <FaUser className="text-[rgb(107,114,128)]" />
+                            회원정보 수정
+                        </button>
                     </li>
 
-                    <li className="group flex items-center gap-3 px-3 py-2 rounded transition-colors duration-200 cursor-pointer hover:bg-gray-100">
-                        <FaCrown className="text-gray-600 group-hover:text-blue-600" />
-                        <span className="group-hover:text-blue-600">구독 내역</span>
+                    <li>
+                        <button className="w-full flex items-center gap-[12px] px-[16px] py-[10px]
+                                text-[14px] text-[rgb(55,65,81)] rounded-[8px]
+                                hover:bg-[rgb(239,246,255)] hover:text-[rgb(37,99,235)]
+                                transition-colors duration-200 cursor-pointer">
+                            <FaCrown className="text-[rgb(107,114,128)]" />
+                            구독 내역
+                        </button>
                     </li>
 
-                    <li className="group flex items-center gap-3 px-3 py-2 rounded transition-colors duration-200 cursor-pointer hover:bg-gray-100">
-                        <FaShoppingCart className="text-gray-600 group-hover:text-blue-600" />
-                        <span className="group-hover:text-blue-600">장바구니</span>
+                    <li>
+                        <button className="w-full flex items-center gap-[12px] px-[16px] py-[10px]
+                                text-[14px] text-[rgb(55,65,81)] rounded-[8px]
+                                hover:bg-[rgb(239,246,255)] hover:text-[rgb(37,99,235)]
+                                transition-colors duration-200 cursor-pointer">
+                            <FaShoppingCart className="text-[rgb(107,114,128)]" />
+                            장바구니
+                        </button>
                     </li>
 
-                    <li className="group flex items-center gap-3 px-3 py-2 rounded transition-colors duration-200 cursor-pointer hover:bg-gray-100">
-                        <MdArticle className="text-gray-600 group-hover:text-blue-600" />
-                        <span className="group-hover:text-blue-600">내가 작성한 글</span>
+                    <li>
+                        <button className="w-full flex items-center gap-[12px] px-[16px] py-[10px]
+                                text-[14px] text-[rgb(55,65,81)] rounded-[8px]
+                                hover:bg-[rgb(239,246,255)] hover:text-[rgb(37,99,235)]
+                                transition-colors duration-200 cursor-pointer">
+                            <MdArticle className="text-[rgb(107,114,128)]" />
+                            내가 작성한 글
+                        </button>
                     </li>
 
-                    <li className="group flex items-center gap-3 px-3 py-2 rounded transition-colors duration-200 cursor-pointer hover:bg-gray-100">
-                        <FaRegCommentDots className="text-gray-600 group-hover:text-blue-600" />
-                        <span className="group-hover:text-blue-600">내가 작성한 댓글</span>
+                    <li>
+                        <button className="w-full flex items-center gap-[12px] px-[16px] py-[10px]
+                                text-[14px] text-[rgb(55,65,81)] rounded-[8px]
+                                hover:bg-[rgb(239,246,255)] hover:text-[rgb(37,99,235)]
+                                transition-colors duration-200 cursor-pointer">
+                            <FaRegCommentDots className="text-[rgb(107,114,128)]" />
+                            내가 작성한 댓글
+                        </button>
                     </li>
 
-                    <li className="group flex items-center gap-3 px-3 py-2 rounded transition-colors duration-200 cursor-pointer hover:bg-gray-100">
-                        <FaCalendarAlt className="text-gray-600 group-hover:text-blue-600" />
-                        <span className="group-hover:text-blue-600">내 일정</span>
-                        {/* 뱃지 */}
-                        <span className="ml-auto text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full">
-                            3
-                        </span>
+                    <li>
+                        <button className="w-full flex items-center gap-[12px] px-[16px] py-[10px]
+                     text-[14px] text-[rgb(55,65,81)] rounded-[8px]
+                     hover:bg-[rgb(239,246,255)] hover:text-[rgb(37,99,235)]
+                     transition-colors duration-200 cursor-pointer">
+                            <FaCalendarAlt className="text-[rgb(107,114,128)]" />
+                            내 일정
+                            <span
+                                className="ml-auto min-w-[24px] h-[24px] flex items-center justify-center text-[12px] font-medium rounded-full bg-[rgb(37,99,235)] text-[white]">
+                                4
+                            </span>
+                        </button>
                     </li>
 
-                    <li className="group flex items-center gap-3 px-3 py-2 rounded transition-colors duration-200 cursor-pointer hover:bg-gray-100">
-                        <FaCrown className="text-gray-600 group-hover:text-blue-600" />
-                        <span className="group-hover:text-blue-600">멤버십</span>
+                    <li>
+                        <button className="w-full flex items-center gap-[12px] px-[16px] py-[10px]
+                                text-[14px] text-[rgb(55,65,81)] rounded-[8px]
+                                hover:bg-[rgb(239,246,255)] hover:text-[rgb(37,99,235)]
+                                transition-colors duration-200 cursor-pointer">
+                            <FaCrown className="text-[rgb(107,114,128)]" />
+                            멤버십
+                        </button>
                     </li>
 
-                    <li className="group flex items-center gap-3 px-3 py-2 rounded transition-colors duration-200 cursor-pointer hover:bg-gray-100">
-                        <FaEnvelope className="text-gray-600 group-hover:text-blue-600" />
-                        <span className="group-hover:text-blue-600">Messages</span>
-                        <span className="ml-auto text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full">
-                            24
-                        </span>
+                    <li>
+                        <button className="w-full flex items-center gap-[12px] px-[16px] py-[10px]
+                     text-[14px] text-[rgb(55,65,81)] rounded-[8px]
+                     hover:bg-[rgb(239,246,255)] hover:text-[rgb(37,99,235)]
+                     transition-colors duration-200 cursor-pointer">
+                            <FaEnvelope className="text-[rgb(107,114,128)]" />
+                            Messages
+                            <span
+                                className="ml-auto min-w-[24px] h-[24px] flex items-center justify-center text-[12px] font-medium rounded-full bg-[rgb(37,99,235)] text-[white]">
+                                24
+                            </span>
+                        </button>
                     </li>
 
-                    <li className="group flex items-center gap-3 px-3 py-2 rounded transition-colors duration-200 cursor-pointer hover:bg-gray-100">
-                        <FaCog className="text-gray-600 group-hover:text-blue-600" />
-                        <span className="group-hover:text-blue-600">Settings</span>
+                    <li>
+                        <button className="w-full flex items-center gap-[12px] px-[16px] py-[10px]
+                                text-[14px] text-[rgb(55,65,81)] rounded-[8px]
+                                hover:bg-[rgb(239,246,255)] hover:text-[rgb(37,99,235)]
+                                transition-colors duration-200 cursor-pointer">
+                            <FaCog className="text-[rgb(107,114,128)]" />
+                            Settings
+                        </button>
                     </li>
 
-                    {/* 회원탈퇴: 빨간색 강조 */}
-                    <li className="group flex items-center gap-3 px-3 py-2 rounded transition-colors duration-200 cursor-pointer hover:bg-red-50">
-                        <FaSignOutAlt className="text-red-500 group-hover:text-red-600" />
-                        <span className="text-red-500 group-hover:text-red-600">
+                    <li>
+                        <button className="w-full flex items-center gap-[12px] px-[16px] py-[10px]
+                                text-[14px] text-[rgb(220,38,38)] rounded-[8px]
+                                hover:bg-[rgb(254,242,242)] hover:text-[rgb(185,28,28)]
+                                transition-colors duration-200 cursor-pointer">
+                            <FaSignOutAlt className="text-[rgb(220,38,38)]" />
                             회원탈퇴
-                        </span>
+                        </button>
                     </li>
                 </ul>
             </nav>
