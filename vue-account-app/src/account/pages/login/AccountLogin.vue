@@ -1,29 +1,35 @@
 <template>
-  <v-container :style="containerStyle">
-    <div class="login-wrapper" :style="loginWrapperStyle">
-      <div>
-        <div class="login_logo" :style="logoStyle"></div>
+  <div >
+    <img :src="Logo" alt="Logo" style="width: 180px; height: 70px; object-fit: contain;" @click="goHome">
+  </div>
 
-        <!-- [변경] 인라인 color 제거 -->
-        <div class="introduction">
-          <p>기업 분석과 AI 모의면접 | 취업 준비는 <b>JOBSTICK</b>에서</p>
-        </div>
 
-        <v-divider class="mt-5 mb-7" :thickness="3"></v-divider>
+  <div class="w-full flex items-center justify-center min-h-screen bg-white">
 
-        <!-- 로그인 버튼들 -->
-        <v-btn
-          :style="guestBtnStyle"
-          class="guest-login-btn"
-          @click="handleGuestLogin"
-        >
-          게스트 로그인
-        </v-btn>
-        <v-btn
-          :style="kakaoBtnStyle"
-          class="kakao-login-btn"
+    <!-- 왼쪽 로그인 영역 -->
+    <div class="w-1/2">
+      <!-- 소개 텍스트 -->
+      <div class="p-10">
+        SingIn
+
+      <!-- 로그인 버튼들 -->
+      <!--
+      <v-btn
+        :style="guestBtnStyle"
+        class="guest-login-btn"
+        @click="handleGuestLogin"
+      >
+        게스트 로그인
+      </v-btn>
+      -->
+      <v-btn
+          class="w-full h-12 mb-2 bg-yellow-400 bg-no-repeat bg-center bg-contain"
+          :style="{ backgroundImage: `url(${kakaoBtn})` }"
           @click="() => goToPrivacyAgreementPage('KAKAO')"
-        ></v-btn>
+      ></v-btn>
+
+
+        <!--
         <v-btn
           :style="googleBtnStyle"
           class="google-login-btn"
@@ -34,32 +40,41 @@
           class="naver-login-btn"
           @click="() => goToPrivacyAgreementPage('NAVER')"
         ></v-btn>
+        -->
 
-        <!-- 관리자 로그인 -->
-        <v-btn
+      <!-- 관리자 로그인 -->
+      <v-btn
           :style="adminBtnStyle"
           class="admin-login-btn"
           @click="goToAdminLogin"
-          block
-        ></v-btn>
-      </div>
+      ></v-btn>
     </div>
-  </v-container>
+    </div>
+
+
+    <!-- 오른쪽 이미지 영역 -->
+    <div class="w-1/2 flex items-center justify-center min-h-screen bg-white">
+      <div class="image-content">이미지</div>
+    </div>
+  </div>
 </template>
+
 
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from "vue-router"
 import { useGuestAuthenticationStore } from "../../../guest/stores/guestAuthenticationStore"
 import { useHead } from '@vueuse/head'
-
+import '../../../assets/tailwind.css'
 import loginBg from '@/assets/images/fixed/login_bg61.jpg'
 import logo1 from '@/assets/images/fixed/logo1.png'
+import Logo from '@/assets/images/fixed/Logo.png'
 import kakaoBtn from '@/assets/images/fixed/btn_login_kakao.png'
 import googleBtn from '@/assets/images/fixed/btn_login_google.png'
 import naverBtn from '@/assets/images/fixed/btn_login_naver.png'
 import githubIcon from '@/assets/images/fixed/icon-github.svg'
 import {kakaoAuthenticationAction as kakaoAuthentication} from "@/kakao/stores/kakaoAuthenticationActions";
+import {useNavigate} from "react-router-dom";
 
 // SEO meta 생략 (그대로 사용)
 
@@ -73,42 +88,11 @@ const hoverGoogle = ref(false)
 const hoverNaver = ref(false)
 const hoverAdmin = ref(false)
 
-const containerStyle = computed(() => ({
-  maxWidth: '100vw',
-  minHeight: '89vh',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  // background: `url('${loginBg}') no-repeat center center`,
-  backgroundSize: '900px auto',
+function goHome() {
+  console.log("go home")
+  window.location.href = '/'
+}
 
-  // [변경] 전역 글자색: host 변수(--text) 우선, 없으면 Vuetify on-background 사용
-  color: 'var(--text, rgb(var(--v-theme-on-background)))',
-}))
-
-const logoStyle = computed(() => ({
-  height: '20vh',
-  marginBottom: '-2vh',
-  backgroundImage: `url('${logo1}')`,
-  backgroundSize: 'contain',
-  backgroundRepeat: 'no-repeat',
-  backgroundPosition: 'center',
-}))
-
-const loginWrapperStyle = computed(() => ({
-  position: 'relative',
-  zIndex: 1,
-  top: '70px',
-  width: '50vh',
-  height: '70vh',
-  backgroundColor: '#877e7e00',
-  borderRadius: '9vh',
-  padding: '0vh 10vh',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  textAlign: 'center',
-}))
 
 const btnCommon = {
   width: '100%',
@@ -183,10 +167,3 @@ const goToAdminLogin = () => {
   router.push("/account/admin-code")
 }
 </script>
-
-<style scoped>
-/* [추가] 안전망: 소개 문단도 다크/라이트 따라가게 */
-.introduction {
-  color: var(--text, rgb(var(--v-theme-on-background)));
-}
-</style>
