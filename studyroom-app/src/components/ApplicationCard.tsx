@@ -1,4 +1,3 @@
-// ApplicationCard.tsx
 import React from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
@@ -6,25 +5,24 @@ import styled from "styled-components";
 type Status = "pending" | "approved" | "rejected";
 
 interface Application {
-    id: number;
-    studyId: number;
-    studyTitle: string;
-    status: Status;
-    appliedAt: string;
+  id: number;
+  studyId: number;
+  studyTitle: string;
+  status: Status;
+  appliedAt: string;
 }
 
 interface ApplicationCardProps {
-    application: Application;
-    onCancel: (id: number) => void;
+  application: Application;
+  onCancel: (id: number) => void;
 }
 
-/* ── styled-components (scoped) ───────────────────────── */
-
+/* ─ styled-components (scoped) ─ */
 const Card = styled(Link)`
-  background-color: #2c2f3b;
+  background-color: ${({ theme }) => theme.surface};
   padding: 20px;
   border-radius: 8px;
-  border: 1px solid #3e414f;
+  border: 1px solid ${({ theme }) => theme.border};
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -34,8 +32,9 @@ const Card = styled(Link)`
 
   &:focus {
     outline: none;
-    border-color: #5865f2;
-    box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.4);
+    border-color: ${({ theme }) => theme.primary};
+    /* primary 색에 고정된 알파 그림자 */
+    box-shadow: 0 0 0 2px rgba(1, 176, 241, 0.35);
   }
 
   &:hover {
@@ -67,7 +66,7 @@ const Meta = styled.div`
 
 const AppliedDate = styled.p`
   font-size: 13px;
-  color: #8c92a7;
+  color: ${({ theme }) => theme.muted};
   margin: 0;
 `;
 
@@ -79,20 +78,20 @@ const StatusTag = styled.div<{ $status: Status }>`
   flex-shrink: 0;
 
   ${({ $status }) => {
-        switch ($status) {
-            case "pending":
-                return `background-color: rgba(255,165,0,0.2); color: #ffa500;`;
-            case "approved":
-                return `background-color: rgba(4,199,114,0.2); color: #04c772;`;
-            case "rejected":
-                return `background-color: rgba(255,107,107,0.2); color: #ff6b6b;`;
-        }
-    }}
+    switch ($status) {
+      case "pending":
+        return `background-color: rgba(255,165,0,0.2); color: #ffa500;`;
+      case "approved":
+        return `background-color: rgba(4,199,114,0.2); color: #04c772;`;
+      case "rejected":
+        return `background-color: rgba(255,107,107,0.2); color: #ff6b6b;`;
+    }
+  }}
 `;
 
 const CancelButton = styled.button`
   background-color: #ff6b6b;
-  color: white;
+  color: #ffffff;
   border: none;
   border-radius: 6px;
   padding: 8px 12px;
@@ -106,47 +105,50 @@ const CancelButton = styled.button`
   }
 
   &:disabled {
-    background-color: black;
-    color: white;
+    background-color: #1A1A1F;
+    color: #ffffff;
     cursor: not-allowed;
+    border: 1px solid ${({ theme }) => theme.border};
   }
 `;
 
-/* ── Component ─────────────────────────────────────────── */
+/* ─ Component ─ */
+const ApplicationCard: React.FC<ApplicationCardProps> = ({
+  application,
+  onCancel,
+}) => {
+  const { id, studyId, studyTitle, status, appliedAt } = application;
 
-const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onCancel }) => {
-    const { id, studyId, studyTitle, status, appliedAt } = application;
+  const statusText = {
+    pending: "대기중",
+    approved: "수락됨",
+    rejected: "거절됨",
+  }[status];
 
-    const statusText = {
-        pending: "대기중",
-        approved: "수락됨",
-        rejected: "거절됨",
-    }[status];
+  const handleCancelClick: React.MouseEventHandler<HTMLButtonElement> = (e) => {
+    e.preventDefault(); // 링크 이동 방지
+    e.stopPropagation(); // 부모(Link) 클릭 전파 방지
+    onCancel(id);
+  };
 
-    const handleCancelClick: React.MouseEventHandler<HTMLButtonElement> = (e) => {
-        e.preventDefault();     // 링크 이동 방지
-        e.stopPropagation();    // 부모(Link) 클릭 전파 방지
-        onCancel(id);
-    };
+  return (
+    <Card to={`../study/${studyId}`}>
+      <Content>
+        <Title>{studyTitle}</Title>
+        <Meta>
+          <AppliedDate>{appliedAt} 신청</AppliedDate>
 
-    return (
-        <Card to={`../study/${studyId}`}>
-            <Content>
-                <Title>{studyTitle}</Title>
-                <Meta>
-                    <AppliedDate>{appliedAt} 신청</AppliedDate>
+          {status === "pending" ? (
+            <CancelButton onClick={handleCancelClick}>신청 취소</CancelButton>
+          ) : (
+            <CancelButton disabled>취소 불가</CancelButton>
+          )}
+        </Meta>
+      </Content>
 
-                    {status === "pending" ? (
-                        <CancelButton onClick={handleCancelClick}>신청 취소</CancelButton>
-                    ) : (
-                        <CancelButton disabled>취소 불가</CancelButton>
-                    )}
-                </Meta>
-            </Content>
-
-            <StatusTag $status={status}>{statusText}</StatusTag>
-        </Card>
-    );
+      <StatusTag $status={status}>{statusText}</StatusTag>
+    </Card>
+  );
 };
 
 export default ApplicationCard;
