@@ -17,8 +17,18 @@ const VueAccountAppWrapper = ({ eventBus }: { eventBus: any }) => {
             (el.style as any).colorScheme = t;
 
             // 최소 공통 토큰 주입(원하면 확장)
-            const light = { '--text': '#111', '--card': '#ffffffc0' };
-            const dark = { '--text': '#eaeaea', '--card': '#00000000' };
+            const light = { 
+                '--text': '#111', 
+                '--card': '#ffffffc0',
+                '--flex-direction': 'row',
+                '--login-width': '50%'
+            };
+            const dark = { 
+                '--text': '#eaeaea', 
+                '--card': '#00000000',
+                '--flex-direction': 'row',
+                '--login-width': '50%'
+            };
             const tokens = t === 'dark' ? dark : light;
             Object.entries(tokens).forEach(([k, v]) => el.style.setProperty(k, v));
         };
@@ -67,10 +77,11 @@ const VueAccountAppWrapper = ({ eventBus }: { eventBus: any }) => {
             id="vue-account-wrapper"
             ref={vueModuleRef}
             style={{
-                width: "100vw",
-                height: "100vh",
+                width: "100%",
+                height: "100vh", // 전체 높이 사용
                 margin: 0,
                 padding: 0,
+
             }}
         />
     )
