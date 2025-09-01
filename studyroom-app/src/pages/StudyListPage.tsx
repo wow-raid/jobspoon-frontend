@@ -1,19 +1,18 @@
-// StudyListPage.tsx
+// studyroom-app/src/pages/StudyListPage.tsx
 import React, { useMemo, useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
-// import { FAKE_STUDY_ROOMS } from '../data/mockData';
 import StudyRoomCard from '../components/StudyRoomCard';
 import Modal from '../components/Modal';
 import CreateStudyForm from '../components/CreateStudyForm';
 import FilterBar, { FilterValues } from '../components/FilterBar';
-import {StudyRoom} from "../types/study";
+import { StudyRoom } from "../types/study";
 import axiosInstance from "../api/axiosInstance";
 
 const PageTop = styled.div`
   text-align: center;
   padding: 20px 0 40px 0;
-  border-bottom: 1px solid #3e414f;
+  border-bottom: 1px solid ${({ theme }) => theme.border};
   margin-bottom: 32px;
 `;
 
@@ -25,7 +24,7 @@ const PageMainTitle = styled.h1`
 
 const PageSubtitle = styled.p`
   font-size: 1rem;
-  color: #a0a0a0;
+  color: ${({ theme }) => theme.subtle};
   margin: 0;
 `;
 
@@ -43,7 +42,7 @@ const ListHeader = styled.div`
 
   h2 span {
     font-size: 20px;
-    color: #a0a0a0;
+    color: ${({ theme }) => theme.subtle};
   }
 `;
 
@@ -53,10 +52,10 @@ const HeaderActions = styled.div`
 `;
 
 const NavBtnSecondary = styled(Link)`
-  background-color: #3a3f4c;
-  color: white;
+  background-color: ${({ theme }) => theme.surface};
+  color: ${({ theme }) => theme.fg};
   text-decoration: none;
-  border: none;
+  border: 1px solid ${({ theme }) => theme.border};
   border-radius: 6px;
   padding: 10px 16px;
   font-size: 16px;
@@ -64,22 +63,25 @@ const NavBtnSecondary = styled(Link)`
   cursor: pointer;
   display: flex;
   align-items: center;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, border-color .2s;
 
   &:hover {
-    background-color: #4b5563;
+    background-color: ${({ theme }) => theme.surfaceHover};
+    border-color: ${({ theme }) => theme.primary};
   }
 `;
 
 const CreateStudyBtn = styled.button`
-  background-color: #5865f2;
-  color: white;
+  background-color: ${({ theme }) => theme.primary};
+  color: #ffffff;
   border: none;
   border-radius: 6px;
   padding: 10px 16px;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
+
+  &:hover { background-color: ${({ theme }) => theme.primaryHover}; }
 `;
 
 const StudyListContainer = styled.div`
@@ -101,9 +103,7 @@ const StudyListPage: React.FC = () => {
     useEffect(() => {
         const fetchStudyRooms = async () => {
             try {
-                const response = await axiosInstance.get('/study-rooms', {
-                    params: {size: 20}
-                });
+                const response = await axiosInstance.get('/study-rooms', { params: { size: 20 } });
                 setStudyRooms(response.data.studyRoomList);
             } catch (error) {
                 console.error("스터디모임 목록을 불러오는 데 실패했습니다:", error);
@@ -111,7 +111,6 @@ const StudyListPage: React.FC = () => {
         };
         fetchStudyRooms();
     }, []);
-
 
     const filteredRooms = useMemo(() => {
         let rooms = studyRooms;
@@ -136,9 +135,8 @@ const StudyListPage: React.FC = () => {
             console.warn("생성된 스터디 데이터가 유효하지 않습니다:", newStudy);
             return;
         }
-
-        setStudyRooms(prevRooms => [newStudy, ...prevRooms]); // 리스트 최상단에 추가
-        setIsModalOpen(false); // 모달 닫기
+        setStudyRooms(prev => [newStudy, ...prev]);
+        setIsModalOpen(false);
         alert('스터디 모임이 성공적으로 생성되었습니다.');
     };
 
@@ -169,7 +167,7 @@ const StudyListPage: React.FC = () => {
             </StudyListContainer>
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-                <CreateStudyForm onSuccess={handleCreateSuccess}/>
+                <CreateStudyForm onSuccess={handleCreateSuccess} />
             </Modal>
         </div>
     );
