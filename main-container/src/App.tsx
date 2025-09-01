@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 
 import { CircularProgress, CssBaseline, GlobalStyles } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { RecoilRoot, useRecoilValue } from "recoil";
 
 import mitt from "mitt";
@@ -69,6 +69,35 @@ function InnerApp() {
       .catch((err) => console.error("Failed to load navigation bar:", err));
   }, []);
 
+
+function AppRoutes() {
+    const location = useLocation();
+    const hideLayout = location.pathname === "/vue-account/account/login";
+
+    return (
+        <Suspense fallback={<CircularProgress />}>
+            {!hideLayout && <NavigationBarApp />}
+            <Routes>
+                <Route path="/" element={<Main />} />
+                <Route path="/vue-account/*" element={<VueAccountAppWrapper eventBus={eventBus} />} />
+                <Route path="/studies/*" element={<StudyRoomApp />} />
+                <Route
+                    path="/vue-ai-interview/*"
+                    element={
+                        <RequireToken loginPath="/vue-account/account/login">
+                            <VueAiInterviewAppWrapper eventBus={eventBus} />
+                        </RequireToken>
+                    }
+                />
+                <Route path="/svelte-review/*" element={<SvelteReviewAppWrapper />} />
+                <Route path="/mypage/*" element={<MyPageApp />} />
+            </Routes>
+            {!hideLayout && <Footer />}
+        </Suspense>
+    );
+}
+
+
   return (
     <ThemeProvider theme={muiTheme}>
       <CssBaseline />
@@ -85,34 +114,16 @@ function InnerApp() {
       <ThemeSync />
 
       <BrowserRouter>
-        <Suspense fallback={<CircularProgress />}>
-          <NavigationBarApp />
-          <Routes>
-            <Route path="/" element={<Main/>} />
-            <Route
-              path="/vue-account/*"
-              element={<VueAccountAppWrapper eventBus={eventBus} />}
-            />
-            <Route path="/studies/*" element={<StudyRoomApp />} />
-            <Route
-              path="/vue-ai-interview/*"
-              element={
-                <RequireToken loginPath="/vue-account/account/login">
-                  <VueAiInterviewAppWrapper eventBus={eventBus} />
-                </RequireToken>
-              }
-            />
-            <Route path="/svelte-review/*" element={<SvelteReviewAppWrapper />} />
-              <Route path="/mypage/*" element={<MyPageApp />} />
-          </Routes>
-          <Footer />
-        </Suspense>
+          <AppRoutes />
       </BrowserRouter>
 
       <ThemeToggleButton />
     </ThemeProvider>
   );
 }
+
+
+
 
 const App = () => (
   <RecoilRoot>
