@@ -8,7 +8,7 @@ import {
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import '../assets/tailwind.css'
 
-const COLORS = ["#3b82f6", "#e5e7eb"]; // 파랑/회색
+const COLORS = ["rgb(59,130,246)", "rgb(229,231,235)"]; // 파랑 / 회색
 
 // 공통 도넛 데이터 생성
 const makeDonutData = (percent: number) => [
@@ -26,8 +26,9 @@ function DonutChart({
     const percent = Math.min(100, (value / max) * 100); // % 변환
 
     return (
-        <div className="text-center">
-            <div className="relative w-full h-[120px] flex items-center justify-center">
+        <div className="flex flex-col items-center justify-center p-[16px]
+                        bg-[white] rounded-[12px] shadow border border-[rgb(229,231,235)]">
+            <div className="relative w-[120px] h-[120px] flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                         <Pie
@@ -44,14 +45,16 @@ function DonutChart({
                     </PieChart>
                 </ResponsiveContainer>
 
-                {/* 중앙 값 표시 */}
+                {/* 중앙 값 */}
                 <div className="absolute text-center">
-                    <p className="font-bold text-base">{value}{unit}</p>
+                    <p className="text-[18px] font-[600] text-[rgb(17,24,39)]">
+                        {value}{unit}
+                    </p>
                 </div>
             </div>
 
-            {/* 라벨은 아래 */}
-            <p className="text-sm text-gray-600 mt-2">{label}</p>
+            {/* 라벨 */}
+            <p className="text-[14px] text-[rgb(107,114,128)] mt-[12px]">{label}</p>
         </div>
     );
 }
@@ -78,25 +81,55 @@ export default function DashboardSection() {
     }
 
     return (
-        <section className="border bg-white p-6 rounded shadow">
-            <h2 className="text-lg font-bold mb-4">활동 지표</h2>
+        <section className="bg-[white] p-[24px] rounded-[12px] space-y-[20px]">
+            <h2 className="text-[18px] font-[700] text-[rgb(17,24,39)]">활동 지표</h2>
 
             {/* 텍스트 로그 */}
-            <div className="flex flex-col space-y-2 text-sm mb-6">
-                <p>출석률: <span className="font-semibold">{attendance.attendanceRate.toFixed(1)}%</span></p>
-                <p>출석일수: <span className="font-semibold">{attendance.attended}/{attendance.totalDays}일</span></p>
-                <p>총 모의 면접 횟수: <span className="font-semibold">{interview.interviewTotalCount}회</span></p>
-                <p>이번 달 모의 면접 횟수: <span className="font-semibold">{interview.interviewMonthlyCount}회</span></p>
-                <p>총 문제풀이 횟수: <span className="font-semibold">{quiz.quizTotalCount}개</span></p>
-                <p>이번 달 문제풀이 횟수: <span className="font-semibold">{quiz.quizMonthlyCount}개</span></p>
-                <p>리뷰 작성: <span className="font-semibold">{review.reviewCount}개</span></p>
-                <p>모임 작성: <span className="font-semibold">{studyroom.studyroomCount}개</span></p>
-                <p>댓글 작성: <span className="font-semibold">{comment.commentCount}개</span></p>
-                <p>신뢰 점수: <span className="font-semibold">{trust.trustScore}점</span></p>
+            <div className="grid grid-cols-2 gap-[12px] mb-[24px]">
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
+                    <span className="text-[13px] text-[rgb(107,114,128)]">출석률</span>
+                    <span className="font-[600] text-[rgb(37,99,235)]">{attendance.attendanceRate.toFixed(1)}%</span>
+                </div>
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
+                    <span className="text-[13px] text-[rgb(107,114,128)]">출석일수</span>
+                    <span className="font-[600] text-[rgb(37,99,235)]">{attendance.attended}/{attendance.totalDays}일</span>
+                </div>
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
+                    <span className="text-[13px] text-[rgb(107,114,128)]">총 모의면접</span>
+                    <span className="font-[600] text-[rgb(37,99,235)]">{interview.interviewTotalCount}회</span>
+                </div>
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
+                    <span className="text-[13px] text-[rgb(107,114,128)]">이번 달 모의면접</span>
+                    <span className="font-[600] text-[rgb(37,99,235)]">{interview.interviewMonthlyCount}회</span>
+                </div>
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
+                    <span className="text-[13px] text-[rgb(107,114,128)]">총 문제풀이</span>
+                    <span className="font-[600] text-[rgb(37,99,235)]">{quiz.quizTotalCount}개</span>
+                </div>
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
+                    <span className="text-[13px] text-[rgb(107,114,128)]">이번 달 문제풀이</span>
+                    <span className="font-[600] text-[rgb(37,99,235)]">{quiz.quizMonthlyCount}개</span>
+                </div>
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
+                    <span className="text-[13px] text-[rgb(107,114,128)]">리뷰 작성</span>
+                    <span className="font-[600] text-[rgb(37,99,235)]">{review.reviewCount}개</span>
+                </div>
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
+                    <span className="text-[13px] text-[rgb(107,114,128)]">모임 작성</span>
+                    <span className="font-[600] text-[rgb(37,99,235)]">{studyroom.studyroomCount}개</span>
+                </div>
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
+                    <span className="text-[13px] text-[rgb(107,114,128)]">댓글 작성</span>
+                    <span className="font-[600] text-[rgb(37,99,235)]">{comment.commentCount}개</span>
+                </div>
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
+                    <span className="text-[13px] text-[rgb(107,114,128)]">신뢰 점수</span>
+                    <span className="font-[600] text-[rgb(37,99,235)]">{trust.trustScore}점</span>
+                </div>
             </div>
 
-            {/* 도넛 차트 (한 줄에 4개) */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {/* 도넛 차트 레이아웃 */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-[16px]">
                 <DonutChart value={attendance.attendanceRate} label="출석률" unit="%" max={100} />
                 <DonutChart value={interview.interviewMonthlyCount} label="이번 달 모의면접" unit="회" max={10} />
                 <DonutChart value={quiz.quizMonthlyCount} label="이번 달 문제풀이" unit="개" max={20} />

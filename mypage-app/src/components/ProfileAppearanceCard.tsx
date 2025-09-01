@@ -30,14 +30,6 @@ export default function ProfileAppearanceCard() {
 
     return (
         <div className="bg-[white] rounded-[12px] shadow p-[24px] text-center space-y-[16px]">
-            {/* 상단 헤더 */}
-            <div className="flex items-center justify-between mb-[12px]">
-                <div className="flex items-center gap-[8px] text-[rgb(37,99,235)] font-bold text-[14px]">
-                    <span className="bg-[rgb(37,99,235)] text-[white] px-[8px] py-[2px] rounded-full text-[12px]">▼</span>
-                    <span>마이페이지</span>
-                </div>
-                <FaChevronLeft className="text-[rgb(107,114,128)] cursor-pointer" />
-            </div>
 
             {/* 프로필 이미지 */}
             <div className="flex justify-center mb-[20px]">
@@ -53,7 +45,7 @@ export default function ProfileAppearanceCard() {
 
             {/* 기본 정보 */}
             <div>
-                <table className="mx-auto text-[14px] leading-[28px] border-separate border-spacing-x-[8px]">
+                <table className="mx-auto text-[14px] leading-[28px] border-separate border-spacing-x-[8px] border-collapse border-[0]">
                     <tbody>
                     <tr>
                         <td className="text-right font-semibold text-[rgb(55,65,81)] whitespace-nowrap">등급</td>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import ProfileAppearanceCard from "./ProfileAppearanceCard";
 import {
     FaUser,
@@ -9,15 +9,36 @@ import {
     FaEnvelope,
     FaCog,
     FaSignOutAlt,
+    FaChevronDown,
+    FaChevronRight
 } from "react-icons/fa";
 import { MdArticle } from "react-icons/md";
 import '../assets/tailwind.css'
 
 export default function SideBar() {
+
+    const [isProfileOpen, setIsProfileOpen] = useState(true);
+
     return (
-        <div className="h-full flex flex-col p-[16px] space-y-[24px] bg-white border-r shadow-sm">
-            {/* 프로필 카드 */}
-            <ProfileAppearanceCard />
+        <div className="h-full flex flex-col p-[16px] space-y-[24px] bg-white shadow-sm">
+
+            {/* 마이페이지 토글 버튼 */}
+            <button
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className="flex items-center gap-[10px] text-[16px] font-[600] text-[rgb(17,24,39)] cursor-pointer">
+                <span className="w-[28px] h-[28px] flex items-center justify-center bg-[rgb(59,130,246)] text-[white] rounded-[6px] text-[14px]">
+                    {isProfileOpen ? <FaChevronDown /> : <FaChevronRight />}
+                </span>
+                마이페이지
+            </button>
+
+            {/* 프로필 카드 (토글됨) */}
+            <div className={`overflow-hidden transition-all duration-300 ease-in-out`}
+                style={{maxHeight: isProfileOpen ? "1000px" : "0px", opacity: isProfileOpen ? 1 : 0,}}>
+                <ProfileAppearanceCard />
+            </div>
+
+            {/*{isProfileOpen && <ProfileAppearanceCard />}*/}
 
             {/* 메뉴 리스트 */}
             <nav className="flex-1">

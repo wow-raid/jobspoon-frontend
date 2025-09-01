@@ -5,9 +5,11 @@ import '../assets/tailwind.css'
 
 export default function MyPageLayout() {
     return (
-        <div className="flex min-h-screen w-full">
+        <div className="flex min-h-screen w-full bg-[rgb(249,250,251)]">
             {/* 좌측 메뉴바 */}
-            <aside className="w-[300px] sm:w-80 md:w-96 lg:w-[28rem] bg-white border-r shadow-sm flex-shrink-0">
+            <aside className="w-[300px] sm:w-80 md:w-96 lg:w-[28rem]
+                  bg-[white] border-r border-r-[rgb(229,231,235)]
+                  flex-shrink-0">
                 <SideBar />
             </aside>
 
