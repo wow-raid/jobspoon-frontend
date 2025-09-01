@@ -1,11 +1,11 @@
-// Modal.tsx
+// studyroom-app/src/components/Modal.tsx
 import React, { useEffect, useRef } from "react";
 import styled from "styled-components";
 
 interface ModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    children: React.ReactNode;
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
 }
 
 const Overlay = styled.div`
@@ -13,7 +13,7 @@ const Overlay = styled.div`
   inset: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: ${({ theme }) => theme.overlay};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -22,7 +22,9 @@ const Overlay = styled.div`
 
 const Content = styled.div`
   position: relative;
-  background-color: #2c2f3b;
+  background-color: ${({ theme }) => theme.surface};
+  color: ${({ theme }) => theme.fg};
+  border: 1px solid ${({ theme }) => theme.border};
   border-radius: 8px;
   padding: 24px;
   width: 550px;
@@ -30,10 +32,10 @@ const Content = styled.div`
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  outline: none; /* ref로 포커스 받을 때 외곽선 제거 */
+  outline: none;
 
   &:focus {
-    box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.4);
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.primary};
   }
 `;
 
@@ -42,59 +44,50 @@ const CloseButton = styled.button`
   top: 12px;
   right: 12px;
   background: none;
-  color: #8c92a7;
+  color: ${({ theme }) => theme.muted};
   border: none;
   font-size: 24px;
   cursor: pointer;
 
-  &:hover {
-    color: #c2c6d3;
-  }
+  &:hover { color: ${({ theme }) => theme.fg}; }
 `;
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
-    const contentRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        if (!isOpen) return;
+  useEffect(() => {
+    if (!isOpen) return;
 
-        // ESC로 닫기
-        const onKey = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
-        };
-        window.addEventListener("keydown", onKey);
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
 
-        // 바디 스크롤 잠금
-        const prev = document.body.style.overflow;
-        document.body.style.overflow = "hidden";
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
-        // 포커스 이동
-        contentRef.current?.focus();
+    contentRef.current?.focus();
 
-        return () => {
-            window.removeEventListener("keydown", onKey);
-            document.body.style.overflow = prev;
-        };
-    }, [isOpen, onClose]);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen, onClose]);
 
-    if (!isOpen) return null;
+  if (!isOpen) return null;
 
-    return (
-        <Overlay onClick={onClose}>
-            <Content
-                ref={contentRef}
-                tabIndex={-1}
-                role="dialog"
-                aria-modal="true"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <CloseButton aria-label="닫기" onClick={onClose}>
-                    &times;
-                </CloseButton>
-                {children}
-            </Content>
-        </Overlay>
-    );
+  return (
+    <Overlay onClick={onClose}>
+      <Content
+        ref={contentRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <CloseButton aria-label="닫기" onClick={onClose}>&times;</CloseButton>
+        {children}
+      </Content>
+    </Overlay>
+  );
 };
 
 export default Modal;
