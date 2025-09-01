@@ -65,6 +65,7 @@
               type="submit"
               class="w-full max-w-[350px] mt-6 py-3 text-white font-semibold rounded-xl transition-colors"
               style="background-color: #2563eb;"
+              @click="triggerSocialLogin"
           >
             Log In
           </button>
@@ -174,7 +175,10 @@ function goHome() {
   window.location.href = '/'
 }
 
-
+function triggerSocialLogin() {
+  alert("준비중입니다 소셜 로그인을 이용해주세요");
+  console.log("확인 눌렀음");
+}
 
 
 const btnCommon = {
