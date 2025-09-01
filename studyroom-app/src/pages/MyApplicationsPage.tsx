@@ -1,4 +1,3 @@
-// MyApplicationsPage.tsx
 import React, { useMemo, useState } from "react";
 import styled from "styled-components";
 import ApplicationCard from "../components/ApplicationCard";
@@ -16,7 +15,7 @@ const Title = styled.h1`
   font-size: 2rem;
   text-align: center;
   margin-bottom: 40px;
-  color: #fff;
+  color: ${({ theme }) => theme.fg};
 `;
 
 const FilterBar = styled.div`
@@ -27,9 +26,11 @@ const FilterBar = styled.div`
 `;
 
 const FilterTag = styled.button<{ $active?: boolean }>`
-  background-color: ${({ $active }) => ($active ? "#5865f2" : "#3a3f4c")};
-  color: ${({ $active }) => ($active ? "#ffffff" : "#e0e0e0")};
-  border: 1px solid ${({ $active }) => ($active ? "#5865f2" : "#3a3f4c")};
+  background-color: ${({ theme, $active }) =>
+        $active ? theme.primary : theme.surfaceAlt};
+  color: ${({ theme, $active }) => ($active ? "#ffffff" : theme.muted)};
+  border: 1px solid
+    ${({ theme, $active }) => ($active ? theme.primary : theme.border)};
   border-radius: 16px;
   padding: 8px 16px;
   font-size: 14px;
@@ -38,7 +39,8 @@ const FilterTag = styled.button<{ $active?: boolean }>`
   transition: all 0.2s;
 
   &:hover {
-    background-color: ${({ $active }) => ($active ? "#5865f2" : "#4b5563")};
+    background-color: ${({ theme, $active }) =>
+        $active ? theme.primaryHover : theme.surfaceHover};
   }
 `;
 
@@ -53,13 +55,13 @@ const EmptyBox = styled.div`
   justify-content: center;
   align-items: center;
   padding: 80px 20px;
-  background-color: #2c2f3b;
+  background-color: ${({ theme }) => theme.surface};
   border-radius: 8px;
-  border: 1px dashed #4a4e59;
+  border: 1px dashed ${({ theme }) => theme.border};
 
   p {
     font-size: 36px;
-    color: #8c92a7;
+    color: ${({ theme }) => theme.muted};
     margin: 0;
   }
 `;
