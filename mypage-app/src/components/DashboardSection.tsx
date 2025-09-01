@@ -86,43 +86,43 @@ export default function DashboardSection() {
 
             {/* 텍스트 로그 */}
             <div className="grid grid-cols-2 gap-[12px] mb-[24px]">
-                <div className="flex justify-between items-center p-[12px] rounded-[8px]">
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
                     <span className="text-[13px] text-[rgb(107,114,128)]">출석률</span>
                     <span className="font-[600] text-[rgb(37,99,235)]">{attendance.attendanceRate.toFixed(1)}%</span>
                 </div>
-                <div className="flex justify-between items-center p-[12px] rounded-[8px]">
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
                     <span className="text-[13px] text-[rgb(107,114,128)]">출석일수</span>
                     <span className="font-[600] text-[rgb(37,99,235)]">{attendance.attended}/{attendance.totalDays}일</span>
                 </div>
-                <div className="flex justify-between items-center p-[12px] rounded-[8px]">
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
                     <span className="text-[13px] text-[rgb(107,114,128)]">총 모의면접</span>
                     <span className="font-[600] text-[rgb(37,99,235)]">{interview.interviewTotalCount}회</span>
                 </div>
-                <div className="flex justify-between items-center p-[12px] rounded-[8px]">
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
                     <span className="text-[13px] text-[rgb(107,114,128)]">이번 달 모의면접</span>
                     <span className="font-[600] text-[rgb(37,99,235)]">{interview.interviewMonthlyCount}회</span>
                 </div>
-                <div className="flex justify-between items-center p-[12px] rounded-[8px]">
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
                     <span className="text-[13px] text-[rgb(107,114,128)]">총 문제풀이</span>
                     <span className="font-[600] text-[rgb(37,99,235)]">{quiz.quizTotalCount}개</span>
                 </div>
-                <div className="flex justify-between items-center p-[12px] rounded-[8px]">
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
                     <span className="text-[13px] text-[rgb(107,114,128)]">이번 달 문제풀이</span>
                     <span className="font-[600] text-[rgb(37,99,235)]">{quiz.quizMonthlyCount}개</span>
                 </div>
-                <div className="flex justify-between items-center p-[12px] rounded-[8px]">
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
                     <span className="text-[13px] text-[rgb(107,114,128)]">리뷰 작성</span>
                     <span className="font-[600] text-[rgb(37,99,235)]">{review.reviewCount}개</span>
                 </div>
-                <div className="flex justify-between items-center p-[12px] rounded-[8px]">
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
                     <span className="text-[13px] text-[rgb(107,114,128)]">모임 작성</span>
                     <span className="font-[600] text-[rgb(37,99,235)]">{studyroom.studyroomCount}개</span>
                 </div>
-                <div className="flex justify-between items-center p-[12px] rounded-[8px]">
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
                     <span className="text-[13px] text-[rgb(107,114,128)]">댓글 작성</span>
                     <span className="font-[600] text-[rgb(37,99,235)]">{comment.commentCount}개</span>
                 </div>
-                <div className="flex justify-between items-center p-[12px] rounded-[8px]">
+                <div className="flex justify-between items-center p-[12px] bg-[rgb(249,250,251)] rounded-[8px]">
                     <span className="text-[13px] text-[rgb(107,114,128)]">신뢰 점수</span>
                     <span className="font-[600] text-[rgb(37,99,235)]">{trust.trustScore}점</span>
                 </div>
