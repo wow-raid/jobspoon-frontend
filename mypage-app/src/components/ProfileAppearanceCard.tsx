@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { fetchMyProfile, ProfileAppearanceResponse } from "../api/profileAppearanceApi.ts";
 import '../assets/tailwind.css'
-
 import { FaEdit } from "react-icons/fa";
+import ServiceModal from "./ServiceModal.tsx";
 
 export default function ProfileAppearanceCard() {
     const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     // TODO: 👉 로그인 연동 전까지는 임시 하드코딩
     useEffect(() => {
@@ -29,7 +30,7 @@ export default function ProfileAppearanceCard() {
     }
 
     return (
-        <div className="rounded-[12px] shadow p-[24px] text-center space-y-[16px]">
+        <div className="rounded-[12px] shadow p-[24px] text-center space-y-[16px] bg-[rgb(249,250,251)]">
             {/* 프로필 이미지 */}
             <div className="flex justify-center mb-[20px]">
                 <img
@@ -78,11 +79,15 @@ export default function ProfileAppearanceCard() {
                                bg-[rgb(59,130,246)] text-[white] text-[13px] rounded-[6px]
                                hover:bg-[rgb(37,99,235)] cursor-pointer
                                transition-colors duration-200"
-                    onClick={() => console.log("수정하기 클릭!")}>
+                    onClick={() => setIsModalOpen(true)}>
                     <FaEdit />
                     수정하기
                 </button>
             </div>
+
+            {/* 모달 컴포넌트 */}
+            <ServiceModal isOpen={isModalOpen} onClose={() =>
+                setIsModalOpen(false)} />
         </div>
     );
 }

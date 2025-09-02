@@ -32,7 +32,9 @@ export default function SideBar() {
                 <span className="w-[28px] h-[28px] flex items-center justify-center bg-[rgb(59,130,246)] text-[white] rounded-[6px] text-[14px]">
                     {isProfileOpen ? <FaChevronDown /> : <FaChevronRight />}
                 </span>
-                마이페이지
+                <span className="bg-[rgb(249,250,251)] px-[6px] py-[2px] rounded">
+                    마이페이지
+                </span>
             </button>
 
             {/* 프로필 카드 (토글됨) */}
