@@ -10,7 +10,11 @@ export interface FilterValues {
   showRecruitingOnly: boolean;
 }
 
-interface FilterBarProps { onFilterChange: (filters: FilterValues) => void; }
+interface FilterBarProps {
+    onFilterChange: (filters: FilterValues) => void;
+    showRecruitingFilter?: boolean;
+    searchPlaceholder?: string;
+}
 
 /* ─ styled-components (scoped) ─ */
 const Container = styled.div`
@@ -76,27 +80,47 @@ const Checkbox = styled.input.attrs({ type: "checkbox" })`
   accent-color: ${({ theme }) => theme.primary};
 `;
 
-const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange }) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [location, setLocation] = useState("전체");
-  const [job, setJob] = useState("전체");
-  const [showRecruitingOnly, setShowRecruitingOnly] = useState(false);
+const FilterBar: React.FC<FilterBarProps> = ({
+                                                 onFilterChange,
+                                                 showRecruitingFilter = true,
+                                                 searchPlaceholder = "스터디 제목으로 검색",
+                                             }) => {
+    // 👇 1. 상태를 하나의 객체로 통합하고, 모든 필드를 포함시킵니다.
+    const [filters, setFilters] = useState<FilterValues>({
+        searchTerm: "",
+        location: "전체",
+        job: "전체",
+        showRecruitingOnly: false,
+    });
 
-  useEffect(() => {
-    onFilterChange({ searchTerm, location, job, showRecruitingOnly });
-  }, [searchTerm, location, job, showRecruitingOnly, onFilterChange]);
+  // const [searchTerm, setSearchTerm] = useState("");
+  // const [location, setLocation] = useState("전체");
+  // const [job, setJob] = useState("전체");
+  // const [showRecruitingOnly, setShowRecruitingOnly] = useState(false);
+
+    useEffect(() => {
+        onFilterChange(filters);
+    }, [filters, onFilterChange]);
+
+    const handleValueChange = (field: keyof FilterValues, value: string) => {
+        setFilters(prev => ({ ...prev, [field]: value }));
+    };
 
   return (
     <Container>
       <SearchInput
         type="text"
-        placeholder="스터디 제목으로 검색"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder={searchPlaceholder}
+        value={filters.searchTerm}
+        onChange={(e) => handleValueChange("searchTerm", e.target.value)}
         aria-label="스터디 제목 검색"
       />
 
-      <Select value={location} onChange={(e) => setLocation(e.target.value)} aria-label="지역 선택">
+      <Select
+          value={filters.location}
+              onChange={(e) => handleValueChange("location", e.target.value)}
+              aria-label="지역 선택"
+      >
         {LOCATION.map((region) => (
           <option key={region.value} value={region.value}>
             {region.value === "전체" ? "지역 (전체)" : region.label}
@@ -104,19 +128,25 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange }) => {
         ))}
       </Select>
 
-      <Select value={job} onChange={(e) => setJob(e.target.value)} aria-label="직군 선택">
-        {DEV_JOBS.map((j) => (
-          <option key={j} value={j}>{j}</option>
-        ))}
-      </Select>
+        <Select
+            value={filters.job}
+            onChange={(e) => handleValueChange("job", e.target.value)}
+            aria-label="직군 선택"
+        >
+            {DEV_JOBS.map((j) => (
+                <option key={j} value={j}>{j}</option>
+            ))}
+        </Select>
 
-      <CheckboxLabel>
-        <Checkbox
-          checked={showRecruitingOnly}
-          onChange={(e) => setShowRecruitingOnly(e.target.checked)}
-        />
-        모집 중인 스터디만 보기
-      </CheckboxLabel>
+        {showRecruitingFilter && (
+            <CheckboxLabel>
+                <Checkbox
+                    checked={filters.showRecruitingOnly}
+                    onChange={(e) => handleValueChange("showRecruitingOnly", e.target.checked)}
+                />
+                모집 중인 스터디만 보기
+            </CheckboxLabel>
+        )}
     </Container>
   );
 };
