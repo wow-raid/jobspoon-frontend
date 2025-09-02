@@ -182,10 +182,12 @@ const CreateStudyForm: React.FC<CreateStudyFormProps> = ({
 
         try {
             if (isEditMode) {
+                // 수정모드
                 if (!initialData?.id) { alert("수정할 스터디 정보가 올바르지 않습니다."); return; }
                 const response = await axiosInstance.put(`/study-rooms/${initialData.id}`, apiRequestData);
                 if (response.status === 200) onSuccess(response.data);
             } else {
+                // 생성모드
                 const response = await axiosInstance.post('/study-rooms', apiRequestData);
                 if (response.status === 201) onSuccess(response.data);
             }

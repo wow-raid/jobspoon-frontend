@@ -34,35 +34,80 @@ export const FAKE_STUDY_ROOMS: StudyRoom[] = [
 
 export interface Application {
     id: number;
-    studyId: number;
-    studyTitle: string;
-    status: string;
+    status: 'pending' | 'approved' | 'rejected';
+    message: string;
     appliedAt: string;
+    study: {
+        id: number;
+        title: string;
+        location: string;
+        recruitingRoles: string[];
+    };
 }
 
 // === 내 신청 내역 데이터 (20개) ===
 export const MY_APPLICATIONS: Application[] = [
-    { id: 1, studyId: 1, studyTitle: 'React 19 최신 기능 스터디', status: 'pending', appliedAt: '방금 전' },
-    { id: 2, studyId: 2, studyTitle: 'TypeScript 기반 실전 프로젝트', status: 'approved', appliedAt: '1일 전' },
-    { id: 3, studyId: 3, studyTitle: 'Vue.js 스터디 (마감)', status: 'rejected', appliedAt: '2일 전' },
-    { id: 4, studyId: 4, studyTitle: '웹 성능 최적화 Deep Dive', status: 'pending', appliedAt: '3일 전' },
-    { id: 5, studyId: 5, studyTitle: 'Next.js 앱 라우터 마스터', status: 'approved', appliedAt: '4일 전' },
-    { id: 6, studyId: 6, studyTitle: 'Kotlin & Spring Boot MSA', status: 'pending', appliedAt: '1시간 전' },
-    { id: 7, studyId: 7, studyTitle: '대용량 트래픽 처리 설계 (마감)', status: 'rejected', appliedAt: '3일 전' },
-    { id: 8, studyId: 8, studyTitle: 'Node.js 클린 아키텍처', status: 'approved', appliedAt: '5일 전' },
-    { id: 9, studyId: 9, studyTitle: '실용적인 Go 언어 스터디', status: 'pending', appliedAt: '6일 전' },
-    { id: 10, studyId: 10, studyTitle: 'NestJS 기반 API 서버 개발', status: 'approved', appliedAt: '1주 전' },
-    { id: 11, studyId: 11, studyTitle: 'Jetpack Compose 실전', status: 'rejected', appliedAt: '2일 전' },
-    { id: 12, studyId: 12, studyTitle: 'SwiftUI 동시성 프로그래밍', status: 'pending', appliedAt: '4일 전' },
-    { id: 13, studyId: 13, studyTitle: 'Flutter 앱 만들기 (마감)', status: 'approved', appliedAt: '1주 전' },
-    { id: 14, studyId: 14, studyTitle: 'React Native 프로젝트', status: 'pending', appliedAt: '10일 전' },
-    { id: 15, studyId: 15, studyTitle: 'Terraform으로 IaC 구축하기', status: 'rejected', appliedAt: '3일 전' },
-    { id: 16, studyId: 16, studyTitle: 'CS 전공 면접 스터디', status: 'approved', appliedAt: '4일 전' },
-    { id: 17, studyId: 17, studyTitle: 'LLM 기반 서비스 개발', status: 'pending', appliedAt: '5일 전' },
-    { id: 18, studyId: 18, studyTitle: 'CI/CD 파이프라인 구축 (마감)', status: 'rejected', appliedAt: '1주 전' },
-    { id: 19, studyId: 19, studyTitle: 'SQL 쿼리 스터디', status: 'approved', appliedAt: '2일 전' },
-    { id: 20, studyId: 20, studyTitle: '코딩 테스트 알고리즘', status: 'pending', appliedAt: '1일 전' },
-];
+    {
+        id: 1,
+        status: 'pending',
+        message: 'React 최신 기능에 대해 깊이 있게 공부하고 싶습니다.',
+        appliedAt: '방금 전',
+        study: {
+            id: 1,
+            title: 'React 19 최신 기능 스터디',
+            location: 'ONLINE',
+            recruitingRoles: ['프론트엔드'],
+        },
+    },
+    {
+        id: 2,
+        status: 'approved',
+        message: 'TypeScript 실전 경험을 쌓고 싶습니다.',
+        appliedAt: '1일 전',
+        study: {
+            id: 2,
+            title: 'TypeScript 기반 실전 프로젝트',
+            location: 'SEOUL',
+            recruitingRoles: ['프론트엔드', '백엔드'],
+        },
+    },
+    {
+        id: 3,
+        status: 'rejected',
+        message: 'Vue.js 경험을 활용하고 싶습니다.',
+        appliedAt: '2일 전',
+        study: {
+            id: 3,
+            title: 'Vue.js 스터디 (마감)',
+            location: 'GYEONGGI',
+            recruitingRoles: ['프론트엔드'],
+        },
+    },
+    {
+        id: 4,
+        status: 'pending',
+        message: '웹 성능에 대한 심도 깊은 논의를 하고 싶습니다.',
+        appliedAt: '3일 전',
+        study: {
+            id: 4,
+            title: '웹 성능 최적화 Deep Dive',
+            location: 'ONLINE',
+            recruitingRoles: ['프론트엔드'],
+        },
+    },
+    {
+        id: 5,
+        status: 'approved',
+        message: 'Next.js의 앱 라우터 사용 경험을 공유하고 싶습니다.',
+        appliedAt: '4일 전',
+        study: {
+            id: 5,
+            title: 'Next.js 앱 라우터 마스터',
+            location: 'BUSAN',
+            recruitingRoles: ['프론트엔드', '풀스택'],
+        },
+    },
+    ];
 
 export interface Announcement {
     id: number;

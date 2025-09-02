@@ -9,17 +9,17 @@ import StudyDetailView from '../components/StudyDetailView';
 import Modal from '../components/Modal';
 import ApplicationForm from '../components/ApplicationForm';
 import CreateStudyForm from "../components/CreateStudyForm";        // 생성폼을 재사용함
+import { useAuth } from "../hooks/useAuth";
 
 const PageContainer = styled.div`
   max-width: 800px;
   margin: 0 auto;
 `;
 
-const CURRENT_USER_ID = 1;
-
 const StudyDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { currentUserId } = useAuth();
     const [study, setStudy] = useState<StudyRoom | null>(null);
     const [loading, setLoading] = useState(true);
     const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
@@ -63,7 +63,12 @@ const StudyDetailPage: React.FC = () => {
     if (loading) return <div>로딩 중...</div>;
     if (!study) return <div>스터디 정보를 찾을 수 없습니다.</div>;
 
-    const isOwner = study.hostId === CURRENT_USER_ID;
+    console.log('isOwner 비교 전 값 확인:', {
+        '로그인된 사용자 ID': currentUserId,
+        '스터디 생성자 ID': study.hostId
+    });
+
+    const isOwner = currentUserId !== null && study.hostId === currentUserId;
 
     return (
         <PageContainer>
