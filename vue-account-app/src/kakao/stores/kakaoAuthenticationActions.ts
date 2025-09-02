@@ -22,12 +22,15 @@ export const kakaoAuthenticationAction = {
 
             // 팝업 메시지 받기
             const receiveMessage = (event: MessageEvent) => {
+
                 console.log('📨 받은 메시지:', event.origin, event.data);
 
-                // if (!event.origin.startsWith(env.origin)) {
-                //     console.warn('❌ 허용되지 않은 origin:', event.origin);
-                //     return;
-                // }
+                // 허용된 origin만 허용
+                if (event.origin !== process.env.ORIGIN) {
+                    console.log("원본 Origin : ", process.env.ORIGIN);
+                    console.warn('❌ 허용되지 않은 origin:', event.origin);
+                    return;
+                }
 
                 sessionStorage.setItem("tempLoginType", loginType);
                 const { accessToken, isNewUser, user } = event.data;
