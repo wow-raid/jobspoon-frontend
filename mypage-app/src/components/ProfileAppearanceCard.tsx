@@ -2,12 +2,10 @@ import React, { useEffect, useState } from "react";
 import { fetchMyProfile, ProfileAppearanceResponse } from "../api/profileAppearanceApi.ts";
 import '../assets/tailwind.css'
 import { FaEdit } from "react-icons/fa";
-// import ServiceModal from "./ServiceModal.tsx";
 import { useNavigate } from "react-router-dom";
 
 export default function ProfileAppearanceCard() {
     const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
-    // const [isModalOpen, setIsModalOpen] = useState(false);
     const navigate = useNavigate();
 
     // TODO: 👉 로그인 연동 전까지는 임시 하드코딩
@@ -86,10 +84,6 @@ export default function ProfileAppearanceCard() {
                     수정하기
                 </button>
             </div>
-
-            {/*/!* 모달 컴포넌트 *!/*/}
-            {/*<ServiceModal isOpen={isModalOpen} onClose={() =>*/}
-            {/*    setIsModalOpen(false)} />*/}
         </div>
     );
 }

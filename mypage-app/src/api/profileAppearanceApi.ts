@@ -68,7 +68,7 @@ export async function equipRank(token: string, rankId: number): Promise<HistoryI
 export async function fetchMyTitles(token: string): Promise<HistoryItem[]> {
     const res = await axios.get<HistoryItem[]>(
         `${API_BASE_URL}/profile-appearance/title/my`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: token } }
     );
     return res.data;
 }
@@ -78,7 +78,7 @@ export async function equipTitle(token: string, titleId: number): Promise<Histor
     const res = await axios.put<HistoryItem>(
         `${API_BASE_URL}/profile-appearance/title/${titleId}/equip`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: token } }
     );
     return res.data;
 }
