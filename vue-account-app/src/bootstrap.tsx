@@ -25,6 +25,8 @@ export const vueAccountAppMount = async (el: string | Element, eventBus: any) =>
     const container = typeof el === "string" ? document.querySelector(el) : el;
     if (!container) return;
 
+    // 쉐도우 DOM 사용 코드 (주석 처리)
+    /*
     // ShadowRoot 재사용(이미 있으면 attachShadow 금지)
     const shadowRoot: ShadowRoot =
         (container as any).shadowRoot ?? (container as Element).attachShadow({ mode: "open" });
@@ -41,6 +43,20 @@ export const vueAccountAppMount = async (el: string | Element, eventBus: any) =>
 
     // Vuetify / MDI CSS를 Shadow DOM에 주입 (대기)
     await injectVuetifyCssIntoShadow(shadowRoot);
+    */
+    
+    // 일반 DOM 사용 코드 (쉐도우 DOM 제거)
+    // 컨테이너 초기화
+    container.innerHTML = "";
+    
+    // Vue mount용 div
+    const appRoot = document.createElement("div");
+    appRoot.classList.add("v-application", "v-theme--light");
+    (appRoot.style as any).visibility = "hidden";
+    container.appendChild(appRoot);
+    
+    // 필요한 CSS 스타일 로드 (전역 스타일시트로 적용)
+    await injectGlobalCss();
 
     // 폰트 준비 – 너무 오래 걸리면 세이프가드로 진행
     await Promise.race([
@@ -91,26 +107,38 @@ export const vueAccountAppMount = async (el: string | Element, eventBus: any) =>
     }
     lastEventBus = eventBus;
 
+    // 쉐도우 DOM 사용 코드 (주석 처리)
+    /*
     app.mount(shadowAppRoot);
 
     // 다음 프레임에 표시
     requestAnimationFrame(() => { (shadowAppRoot.style as any).visibility = ""; });
+    */
+    
+    // 일반 DOM 사용 코드
+    app.mount(appRoot);
+    
+    // 다음 프레임에 표시
+    requestAnimationFrame(() => { (appRoot.style as any).visibility = ""; });
 };
 
-// ShadowRoot에 Vuetify/MDI css fetch해서 style로 삽입 (상대 경로 보정 포함)
+// 쉐도우 DOM에 Vuetify/MDI/Tailwind css fetch해서 style로 삽입 (상대 경로 보정 포함) - 주석 처리된 코드
 async function injectVuetifyCssIntoShadow(shadowRoot: ShadowRoot) {
-    const [vuetifyCss, mdiCssRaw] = await Promise.all([
+    const [vuetifyCss, mdiCssRaw, tailwindCss] = await Promise.all([
         fetch("https://cdn.jsdelivr.net/npm/vuetify@3.9.0/dist/vuetify.min.css").then((r) => r.text()),
         fetch("https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css").then((r) => r.text()),
+        // Tailwind CSS CDN 추가
+        fetch("https://cdn.jsdelivr.net/npm/tailwindcss@4.1.12/dist/tailwind.min.css").then((r) => r.text()),
     ]);
 
     // MDI 상대 폰트 경로를 절대 경로로 치환
     const mdiBase = "https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/";
     const mdiCss = mdiCssRaw.replace(
-        /url\((['"]?)(?!https?:|data:)([^'")]+)\1\)/g,
+        /url\((['"\\]?)(?!https?:|data:)([^'"\\)]+)\1\)/g,
         (_: string, _q: string, url: string) => `url('${new URL(url, mdiBase).href}')`
     );
 
+    // 기본 스타일 요소 생성
     const style = document.createElement("style");
     style.id = "vuetify-shadow-css";
     style.textContent = `
@@ -128,6 +156,114 @@ async function injectVuetifyCssIntoShadow(shadowRoot: ShadowRoot) {
     ${mdiCss}
   `;
     shadowRoot.appendChild(style);
+    
+    // Tailwind CSS를 별도 스타일 요소로 추가
+    const tailwindStyle = document.createElement("style");
+    tailwindStyle.id = "tailwind-shadow-css";
+    tailwindStyle.textContent = tailwindCss;
+    shadowRoot.appendChild(tailwindStyle);
+    
+    // 커스텀 CSS 변수 및 레이아웃 스타일 추가
+    const customStyle = document.createElement("style");
+    customStyle.id = "custom-shadow-css";
+    customStyle.textContent = `
+    /* 레이아웃 관련 CSS 변수 */
+    :host {
+      --flex-direction: row;
+      --login-width: 50%;
+    }
+    
+    /* Tailwind 클래스 보완 스타일 */
+    .w-full { width: 100% !important; }
+    .h-screen { height: 100vh !important; }
+    .flex { display: flex !important; }
+    .flex-row { flex-direction: row !important; }
+    .flex-col { flex-direction: column !important; }
+    .justify-center { justify-content: center !important; }
+    .items-center { align-items: center !important; }
+    .w-1/2 { width: 50% !important; }
+    .p-16 { padding: 4rem !important; }
+    .gap-6 { gap: 1.5rem !important; }
+    .bg-black { background-color: #000 !important; }
+    .bg-gray-200 { background-color: #e5e7eb !important; }
+    .text-white { color: #fff !important; }
+    
+    /* 반응형 스타일 */
+    @media (max-width: 768px) {
+      :host {
+        --flex-direction: column;
+        --login-width: 100%;
+      }
+    }
+  `;
+    shadowRoot.appendChild(customStyle);
+}
+
+// 일반 DOM에 전역 스타일 주입 (쉐도우 DOM 제거 버전)
+async function injectGlobalCss() {
+    const [vuetifyCss, mdiCssRaw, tailwindCss] = await Promise.all([
+        fetch("https://cdn.jsdelivr.net/npm/vuetify@3.9.0/dist/vuetify.min.css").then((r) => r.text()),
+        fetch("https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css").then((r) => r.text()),
+        // Tailwind CSS CDN 추가
+        fetch("https://cdn.jsdelivr.net/npm/tailwindcss@4.1.12/dist/tailwind.min.css").then((r) => r.text()),
+    ]);
+
+    // MDI 상대 폰트 경로를 절대 경로로 치환
+    const mdiBase = "https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/";
+    const mdiCss = mdiCssRaw.replace(
+        /url\((['"\\]?)(?!https?:|data:)([^'"\\)]+)\1\)/g,
+        (_: string, _q: string, url: string) => `url('${new URL(url, mdiBase).href}')`
+    );
+    
+    // 기존 스타일 요소가 있는지 확인
+    let vuetifyStyle = document.getElementById("vuetify-global-css");
+    if (!vuetifyStyle) {
+        vuetifyStyle = document.createElement("style");
+        vuetifyStyle.id = "vuetify-global-css";
+        document.head.appendChild(vuetifyStyle);
+    }
+    vuetifyStyle.textContent = vuetifyCss;
+    
+    // MDI 아이콘 스타일 추가
+    let mdiStyle = document.getElementById("mdi-global-css");
+    if (!mdiStyle) {
+        mdiStyle = document.createElement("style");
+        mdiStyle.id = "mdi-global-css";
+        document.head.appendChild(mdiStyle);
+    }
+    mdiStyle.textContent = mdiCss;
+    
+    // Tailwind CSS 추가
+    let tailwindStyle = document.getElementById("tailwind-global-css");
+    if (!tailwindStyle) {
+        tailwindStyle = document.createElement("style");
+        tailwindStyle.id = "tailwind-global-css";
+        document.head.appendChild(tailwindStyle);
+    }
+    tailwindStyle.textContent = tailwindCss;
+    
+    // 커스텀 CSS 변수 및 레이아웃 스타일 추가
+    let customStyle = document.getElementById("custom-global-css");
+    if (!customStyle) {
+        customStyle = document.createElement("style");
+        customStyle.id = "custom-global-css";
+        document.head.appendChild(customStyle);
+    }
+    customStyle.textContent = `
+    /* 레이아웃 관련 CSS 변수 */
+    :root {
+      --flex-direction: row;
+      --login-width: 50%;
+    }
+    
+    /* 반응형 스타일 */
+    @media (max-width: 768px) {
+      :root {
+        --flex-direction: column;
+        --login-width: 100%;
+      }
+    }
+    `;
 }
 
 export const vueAccountAppUnmount = () => {
@@ -140,13 +276,20 @@ export const vueAccountAppUnmount = () => {
         lastEventBus.off("vue-account-routing-event", routingHandler);
     }
     routingHandler = null;
-    lastEventBus = null;
-
+    
+    // 쉐도우 DOM 사용 코드 (주석 처리)
+    /*
     // ShadowRoot 비우기 (스타일/DOM 정리)
     if (shadowRootRef) {
         shadowRootRef.innerHTML = "";
         shadowRootRef = null;
     }
+    */
+    
+    // 일반 DOM 사용 코드
+    // 기존 전역 스타일은 유지 (다른 앱에서도 사용할 수 있음)
+    
+    lastEventBus = null;
 };
 
 interface EventBus {
