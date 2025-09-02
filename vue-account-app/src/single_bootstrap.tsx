@@ -1,7 +1,6 @@
 import { createApp, h } from 'vue'
 import type { App as VueApp } from 'vue'
 import App from './App.vue'
-import vuetify from './plugins/vuetify'
 import { loadFonts } from './plugins/webfontloader'
 import { createHead } from '@vueuse/head'
 
