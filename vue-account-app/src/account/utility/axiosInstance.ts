@@ -12,6 +12,7 @@ export function createAxiosInstances() {
     const aiBaseUrl = process.env.VUE_APP_AI_API_BASE_URL;
 
     if (!djangoAxiosInstance) {
+        console.log("🔎 Spring API URL:", process.env.VUE_APP_SPRING_API_BASE_URL);
         djangoAxiosInstance = axios.create({
             baseURL: djangoApiUrl,
             timeout: 80000,
