@@ -18,19 +18,20 @@ const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #3e414f;
+  border-bottom: 1px solid ${({ theme }) => theme.border};
   padding-bottom: 16px;
   margin-bottom: 16px;
 
   h2 {
     margin: 0;
     font-size: 20px;
-    color: #fff;
+    color: ${({ theme }) => theme.fg};
   }
 `;
 
 const WriteBtn = styled.button`
-  background-color: #5865f2;
+  background-color: ${({ theme }) => theme.accent ?? theme.primary};
+
   color: #ffffff;
   border: none;
   border-radius: 6px;
@@ -38,6 +39,7 @@ const WriteBtn = styled.button`
   font-size: 14px;
   font-weight: bold;
   cursor: pointer;
+  &:hover { background-color: ${({ theme }) => theme.accentHover ?? theme.primaryHover}; }
 `;
 
 const SearchBar = styled.div`
@@ -48,16 +50,17 @@ const SearchInput = styled.input`
   width: 100%;
   padding: 10px 14px;
   border-radius: 6px;
-  border: 1px solid #3e414f;
-  background-color: #1e2129;
-  color: #d1d5db;
+  border: 1px solid ${({ theme }) => theme.inputBorder};
+  background-color: ${({ theme }) => theme.inputBg};
+  color: ${({ theme }) => theme.fg};
   font-size: 14px;
   box-sizing: border-box;
+  &::placeholder { color: ${({ theme }) => theme.inputPlaceholder}; }
 
   &:focus {
     outline: none;
-    border-color: #5865f2;
-    box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.35);
+    border-color: ${({ theme }) => theme.accent ?? theme.primary};
+    box-shadow: 0 0 0 2px rgba(88,101,242,0.35);
   }
 `;
 
@@ -68,7 +71,8 @@ const List = styled.div`
 `;
 
 const Item = styled.div<{ $clickable?: boolean; $pinned?: boolean }>`
-  background-color: ${({ $pinned }) => ($pinned ? 'rgba(88, 101, 242, 0.1)' : '#1e2129')};
+  background-color: ${({ theme, $pinned }) =>
+            $pinned ? (theme.tagBg ?? theme.surfaceHover) : theme.surface };
   padding: 16px;
   border-radius: 8px;
   border: 1px solid transparent;
@@ -79,12 +83,14 @@ const Item = styled.div<{ $clickable?: boolean; $pinned?: boolean }>`
   align-items: center;
   gap: 16px;
 
-  ${({ $pinned }) => ($pinned ? 'border-left: 3px solid #5865f2;' : '')}
+  ${({ theme, $pinned }) => ($pinned ? `border-left: 3px solid ${theme.accent ?? theme.primary};` : '')}
   ${({ $clickable }) => ($clickable ? 'cursor: pointer;' : '')}
 
   &:hover {
-    ${({ $clickable }) => ($clickable ? 'background-color: #24262d; transform: scale(1.02); border-color: #5865f2;' : '')}
-  }
+   ${({ theme, $clickable }) =>
+              $clickable
+                    ? `background-color: ${theme.surfaceHover}; transform: scale(1.01); border-color: ${theme.accent ?? theme.primary};`
+                : ''}
 `;
 
 const ItemMainContent = styled.div`
@@ -101,7 +107,7 @@ const ItemHeader = styled.div`
 
 const ItemTitle = styled.span`
   font-weight: 600;
-  color: #e0e0e0;
+  color: ${({ theme }) => theme.fg};
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -110,13 +116,13 @@ const ItemTitle = styled.span`
 
 const ItemMeta = styled.span`
   font-size: 12px;
-  color: #8c92a7;
+  color: ${({ theme }) => theme.subtle};
   flex-shrink: 0;
 `;
 
 const PinButton = styled.button<{ $pinned?: boolean }>`
-  background-color: ${({ $pinned }) => ($pinned ? '#5865f2' : '#3a3f4c')};
-  color: ${({ $pinned }) => ($pinned ? '#ffffff' : '#d1d5db')};
+  background-color: ${({ theme, $pinned }) => ($pinned ? (theme.accent ?? theme.primary) : theme.surfaceHover)};
+  color: #fff;
   border: none;
   border-radius: 6px;
   padding: 6px 10px;
@@ -127,7 +133,8 @@ const PinButton = styled.button<{ $pinned?: boolean }>`
   transition: background-color 0.2s;
 
   &:hover {
-    background-color: ${({ $pinned }) => ($pinned ? '#5865f2' : '#4b5563')};
+    background-color: ${({ theme, $pinned }) =>
+    $pinned ? (theme.accentHover ?? theme.primaryHover) : theme.surfaceHover};
   }
 `;
 
