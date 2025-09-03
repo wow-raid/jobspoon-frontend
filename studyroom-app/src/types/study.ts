@@ -9,10 +9,11 @@ export interface StudyRoom {
     recruitingRoles: string[];
     skillStack: string[];
     createdAt: string;
-    hostId?: number;
+    hostId: number;
+    currentMembers?: number;
     // 아래 필드들은 백엔드 응답에 맞춰 제거하거나 수정
     // job?: string;
     // category?: string;
     // postedAt?: string;
-    // currentMembers?: number;
+
 }
