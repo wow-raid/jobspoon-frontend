@@ -2,6 +2,9 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import springAxiosInst from "./utility/AxiosInst.ts";
+import {logoutRequest} from "./utility/AccountApi.ts";
+
 
 const Header = styled.header`
   position: sticky;
@@ -82,15 +85,30 @@ const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+
   useEffect(() => {
     const token = localStorage.getItem("userToken");
     setIsLoggedIn(!!token);
   }, [location]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("userToken");
-    setIsLoggedIn(false);
-    navigate("/");
+  const handleLogout = async () => {
+    const token = localStorage.getItem("userToken");
+
+    try{
+      const axiosResponse = await logoutRequest();
+      console.log("성공 했나");
+      if(axiosResponse.status === 200 && axiosResponse.data == "success"){
+        setIsLoggedIn(false);
+        localStorage.removeItem("userToken");
+        navigate("/");
+      } else{
+        alert("로그아웃에 실패 하였습니다.");
+      }
+    } catch(err){
+      console.log(err);
+      alert("로그아웃중 문제 발생");
+    }
+
   };
 
   const isActive = (to: string) =>

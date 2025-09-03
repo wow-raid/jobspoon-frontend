@@ -82,6 +82,7 @@ export default defineConfig({
     new DefinePlugin({
       "process.env.REACT_APP_BASE_URL": JSON.stringify(process.env.REACT_APP_BASE_URL),
       "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
+      "process.env.SPRING_SERVER_API_URL": JSON.stringify(process.env.SPRING_SERVER_API_URL)
     }),
     new ModuleFederationPlugin(mfConfig),
     isDev ? new RefreshPlugin() : null,
