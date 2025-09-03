@@ -24,5 +24,10 @@ declare module 'styled-components' {
         badgeRecruitingFg: string;
         badgeClosedBg: string;
         badgeClosedFg: string;
+
+        accent: string;
+        accentHover: string;
+        danger: string;
+        dangerHover: string;
     }
 }

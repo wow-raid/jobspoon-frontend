@@ -18,7 +18,7 @@ const Title = styled.h3`
   text-align: center;
   font-size: 20px;
   margin: 0;
-  color: #fff;
+  color: ${({ theme }) => theme.fg};
 `;
 
 const Group = styled.div`
@@ -29,20 +29,20 @@ const Group = styled.div`
 
 const Label = styled.label`
   font-weight: 600;
-  color: #d1d5db;
+  color: ${({ theme }) => theme.fg};
 `;
 
 const TextInput = styled.input`
   padding: 10px;
   border-radius: 6px;
-  border: 1px solid #4a5568;
-  background-color: #1f2937;
-  color: #d1d5db;
+  border: 1px solid ${({ theme }) => theme.inputBorder};
+  background-color: ${({ theme }) => theme.inputBg};
+  color: ${({ theme }) => theme.fg};
   font-size: 14px;
 
   &:focus {
     outline: none;
-    border-color: #5865f2;
+    border-color: ${({ theme }) => theme.accent ?? theme.primary};
     box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.35);
   }
 `;
@@ -50,22 +50,22 @@ const TextInput = styled.input`
 const TextArea = styled.textarea`
   padding: 10px;
   border-radius: 6px;
-  border: 1px solid #4a5568;
-  background-color: #1f2937;
-  color: #d1d5db;
+  border: 1px solid ${({ theme }) => theme.inputBorder};
+  background-color: ${({ theme }) => theme.inputBg};
+  color: ${({ theme }) => theme.fg};
   font-size: 14px;
   min-height: 160px;
   resize: vertical;
 
   &:focus {
     outline: none;
-    border-color: #5865f2;
-    box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.35);
+    border-color: ${({ theme }) => theme.accent ?? theme.primary};
+    box-shadow: 0 0 0 2px rgba(88,101,242,0.35);
   }
 `;
 
 const SubmitBtn = styled.button`
-  background-color: #5865f2;
+  background-color: ${({ theme }) => theme.accent ?? theme.primary};
   color: white;
   border: none;
   border-radius: 6px;
@@ -74,9 +74,7 @@ const SubmitBtn = styled.button`
   font-weight: bold;
   cursor: pointer;
 
-  &:hover {
-    filter: brightness(0.95);
-  }
+  &:hover { background-color: ${({ theme }) => theme.accentHover ?? theme.primaryHover}; }
 `;
 
 const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ onSubmit, initialData }) => {

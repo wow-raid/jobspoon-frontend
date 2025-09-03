@@ -36,6 +36,10 @@ const lightTheme = {
   badgeRecruitingFg: '#fff',
   badgeClosedBg: '#1A1A1F',
   badgeClosedFg: '#BDBDBD',
+  accent: '#5865F2',
+  accentHover: '#4752c4',
+  danger: '#ef4444',
+  dangerHover: '#dc2626',
 };
 
 const darkTheme = {
@@ -58,6 +62,10 @@ const darkTheme = {
   badgeRecruitingFg: '#fff',
   badgeClosedBg: '#1A1A1F',
   badgeClosedFg: '#BDBDBD',
+  accent: '#5865F2',
+  accentHover: '#6a75f7',
+  danger: '#ff6b6b',
+  dangerHover: '#f05252',
 };
 
 // 1) 리모트 전용 스코프 래퍼
@@ -91,7 +99,7 @@ function useBridgeTheme(): BridgeTheme {
     try {
       const ls = localStorage.getItem('theme');
       if (ls === 'light' || ls === 'dark') return ls as BridgeTheme;
-    } catch {}
+    } catch { }
     return getTheme();
   };
 

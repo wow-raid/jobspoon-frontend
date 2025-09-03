@@ -22,20 +22,20 @@ const Container = styled.div`
 `;
 
 const Header = styled.div`
-  border-bottom: 1px solid #3e414f;
+  border-bottom: 1px solid ${({ theme }) => theme.border};
   padding-bottom: 16px;
   margin-bottom: 20px;
 
   h2 {
     margin: 0 0 8px 0;
     font-size: 22px;
-    color: #fff;
+    color: ${({ theme }) => theme.fg};
   }
 `;
 
 const Meta = styled.div`
   font-size: 13px;
-  color: #8c92a7;
+  color: ${({ theme }) => theme.subtle};
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
@@ -48,7 +48,7 @@ const ContentText = styled.p`
   line-height: 1.7;
   white-space: pre-wrap;
   margin: 0;
-  color: #d1d5db;
+  color: ${({ theme }) => theme.fg};
 `;
 
 const Actions = styled.div`
@@ -57,7 +57,7 @@ const Actions = styled.div`
   gap: 12px;
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid #3e414f;
+  border-top: 1px solid ${({ theme }) => theme.border};
 `;
 
 const Btn = styled.button`
@@ -72,7 +72,7 @@ const Btn = styled.button`
 `;
 
 const EditBtn = styled(Btn)`
-  background-color: #4a5568;
+  background-color: ${({ theme }) => theme.surfaceHover};
 
   &:hover {
     filter: brightness(1.05);
@@ -80,11 +80,9 @@ const EditBtn = styled(Btn)`
 `;
 
 const DeleteBtn = styled(Btn)`
-  background-color: #ff6b6b;
+  background-color: ${({ theme }) => theme.danger ?? '#ff6b6b'};
 
-  &:hover {
-    filter: brightness(0.95);
-  }
+  &:hover { background-color: ${({ theme }) => theme.dangerHover ?? '#f05252'}; }
 `;
 
 const ReadLabel = styled.label`
@@ -92,24 +90,24 @@ const ReadLabel = styled.label`
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: #d1d5db;
+  color: ${({ theme }) => theme.fg};
 
   input[type="checkbox"] {
     width: 16px;
     height: 16px;
-    accent-color: #5865f2;
+    accent-color: ${({ theme }) => theme.accent ?? theme.primary};
   }
 `;
 
 const ReadByList = styled.div`
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid #3e414f;
+  border-top: 1px solid ${({ theme }) => theme.border};
 
   h4 {
     margin: 0 0 12px 0;
     font-size: 14px;
-    color: #a0a0a0;
+    color: ${({ theme }) => theme.subtle};
   }
 
   ul {
@@ -117,7 +115,7 @@ const ReadByList = styled.div`
     padding: 0;
     margin: 0;
     font-size: 14px;
-    color: #d1d5db;
+    color: ${({ theme }) => theme.fg};
   }
 
   li {
@@ -126,7 +124,7 @@ const ReadByList = styled.div`
 
   p {
     font-size: 14px;
-    color: #8c92a7;
+    color: ${({ theme }) => theme.subtle};
     margin: 0;
   }
 `;
