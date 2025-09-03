@@ -80,10 +80,10 @@ const JoinedStudyRoomList: React.FC<JoinedStudyRoomListProps> = ({ room }) => {
             <strong>최대인원:</strong> {room.currentMembers} / {room.maxMembers} 명
           </p>
           <p>
-            <strong>모집직무:</strong> {room.job}
+            <strong>모집직무:</strong> {room.recruitingRoles}
           </p>
           <p>
-            <strong>기술스택:</strong> {room.tags.join(", ")}
+            <strong>기술스택:</strong> {room.skillStack.join(", ")}
           </p>
         </Details>
       </div>

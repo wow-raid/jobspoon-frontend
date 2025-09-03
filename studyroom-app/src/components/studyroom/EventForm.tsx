@@ -1,14 +1,12 @@
-// EventForm.tsx
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { ScheduleEvent } from "../../data/mockData.ts";
+import { ScheduleEvent } from "../../data/mockData";
 
 interface EventFormProps {
     onSubmit: (eventData: Omit<ScheduleEvent, "id" | "authorId">) => void;
-    initialData?: ScheduleEvent; // 날짜를 더블클릭 했을 때 전달받을 초기 날짜
+    initialData?: ScheduleEvent;
 }
 
-/* ─ styled-components (scoped) ─ */
 const Form = styled.form`
   display: flex;
   flex-direction: column;
@@ -17,7 +15,7 @@ const Form = styled.form`
   h3 {
     text-align: center;
     margin: 0 0 10px 0;
-    color: #fff;
+    color: ${({ theme }) => theme.fg};
   }
 `;
 
@@ -30,20 +28,20 @@ const Group = styled.div`
 const Label = styled.label`
   font-size: 14px;
   font-weight: 500;
-  color: #d1d5db;
+  color: ${({ theme }) => theme.fg};
 `;
 
 const Input = styled.input`
   padding: 8px;
   border-radius: 4px;
-  border: 1px solid #4a5568;
-  background-color: #1f2937;
-  color: #ffffff;
+  border: 1px solid ${({ theme }) => theme.inputBorder};
+  background-color: ${({ theme }) => theme.inputBg};
+  color: ${({ theme }) => theme.fg};
   font-size: 14px;
 
   &:focus {
     outline: none;
-    border-color: #5865f2;
+    border-color: ${({ theme }) => theme.accent ?? theme.primary};
     box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.35);
   }
 `;
@@ -51,7 +49,7 @@ const Input = styled.input`
 const SubmitBtn = styled.button`
   margin-top: 10px;
   padding: 10px;
-  background-color: #5865f2;
+  background-color: ${({ theme }) => theme.accent ?? theme.primary};
   color: white;
   border: none;
   border-radius: 6px;
@@ -59,7 +57,7 @@ const SubmitBtn = styled.button`
   cursor: pointer;
 
   &:hover {
-    filter: brightness(0.95);
+    background-color: ${({ theme }) => theme.accentHover ?? theme.primaryHover};
   }
 `;
 
@@ -81,7 +79,6 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit, initialData }) => {
     }, [initialData]);
 
     const toLocalInputValue = (d: Date) => {
-        // datetime-local은 로컬 기준 문자열(YYYY-MM-DDTHH:mm)이 필요
         const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
         return local.toISOString().slice(0, 16);
     };
@@ -99,8 +96,8 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit, initialData }) => {
         <Form onSubmit={handleSubmit}>
             <h3>{initialData ? "일정 수정" : "새 일정 등록"}</h3>
 
-            <Group className="form-group">
-                <Label>일정 등록</Label>
+            <Group>
+                <Label>일정 제목</Label>
                 <Input
                     type="text"
                     value={title}
@@ -109,7 +106,7 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit, initialData }) => {
                 />
             </Group>
 
-            <Group className="form-group">
+            <Group>
                 <Label>시작 시간</Label>
                 <Input
                     type="datetime-local"
@@ -119,7 +116,7 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit, initialData }) => {
                 />
             </Group>
 
-            <Group className="form-group">
+            <Group>
                 <Label>종료 시간</Label>
                 <Input
                     type="datetime-local"

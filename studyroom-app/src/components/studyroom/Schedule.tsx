@@ -1,4 +1,3 @@
-// Schedule.tsx
 import React, { useMemo, useState, useCallback } from "react";
 import styled from "styled-components";
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
@@ -13,7 +12,6 @@ import EventDetail from "./EventDetail";
 moment.locale("ko");
 const localizer = momentLocalizer(moment);
 
-// 현재 로그인한 사용자를 가정합니다.
 const CURRENT_USER_ID = "모임장";
 
 /* ─ styled-components (scoped) ─ */
@@ -30,12 +28,12 @@ const Header = styled.div`
   h2 {
     margin: 0;
     font-size: 20px;
-    color: #fff;
+    color: ${({ theme }) => theme.fg};
   }
 `;
 
 const AddEventBtn = styled.button`
-  background-color: #5865f2;
+  background-color: ${({ theme }) => theme.accent ?? theme.primary};
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -43,66 +41,83 @@ const AddEventBtn = styled.button`
   font-size: 14px;
   font-weight: bold;
   cursor: pointer;
+  &:hover {
+    background-color: ${({ theme }) => theme.accentHover ?? theme.primaryHover};
+  }
 `;
 
+/* react-big-calendar 오버라이드 */
 const CalendarWrapper = styled.div`
-  background-color: #1e2129;
+  background-color: ${({ theme }) => theme.surface};
   padding: 16px;
   border-radius: 8px;
-  color: #d1d5db;
+  color: ${({ theme }) => theme.fg};
 
-  /* ─ react-big-calendar overrides (scoped) ─ */
   .rbc-toolbar {
     margin-bottom: 16px;
+    color: ${({ theme }) => theme.fg};
   }
+
   .rbc-toolbar button {
-    background-color: #3a3f4c;
-    border: 1px solid #4a5568;
-    color: #e0e0e0;
+    background-color: ${({ theme }) => theme.surfaceHover};
+    border: 1px solid ${({ theme }) => theme.border};
+    color: ${({ theme }) => theme.fg};
   }
   .rbc-toolbar button:hover,
   .rbc-toolbar button:focus {
-    background-color: #4b5563;
+    background-color: ${({ theme }) => theme.surface};
   }
   .rbc-toolbar button.rbc-active {
-    background-color: #5865f2;
+    background-color: ${({ theme }) => theme.accent ?? theme.primary};
+    color: #fff;
   }
 
   .rbc-header {
-    border-bottom: 1px solid #3e414f;
+    border-bottom: 1px solid ${({ theme }) => theme.border};
     padding: 8px 0;
+    color: ${({ theme }) => theme.fg};
+    background: transparent;
   }
 
   .rbc-day-bg {
-    border-left: 1px solid #3e414f;
+    border-left: 1px solid ${({ theme }) => theme.border};
   }
 
-  /* ✅ dayPropGetter에서 주는 클래스명 */
+  /* dayPropGetter에서 주는 클래스명 */
   .rbc-day-bg.selected-day {
-    background-color: rgba(88, 101, 242, 0.2);
+    background-color: ${({ theme }) => `${(theme.accent ?? theme.primary)}33`}; /* ~20% */
   }
-  /* 혹시 내부 선택 스타일을 쓸 때를 대비 */
   .rbc-day-bg.selected-slot {
-    background-color: rgba(88, 101, 242, 0.2);
+    background-color: ${({ theme }) => `${(theme.accent ?? theme.primary)}33`};
   }
 
   .rbc-month-view {
-    border: 1px solid #3e414f;
+    border: 1px solid ${({ theme }) => theme.border};
+    background: ${({ theme }) => theme.surface};
   }
   .rbc-month-row {
-    border-top: 1px solid #3e414f;
+    border-top: 1px solid ${({ theme }) => theme.border};
   }
   .rbc-today {
-    background-color: rgba(88, 101, 242, 0.1);
+    background-color: ${({ theme }) => `${(theme.accent ?? theme.primary)}1A`}; /* ~10% */
   }
+  .rbc-off-range-bg {
+    background: ${({ theme }) => theme.surfaceHover};
+  }
+
   .rbc-event {
-    background-color: #5865f2;
+    background-color: ${({ theme }) => theme.accent ?? theme.primary};
+    color: #fff;
     border: none;
     border-radius: 4px;
   }
+
+  .rbc-time-content,
+  .rbc-time-view,
+  .rbc-timeslot-group {
+    border-color: ${({ theme }) => theme.border};
+  }
 `;
-
-
 
 const MonthlyList = styled.div`
   margin-top: 32px;
@@ -110,14 +125,14 @@ const MonthlyList = styled.div`
   h3 {
     font-size: 18px;
     margin-bottom: 16px;
-    border-left: 3px solid #5865f2;
+    border-left: 3px solid ${({ theme }) => theme.accent ?? theme.primary};
     padding-left: 8px;
-    color: #fff;
+    color: ${({ theme }) => theme.fg};
   }
 
   p {
     margin: 0;
-    color: #d1d5db;
+    color: ${({ theme }) => theme.fg};
   }
 `;
 
@@ -125,24 +140,25 @@ const MonthlyItem = styled.div`
   display: flex;
   align-items: center;
   gap: 16px;
-  background-color: #1e2129;
+  background-color: ${({ theme }) => theme.surface};
+  border: 1px solid ${({ theme }) => theme.border};
   padding: 12px 16px;
   border-radius: 6px;
   margin-bottom: 8px;
 `;
 const MonthlyDate = styled.div`
   font-weight: bold;
-  color: #a0a0a0;
+  color: ${({ theme }) => theme.subtle};
   width: 80px;
 `;
 const MonthlyTitle = styled.div`
   flex-grow: 1;
   font-weight: 500;
-  color: #e5e7eb;
+  color: ${({ theme }) => theme.fg};
 `;
 const MonthlyTime = styled.div`
   font-size: 13px;
-  color: #8c92a7;
+  color: ${({ theme }) => theme.subtle};
 `;
 
 const Schedule: React.FC = () => {
