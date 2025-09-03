@@ -32,7 +32,7 @@ const Container = styled.div`
 `;
 
 const HeaderBox = styled.header`
-  background-color: #2c2f3b;
+  background-color: ${({ theme }) => theme.surface};
   padding: 24px;
   border-radius: 8px;
   margin-bottom: 24px;
@@ -41,11 +41,11 @@ const HeaderBox = styled.header`
   h2 {
     margin: 0 0 8px 0;
     font-size: 24px;
-    color: #fff;
+    color: ${({ theme }) => theme.fg};
   }
   p {
     margin: 0;
-    color: #a0a0a0;
+    color: ${({ theme }) => theme.subtle};
   }
 `;
 
@@ -56,7 +56,7 @@ const Main = styled.main`
 
 const Sidebar = styled.nav`
   flex: 0 0 200px;
-  background-color: #2c2f3b;
+  background-color: ${({ theme }) => theme.surface};
   border-radius: 8px;
   padding: 16px;
   text-align: center;
@@ -67,7 +67,7 @@ const Sidebar = styled.nav`
 `;
 
 const SidebarLink = styled(NavLink)`
-  color: #d1d5db;
+  color: ${({ theme }) => theme.fg};
   text-decoration: none;
   padding: 12px 16px;
   border-radius: 6px;
@@ -75,17 +75,17 @@ const SidebarLink = styled(NavLink)`
   font-weight: 500;
 
   &:hover {
-    background-color: #3e414f;
+    background-color: ${({ theme }) => theme.surfaceHover};
   }
   &.active {
-    background-color: #5865f2;
-    color: white;
+    background-color: ${({ theme }) => theme.accent ?? theme.primary};
+    color: #fff;
   }
 `;
 
 const ContentArea = styled.section`
   flex-grow: 1;
-  background-color: #2c2f3b;
+  background-color: ${({ theme }) => theme.surface};
   border-radius: 8px;
   padding: 24px;
   min-height: 400px;

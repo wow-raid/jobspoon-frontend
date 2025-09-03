@@ -4,6 +4,7 @@ import { StudyRoom } from "../types/study";
 import { FAKE_STUDY_ROOMS } from "../data/mockData";
 import JoinedStudyRoomList from "../components/JoinedStudyRoomList";
 import FilterBar, { FilterValues } from "../components/FilterBar";
+import axiosInstance from "../api/axiosInstance";
 
 const Page = styled.div`
   max-width: 1200px;
@@ -44,6 +45,8 @@ const MY_STUDY_IDS = [2, 5, 8, 10, 16, 19];
 
 const MyStudiesPage: React.FC = () => {
   const [myStudies, setMyStudies] = useState<StudyRoom[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [filters, setFilters] = useState<FilterValues>({
     searchTerm: '',
@@ -53,10 +56,21 @@ const MyStudiesPage: React.FC = () => {
   });
 
   useEffect(() => {
-    const joinedStudies = FAKE_STUDY_ROOMS.filter((room) =>
-      MY_STUDY_IDS.includes(room.id)
-    );
-    setMyStudies(joinedStudies);
+    const fetchMyStudies = async () => {
+      try {
+        setLoading(true);
+        // GET /api/my-studies 로 API 요청
+        const response = await axiosInstance.get<StudyRoom[]>('/study-rooms/my-studies');
+        setMyStudies(response.data);
+      } catch (err) {
+        console.error("참여 중인 스터디 목록을 불러오는 데 실패했습니다:", err);
+        setError("데이터를 불러오는 중 오류가 발생했습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMyStudies();
   }, []);
 
   const filteredStudies = useMemo(() => {
@@ -79,22 +93,37 @@ const MyStudiesPage: React.FC = () => {
     return studiesToFilter;
   }, [myStudies, filters]); // myStudies 또는 filters 값이 변경될 때만 다시 계산
 
+  if (loading) {
+    return <Page><p>로딩 중...</p></Page>;
+  }
+  if (error) {
+    return <Page><p>{error}</p></Page>;
+  }
+
   return (
       <Page>
         <Title>참여중인 면접스터디 목록</Title>
-
-        {/* 👇 4. FilterBar 컴포넌트 추가 */}
         <FilterBar
             onFilterChange={setFilters}
-            showRecruitingFilter={false} // '모집 중' 필터는 이 페이지에선 불필요하므로 숨김
+            showRecruitingFilter={false}
         />
-
-        {/* 👇 5. myStudies 대신 filteredStudies를 사용하도록 수정 */}
         {filteredStudies.length > 0 ? (
             <ListContainer>
-              {filteredStudies.map((room) => (
-                  <JoinedStudyRoomList key={room.id} room={room} />
-              ))}
+              {/* 👇 이 부분을 수정합니다. */}
+              {filteredStudies.map((room) => {
+                try {
+                  // 정상적으로 렌더링을 시도합니다.
+                  return <JoinedStudyRoomList key={room.id} room={room} />;
+                } catch (e) {
+                  // 만약 JoinedStudyRoomList 컴포넌트가 렌더링되다 에러가 나면 여기서 잡습니다.
+                  console.error("카드 렌더링 중 에러 발생:", {
+                    error: e,
+                    roomData: room // 어떤 데이터에서 에러가 났는지 확인
+                  });
+                  // 에러가 난 카드는 대체 UI를 보여줍니다.
+                  return <div key={room.id}>이 항목을 표시하는 중 오류가 발생했습니다.</div>;
+                }
+              })}
             </ListContainer>
         ) : (
             <EmptyBox>
