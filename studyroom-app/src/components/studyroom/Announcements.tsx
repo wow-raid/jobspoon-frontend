@@ -147,7 +147,6 @@ const Announcements: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const { userId } = useAuth();
     const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
-    const [isLoadingDetail, setIsLoadingDetail] = useState(false);
 
     const fetchAnnouncements = useCallback(async () => {
         if (!studyRoomId) return;
@@ -195,28 +194,17 @@ const Announcements: React.FC = () => {
         }
     };
 
-    const handleViewDetail = async (announcement: Announcement) => {
+    const handleViewDetail = (announcement: Announcement) => {
         setSelectedAnnouncement(announcement);
         setIsDetailModalOpen(true);
-        setIsLoadingDetail(true);
-        try {
-            const response = await axiosInstance.get(
-                `/study-rooms/${studyRoomId}/announcements/${announcement.id}`
-            );
-            setSelectedAnnouncement(response.data);
-        } catch (error) {
-            console.error("공지사항 상세 정보를 불러오는데 실패했습니다:", error);
-            alert("상세 정보를 불러오는 중 오류가 발생했습니다.");
-            setIsDetailModalOpen(false);
-        } finally {
-            setIsLoadingDetail(false);
-        }
     };
 
     const handlePinToggle = async (id: number) => { // async 추가
         try {
+            // ✅ [추가] 백엔드에 변경 사항을 저장하도록 PATCH API 호출
             await axiosInstance.patch(`/study-rooms/${studyRoomId}/announcements/${id}/pin`);
 
+            // API 호출이 성공하면 화면 상태를 변경
             setAnnouncements(prev =>
                 prev.map(item => (item.id === id ? { ...item, isPinned: !item.isPinned } : item))
             );
