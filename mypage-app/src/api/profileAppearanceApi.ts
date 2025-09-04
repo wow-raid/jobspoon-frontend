@@ -37,12 +37,20 @@ export async function updateProfilePhoto(token: string, photoUrl: string) {
 
 // 닉네임 변경
 export async function updateNickname(token: string, customNickname: string) {
-    const res = await axios.put<ProfileAppearanceResponse>(
-        `${API_BASE_URL}/profile-appearance/nickname`,
-        { customNickname },
-        { headers: { Authorization: token } }
-    );
-    return res.data;
+    try{
+        const res = await axios.put<ProfileAppearanceResponse>(
+            `${API_BASE_URL}/profile-appearance/nickname`,
+            { customNickname },
+            { headers: { Authorization: token } }
+        );
+        return res.data;
+    }catch(error: any){
+        // 백엔드에서 IllegalArgumentException 메시지를 그대로 뽑아서 throw
+        if(error.response?.data) {
+            throw new Error(error.response.data.message || error.response.data);
+        }
+        throw new Error("닉네임 수정 실패");
+    }
 }
 
 // 보유 랭크 조회
