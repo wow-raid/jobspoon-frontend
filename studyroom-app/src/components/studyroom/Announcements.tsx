@@ -1,14 +1,13 @@
 // Announcements.tsx
-import React, { useMemo, useState } from 'react';
+import React, {useMemo, useState, useCallback, useEffect} from 'react';
 import styled from 'styled-components';
-import { FAKE_ANNOUNCEMENTS, Announcement } from '../../data/mockData';
+import axiosInstance from "../../api/axiosInstance";
+import { Announcement } from "../../types/study";
 import Modal from '../Modal';
 import AnnouncementForm from './AnnouncementForm';
 import AnnouncementDetail from './AnnouncementDetail';
-
-// 로그인 되었다는 가정하에 버튼 유무, 읽음 유무 테스트
-const CURRENT_USER_ROLE = 'leader'; // 'leader' | 'member'
-const CURRENT_USER_ID = '모임장';
+import { useAuth } from "../../hooks/useAuth";
+import { useParams } from "react-router-dom";
 
 const Container = styled.div`
   width: 100%;
@@ -139,36 +138,60 @@ const PinButton = styled.button<{ $pinned?: boolean }>`
 `;
 
 const Announcements: React.FC = () => {
-    const [announcements, setAnnouncements] = useState<Announcement[]>(FAKE_ANNOUNCEMENTS);
+    const { id: studyRoomId } = useParams<{ id: string }>();
+    const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
     const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const { userId } = useAuth();
+    const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 
-    const currentUser = {
-        role: CURRENT_USER_ROLE as 'leader' | 'member',
-        id: CURRENT_USER_ID,
-    };
-
-    // 1) 폼 제출 (새 글 / 수정)
-    const handleFormSubmit = (formData: { title: string; content: string }) => {
-        if (editingAnnouncement) {
-            setAnnouncements(prev =>
-                prev.map(item => (item.id === editingAnnouncement.id ? { ...item, ...formData } : item)),
-            );
-        } else {
-            const newAnnouncement: Announcement = {
-                id: Date.now(),
-                author: currentUser.id,
-                createdAt: new Date(),
-                pinned: false,
-                readBy: [],
-                ...formData,
-            };
-            setAnnouncements(prev => [newAnnouncement, ...prev]);
+    const fetchAnnouncements = useCallback(async () => {
+        if (!studyRoomId) return;
+        try {
+            const response = await axiosInstance.get(`/study-rooms/${studyRoomId}/announcements`);
+            setAnnouncements(response.data);
+        } catch (error) {
+            console.error("공지사항 목록을 불러오는데 실패했습니다:", error);
         }
-        closeFormModal();
+    }, [studyRoomId]);
+
+    const fetchUserRole = useCallback(async () => {
+        if (!studyRoomId) return;
+        try {
+            const response = await axiosInstance.get(`/study-rooms/${studyRoomId}/role`);
+            setCurrentUserRole(response.data); // "LEADER" 또는 "MEMBER" 문자열이 저장됩니다.
+            console.log("Fetched user role:", response.data);
+        } catch (error) {
+            console.error("스터디룸 역할 정보를 불러오는데 실패했습니다:", error);
+            setCurrentUserRole(null); // 에러 발생 시 null로 설정
+        }
+    }, [studyRoomId]);
+
+    useEffect(() => {
+        if (studyRoomId) {
+            fetchAnnouncements();
+            fetchUserRole();
+        }
+    }, [studyRoomId, fetchAnnouncements, fetchUserRole]);
+
+    // ✅ 2. 폼 제출 시 (새 글 / 수정) API 호출
+    const handleFormSubmit = async (formData: { title: string; content: string }) => {
+        if (!studyRoomId) return;
+        try {
+            if (editingAnnouncement) {
+                await axiosInstance.put(`/study-rooms/${studyRoomId}/announcements/${editingAnnouncement.id}`, formData);
+            } else {
+                await axiosInstance.post(`/study-rooms/${studyRoomId}/announcements`, formData);
+            }
+            fetchAnnouncements();
+            closeFormModal();
+        } catch (error) {
+            console.error("공지사항 저장에 실패했습니다:", error);
+            alert("오류가 발생했습니다.");
+        }
     };
 
     const handleViewDetail = (announcement: Announcement) => {
@@ -177,7 +200,7 @@ const Announcements: React.FC = () => {
     };
 
     const handlePinToggle = (id: number) => {
-        setAnnouncements(prev => prev.map(item => (item.id === id ? { ...item, pinned: !item.pinned } : item)));
+        setAnnouncements(prev => prev.map(item => (item.id === id ? { ...item, isPinned: !item.isPinned } : item)));
     };
 
     const handleEditClick = () => {
@@ -202,24 +225,31 @@ const Announcements: React.FC = () => {
         }
     };
 
-    const handleMarkAsRead = () => {
-        if (!selectedAnnouncement) return;
-        setAnnouncements(prev =>
-            prev.map(item => {
-                if (item.id === selectedAnnouncement.id && !item.readBy?.includes(currentUser.id)) {
-                    const newReadBy = [...(item.readBy || []), currentUser.id];
-                    setSelectedAnnouncement(prevSelected => (prevSelected ? { ...prevSelected, readBy: newReadBy } : null));
-                    return { ...item, readBy: newReadBy };
-                }
-                return item;
-            }),
-        );
+    const handleMarkAsRead = async (announcementId: number) => {
+        if (!studyRoomId || !userId) return;
+
+        try {
+            await axiosInstance.post(`/study-rooms/${studyRoomId}/announcements/${announcementId}/read`);
+            setAnnouncements(prev =>
+                prev.map(item => {
+                    if (item.id === announcementId) {
+                        const newReadBy = [...(item.readBy || []), userId];
+                        return { ...item, readBy: newReadBy };
+                    }
+                    return item;
+                })
+            );
+            setSelectedAnnouncement(prev => (prev ? { ...prev, readBy: [...(prev.readBy || []), userId] } : null));
+        } catch (error) {
+            console.error("읽음 처리 중 오류가 발생했습니다:", error);
+            alert("오류가 발생했습니다.");
+        }
     };
 
     const displayedAnnouncements = useMemo(() => {
         return [...announcements]
             .sort((a, b) => {
-                if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+                if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
                 return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
             })
             .filter(item => item.title.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -229,7 +259,7 @@ const Announcements: React.FC = () => {
         <Container>
             <Header>
                 <h2>📢 공지사항</h2>
-                {currentUser.role === 'leader' && (
+                {currentUserRole === 'LEADER' && (
                     <WriteBtn
                         onClick={() => {
                             setEditingAnnouncement(null);
@@ -253,28 +283,28 @@ const Announcements: React.FC = () => {
 
             <List>
                 {displayedAnnouncements.map(item => (
-                    <Item key={item.id} $clickable $pinned={item.pinned}>
+                    <Item key={item.id} $clickable $pinned={item.isPinned}>
                         <ItemMainContent onClick={() => handleViewDetail(item)}>
                             <ItemHeader>
                                 <ItemTitle>
-                                    {item.pinned && '📌 '} {item.title}
+                                    {item.isPinned && '📌 '} {item.title}
                                 </ItemTitle>
                                 <ItemMeta>
-                                    {item.author} · {new Date(item.createdAt).toLocaleDateString()}
+                                    {item.author.nickname} · {new Date(item.createdAt).toLocaleDateString()}
                                 </ItemMeta>
                             </ItemHeader>
                         </ItemMainContent>
 
-                        {currentUser.role === 'leader' && (
+                        {currentUserRole === 'LEADER' && (
                             <PinButton
-                                $pinned={item.pinned}
+                                $pinned={item.isPinned}
                                 onClick={e => {
                                     e.stopPropagation();
                                     handlePinToggle(item.id);
                                 }}
-                                aria-pressed={item.pinned}
+                                aria-pressed={item.isPinned}
                             >
-                                {item.pinned ? '고정 해제' : '상단 고정'}
+                                {item.isPinned ? '고정 해제' : '상단 고정'}
                             </PinButton>
                         )}
                     </Item>
@@ -298,8 +328,8 @@ const Announcements: React.FC = () => {
                         announcement={selectedAnnouncement}
                         onEdit={handleEditClick}
                         onDelete={handleDelete}
-                        currentUser={currentUser}
-                        onMarkAsRead={handleMarkAsRead}
+                        currentUser={{ role: currentUserRole, id: userId }}
+                        onMarkAsRead={() => handleMarkAsRead(selectedAnnouncement.id)}
                     />
                 )}
             </Modal>
