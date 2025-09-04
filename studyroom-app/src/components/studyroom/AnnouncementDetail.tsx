@@ -4,8 +4,8 @@ import styled from 'styled-components';
 import { Announcement } from '../../data/mockData';
 
 interface CurrentUser {
-    role: 'leader' | 'member';
-    id: string;
+    role: string | null;
+    id: number | null;
 }
 
 interface AnnouncementDetailProps {
