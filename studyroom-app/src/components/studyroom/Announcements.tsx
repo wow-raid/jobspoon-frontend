@@ -147,6 +147,7 @@ const Announcements: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const { userId } = useAuth();
     const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
+    const [isLoadingDetail, setIsLoadingDetail] = useState(false);
 
     const fetchAnnouncements = useCallback(async () => {
         if (!studyRoomId) return;
@@ -194,13 +195,35 @@ const Announcements: React.FC = () => {
         }
     };
 
-    const handleViewDetail = (announcement: Announcement) => {
+    const handleViewDetail = async (announcement: Announcement) => {
         setSelectedAnnouncement(announcement);
         setIsDetailModalOpen(true);
+        setIsLoadingDetail(true);
+        try {
+            const response = await axiosInstance.get(
+                `/study-rooms/${studyRoomId}/announcements/${announcement.id}`
+            );
+            setSelectedAnnouncement(response.data);
+        } catch (error) {
+            console.error("공지사항 상세 정보를 불러오는데 실패했습니다:", error);
+            alert("상세 정보를 불러오는 중 오류가 발생했습니다.");
+            setIsDetailModalOpen(false);
+        } finally {
+            setIsLoadingDetail(false);
+        }
     };
 
-    const handlePinToggle = (id: number) => {
-        setAnnouncements(prev => prev.map(item => (item.id === id ? { ...item, isPinned: !item.isPinned } : item)));
+    const handlePinToggle = async (id: number) => { // async 추가
+        try {
+            await axiosInstance.patch(`/study-rooms/${studyRoomId}/announcements/${id}/pin`);
+
+            setAnnouncements(prev =>
+                prev.map(item => (item.id === id ? { ...item, isPinned: !item.isPinned } : item))
+            );
+        } catch (error) {
+            console.error("고정 상태 변경에 실패했습니다:", error);
+            alert("상태 변경 중 오류가 발생했습니다.");
+        }
     };
 
     const handleEditClick = () => {
