@@ -141,10 +141,18 @@ const verifyAdminCode = async () => {
           headers: { "Content-Type": "application/json" },
         }
     );
-
+    console.log("status", res.status);
     if (res.status === 200) {
-      // 인증 성공 → 홈 또는 관리자 전용 라우트로 이동
-      localStorage.setItem("isAdmin", "true");
+      //Authorization 헤더에서 토큰 추출
+      const authHeader = res.headers?.["authorization"] ?? res.headers?.["Authorization"];
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        const token = authHeader.substring(7); // "Bearer " 제거
+        localStorage.setItem("tempoaryAdminToken", token);
+      } else {
+        // 토큰이 없다면 경고
+        console.warn("Authorization header(Bearer ...) not found in response.");
+      }
+      console.log("auth", res.headers?.authorization ?? res.headers?.Authorization);
       router.push({ name: "AdminOverview" });
     } else if (res.status === 401) {
       errorMessage.value = "아이디 또는 비밀번호가 올바르지 않습니다.";
