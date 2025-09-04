@@ -6,12 +6,14 @@ const API_BASE_URL = "http://localhost:8080";
 export interface ProfileAppearanceResponse {
     photoUrl: string | null;
     customNickname: string;
-    rank?: { code: string; displayName: string };
+    rank?: { id?: number; code: string; displayName: string };
     title?: { code: string; displayName: string };
+    email?: string;
 }
 
 // 공통 Rank/Title 이력 타입
 export interface HistoryItem{
+    id: number;
     code: string;
     displayName: string;
     acquiredAt: string; // ISO datetime
@@ -19,7 +21,8 @@ export interface HistoryItem{
 
 // 내 프로필 조회
 export async function fetchMyProfile(token: string) {
-    const res = await axios.get(`${API_BASE_URL}/profile-appearance/my`,
+    const res = await axios.get<ProfileAppearanceResponse>(
+        `${API_BASE_URL}/profile-appearance/my`,
         { headers: { Authorization: token } }
     );
     return res.data;

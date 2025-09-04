@@ -4,6 +4,7 @@ import {
     fetchMyRanks,
     fetchMyTitles,
     updateNickname,
+    equipRank,
     HistoryItem,
     ProfileAppearanceResponse,
 } from "../api/profileAppearanceApi.ts";
@@ -18,27 +19,39 @@ export default function ProfileAppearanceCardEdit() {
     const [showTitles, setShowTitles] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [nicknameInput, setNicknameInput] = useState("");
+    const [errorMessage, setErrorMessage] = useState(""); // 에러 메시지 상태
 
     // 닉네임 수정 핸들러
     const handleNicknameUpdate = async () => {
         const token = "test-token2";
-
         if(!nicknameInput.trim()){
-            alert("닉네임을 입력하세요!");
+            setErrorMessage("닉네임을 입력하세요!");
             return;
         }
-
         try {
             const updated = await updateNickname(token, nicknameInput);
             setProfile((prev) =>
                 prev ? {...prev, customNickname: updated.customNickname} : prev
             );
-            alert("닉네임이 변경되었습니다!");
+            setErrorMessage(""); // 성공하면 에러 메시지 초기화
             setNicknameInput(""); // 입력창 초기화
         } catch (error: any) {
-            alert(error.message); // 서버 정책 위반 메시지 그대로 표시
+            setErrorMessage(error.message); // 서버 정책 위반 메시지 그대로 표시
         }
     };
+
+    // 랭크 장착 핸들러
+    const handleEquipRank = async (rankId: number) => {
+        const token = "test-token2";
+        try {
+            const updated = await equipRank(token, rankId);
+            setProfile((prev) =>
+                prev ? { ...prev, rank: updated } : prev );
+            alert(`${updated.displayName} 랭크가 장착되었습니다!`);
+        } catch (error: any) {
+            alert(error.message || "랭크 장착에 실패했습니다.");
+        }
+    }
 
     useEffect(() => {
         const token = "test-token2";
@@ -80,6 +93,8 @@ export default function ProfileAppearanceCardEdit() {
                     />
                     <SaveButton onClick={handleNicknameUpdate}>수정</SaveButton> {/* ✅ onClick 추가 */}
                 </NicknameForm>
+
+                {errorMessage && <ErrorText>{errorMessage}</ErrorText>}
             </NicknameSection>
 
             <HistoryGrid>
@@ -101,11 +116,13 @@ export default function ProfileAppearanceCardEdit() {
                         <HistoryList>
                             {ranks.map((rank) => (
                                 <HistoryItemBox key={rank.code}>
-                  <span>
-                    {rank.displayName} (
-                      {new Date(rank.acquiredAt).toLocaleDateString()})
-                  </span>
-                                    <EquipButton>장착</EquipButton>
+                                    <span>
+                                        {rank.displayName} (
+                                        {new Date(rank.acquiredAt).toLocaleDateString()})
+                                    </span>
+                                    <EquipButton onClick={() => handleEquipRank(rank.id)}>
+                                        장착
+                                    </EquipButton>
                                 </HistoryItemBox>
                             ))}
                         </HistoryList>
@@ -196,14 +213,16 @@ const NoPhoto = styled.span`
 `;
 
 const PhotoButton = styled.button`
-  padding: 4px 16px;
-  background: rgb(59, 130, 246);
-  color: white;
-  font-size: 14px;
-  border-radius: 8px;
-  &:hover {
-    background: rgb(37, 99, 235);
-  }
+    padding: 4px 16px;
+    background: rgb(59, 130, 246);
+    color: white;
+    font-size: 14px;
+    border: none;          /* 기본 테두리 제거 */
+    border-radius: 8px;
+    cursor: pointer;
+    &:hover {
+        background: rgb(37, 99, 235);
+    }
 `;
 
 const NicknameSection = styled.div`
@@ -236,14 +255,16 @@ const NicknameInput = styled.input`
 `;
 
 const SaveButton = styled.button`
-  padding: 8px 16px;
-  background: rgb(34, 197, 94);
-  color: white;
-  font-size: 14px;
-  border-radius: 8px;
-  &:hover {
-    background: rgb(22, 163, 74);
-  }
+    padding: 8px 16px;
+    background: rgb(34, 197, 94);
+    color: white;
+    font-size: 14px;
+    border: none;         /* 기본 테두리 제거 */
+    border-radius: 8px;
+    cursor: pointer;
+    &:hover {
+        background: rgb(22, 163, 74);
+    }
 `;
 
 const HistoryGrid = styled.div`
@@ -278,11 +299,14 @@ const HistoryHeader = styled.div`
 `;
 
 const ToggleButton = styled.button`
-  font-size: 14px;
-  color: rgb(59, 130, 246);
-  &:hover {
-    text-decoration: underline;
-  }
+    font-size: 14px;
+    color: rgb(59, 130, 246);
+    border: none;           /* 기본 테두리 제거 */
+    background: transparent;/* 기본 배경 제거 */
+    cursor: pointer;
+    &:hover {
+        text-decoration: underline;
+    }
 `;
 
 const Equipped = styled.div`
@@ -321,11 +345,19 @@ const HistoryItemBox = styled.li`
 `;
 
 const EquipButton = styled.button`
-  font-size: 12px;
-  padding: 4px 8px;
-  background: rgb(243, 244, 246);
-  border-radius: 4px;
-  &:hover {
-    background: rgb(229, 231, 235);
-  }
+    font-size: 12px;
+    padding: 4px 8px;
+    background: rgb(243, 244, 246);
+    border: none;           /* 기본 테두리 제거 */
+    border-radius: 4px;
+    cursor: pointer;
+    &:hover {
+        background: rgb(229, 231, 235);
+    }
+`;
+
+const ErrorText = styled.p`
+  font-size: 13px;
+  color: rgb(220, 38, 38); /* Tailwind red-600 */
+  margin-top: 4px;
 `;

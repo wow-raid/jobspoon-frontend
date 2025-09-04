@@ -41,6 +41,11 @@ export default function ProfileAppearanceCard() {
                     <ValueCell>{profile.rank?.displayName ?? "등급 없음"}</ValueCell>
                 </tr>
                 <tr>
+                    <LabelCell>칭호</LabelCell>
+                    <Separator>|</Separator>
+                    <ValueCell>{profile.title?.displayName ?? "칭호 없음"}</ValueCell>
+                </tr>
+                <tr>
                     <LabelCell>별명</LabelCell>
                     <Separator>|</Separator>
                     <ValueCell>{profile.customNickname}</ValueCell>
@@ -48,7 +53,7 @@ export default function ProfileAppearanceCard() {
                 <tr>
                     <LabelCell>계정</LabelCell>
                     <Separator>|</Separator>
-                    <ValueCell>TestUser01</ValueCell>
+                    <ValueCell>{profile.email}</ValueCell>
                 </tr>
                 </tbody>
             </InfoTable>
@@ -124,21 +129,23 @@ const ButtonWrapper = styled.div`
 `;
 
 const EditButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: rgb(59, 130, 246);
-  color: white;
-  font-size: 13px;
-  border-radius: 6px;
-  transition: background 0.2s ease-in-out;
-  cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 13px;
+    color: white;
+    background: rgb(59, 130, 246);
+    border: none;          /* 기본 검정 테두리 제거 */
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s ease-in-out;
 
-  &:hover {
-    background: rgb(37, 99, 235);
-  }
+    &:hover {
+        background: rgb(37, 99, 235);
+    }
 `;
+
 
 
 

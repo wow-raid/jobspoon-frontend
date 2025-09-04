@@ -66,19 +66,17 @@ const Message = styled.p`
 `;
 
 const CloseButton = styled.button`
-  padding: 10px 20px;
-  background: rgb(59, 130, 246);
-  color: white;
-  border-radius: 6px;
-  transition: background 0.2s ease-in-out;
+    padding: 10px 20px;
+    background: rgb(59, 130, 246);
+    border: none;          /* 기본 검정 테두리 제거 */
+    color: white;
+    border-radius: 6px;
+    transition: background 0.2s ease-in-out;
 
-  &:hover {
-    background: rgb(37, 99, 235);
-  }
+    &:hover {
+        background: rgb(37, 99, 235);
+    }
 `;
-
-
-
 
 
 // import React from "react";
