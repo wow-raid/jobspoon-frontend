@@ -56,11 +56,5 @@ const router = createRouter({
   history: createWebHistory("/vue-account/"),
   routes,
 });
-router.beforeEach((to, _from, next) => {
-  if (to.meta.requiresAdmin) {
-    const isAdmin = localStorage.getItem("isAdmin") === "true";
-    if (!isAdmin) return next("/account/login");
-  }
-  next();
-});
+
 export default router;

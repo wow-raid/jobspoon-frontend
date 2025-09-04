@@ -15,5 +15,17 @@ export interface StudyRoom {
     // job?: string;
     // category?: string;
     // postedAt?: string;
+}
 
+export interface Announcement {
+    id: number;
+    title: string;
+    content: string;
+    isPinned: boolean;
+    createdAt: string;
+    author: {
+        id: number;
+        nickname: string;
+    };
+    readBy?: number[];
 }
