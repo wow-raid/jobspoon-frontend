@@ -14,6 +14,7 @@ import Footer from "./components/Footer";
 import VueAccountAppWrapper from "./VueAccountWrapper.tsx";
 import VueAiInterviewAppWrapper from "./VueAiInterviewWrapper.tsx";
 import SvelteReviewAppWrapper from "./SvelteReviewWrapper.tsx";
+import SvelteKitReviewAppWrapper from "./SvelteKitReviewWrapper.tsx";
 import RequireToken from "./RequireToken";
 import ThemeSync from "./ThemeSync";
 import ThemeToggleButton from "./ThemeToggleButton";
@@ -92,6 +93,7 @@ function AppRoutes() {
                     }
                 />
                 <Route path="/svelte-review/*" element={<SvelteReviewAppWrapper />} />
+                <Route path="/sveltekit-review/*" element={<SvelteKitReviewAppWrapper />} />
                 <Route path="/mypage/*" element={<MyPageApp />} />
             </Routes>
             {!hideLayout && <Footer />}
