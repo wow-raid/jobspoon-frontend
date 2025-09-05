@@ -246,12 +246,27 @@ const Announcements: React.FC = () => {
         setEditingAnnouncement(null);
     };
 
-    const handleDelete = () => {
+    const handleDelete = async () => { // ✅ 1. async 추가
         if (!selectedAnnouncement) return;
+
         if (window.confirm('공지사항을 삭제하시겠습니까?')) {
-            setAnnouncements(prev => prev.filter(item => item.id !== selectedAnnouncement.id));
-            setIsDetailModalOpen(false);
-            setSelectedAnnouncement(null);
+            try {
+                // ✅ 2. 백엔드에 삭제를 요청하는 DELETE API 호출
+                await axiosInstance.delete(
+                    `/study-rooms/${studyRoomId}/announcements/${selectedAnnouncement.id}`
+                );
+
+                // ✅ 3. API 호출이 성공하면 화면 상태를 업데이트하여 목록에서 제거
+                setAnnouncements(prev => prev.filter(item => item.id !== selectedAnnouncement.id));
+                setIsDetailModalOpen(false);
+                setSelectedAnnouncement(null);
+
+                alert("공지사항이 삭제되었습니다."); // 사용자에게 성공 피드백
+
+            } catch (error) {
+                console.error("공지사항 삭제에 실패했습니다:", error);
+                alert("삭제 처리 중 오류가 발생했습니다.");
+            }
         }
     };
 
