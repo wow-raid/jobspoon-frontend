@@ -66,7 +66,11 @@ export default function ProfileAppearanceCardEdit() {
     };
 
     useEffect(() => {
-        const token = "test-token2";
+        const token = localStorage.getItem("userToken");
+        if(!token){
+            console.error("로그인 토큰 없음");
+            return;
+        }
         fetchMyProfile(token).then(setProfile).catch(console.error);
         fetchMyRanks(token).then(setRanks).catch(console.error);
         fetchMyTitles(token).then(setTitles).catch(console.error);
@@ -361,6 +365,11 @@ const HistoryItemBox = styled.li`
     border: 1px solid rgb(229, 231, 235);
     border-radius: 8px;
     padding: 8px 12px;
+
+    span {
+        font-size: 14px;
+        color: rgb(31, 41, 55); /* ✅ 진한 글씨색 */
+    }
 `;
 
 const EquipButton = styled.button`

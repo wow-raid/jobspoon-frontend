@@ -9,7 +9,11 @@ export default function ProfileAppearanceCard() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const token = "test-token2";
+        const token = localStorage.getItem("userToken");
+        if(!token){
+            console.error("로그인 토큰 없음");
+            return;
+        }
         fetchMyProfile(token)
             .then(setProfile)
             .catch(console.error);

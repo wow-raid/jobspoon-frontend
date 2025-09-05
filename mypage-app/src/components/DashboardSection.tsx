@@ -73,7 +73,11 @@ export default function DashboardSection() {
     const [trust] = useState({ trustScore: 88 });
 
     useEffect(() => {
-        const token = "test-token2";
+        const token = localStorage.getItem("userToken");
+        if(!token){
+            console.error("로그인 토큰 없음");
+            return;
+        }
         getAttendanceRate(token).then(setAttendance).catch(console.error);
         getInterviewCompletion(token).then(setInterview).catch(console.error);
     }, []);
