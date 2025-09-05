@@ -1,13 +1,34 @@
-import React from "react";
+import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import SideBar from "./SideBar";
+import ProfileAppearanceCard from "./ProfileAppearanceCard";
 import styled from "styled-components";
+import { FaChevronDown, FaChevronRight } from "react-icons/fa";
+
 
 export default function MyPageLayout() {
+
+    {/* 토글 */}
+    const [isProfileOpen, setIsProfileOpen] = useState(true);
+
     return (
         <LayoutContainer>
-            {/* 좌측 메뉴바 */}
+            {/* 좌측 사이드 영역 (프로필 + 메뉴) */}
             <Aside>
+                {/* 토글 버튼 */}
+                <ToggleButton onClick={() => setIsProfileOpen(!isProfileOpen)}>
+                    <ToggleIcon>
+                        {isProfileOpen ? <FaChevronDown /> : <FaChevronRight />}
+                    </ToggleIcon>
+                    <ToggleLabel>마이페이지</ToggleLabel>
+                </ToggleButton>
+
+                {/* 프로필 카드 (토글됨) */}
+                <ProfileWrapper isOpen={isProfileOpen}>
+                    <ProfileAppearanceCard />
+                </ProfileWrapper>
+
+                {/* 메뉴 */}
                 <SideBar />
             </Aside>
 
@@ -23,56 +44,70 @@ export default function MyPageLayout() {
 
 // 레이아웃 전체 컨테이너
 const LayoutContainer = styled.div`
-  display: flex;
-  min-height: 100vh;
-  width: 100%;
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    background: #f9fafb;
 `;
 
-// 좌측 메뉴바
 const Aside = styled.aside`
-  width: 300px;
-  border-right: 1px solid rgb(229, 231, 235);
-  flex-shrink: 0;
+    width: 240px; /* 여기서만 사이드바 폭 조정 */
+    border-right: 1px solid rgb(229, 231, 235);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 12px;
 
-  @media (min-width: 640px) {
-    width: 20rem; /* sm:w-80 */
-  }
-  @media (min-width: 768px) {
-    width: 24rem; /* md:w-96 */
-  }
-  @media (min-width: 1024px) {
-    width: 28rem; /* lg:w-[28rem] */
-  }
+    @media (min-width: 1024px) {
+        width:300px; /* 큰 화면에서는 조금 넓게 */
+    }
 `;
 
 // 메인 컨텐츠
 const Main = styled.main`
-  flex: 1;
-  padding: 1.5rem; /* p-6 */
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem; /* space-y-6 */
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
 `;
 
+/* === 토글 관련 === */
+const ToggleButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: rgb(17, 24, 39);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  outline: none;
+`;
 
+const ToggleIcon = styled.span`
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(59, 130, 246);
+  color: white;
+  border-radius: 6px;
+  font-size: 14px;
+`;
 
-// import React from "react";
-// import { Outlet } from "react-router-dom";
-// import SideBar from "./SideBar";
-// import '../assets/tailwind.css'
-//
-// export default function MyPageLayout() {
-//     return (
-//         <div className="flex min-h-screen w-full">
-//             {/* 좌측 메뉴바 */}
-//             <aside className="w-[300px] sm:w-80 md:w-96 lg:w-[28rem] border-r border-r-[rgb(229,231,235)] flex-shrink-0">
-//                 <SideBar />
-//             </aside>
-//
-//             {/* 메인 컨텐츠 */}
-//             <main className="flex-1 p-6 space-y-6">
-//                 <Outlet />
-//             </main>
-//         </div>
-//     );
-// }
+const ToggleLabel = styled.span`
+  background: rgb(249, 250, 251);
+  padding: 2px 6px;
+  border-radius: 4px;
+`;
+
+const ProfileWrapper = styled.div<{ isOpen: boolean }>`
+  overflow: hidden;
+  transition: all 0.3s ease-in-out;
+  max-height: ${({ isOpen }) => (isOpen ? "1000px" : "0px")};
+  opacity: ${({ isOpen }) => (isOpen ? 1 : 0)};
+`;

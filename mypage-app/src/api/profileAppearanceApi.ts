@@ -7,7 +7,7 @@ export interface ProfileAppearanceResponse {
     photoUrl: string | null;
     customNickname: string;
     rank?: { id?: number; code: string; displayName: string };
-    title?: { code: string; displayName: string };
+    title?: { id?: number; code: string; displayName: string };
     email?: string;
 }
 

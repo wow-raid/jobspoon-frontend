@@ -5,6 +5,7 @@ import {
     fetchMyTitles,
     updateNickname,
     equipRank,
+    equipTitle,
     HistoryItem,
     ProfileAppearanceResponse,
 } from "../api/profileAppearanceApi.ts";
@@ -19,24 +20,24 @@ export default function ProfileAppearanceCardEdit() {
     const [showTitles, setShowTitles] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [nicknameInput, setNicknameInput] = useState("");
-    const [errorMessage, setErrorMessage] = useState(""); // 에러 메시지 상태
+    const [errorMessage, setErrorMessage] = useState("");
 
     // 닉네임 수정 핸들러
     const handleNicknameUpdate = async () => {
         const token = "test-token2";
-        if(!nicknameInput.trim()){
+        if (!nicknameInput.trim()) {
             setErrorMessage("닉네임을 입력하세요!");
             return;
         }
         try {
             const updated = await updateNickname(token, nicknameInput);
             setProfile((prev) =>
-                prev ? {...prev, customNickname: updated.customNickname} : prev
+                prev ? { ...prev, customNickname: updated.customNickname } : prev
             );
-            setErrorMessage(""); // 성공하면 에러 메시지 초기화
-            setNicknameInput(""); // 입력창 초기화
+            setErrorMessage("");
+            setNicknameInput("");
         } catch (error: any) {
-            setErrorMessage(error.message); // 서버 정책 위반 메시지 그대로 표시
+            setErrorMessage(error.message);
         }
     };
 
@@ -45,13 +46,24 @@ export default function ProfileAppearanceCardEdit() {
         const token = "test-token2";
         try {
             const updated = await equipRank(token, rankId);
-            setProfile((prev) =>
-                prev ? { ...prev, rank: updated } : prev );
+            setProfile((prev) => (prev ? { ...prev, rank: updated } : prev));
             alert(`${updated.displayName} 랭크가 장착되었습니다!`);
         } catch (error: any) {
             alert(error.message || "랭크 장착에 실패했습니다.");
         }
-    }
+    };
+
+    // 칭호 장착 핸들러
+    const handleEquipTitle = async (titleId: number) => {
+        const token = "test-token2";
+        try {
+            const updated = await equipTitle(token, titleId);
+            setProfile((prev) => (prev ? { ...prev, title: updated } : prev));
+            alert(`${updated.displayName} 칭호가 장착되었습니다!`);
+        } catch (error: any) {
+            alert(error.message || "칭호 장착에 실패했습니다.");
+        }
+    };
 
     useEffect(() => {
         const token = "test-token2";
@@ -66,10 +78,9 @@ export default function ProfileAppearanceCardEdit() {
 
     return (
         <Card>
-            {/* 제목 */}
             <Title>프로필 외형 수정</Title>
 
-            {/* 상단 프로필 영역 */}
+            {/* 프로필 영역 */}
             <ProfileSection>
                 <PhotoWrapper>
                     {profile.photoUrl ? (
@@ -89,16 +100,16 @@ export default function ProfileAppearanceCardEdit() {
                         type="text"
                         placeholder="닉네임 입력"
                         value={nicknameInput}
-                        onChange={(e) => setNicknameInput(e.target.value)} // ✅ 수정
+                        onChange={(e) => setNicknameInput(e.target.value)}
                     />
-                    <SaveButton onClick={handleNicknameUpdate}>수정</SaveButton> {/* ✅ onClick 추가 */}
+                    <SaveButton onClick={handleNicknameUpdate}>수정</SaveButton>
                 </NicknameForm>
-
                 {errorMessage && <ErrorText>{errorMessage}</ErrorText>}
             </NicknameSection>
 
+            {/* 이력 카드 */}
             <HistoryGrid>
-                {/* 랭크 카드 */}
+                {/* 등급 */}
                 <HistoryCard>
                     <HistoryHeader>
                         <h3>등급 전체 이력</h3>
@@ -120,8 +131,11 @@ export default function ProfileAppearanceCardEdit() {
                                         {rank.displayName} (
                                         {new Date(rank.acquiredAt).toLocaleDateString()})
                                     </span>
-                                    <EquipButton onClick={() => handleEquipRank(rank.id)}>
-                                        장착
+                                    <EquipButton
+                                        disabled={profile.rank?.id === rank.id}
+                                        onClick={() => handleEquipRank(rank.id)}
+                                    >
+                                        {profile.rank?.id === rank.id ? "장착 중" : "장착"}
                                     </EquipButton>
                                 </HistoryItemBox>
                             ))}
@@ -129,7 +143,7 @@ export default function ProfileAppearanceCardEdit() {
                     )}
                 </HistoryCard>
 
-                {/* 칭호 카드 */}
+                {/* 칭호 */}
                 <HistoryCard>
                     <HistoryHeader>
                         <h3>칭호 전체 이력</h3>
@@ -147,11 +161,16 @@ export default function ProfileAppearanceCardEdit() {
                         <HistoryList>
                             {titles.map((title) => (
                                 <HistoryItemBox key={title.code}>
-                  <span>
-                    {title.displayName} (
-                      {new Date(title.acquiredAt).toLocaleDateString()})
-                  </span>
-                                    <EquipButton>장착</EquipButton>
+                                    <span>
+                                        {title.displayName} (
+                                        {new Date(title.acquiredAt).toLocaleDateString()})
+                                    </span>
+                                    <EquipButton
+                                        disabled={profile.title?.id === title.id}
+                                        onClick={() => handleEquipTitle(title.id)}
+                                    >
+                                        {profile.title?.id === title.id ? "장착 중" : "장착"}
+                                    </EquipButton>
                                 </HistoryItemBox>
                             ))}
                         </HistoryList>
@@ -167,49 +186,49 @@ export default function ProfileAppearanceCardEdit() {
 /* ================== styled-components ================== */
 
 const Card = styled.section`
-  padding: 24px;
-  border-radius: 12px;
-  background: white;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+    padding: 24px;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 `;
 
 const Title = styled.h2`
-  font-size: 18px;
-  font-weight: 700;
-  color: rgb(17, 24, 39);
+    font-size: 18px;
+    font-weight: 700;
+    color: rgb(17, 24, 39);
 `;
 
 const ProfileSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
 `;
 
 const PhotoWrapper = styled.div`
-  width: 112px;
-  height: 112px;
-  border-radius: 50%;
-  background: rgb(229, 231, 235);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
+    width: 112px;
+    height: 112px;
+    border-radius: 50%;
+    background: rgb(229, 231, 235);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
 `;
 
 const Photo = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 `;
 
 const NoPhoto = styled.span`
-  font-size: 14px;
-  color: rgb(107, 114, 128);
+    font-size: 14px;
+    color: rgb(107, 114, 128);
 `;
 
 const PhotoButton = styled.button`
@@ -217,7 +236,7 @@ const PhotoButton = styled.button`
     background: rgb(59, 130, 246);
     color: white;
     font-size: 14px;
-    border: none;          /* 기본 테두리 제거 */
+    border: none;
     border-radius: 8px;
     cursor: pointer;
     &:hover {
@@ -226,32 +245,32 @@ const PhotoButton = styled.button`
 `;
 
 const NicknameSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 
-  label {
-    font-size: 14px;
-    color: rgb(75, 85, 99);
-  }
+    label {
+        font-size: 14px;
+        color: rgb(75, 85, 99);
+    }
 `;
 
 const NicknameForm = styled.div`
-  display: flex;
-  gap: 8px;
+    display: flex;
+    gap: 8px;
 `;
 
 const NicknameInput = styled.input`
-  flex: 1;
-  border: 1px solid rgb(209, 213, 219);
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 14px;
+    flex: 1;
+    border: 1px solid rgb(209, 213, 219);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
 
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgb(147, 197, 253);
-  }
+    &:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgb(147, 197, 253);
+    }
 `;
 
 const SaveButton = styled.button`
@@ -259,7 +278,7 @@ const SaveButton = styled.button`
     background: rgb(34, 197, 94);
     color: white;
     font-size: 14px;
-    border: none;         /* 기본 테두리 제거 */
+    border: none;
     border-radius: 8px;
     cursor: pointer;
     &:hover {
@@ -268,41 +287,41 @@ const SaveButton = styled.button`
 `;
 
 const HistoryGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
 
-  @media (min-width: 1024px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
+    @media (min-width: 1024px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
 `;
 
 const HistoryCard = styled.div`
-  padding: 16px;
-  background: rgb(249, 250, 251);
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+    padding: 16px;
+    background: rgb(249, 250, 251);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 
-  h3 {
-    font-weight: 600;
-    color: rgb(31, 41, 55);
-  }
+    h3 {
+        font-weight: 600;
+        color: rgb(31, 41, 55);
+    }
 `;
 
 const HistoryHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 `;
 
 const ToggleButton = styled.button`
     font-size: 14px;
     color: rgb(59, 130, 246);
-    border: none;           /* 기본 테두리 제거 */
-    background: transparent;/* 기본 배경 제거 */
+    border: none;
+    background: transparent;
     cursor: pointer;
     &:hover {
         text-decoration: underline;
@@ -310,54 +329,62 @@ const ToggleButton = styled.button`
 `;
 
 const Equipped = styled.div`
-  border: 2px solid rgb(59, 130, 246);
-  background: rgb(239, 246, 255);
-  border-radius: 8px;
-  padding: 8px 12px;
-  display: flex;
-  justify-content: space-between;
+    border: 2px solid rgb(59, 130, 246);
+    background: rgb(239, 246, 255);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
 
-  span {
-    font-weight: 500;
-    font-size: 14px;
-    color: rgb(29, 78, 216);
-  }
+    span {
+        font-weight: 500;
+        font-size: 14px;
+        color: rgb(29, 78, 216);
+    }
 
-  span:last-child {
-    font-size: 12px;
-    font-weight: 600;
-  }
+    span:last-child {
+        font-size: 12px;
+        font-weight: 600;
+    }
 `;
 
 const HistoryList = styled.ul`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 `;
 
 const HistoryItemBox = styled.li`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border: 1px solid rgb(229, 231, 235);
-  border-radius: 8px;
-  padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid rgb(229, 231, 235);
+    border-radius: 8px;
+    padding: 8px 12px;
 `;
 
 const EquipButton = styled.button`
     font-size: 12px;
     padding: 4px 8px;
     background: rgb(243, 244, 246);
-    border: none;           /* 기본 테두리 제거 */
+    border: none;
     border-radius: 4px;
     cursor: pointer;
+
     &:hover {
         background: rgb(229, 231, 235);
+    }
+
+    &:disabled {
+        background: transparent;
+        color: rgb(37, 99, 235);
+        font-weight: 600;
+        cursor: default;
     }
 `;
 
 const ErrorText = styled.p`
-  font-size: 13px;
-  color: rgb(220, 38, 38); /* Tailwind red-600 */
-  margin-top: 4px;
+    font-size: 13px;
+    color: rgb(220, 38, 38);
+    margin-top: 4px;
 `;
