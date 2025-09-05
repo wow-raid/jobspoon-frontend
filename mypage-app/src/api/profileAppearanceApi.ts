@@ -6,12 +6,14 @@ const API_BASE_URL = "http://localhost:8080";
 export interface ProfileAppearanceResponse {
     photoUrl: string | null;
     customNickname: string;
-    rank?: { code: string; displayName: string };
-    title?: { code: string; displayName: string };
+    rank?: { id?: number; code: string; displayName: string };
+    title?: { id?: number; code: string; displayName: string };
+    email?: string;
 }
 
 // 공통 Rank/Title 이력 타입
 export interface HistoryItem{
+    id: number;
     code: string;
     displayName: string;
     acquiredAt: string; // ISO datetime
@@ -19,7 +21,8 @@ export interface HistoryItem{
 
 // 내 프로필 조회
 export async function fetchMyProfile(token: string) {
-    const res = await axios.get(`${API_BASE_URL}/profile-appearance/my`,
+    const res = await axios.get<ProfileAppearanceResponse>(
+        `${API_BASE_URL}/profile-appearance/my`,
         { headers: { Authorization: token } }
     );
     return res.data;
@@ -37,12 +40,20 @@ export async function updateProfilePhoto(token: string, photoUrl: string) {
 
 // 닉네임 변경
 export async function updateNickname(token: string, customNickname: string) {
-    const res = await axios.put<ProfileAppearanceResponse>(
-        `${API_BASE_URL}/profile-appearance/nickname`,
-        { customNickname },
-        { headers: { Authorization: token } }
-    );
-    return res.data;
+    try{
+        const res = await axios.put<ProfileAppearanceResponse>(
+            `${API_BASE_URL}/profile-appearance/nickname`,
+            { customNickname },
+            { headers: { Authorization: token } }
+        );
+        return res.data;
+    }catch(error: any){
+        // 백엔드에서 IllegalArgumentException 메시지를 그대로 뽑아서 throw
+        if(error.response?.data) {
+            throw new Error(error.response.data.message || error.response.data);
+        }
+        throw new Error("닉네임 수정 실패");
+    }
 }
 
 // 보유 랭크 조회
