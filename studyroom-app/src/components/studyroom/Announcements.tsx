@@ -147,6 +147,7 @@ const Announcements: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const { userId } = useAuth();
     const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
+    const [isLoadingDetail, setIsLoadingDetail] = useState(false)
 
     const fetchAnnouncements = useCallback(async () => {
         if (!studyRoomId) return;
@@ -194,9 +195,27 @@ const Announcements: React.FC = () => {
         }
     };
 
-    const handleViewDetail = (announcement: Announcement) => {
+    // ✅ 2. handleViewDetail 함수를 API를 호출하는 비동기 함수로 수정
+    const handleViewDetail = async (announcement: Announcement) => {
+        // 먼저 목록의 기본 정보로 모달을 빠르게 엽니다.
         setSelectedAnnouncement(announcement);
         setIsDetailModalOpen(true);
+        setIsLoadingDetail(true); // 로딩 시작
+
+        try {
+            // 상세 정보 API를 호출하여 'content'가 포함된 완전한 데이터를 가져옵니다.
+            const response = await axiosInstance.get(
+                `/study-rooms/${studyRoomId}/announcements/${announcement.id}`
+            );
+            // API 응답으로 state를 업데이트하여 화면을 갱신합니다.
+            setSelectedAnnouncement(response.data);
+        } catch (error) {
+            console.error("공지사항 상세 정보를 불러오는데 실패했습니다:", error);
+            alert("상세 정보를 불러오는 중 오류가 발생했습니다.");
+            setIsDetailModalOpen(false); // 오류 발생 시 모달 닫기
+        } finally {
+            setIsLoadingDetail(false); // 로딩 종료 (성공/실패 모든 경우)
+        }
     };
 
     const handlePinToggle = async (id: number) => { // async 추가
@@ -322,6 +341,7 @@ const Announcements: React.FC = () => {
                 ))}
             </List>
 
+            {/* ✅ 1. 글쓰기/수정 모달은 isWriteModalOpen에 연결 */}
             <Modal isOpen={isWriteModalOpen} onClose={closeFormModal}>
                 <AnnouncementForm
                     onSubmit={handleFormSubmit}
@@ -330,18 +350,24 @@ const Announcements: React.FC = () => {
                             ? { title: editingAnnouncement.title, content: editingAnnouncement.content }
                             : undefined
                     }
+                    isEditing={!!editingAnnouncement} // ✅ 폼이 수정 모드임을 알려줌
                 />
             </Modal>
 
+            {/* ✅ 2. 상세 보기 모달은 isDetailModalOpen에 연결 */}
             <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)}>
-                {selectedAnnouncement && (
-                    <AnnouncementDetail
-                        announcement={selectedAnnouncement}
-                        onEdit={handleEditClick}
-                        onDelete={handleDelete}
-                        currentUser={{ role: currentUserRole, id: userId }}
-                        onMarkAsRead={() => handleMarkAsRead(selectedAnnouncement.id)}
-                    />
+                {isLoadingDetail ? (
+                    <div>로딩 중...</div>
+                ) : (
+                    selectedAnnouncement && (
+                        <AnnouncementDetail
+                            announcement={selectedAnnouncement}
+                            onEdit={handleEditClick}
+                            onDelete={handleDelete}
+                            currentUser={{ role: currentUserRole, id: userId }}
+                            onMarkAsRead={() => handleMarkAsRead(selectedAnnouncement.id)}
+                        />
+                    )
                 )}
             </Modal>
         </Container>
