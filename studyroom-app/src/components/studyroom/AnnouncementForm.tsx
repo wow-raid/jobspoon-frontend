@@ -5,6 +5,7 @@ import styled from "styled-components";
 interface AnnouncementFormProps {
     onSubmit: (formData: { title: string; content: string }) => void;
     initialData?: { title: string; content: string };
+    isEditing?: boolean;
 }
 
 /* ─ styled-components (scoped) ─ */
@@ -77,7 +78,7 @@ const SubmitBtn = styled.button`
   &:hover { background-color: ${({ theme }) => theme.accentHover ?? theme.primaryHover}; }
 `;
 
-const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ onSubmit, initialData }) => {
+const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ onSubmit, initialData, isEditing = false }) => {
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
 
@@ -85,6 +86,9 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ onSubmit, initialDa
         if (initialData) {
             setTitle(initialData.title);
             setContent(initialData.content);
+        } else {
+            setTitle("");
+            setContent("");
         }
     }, [initialData]);
 
@@ -99,7 +103,7 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ onSubmit, initialDa
 
     return (
         <Form onSubmit={handleSubmit}>
-            <Title>새 공지사항 작성</Title>
+            <Title>{isEditing ? '공지사항 수정' : '새 공지사항 작성'}</Title>
 
             <Group>
                 <Label htmlFor="announcement-title">제목</Label>
@@ -124,7 +128,7 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ onSubmit, initialDa
                 />
             </Group>
 
-            <SubmitBtn type="submit">등록하기</SubmitBtn>
+            <SubmitBtn type="submit">{isEditing ? '수정하기' : '등록하기'}</SubmitBtn>
         </Form>
     );
 };
