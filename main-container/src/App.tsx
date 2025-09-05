@@ -90,7 +90,28 @@ function AppRoutes() {
                     }
                 />
                 <Route path="/svelte-review/*" element={<SvelteReviewAppWrapper />} />
-                <Route path="/mypage/*" element={<MyPageApp />} />
+
+
+
+
+
+
+                {/*<Route path="/mypage/*" element={<MyPageApp />} />*/}
+                {/* ✅ MyPage도 로그인 필수로 감싸기 */}
+                <Route
+                    path="/mypage/*"
+                    element={
+                        <RequireToken loginPath="/vue-account/account/login">
+                            <MyPageApp />
+                        </RequireToken>
+                    }
+                />
+
+
+
+
+
+
             </Routes>
             {!hideLayout && <Footer />}
         </Suspense>
