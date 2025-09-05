@@ -29,3 +29,17 @@ export interface Announcement {
     };
     readBy?: number[];
 }
+
+export type Status = "pending" | "approved" | "rejected";
+
+export interface Application {
+    id: number;
+    study: {
+        id: number;
+        title: string;
+        location: string;
+        recruitingRoles: string[];
+    };
+    status: Status;
+    appliedAt: string;
+}

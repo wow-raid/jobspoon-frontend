@@ -1,16 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-
-type Status = "pending" | "approved" | "rejected";
-
-interface Application {
-  id: number;
-  studyId: number;
-  studyTitle: string;
-  status: Status;
-  appliedAt: string;
-}
+import { Status, Application } from "../types/study";
 
 interface ApplicationCardProps {
   application: Application;
@@ -117,13 +108,20 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   application,
   onCancel,
 }) => {
-  const { id, studyId, studyTitle, status, appliedAt } = application;
+  const { id, study, status, appliedAt } = application;
 
-  const statusText = {
+  const STATUS_MAP = {
     pending: "대기중",
     approved: "수락됨",
     rejected: "거절됨",
-  }[status];
+  };
+  const statusText = STATUS_MAP[status.toLowerCase()] || "알 수 없음";
+
+    const formattedDate = new Date(appliedAt).toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
 
   const handleCancelClick: React.MouseEventHandler<HTMLButtonElement> = (e) => {
     e.preventDefault(); // 링크 이동 방지
@@ -132,13 +130,14 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   };
 
   return (
-    <Card to={`../study/${studyId}`}>
+    <Card to={`../study/${study.id}`}>
       <Content>
-        <Title>{studyTitle}</Title>
-        <Meta>
-          <AppliedDate>{appliedAt} 신청</AppliedDate>
+        <Title>{study.title}</Title>
 
-          {status === "pending" ? (
+        <Meta>
+          <AppliedDate>{formattedDate} 신청</AppliedDate>
+
+          {status.toLowerCase() === "pending" ? (
             <CancelButton onClick={handleCancelClick}>신청 취소</CancelButton>
           ) : (
             <CancelButton disabled>취소 불가</CancelButton>
