@@ -93,8 +93,15 @@ function AppRoutes() {
                     }
                 />
                 <Route path="/svelte-review/*" element={<SvelteReviewAppWrapper />} />
+                <Route
+                    path="/mypage/*"
+                    element={
+                        <RequireToken loginPath="/vue-account/account/login">
+                            <MyPageApp />
+                        </RequireToken>
+                    }
+                />
                 <Route path="/sveltekit-review/*" element={<SvelteKitReviewAppWrapper />} />
-                <Route path="/mypage/*" element={<MyPageApp />} />
             </Routes>
             {!hideLayout && <Footer />}
         </Suspense>
