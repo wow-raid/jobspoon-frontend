@@ -1,7 +1,7 @@
 // AnnouncementDetail.tsx
 import React from 'react';
 import styled from 'styled-components';
-import { Announcement } from '../../data/mockData';
+import { Announcement} from "../../types/study";
 
 interface CurrentUser {
     role: string | null;
@@ -137,14 +137,14 @@ const AnnouncementDetail: React.FC<AnnouncementDetailProps> = ({
     currentUser,
     onMarkAsRead,
 }) => {
-    const hasRead = announcement.readBy?.includes(currentUser.id);
+    const hasRead = currentUser.id !== null && announcement.readBy?.includes(currentUser.id);
 
     return (
         <Container>
             <Header>
-                <h2>{announcement.pinned && '📌 '} {announcement.title}</h2>
+                <h2>{announcement.isPinned && '📌 '} {announcement.title}</h2>
                 <Meta>
-                    <span>작성자: {announcement.author}</span>
+                    <span>작성자: {announcement.author.nickname}</span>
                     <span>작성일: {new Date(announcement.createdAt).toLocaleString()}</span>
                 </Meta>
             </Header>
@@ -154,7 +154,7 @@ const AnnouncementDetail: React.FC<AnnouncementDetailProps> = ({
             </Content>
 
             <Actions>
-                {currentUser.role === 'leader' ? (
+                {currentUser.role === 'LEADER' ? (
                     <>
                         <EditBtn onClick={onEdit}>수정</EditBtn>
                         <DeleteBtn onClick={onDelete}>삭제</DeleteBtn>
@@ -172,7 +172,7 @@ const AnnouncementDetail: React.FC<AnnouncementDetailProps> = ({
                 )}
             </Actions>
 
-            {currentUser.role === 'leader' && (
+            {currentUser.role === 'LEADER' && (
                 <ReadByList>
                     <h4>읽은 사람 ({announcement.readBy?.length || 0}명)</h4>
                     {announcement.readBy && announcement.readBy.length > 0 ? (
