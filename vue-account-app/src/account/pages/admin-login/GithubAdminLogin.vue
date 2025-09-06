@@ -1,3 +1,4 @@
+<!-- src/account/pages/admin-login/GithubAdminLogin.vue -->
 <template>
   <div class="grey lighten-5" style="font-family: 'Noto Sans KR', sans-serif">
     <v-container class="white">
@@ -8,24 +9,35 @@
               <div class="text-h4 font-weight-black mb-10">
                 GitHub Oauth 로그인
               </div>
+
               <div class="d-flex">
-                <v-img
-                  :src="githubIconSrc"
-                  width="120"
-                  class="mx-auto mb-6"
-                ></v-img>
+                <v-img :src="githubIconSrc" width="120" class="mx-auto mb-6" />
               </div>
 
+              <v-btn
+                  block
+                  x-large
+                  rounded
+                  color="gray lighten-1"
+                  class="mt-6"
+                  @click="goToAdminCodeInput"
+              >
+                로그인
+              </v-btn>
+
+              <!-- 필요하면 GitHub로 바로 이동 버튼도 사용 -->
+              <!--
               <v-btn
                 block
                 x-large
                 rounded
-                color="gray lighten-1"
-                class="mt-6"
-                @click="goToAdminCodeInput"
+                color="black"
+                class="mt-3"
+                @click="goToGithubLogin"
               >
-                로그인
+                GitHub로 계속
               </v-btn>
+              -->
             </v-card-text>
           </v-card>
         </v-col>
@@ -34,38 +46,70 @@
   </div>
 </template>
 
-<script setup>
-import logoSrc from "@/assets/images/fixed/logo1.png";
-import githubIconSrc from "@/assets/images/fixed/icon-github.svg";
-
+<script setup lang="ts">
+import { onMounted } from "vue";
+import { useRouter } from "vue-router";
+// 별칭(@)이 없다면 아래를 ../../../assets/... 으로 바꿔주세요.
+// import githubIconSrc from "@/assets/images/fixed/icon-github.svg";
+import githubIconSrc from "../../../assets/images/fixed/icon-github.svg";
 import { useGithubAuthenticationStore } from "../../../github/stores/githubAuthenticationStore";
 
-// ✅ SEO 메타 정보 설정
-definePageMeta({
-  title: '관리자 GitHub 로그인 | 잡스틱(JobStick)',
-  description: '잡스틱(JobStick) 관리자 전용 GitHub 계정으로 로그인하여 관리 기능을 이용하세요.',
-  keywords: ['관리자 로그인', 'GitHub 로그인', 'JobStick 관리자', 'Admin GitHub Login', 'JobStick', 'job-stick', '잡스틱', '개발자 플랫폼', '개발자 취업', '모의 면접', 'AI 면접'],
-  ogTitle: '잡스틱(JobStick) 관리자 GitHub 로그인',
-  ogDescription: '잡스틱(JobStick)의 관리자용 페이지입니다. GitHub 계정으로 안전하게 로그인하세요.',
-  ogImage: '/assets/images/fixed/icon-github.svg',
-  robots: 'noindex, nofollow' // 관리자 페이지는 검색에 노출되지 않도록 처리
-});
-
-// Pinia store 상태
+const router = useRouter();
 const githubAuthentication = useGithubAuthenticationStore();
 
-// 관리자 코드 입력 페이지로 이동
+// 버튼: 코드 입력 화면으로 이동
 const goToAdminCodeInput = () => {
   router.push("/account/admin-code");
 };
 
-// Github 로그인 함수
+// (선택) GitHub 로그인 요청
 const goToGithubLogin = async () => {
-  console.log("goToGithubLogin");
-  await githubAuthentication.requestGithubLoginToDjango();
+  try {
+    await githubAuthentication.requestGithubLoginToDjango();
+  } catch (e) {
+    console.error("[GithubAdminLogin] GitHub 로그인 요청 실패:", e);
+  }
 };
+
+/** 메타 유틸 */
+function setMeta(
+    name: string,
+    content: string,
+    attr: "name" | "property" = "name"
+) {
+  let el = document.head.querySelector<HTMLMetaElement>(
+      `meta[${attr}="${name}"]`
+  );
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute(attr, name);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+}
+
+onMounted(() => {
+  // ✅ 토큰 검증 로직 제거 → 바로 메타 설정만 실행
+  document.title = "관리자 GitHub 로그인 | 잡스틱(JobStick)";
+  setMeta(
+      "description",
+      "잡스틱(JobStick) 관리자 전용 GitHub 계정으로 로그인하여 관리 기능을 이용하세요."
+  );
+  setMeta(
+      "keywords",
+      "관리자 로그인, GitHub 로그인, JobStick 관리자, Admin GitHub Login, JobStick, job-stick, 잡스틱, 개발자 플랫폼, 개발자 취업, 모의 면접, AI 면접"
+  );
+  setMeta("og:title", "잡스틱(JobStick) 관리자 GitHub 로그인", "property");
+  setMeta(
+      "og:description",
+      "잡스틱(JobStick)의 관리자용 페이지입니다. GitHub 계정으로 안전하게 로그인하세요.",
+      "property"
+  );
+  setMeta("og:image", "/assets/images/fixed/icon-github.svg", "property");
+  setMeta("robots", "noindex, nofollow");
+});
 </script>
 
 <style scoped>
-/* 추가적인 스타일이 필요하면 여기에 작성 */
+/* 필요 시 추가 스타일 */
 </style>

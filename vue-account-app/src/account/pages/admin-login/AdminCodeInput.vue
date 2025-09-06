@@ -26,7 +26,7 @@
 
               <!-- [4] 사용자 입력: 관리자 ID (Enter 누르면 verify 실행) -->
               <v-text-field
-                  v-model="administerId"
+                  v-model="administratorId"
                   label="관리자 ID"
                   variant="outlined"
                   class="mb-3"
@@ -35,7 +35,7 @@
 
               <!-- [5] 사용자 입력: 관리자 비밀번호 (Enter 누르면 verify 실행) -->
               <v-text-field
-                  v-model="administerpassword"
+                  v-model="administratorpassword"
                   label="관리자 비밀번호"
                   type="password"
                   variant="outlined"
@@ -97,8 +97,8 @@ const router = useRouter();
 /**
  * [D] 반응형 상태
  */
-const administerId = ref("");
-const administerpassword = ref("");
+const administratorId = ref("");
+const administratorpassword = ref("");
 const loading = ref(false);
 const errorMessage = ref("");
 
@@ -106,7 +106,7 @@ const errorMessage = ref("");
  * [E] 제출 가능 여부 계산
  */
 const canSubmit = computed(
-    () => administerId.value.trim().length > 0 && administerpassword.value.trim().length > 0
+    () => administratorId.value.trim().length > 0 && administratorpassword.value.trim().length > 0
 );
 
 /**
@@ -130,10 +130,10 @@ const verifyAdminCode = async () => {
 
   try {
     const res = await springAxiosInstance.post(
-        "/administer/code_login",
+        "/administrator/code_login",
         {
-          administerId: administerId.value,
-          administerpassword: administerpassword.value,
+          administratorId: administratorId.value,
+          administratorpassword: administratorpassword.value,
         },
         {
           // 2xx가 아니어도 throw하지 않게 해서 status로 분기
@@ -153,7 +153,7 @@ const verifyAdminCode = async () => {
         console.warn("Authorization header(Bearer ...) not found in response.");
       }
       console.log("auth", res.headers?.authorization ?? res.headers?.Authorization);
-      router.push({ name: "AdminOverview" });
+      router.push({ name: "GithubAdminLogin" });
     } else if (res.status === 401) {
       errorMessage.value = "아이디 또는 비밀번호가 올바르지 않습니다.";
     } else {
