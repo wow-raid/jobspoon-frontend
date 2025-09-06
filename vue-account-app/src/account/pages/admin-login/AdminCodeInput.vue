@@ -147,7 +147,7 @@ const verifyAdminCode = async () => {
       const authHeader = res.headers?.["authorization"] ?? res.headers?.["Authorization"];
       if (authHeader && authHeader.startsWith("Bearer ")) {
         const token = authHeader.substring(7); // "Bearer " 제거
-        localStorage.setItem("tempoaryAdminToken", token);
+        localStorage.setItem("temporaryAdminToken", token);
       } else {
         // 토큰이 없다면 경고
         console.warn("Authorization header(Bearer ...) not found in response.");

@@ -27,8 +27,12 @@ const routes: Array<RouteRecordRaw> = [
   { path: "/account/mypage", component: AccountMy },
   { path: "/account/modify/modify-profile", component: ModifyIndex },
   { path: "/account/withdraw", component: AccountWithdraw },
-  { path: "/account/admin-code", component: AdminCodeInput }, { path: "/account/admin-login", name: "GithubAdminLogin", component: GithubAdminLogin },
-  // ✅ 관리자 영역
+  { path: "/account/admin-code", component: AdminCodeInput },
+  { path: "/account/admin-login", name: "GithubAdminLogin",
+      component: GithubAdminLogin,
+      meta: { requiresTempAdmin:true},
+  },
+  //관리자 페이지 영역
   { path: "/account/admin", component: AdminLayout, meta: { requiresAdmin: true },
     children: [
       { path: "", name: "AdminOverview", component: AdminOverview },

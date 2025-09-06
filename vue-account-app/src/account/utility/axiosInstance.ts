@@ -10,6 +10,7 @@ export function createAxiosInstances() {
     const djangoApiUrl = process.env.VUE_APP_DJANGO_API_BASE_URL;
     const springApiUrl = process.env.VUE_APP_SPRING_API_BASE_URL;
     const aiBaseUrl = process.env.VUE_APP_AI_API_BASE_URL;
+    const adminApiUrl = process.env.VUE_APP_SPRING_API_BASE_URL;
 
     if (!djangoAxiosInstance) {
         console.log("🔎 Spring API URL:", process.env.VUE_APP_SPRING_API_BASE_URL);
@@ -41,8 +42,7 @@ export function createAxiosInstances() {
     }
 
     if (!springAdminAxiosInst) {
-        const adminApiUrl =
-            process.env.VUE_APP_SPRING_API_BASE_URL;
+
 
         springAdminAxiosInst = axios.create({
             baseURL: adminApiUrl,
@@ -52,4 +52,18 @@ export function createAxiosInstances() {
     }
 
     return { djangoAxiosInstance, springAxiosInstance, fastapiAxiosInst, springAdminAxiosInst };
+}
+
+//admin 임시토큰 유효성 검증
+export async function validateTempTokenOnServer(token:string): Promise<boolean>{
+    if(!springAdminAxiosInst) createAxiosInstances();
+    try{
+        const resp = await springAdminAxiosInst!.get("/administrator/temptoken_valid", {
+            headers: { "X-Temp-Admin-Token": token },
+            validateStatus: () => true,
+        });
+        return resp.status === 200 || resp.status === 204;
+    }catch {
+        return false;
+    }
 }
