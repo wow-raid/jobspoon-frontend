@@ -186,7 +186,7 @@ const heroSectionStyle = {
 
 const heroContentStyle = {
   flex: '1',
-  maxWidth: '550px',
+  maxWidth: '800px',
   padding: '2rem',
   marginLeft: '2rem',
   marginRight: '0.5rem',
