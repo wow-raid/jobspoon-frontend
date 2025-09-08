@@ -8,10 +8,10 @@ COPY . .
 
 # 빌드 실행
 RUN npm install \
-  && echo "\n// 각 앱의 rspack.config.ts 파일에서 publicPath 수정" \
-  && find . -name "rspack.config.ts" -exec sed -i "s|publicPath: \"auto\"|publicPath: '/' + __dirname.split('/').pop() + '/'|g" {} \; \
-  && find . -name "rspack.config.ts" -exec sed -i "s|publicPath: \"http://localhost:[0-9]\\+/\"|publicPath: '/' + __dirname.split('/').pop() + '/'|g" {} \; \
-  && find . -name "rspack.config.ts" -exec sed -i "s|publicPath: \`\${process.env.MFE_PUBLIC_SERVICE}/\`|publicPath: '/' + __dirname.split('/').pop() + '/'|g" {} \; \
+  && echo "\n// 각 앱의 rspack.config.ts 파일에서 publicPath 수정 (svelte 제외)" \
+  && find . -path "./svelte-review-app" -prune -o -name "rspack.config.ts" -exec sed -i "s|publicPath: \"auto\"|publicPath: '/' + __dirname.split('/').pop() + '/'|g" {} \; \
+  && find . -path "./svelte-review-app" -prune -o -name "rspack.config.ts" -exec sed -i "s|publicPath: \"http://localhost:[0-9]\\+/\"|publicPath: '/' + __dirname.split('/').pop() + '/'|g" {} \; \
+  && find . -path "./svelte-review-app" -prune -o -name "rspack.config.ts" -exec sed -i "s|publicPath: \`\${process.env.MFE_PUBLIC_SERVICE}/\`|publicPath: '/' + __dirname.split('/').pop() + '/'|g" {} \; \
   && npm run build
 
 # 2단계: Nginx
