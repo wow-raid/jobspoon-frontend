@@ -7,6 +7,8 @@ import {
 } from "../api/dashboardApi.ts";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import styled from "styled-components";
+import RankSection from "./RankSection.tsx";
+import TitleSection from "./TitleSection.tsx";
 
 const COLORS = ["rgb(59,130,246)", "rgb(229,231,235)"]; // 파랑 / 회색
 
@@ -87,81 +89,50 @@ export default function DashboardSection() {
     }
 
     return (
-        <Section>
-            <SectionTitle>나의 활동 로그</SectionTitle>
+        <>
+            {/* 나의 활동 로그 */}
+            <Section>
+                <SectionTitle>나의 활동 로그</SectionTitle>
 
-            {/* 텍스트 로그 */}
-            <TopCardGrid>
-                <TopCard>
-                    <p>이번 달 출석</p>
-                    <strong>{attendance.attended}/{attendance.totalDays}일</strong>
-                </TopCard>
-                <TopCard>
-                    <p>총 모의면접</p>
-                    <strong>{interview.interviewTotalCount}회</strong>
-                </TopCard>
-                <TopCard>
-                    <p>총 문제풀이</p>
-                    <strong>{quiz.quizTotalCount}개</strong>
-                </TopCard>
-                <TopCard>
-                    <p>총 글 작성</p>
-                    <strong>{review.reviewCount}개</strong>
-                </TopCard>
-            </TopCardGrid>
-            {/*<LogGrid>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>출석률</span>*/}
-            {/*        <strong>{attendance.attendanceRate.toFixed(1)}%</strong>*/}
-            {/*    </LogItem>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>출석일수</span>*/}
-            {/*        <strong>*/}
-            {/*            {attendance.attended}/{attendance.totalDays}일*/}
-            {/*        </strong>*/}
-            {/*    </LogItem>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>총 모의면접</span>*/}
-            {/*        <strong>{interview.interviewTotalCount}회</strong>*/}
-            {/*    </LogItem>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>이번 달 모의면접</span>*/}
-            {/*        <strong>{interview.interviewMonthlyCount}회</strong>*/}
-            {/*    </LogItem>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>총 문제풀이</span>*/}
-            {/*        <strong>{quiz.quizTotalCount}개</strong>*/}
-            {/*    </LogItem>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>이번 달 문제풀이</span>*/}
-            {/*        <strong>{quiz.quizMonthlyCount}개</strong>*/}
-            {/*    </LogItem>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>리뷰 작성</span>*/}
-            {/*        <strong>{review.reviewCount}개</strong>*/}
-            {/*    </LogItem>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>모임 작성</span>*/}
-            {/*        <strong>{studyroom.studyroomCount}개</strong>*/}
-            {/*    </LogItem>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>댓글 작성</span>*/}
-            {/*        <strong>{comment.commentCount}개</strong>*/}
-            {/*    </LogItem>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>신뢰 점수</span>*/}
-            {/*        <strong>{trust.trustScore}점</strong>*/}
-            {/*    </LogItem>*/}
-            {/*</LogGrid>*/}
+                {/* 텍스트 로그 */}
+                <TopCardGrid>
+                    <TopCard>
+                        <p>이번 달 출석</p>
+                        <strong>{attendance.attended}/{attendance.totalDays}일</strong>
+                    </TopCard>
+                    <TopCard>
+                        <p>총 모의면접</p>
+                        <strong>{interview.interviewTotalCount}회</strong>
+                    </TopCard>
+                    <TopCard>
+                        <p>총 문제풀이</p>
+                        <strong>{quiz.quizTotalCount}개</strong>
+                    </TopCard>
+                    <TopCard>
+                        <p>총 글 작성</p>
+                        <strong>{review.reviewCount}개</strong>
+                    </TopCard>
+                </TopCardGrid>
 
-            {/* 도넛 차트 */}
-            <DonutGrid>
-                <DonutChart value={attendance.attendanceRate} label="이번 달 출석률" unit="%" max={100} />
-                <DonutChart value={interview.interviewMonthlyCount} label="이번 달 모의면접" unit="회" max={10} />
-                <DonutChart value={quiz.quizMonthlyCount} label="이번 달 문제풀이" unit="개" max={20} />
-                <DonutChart value={trust.trustScore} label="신뢰 점수" unit="점" max={100} />
-            </DonutGrid>
-        </Section>
+                {/* 도넛 차트 */}
+                <DonutGrid>
+                    <DonutChart value={attendance.attendanceRate} label="이번 달 출석률" unit="%" max={100} />
+                    <DonutChart value={interview.interviewMonthlyCount} label="이번 달 모의면접" unit="회" max={10} />
+                    <DonutChart value={quiz.quizMonthlyCount} label="이번 달 문제풀이" unit="개" max={20} />
+                    <DonutChart value={trust.trustScore} label="신뢰 점수" unit="점" max={100} />
+                </DonutGrid>
+            </Section>
+
+            {/* 나의 랭크 현황 */}
+            <Section>
+                <RankSection />
+            </Section>
+
+            {/* 나의 칭호 현황 */}
+            <Section>
+                <TitleSection />
+            </Section>
+        </>
     );
 }
 
