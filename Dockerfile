@@ -13,7 +13,7 @@ RUN npm install \
   && find . -name "rspack.config.ts" -exec sed -i "s|publicPath: \"auto\"|publicPath: '/' + __dirname.split('/').pop() + '/'|g" {} \; \
   && find . -name "rspack.config.ts" -exec sed -i "s|publicPath: \"http://localhost:[0-9]\\+/\"|publicPath: '/' + __dirname.split('/').pop() + '/'|g" {} \; \
   && find . -name "rspack.config.ts" -exec sed -i "s|publicPath: \`\${process.env.MFE_PUBLIC_SERVICE}/\`|publicPath: '/' + __dirname.split('/').pop() + '/'|g" {} \; \
-  && npx lerna run build --parallel
+  && npm run build
 
 # 2단계: Nginx
 FROM nginx:alpine
