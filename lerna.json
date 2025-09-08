@@ -10,6 +10,7 @@
     "sveltekit-review-app",
     "studyroom-app",
     "packages/*",
-    "mypage-app"
+    "mypage-app",
+    "spoon-word-app"
   ]
 }
