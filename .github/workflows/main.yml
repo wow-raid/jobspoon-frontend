@@ -26,6 +26,9 @@ jobs:
           
           # 마이페이지 앱 환경변수
           echo "${{ secrets.MY_PAGE_ENV }}" > mypage-app/.env
+          
+          # navation-bar 앱 환경변수
+          echo "${{ secrets.NAVIGATION_BAR_ENV }}" > navigation-bar-app/.env
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
