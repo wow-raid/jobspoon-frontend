@@ -29,8 +29,9 @@ COPY --from=builder /app/main-container/dist /usr/share/nginx/html/html-containe
 COPY --from=builder /app/mypage-app/dist /usr/share/nginx/html/mypage-app
 COPY --from=builder /app/navigation-bar-app/dist /usr/share/nginx/html/navigation-bar-app
 COPY --from=builder /app/studyroom-app/dist /usr/share/nginx/html/studyroom-app
-# svelte-review-app은 워크스페이스에서 제외됨
+# svelte 관련 앱들은 워크스페이스에서 제외됨
 # COPY --from=builder /app/svelte-review-app/dist /usr/share/nginx/html/svelte-review-app
+# COPY --from=builder /app/sveltekit-review-app/dist /usr/share/nginx/html/sveltekit-review-app
 COPY --from=builder /app/vue-account-app/dist /usr/share/nginx/html/vue-account-app
 COPY --from=builder /app/vue-ai-interview-app/dist /usr/share/nginx/html/vue-ai-interview-app
 
