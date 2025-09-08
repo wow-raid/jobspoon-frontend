@@ -6,6 +6,7 @@ export const mfConfig = {
     studyRoomApp: `studyRoomApp@${process.env.REACT_STUDYROOM_APP}/remoteEntry.js`,
     vueAiInterviewApp: `vueAiInterviewApp@${process.env.VUE_AI_INTERVIEW_APP}/remoteEntry.js`,
     svelteReviewApp: `svelteReviewApp@${process.env.SVELTE_REVIEW_APP}/remoteEntry.js`,
+    svelteKitReviewApp: `svelteKitReviewApp@${process.env.SVELTEKIT_REVIEW_APP}/remoteEntry.js`,
     myPageApp: `myPageApp@${process.env.REACT_MYPAGE_APP}/remoteEntry.js`
   },
   shared: {

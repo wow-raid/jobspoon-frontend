@@ -52,12 +52,40 @@ const StudyDetailPage: React.FC = () => {
         alert('스터디모임 정보가 성공적으로 수정되었습니다.');
     }
 
-    const handleApplicationSubmit = (message: string) => {
+    const handleApplicationSubmit = async (message: string) => {
+        // study 객체가 없으면 실행하지 않음
+        if (!study) {
+            alert("스터디 정보가 올바르지 않습니다.");
+            return;
+        }
+        if (!currentUserId) {
+            alert("로그인이 필요합니다.")
+            return;
+        }
+
         console.log(`--- 스터디 참가 신청 ---`);
-        console.log(`스터디 ID: ${study?.id}`);
+        console.log(`스터디 ID: ${study.id}`);
         console.log(`신청 메시지: ${message}`);
 
-        navigate('/success', { state: { title: study?.title } });
+        try {
+            // ✅ 1. 백엔드에 보낼 데이터 준비
+            const requestData = {
+                studyRoomId: study.id,
+                applicantId: currentUserId,
+                message: message,
+            };
+
+            // ✅ 2. axios를 사용해 POST API 호출
+            await axiosInstance.post('/study-applications', requestData);
+
+            // ✅ 3. API 호출이 성공한 후에 성공 페이지로 이동
+            navigate('/success', { state: { title: study.title } });
+
+        } catch (error) {
+            console.error("스터디 참가 신청에 실패했습니다:", error);
+            // 백엔드에서 보낸 에러 메시지가 있다면 표시해주는 것이 더 좋습니다.
+            alert("참가 신청 중 오류가 발생했습니다. 이미 신청했거나, 모임장일 수 있습니다.");
+        }
     };
 
     if (loading) return <div>로딩 중...</div>;

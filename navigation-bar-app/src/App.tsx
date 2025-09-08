@@ -131,12 +131,14 @@ const App: React.FC = () => {
           >
             AI 인터뷰
           </NavLink>
+
           <NavLink
-            to="/mypage"
-            $active={isActive("/mypage")}
+              to={isLoggedIn ? "/mypage" : "/vue-account/account/login"}
+              $active={isActive("/mypage")}
           >
             MyPage
           </NavLink>
+
           <NavLink
             to="/svelte-review/review"
             $active={isActive("/svelte-review")}

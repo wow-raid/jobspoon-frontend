@@ -14,10 +14,12 @@ import Footer from "./components/Footer";
 import VueAccountAppWrapper from "./VueAccountWrapper.tsx";
 import VueAiInterviewAppWrapper from "./VueAiInterviewWrapper.tsx";
 import SvelteReviewAppWrapper from "./SvelteReviewWrapper.tsx";
+import SvelteKitReviewAppWrapper from "./SvelteKitReviewWrapper.tsx";
 import RequireToken from "./RequireToken";
 import ThemeSync from "./ThemeSync";
 import ThemeToggleButton from "./ThemeToggleButton";
 import { themeAtom } from "@jobspoon/app-state";
+import SuccessPage from "studyroom-app/src/pages/SuccessPage.tsx";
 
 const eventBus = mitt();
 
@@ -81,6 +83,7 @@ function AppRoutes() {
                 <Route path="/" element={<Main />} />
                 <Route path="/vue-account/*" element={<VueAccountAppWrapper eventBus={eventBus} />} />
                 <Route path="/studies/*" element={<StudyRoomApp />} />
+                <Route path="/success" element={<SuccessPage />} />
                 <Route
                     path="/vue-ai-interview/*"
                     element={
@@ -90,7 +93,15 @@ function AppRoutes() {
                     }
                 />
                 <Route path="/svelte-review/*" element={<SvelteReviewAppWrapper />} />
-                <Route path="/mypage/*" element={<MyPageApp />} />
+                <Route
+                    path="/mypage/*"
+                    element={
+                        <RequireToken loginPath="/vue-account/account/login">
+                            <MyPageApp />
+                        </RequireToken>
+                    }
+                />
+                <Route path="/sveltekit-review/*" element={<SvelteKitReviewAppWrapper />} />
             </Routes>
             {!hideLayout && <Footer />}
         </Suspense>

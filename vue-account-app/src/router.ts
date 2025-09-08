@@ -7,8 +7,6 @@ import PrivacyAgreement from "./account/pages/login/PrivacyAgreement.vue";
 import AccountMy from "./account/pages/my/AccountMy.vue";
 import ModifyIndex from "./account/pages/modify/ModifyIndex.vue";
 import AccountWithdraw from "./account/pages/withdraw/AccountWithdraw.vue";
-import AdminCodeInput from "./account/pages/admin-login/AdminCodeInput.vue";
-import GithubAdminLogin from "./account/pages/admin-login/GithubAdminLogin.vue";
 
 // 소셜/게스트 인증 리다이렉션
 import KakaoRedirection from "./kakao/redirection/KakaoRedirection.vue";
@@ -17,9 +15,11 @@ import GithubRedirection from "./github/redirection/GithubRedirection.vue";
 import GuestRedirection from "./guest/redirection/GuestRedirection.vue";
 import NaverRedirection from "./naver/redirection/NaverRedirection.vue";
 
+const AdminCodeInput =() => import("./account/pages/admin-login/AdminCodeInput.vue");
 const AdminLayout = () => import("./account/pages/adminPage/AdminLayout.vue");
 const AdminOverview = () => import("./account/pages/adminPage/AdminOverview.vue");
 const AdminUsers = () => import("./account/pages/adminPage/AdminUsers.vue");
+const GithubAdminLogin = () => import("./account/pages/admin-login/GithubAdminLogin.vue");
 
 const routes: Array<RouteRecordRaw> = [
   { path: "/account/login", name: "VueAccountLogin", component: AccountLogin },
@@ -28,17 +28,15 @@ const routes: Array<RouteRecordRaw> = [
   { path: "/account/modify/modify-profile", component: ModifyIndex },
   { path: "/account/withdraw", component: AccountWithdraw },
   { path: "/account/admin-code", component: AdminCodeInput },
-  { path: "/account/admin-login", component: GithubAdminLogin },
-
-  // ✅ 관리자 영역
-  {
-    path: "/account/admin",
-    component: AdminLayout,
-    meta: { requiresAdmin: true },
+  { path: "/account/admin-login", name: "GithubAdminLogin",
+      component: GithubAdminLogin,
+      meta: { requiresTempAdmin:true},
+  },
+  //관리자 페이지 영역
+  { path: "/account/admin", component: AdminLayout, meta: { requiresAdmin: true },
     children: [
       { path: "", name: "AdminOverview", component: AdminOverview },
       { path: "users", name: "AdminUsers", component: AdminUsers },
-      // 필요 시 roles, logs, settings 등 추가
     ],
   },
   // 소셜/게스트 인증 콜백
@@ -56,11 +54,5 @@ const router = createRouter({
   history: createWebHistory("/vue-account/"),
   routes,
 });
-router.beforeEach((to, _from, next) => {
-  if (to.meta.requiresAdmin) {
-    const isAdmin = localStorage.getItem("isAdmin") === "true";
-    if (!isAdmin) return next("/account/login");
-  }
-  next();
-});
+
 export default router;
