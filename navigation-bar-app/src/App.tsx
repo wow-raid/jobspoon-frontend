@@ -126,7 +126,7 @@ const App: React.FC = () => {
           <NavLink to="/" $active={isActive("/")}>홈</NavLink>
           <NavLink to="/studies" $active={isActive("/studies")}>스터디모임</NavLink>
           <NavLink
-            to="/vue-ai-interview/ai-interview/llm-test"
+            to="/vue-ai-interview/ai-interview/landing"
             $active={isActive("/vue-ai-interview")}
           >
             AI 인터뷰
