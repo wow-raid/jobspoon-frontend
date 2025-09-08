@@ -81,11 +81,11 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import landingImage from '../../assets/images/fixed/landinImge.jpg'
 
-
+const currentUrl = process.env.CURRENT_URL;
 const router = useRouter();
 
 const goAiInterview = () =>{
-  router.push('/ai-interview/llm-test')
+  window.location.href = `${currentUrl}/vue-ai-interview/ai-interview/select`
 }
 
 
