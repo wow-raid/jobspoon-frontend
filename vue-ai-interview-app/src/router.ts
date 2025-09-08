@@ -4,6 +4,7 @@ import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import AiInterview from '../src/ai-interview/pages/ai-interview.vue';
 import AiInterviewLLM from '../src/ai-interview/pages/llm-test/ai-interview-llm.vue';
 import AiInterviewAnswerResult from '../src/ai-interview/pages/result/ai-interview-answer-result.vue';
+import AiInterviewLandingpage from "@/ai-interview/pages/ai-interview-landingpage.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -13,6 +14,10 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/ai-interview/llm-test',
         component: AiInterviewLLM,
+    },
+    {
+        path: '/ai-interview/landing',
+        component: AiInterviewLandingpage,
     },
     {
         path: '/ai-interview/result',

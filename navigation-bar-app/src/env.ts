@@ -8,7 +8,7 @@ interface Env {
 const env: Env = {
     mode: process.env.NODE_ENV,
     api: {
-        MAIN_API_URL: process.env.REACT_APP_BASE_URL,
+        MAIN_API_URL: process.env.SPRING_SERVER_API_URL,
     },
 };
 

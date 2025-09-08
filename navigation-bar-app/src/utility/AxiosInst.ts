@@ -6,4 +6,4 @@ const springAxiosInst: AxiosInstance = axios.create({
     timeout: 2500,
 })
 
-export default { springAxiosInst }
+export default springAxiosInst
