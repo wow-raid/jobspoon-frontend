@@ -1,10 +1,15 @@
 import React from 'react';
 import styled from 'styled-components';
-import { ScheduleEvent } from '../../data/mockData';
+import { Schedule } from "../../types/study";
+
+interface CurrentUser {
+    id: number | null;
+    role: string | null;
+}
 
 interface EventDetailProps {
-  event: ScheduleEvent;
-  currentUser: { id: string };
+  event: Schedule
+  currentUser: CurrentUser;
   onEdit: () => void;
   onDelete: () => void;
 }
@@ -57,8 +62,7 @@ const DeleteBtn = styled(Btn)`
 `;
 
 const EventDetail: React.FC<EventDetailProps> = ({ event, currentUser, onEdit, onDelete }) => {
-  const isOwner = currentUser.id === event.authorId;
-
+    const isOwner = (currentUser.id !== null && currentUser.id === event.authorId) || currentUser.role === 'LEADER';
   return (
     <Container>
       <Title>{event.title}</Title>
