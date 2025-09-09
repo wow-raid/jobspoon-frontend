@@ -4,10 +4,10 @@ import {
     fetchMyTitles,
     ProfileAppearanceResponse,
     HistoryItem,
-} from "../api/profileAppearanceApi.ts";
+} from "../../api/profileAppearanceApi.ts";
 import styled from "styled-components";
-import defaultTitle from "../assets/default_rank.png"; // 👉 임시 아이콘 (칭호용 이미지 준비되면 교체)
-import TitleGuideModal from "./TitleGuideModal.tsx";
+import defaultTitle from "../../assets/default_rank.png"; // 👉 임시 아이콘 (칭호용 이미지 준비되면 교체)
+import TitleGuideModal from "../modals/TitleGuideModal.tsx";
 
 export default function TitleSection() {
     const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
@@ -175,7 +175,7 @@ const PreviewWrapper = styled.div`
 
 const PreviewList = styled.div`
     display: flex;
-    gap: 16px;
+    gap: 32px;   /* 👉 16px → 32px */
     justify-content: center;
 `;
 
