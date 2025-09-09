@@ -7,6 +7,7 @@ import AiInterviewAnswerResult from '../src/ai-interview/pages/result/ai-intervi
 import AiInterviewLandingpage from "@/ai-interview/pages/ai-interview-landingpage.vue";
 import AiInterviewSelect from "@/ai-interview/pages/ai-interview-select.vue";
 import AiInterviewDetail from "@/ai-interview/pages/ai-interview-detail.vue";
+import AiInterviewForm from "@/ai-interview/pages/ai-interview-form.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -32,7 +33,12 @@ const routes: Array<RouteRecordRaw> = [
         component: AiInterviewDetail,
         props: true,
     },
-
+    {
+        path: '/ai-interview/form/:type/:subType?/:company?',
+        name: 'ai-interview-form',
+        component: AiInterviewForm,
+        props: true,
+    },
     {
         path: '/ai-interview/result',
         component: AiInterviewAnswerResult,

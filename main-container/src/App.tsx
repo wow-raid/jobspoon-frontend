@@ -84,9 +84,10 @@ function AppRoutes() {
     const hiddenLayouts = [
         "/vue-account/account/login",
         "/vue-ai-interview/ai-interview/select",
+        "/vue-ai-interview/ai-interview/form/*"
     ];
 
-    const hideLayout = hiddenLayouts.includes(location.pathname);
+    const hideLayout = hiddenLayouts.some(path => location.pathname.startsWith(path));
 
     return (
         <Suspense fallback={<CircularProgress />}>
