@@ -2,11 +2,19 @@ import React, { useEffect, useState } from "react";
 import {
     getAttendanceRate,
     getInterviewCompletion,
+    getQuizCompletion,
+    getWritingCount,
+    getTrustScore,
     AttendanceRateResponse,
     InterviewCompletionResponse,
+    QuizCompletionResponse,
+    WritingCountResponse,
+    TrustScoreResponse
 } from "../api/dashboardApi.ts";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import styled from "styled-components";
+import RankSection from "./RankSection.tsx";
+import TitleSection from "./TitleSection.tsx";
 
 const COLORS = ["rgb(59,130,246)", "rgb(229,231,235)"]; // 파랑 / 회색
 
@@ -64,13 +72,9 @@ function DonutChart({
 export default function DashboardSection() {
     const [attendance, setAttendance] = useState<AttendanceRateResponse | null>(null);
     const [interview, setInterview] = useState<InterviewCompletionResponse | null>(null);
-
-    // 👉 Mock 데이터 (백 준비 전)
-    const [quiz] = useState({ quizTotalCount: 42, quizMonthlyCount: 5 });
-    const [review] = useState({ reviewCount: 12 });
-    const [studyroom] = useState({ studyroomCount: 3 });
-    const [comment] = useState({ commentCount: 27 });
-    const [trust] = useState({ trustScore: 88 });
+    const [quiz, setQuiz] = useState<QuizCompletionResponse | null>(null);
+    const [writing, setWriting] = useState<WritingCountResponse | null>(null);
+    const [trust, setTrust] = useState<TrustScoreResponse | null>(null);
 
     useEffect(() => {
         const token = localStorage.getItem("userToken");
@@ -80,88 +84,66 @@ export default function DashboardSection() {
         }
         getAttendanceRate(token).then(setAttendance).catch(console.error);
         getInterviewCompletion(token).then(setInterview).catch(console.error);
+        getQuizCompletion(token).then(setQuiz).catch(console.error);
+        getWritingCount(token).then(setWriting).catch(console.error);
+        getTrustScore(token).then(setTrust).catch(console.error);
     }, []);
 
-    if (!attendance || !interview) {
+    if (!attendance || !interview || !quiz || !writing || !trust) {
         return <p>불러오는 중...</p>;
     }
 
     return (
-        <Section>
-            <SectionTitle>나의 활동 로그</SectionTitle>
+        <>
+            {/* 나의 활동 로그 */}
+            <Section>
+                <SectionTitle>나의 활동 로그</SectionTitle>
 
-            {/* 텍스트 로그 */}
-            <TopCardGrid>
-                <TopCard>
-                    <p>이번 달 출석</p>
-                    <strong>{attendance.attended}/{attendance.totalDays}일</strong>
-                </TopCard>
-                <TopCard>
-                    <p>총 모의면접</p>
-                    <strong>{interview.interviewTotalCount}회</strong>
-                </TopCard>
-                <TopCard>
-                    <p>총 문제풀이</p>
-                    <strong>{quiz.quizTotalCount}개</strong>
-                </TopCard>
-                <TopCard>
-                    <p>총 글 작성</p>
-                    <strong>{review.reviewCount}개</strong>
-                </TopCard>
-            </TopCardGrid>
-            {/*<LogGrid>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>출석률</span>*/}
-            {/*        <strong>{attendance.attendanceRate.toFixed(1)}%</strong>*/}
-            {/*    </LogItem>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>출석일수</span>*/}
-            {/*        <strong>*/}
-            {/*            {attendance.attended}/{attendance.totalDays}일*/}
-            {/*        </strong>*/}
-            {/*    </LogItem>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>총 모의면접</span>*/}
-            {/*        <strong>{interview.interviewTotalCount}회</strong>*/}
-            {/*    </LogItem>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>이번 달 모의면접</span>*/}
-            {/*        <strong>{interview.interviewMonthlyCount}회</strong>*/}
-            {/*    </LogItem>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>총 문제풀이</span>*/}
-            {/*        <strong>{quiz.quizTotalCount}개</strong>*/}
-            {/*    </LogItem>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>이번 달 문제풀이</span>*/}
-            {/*        <strong>{quiz.quizMonthlyCount}개</strong>*/}
-            {/*    </LogItem>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>리뷰 작성</span>*/}
-            {/*        <strong>{review.reviewCount}개</strong>*/}
-            {/*    </LogItem>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>모임 작성</span>*/}
-            {/*        <strong>{studyroom.studyroomCount}개</strong>*/}
-            {/*    </LogItem>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>댓글 작성</span>*/}
-            {/*        <strong>{comment.commentCount}개</strong>*/}
-            {/*    </LogItem>*/}
-            {/*    <LogItem>*/}
-            {/*        <span>신뢰 점수</span>*/}
-            {/*        <strong>{trust.trustScore}점</strong>*/}
-            {/*    </LogItem>*/}
-            {/*</LogGrid>*/}
+                {/* 텍스트 로그 */}
+                <TopCardGrid>
+                    <TopCard>
+                        <p>이번 달 출석</p>
+                        <strong>{attendance.attended}/{attendance.totalDays}일</strong>
+                    </TopCard>
+                    <TopCard>
+                        <p>총 모의면접</p>
+                        <strong>{interview.interviewTotalCount}회</strong>
+                    </TopCard>
+                    <TopCard>
+                        <p>총 문제풀이</p>
+                        <strong>{quiz.quizTotalCount}개</strong>
+                    </TopCard>
+                    <TopCard>
+                        <p>리뷰 작성</p>
+                        <strong>{writing.reviewCount}개</strong>
+                        <p>스터디룸 개설</p>
+                        <strong>{writing.studyroomCount}개</strong>
+                        <p>댓글 작성</p>
+                        <strong>{writing.commentCount}개</strong>
+                        <p>총 글 작성</p>
+                        <strong>{writing.totalCount}개</strong>
+                    </TopCard>
+                </TopCardGrid>
 
-            {/* 도넛 차트 */}
-            <DonutGrid>
-                <DonutChart value={attendance.attendanceRate} label="이번 달 출석률" unit="%" max={100} />
-                <DonutChart value={interview.interviewMonthlyCount} label="이번 달 모의면접" unit="회" max={10} />
-                <DonutChart value={quiz.quizMonthlyCount} label="이번 달 문제풀이" unit="개" max={20} />
-                <DonutChart value={trust.trustScore} label="신뢰 점수" unit="점" max={100} />
-            </DonutGrid>
-        </Section>
+                {/* 도넛 차트 */}
+                <DonutGrid>
+                    <DonutChart value={attendance.attendanceRate} label="이번 달 출석률" unit="%" max={100} />
+                    <DonutChart value={interview.interviewMonthlyCount} label="이번 달 모의면접" unit="회" max={10} />
+                    <DonutChart value={quiz.quizMonthlyCount} label="이번 달 문제풀이" unit="개" max={20} />
+                    <DonutChart value={trust.trustScore} label="신뢰 점수" unit="점" max={100} />
+                </DonutGrid>
+            </Section>
+
+            {/* 나의 랭크 현황 */}
+            <Section>
+                <RankSection />
+            </Section>
+
+            {/* 나의 칭호 현황 */}
+            <Section>
+                <TitleSection />
+            </Section>
+        </>
     );
 }
 
@@ -194,49 +176,29 @@ const TopCardGrid = styled.div`
 
 /* ✅ 상단 카드 레이아웃 */
 const TopCard = styled.div`
-  background: rgb(249, 250, 251);
-  border-radius: 12px;
-  padding: 20px;
-  text-align: center;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    background: rgb(249, 250, 251);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 
-  p {
-    font-size: 14px;
-    color: rgb(107, 114, 128);
-    margin-bottom: 8px;
-  }
+    display: flex;                /* flexbox 사용 */
+    flex-direction: column;       /* 세로 정렬 */
+    justify-content: center;      /* 세로 중앙 정렬 */
+    align-items: center;          /* 가로 중앙 정렬 */
 
-  strong {
-    font-size: 18px;
-    font-weight: 700;
-    color: rgb(17, 24, 39);
-  }
-`;
+    p {
+        font-size: 14px;
+        color: rgb(107, 114, 128);
+        margin-bottom: 4px;         /* 간격 줄임 */
+    }
 
-const LogGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-bottom: 24px;
-`;
-
-const LogItem = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
-  background: rgb(249, 250, 251);
-  border-radius: 8px;
-
-  span {
-    font-size: 13px;
-    color: rgb(107, 114, 128);
-  }
-
-  strong {
-    font-weight: 600;
-    color: rgb(37, 99, 235);
-  }
+    strong {
+        font-size: 18px;
+        font-weight: 700;
+        color: rgb(17, 24, 39);
+        margin-bottom: 8px;         /* 항목별 간격 */
+    }
 `;
 
 const DonutGrid = styled.div`

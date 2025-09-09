@@ -3,6 +3,7 @@ import { ProfileAppearanceResponse } from "../api/profileAppearanceApi.ts";
 import { FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import defaultProfile from "../assets/default_profile.png";
 
 export default function ProfileAppearanceCard({profile}: {profile: ProfileAppearanceResponse}) {
     const navigate = useNavigate();
@@ -16,10 +17,10 @@ export default function ProfileAppearanceCard({profile}: {profile: ProfileAppear
             <ImageWrapper>
             {/* 프로필 이미지 */}
                 <ProfileImage
-                    src={profile.photoUrl || "/default_profile.png"}
+                    src={profile.photoUrl || defaultProfile}
                     alt="profile"
                     onError={(e) => {
-                        (e.target as HTMLImageElement).src = "/default_profile.png";
+                        (e.target as HTMLImageElement).src = defaultProfile;
                     }}
                 />
             </ImageWrapper>

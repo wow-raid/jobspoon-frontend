@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 export interface AttendanceRateResponse {
     attendanceRate: number;
@@ -11,6 +11,22 @@ export interface AttendanceRateResponse {
 export interface InterviewCompletionResponse {
     interviewTotalCount: number;
     interviewMonthlyCount: number;
+}
+
+export interface QuizCompletionResponse {
+    quizTotalCount: number;
+    quizMonthlyCount: number;
+}
+
+export interface WritingCountResponse {
+    reviewCount: number;
+    studyroomCount: number;
+    commentCount: number;
+    totalCount: number;
+}
+
+export interface TrustScoreResponse {
+    trustScore: number;
 }
 
 // 출석률(get)
@@ -27,4 +43,28 @@ export const getInterviewCompletion = async (token: string) => {
         headers: { Authorization: token },
     });
     return res.data;
+};
+
+// 퀴즈 완료 현황(get)
+export const getQuizCompletion = async (token: string) => {
+    const res = await axios.get(`${API_BASE_URL}/user-dashboard/quiz/completion`, {
+        headers: { Authorization: token },
+    });
+    return res.data;
+}
+
+// 게시글 작성 횟수(get)
+export const getWritingCount = async (token: string) => {
+    const res = await axios.get(`${API_BASE_URL}/user-dashboard/writing/count`, {
+        headers: { Authorization: token },
+    });
+    return res.data as WritingCountResponse;
+};
+
+// 신뢰점수(get)
+export const getTrustScore = async (token: string) => {
+    const res = await axios.get(`${API_BASE_URL}/user-dashboard/trust-score`, {
+        headers: { Authorization: token },
+    });
+    return res.data as TrustScoreResponse;
 };

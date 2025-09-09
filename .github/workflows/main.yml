@@ -27,6 +27,9 @@ jobs:
           # 마이페이지 앱 환경변수
           echo "${{ secrets.MY_PAGE_ENV }}" > mypage-app/.env
           
+          # 스터디룸 앱 환경변수
+          echo "${{ secrets.STUDY_ROOM_ENV }}" > studyroom-app/.env
+          
           # navation-bar 앱 환경변수
           echo "${{ secrets.NAVIGATION_BAR_ENV }}" > navigation-bar-app/.env
 

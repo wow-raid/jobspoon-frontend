@@ -20,8 +20,14 @@ import ThemeSync from "./ThemeSync";
 import ThemeToggleButton from "./ThemeToggleButton";
 import { themeAtom } from "@jobspoon/app-state";
 import SuccessPage from "studyroom-app/src/pages/SuccessPage.tsx";
+import Logo from './assets/img.png'
 
 const eventBus = mitt();
+
+function goHome() {
+    window.location.href = '/'
+}
+
 
 const NavigationBarApp = lazy(() => import("navigationBarApp/App"));
 const StudyRoomApp = lazy(() => import("studyRoomApp/App"));
@@ -75,14 +81,29 @@ function InnerApp() {
 
 function AppRoutes() {
     const location = useLocation();
-    const hideLayout = location.pathname === "/vue-account/account/login";
+    const hiddenLayouts = [
+        "/vue-account/account/login",
+        "/vue-ai-interview/ai-interview/select",
+    ];
+
+    const hideLayout = hiddenLayouts.includes(location.pathname);
 
     return (
         <Suspense fallback={<CircularProgress />}>
             {!hideLayout && <NavigationBarApp />}
+            {hideLayout && (
+                <div className="fixed top-0 left-0 p-4 z-50">
+                    <img
+                        src={Logo} // JSX에서는 :src → src
+                        alt="Logo"
+                        style={{ width: 180, height: 70, objectFit: "contain" }} // JSX에서는 스타일 객체
+                        onClick={goHome} // @click → onClick
+                    />
+                </div>
+            )}
             <Routes>
-                <Route path="/" element={<Main />} />
-                <Route path="/vue-account/*" element={<VueAccountAppWrapper eventBus={eventBus} />} />
+                <Route path="/" element={<Main/>}/>
+                <Route path="/vue-account/*" element={<VueAccountAppWrapper eventBus={eventBus}/>}/>
                 <Route path="/studies/*" element={<StudyRoomApp />} />
                 <Route path="/spoon-word/*" element={<SpoonWordApp />} />
                 <Route path="/success" element={<SuccessPage />} />

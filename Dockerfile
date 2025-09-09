@@ -6,13 +6,22 @@ WORKDIR /app
 # 소스 전체 복사
 COPY . .
 
-# 빌드 실행
 RUN npm install \
-  && echo "\n// 각 앱의 rspack.config.ts 파일에서 publicPath 수정" \
-  && find . -name "rspack.config.ts" -exec sed -i "s|publicPath: \"auto\"|publicPath: '/' + __dirname.split('/').pop() + '/'|g" {} \; \
-  && find . -name "rspack.config.ts" -exec sed -i "s|publicPath: \"http://localhost:[0-9]\\+/\"|publicPath: '/' + __dirname.split('/').pop() + '/'|g" {} \; \
-  && find . -name "rspack.config.ts" -exec sed -i "s|publicPath: \`\${process.env.MFE_PUBLIC_SERVICE}/\`|publicPath: '/' + __dirname.split('/').pop() + '/'|g" {} \; \
-  && npm run build
+  && npm -ws run build -w @jobspoon/theme-bridge -w @jobspoon/app-state
+
+# 예: Svelte 관련 앱 제외
+RUN npm install \
+  && echo "// 각 앱 publicPath 수정" \
+  && find main-container navigation-bar-app vue-account-app vue-ai-interview-app studyroom-app mypage-app spoon-word-app -name "rspack.config.ts" \
+       -exec sed -i'' -e 's|publicPath: "auto"|publicPath: "/"+__dirname.split("/").pop()+"/"|g' {} \; \
+  && cd main-container && npm run build && cd .. \
+  && cd navigation-bar-app && npm run build && cd .. \
+  && cd vue-account-app && npm run build && cd .. \
+  && cd vue-ai-interview-app && npm run build && cd .. \
+  && cd studyroom-app && npm run build && cd .. \
+  && cd mypage-app && npm run build && cd .. \
+  && cd spoon-word-app && npm run build && cd ..
+
 
 # 2단계: Nginx
 FROM nginx:alpine
@@ -28,9 +37,10 @@ COPY --from=builder /app/main-container/dist /usr/share/nginx/html/html-containe
 COPY --from=builder /app/mypage-app/dist /usr/share/nginx/html/mypage-app
 COPY --from=builder /app/navigation-bar-app/dist /usr/share/nginx/html/navigation-bar-app
 COPY --from=builder /app/studyroom-app/dist /usr/share/nginx/html/studyroom-app
-COPY --from=builder /app/svelte-review-app/dist /usr/share/nginx/html/svelte-review-app
+#COPY --from=builder /app/svelte-review-app/dist /usr/share/nginx/html/svelte-review-app
 COPY --from=builder /app/vue-account-app/dist /usr/share/nginx/html/vue-account-app
 COPY --from=builder /app/vue-ai-interview-app/dist /usr/share/nginx/html/vue-ai-interview-app
+COPY --from=builder /app/spoon-word-app/dist /usr/share/nginx/html/spoon-word-app
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

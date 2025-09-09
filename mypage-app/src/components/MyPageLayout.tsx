@@ -6,7 +6,6 @@ import styled from "styled-components";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 import { fetchMyProfile, ProfileAppearanceResponse } from "../api/profileAppearanceApi.ts";
 
-
 export default function MyPageLayout() {
 
     {/* 토글 */}
@@ -123,7 +122,6 @@ const ToggleIcon = styled.span`
 `;
 
 const ToggleLabel = styled.span`
-  background: rgb(249, 250, 251);
   padding: 2px 6px;
   border-radius: 4px;
 `;
