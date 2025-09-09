@@ -122,7 +122,6 @@ const ToggleIcon = styled.span`
 `;
 
 const ToggleLabel = styled.span`
-  background: rgb(249, 250, 251);
   padding: 2px 6px;
   border-radius: 4px;
 `;

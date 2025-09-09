@@ -2,9 +2,12 @@ import React, { useEffect, useState } from "react";
 import {
     getAttendanceRate,
     getInterviewCompletion,
+    getQuizCompletion,
+    getWritingCount,
     AttendanceRateResponse,
     InterviewCompletionResponse,
-    QuizCompletionResponse, getQuizCompletion
+    QuizCompletionResponse,
+    WritingCountResponse,
 } from "../api/dashboardApi.ts";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import styled from "styled-components";
@@ -68,11 +71,9 @@ export default function DashboardSection() {
     const [attendance, setAttendance] = useState<AttendanceRateResponse | null>(null);
     const [interview, setInterview] = useState<InterviewCompletionResponse | null>(null);
     const [quiz, setQuiz] = useState<QuizCompletionResponse | null>(null);
+    const [writing, setWriting] = useState<WritingCountResponse | null>(null);
 
     // 👉 Mock 데이터 (백 준비 전)
-    const [review] = useState({ reviewCount: 12 });
-    const [studyroom] = useState({ studyroomCount: 3 });
-    const [comment] = useState({ commentCount: 27 });
     const [trust] = useState({ trustScore: 88 });
 
     useEffect(() => {
@@ -84,9 +85,10 @@ export default function DashboardSection() {
         getAttendanceRate(token).then(setAttendance).catch(console.error);
         getInterviewCompletion(token).then(setInterview).catch(console.error);
         getQuizCompletion(token).then(setQuiz).catch(console.error);
+        getWritingCount(token).then(setWriting).catch(console.error);
     }, []);
 
-    if (!attendance || !interview || !quiz) {
+    if (!attendance || !interview || !quiz || !writing) {
         return <p>불러오는 중...</p>;
     }
 
@@ -111,8 +113,14 @@ export default function DashboardSection() {
                         <strong>{quiz.quizTotalCount}개</strong>
                     </TopCard>
                     <TopCard>
+                        <p>리뷰 작성</p>
+                        <strong>{writing.reviewCount}개</strong>
+                        <p>스터디룸 개설</p>
+                        <strong>{writing.studyroomCount}개</strong>
+                        <p>댓글 작성</p>
+                        <strong>{writing.commentCount}개</strong>
                         <p>총 글 작성</p>
-                        <strong>{review.reviewCount}개</strong>
+                        <strong>{writing.totalCount}개</strong>
                     </TopCard>
                 </TopCardGrid>
 
@@ -167,49 +175,29 @@ const TopCardGrid = styled.div`
 
 /* ✅ 상단 카드 레이아웃 */
 const TopCard = styled.div`
-  background: rgb(249, 250, 251);
-  border-radius: 12px;
-  padding: 20px;
-  text-align: center;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    background: rgb(249, 250, 251);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 
-  p {
-    font-size: 14px;
-    color: rgb(107, 114, 128);
-    margin-bottom: 8px;
-  }
+    display: flex;                /* flexbox 사용 */
+    flex-direction: column;       /* 세로 정렬 */
+    justify-content: center;      /* 세로 중앙 정렬 */
+    align-items: center;          /* 가로 중앙 정렬 */
 
-  strong {
-    font-size: 18px;
-    font-weight: 700;
-    color: rgb(17, 24, 39);
-  }
-`;
+    p {
+        font-size: 14px;
+        color: rgb(107, 114, 128);
+        margin-bottom: 4px;         /* 간격 줄임 */
+    }
 
-const LogGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-bottom: 24px;
-`;
-
-const LogItem = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
-  background: rgb(249, 250, 251);
-  border-radius: 8px;
-
-  span {
-    font-size: 13px;
-    color: rgb(107, 114, 128);
-  }
-
-  strong {
-    font-weight: 600;
-    color: rgb(37, 99, 235);
-  }
+    strong {
+        font-size: 18px;
+        font-weight: 700;
+        color: rgb(17, 24, 39);
+        margin-bottom: 8px;         /* 항목별 간격 */
+    }
 `;
 
 const DonutGrid = styled.div`
