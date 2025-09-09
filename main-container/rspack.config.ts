@@ -90,6 +90,7 @@ export default defineConfig({
     new rspack.HtmlRspackPlugin({
       template: "./index.html",
     }),
+    new RefreshPlugin(),
     new DefinePlugin({
       "process.env.MFE_PUBLIC_SERVICE": JSON.stringify(process.env.MFE_PUBLIC_SERVICE),
       "process.env.VUE_ACCOUNT_APP": JSON.stringify(process.env.VUE_ACCOUNT_APP),
