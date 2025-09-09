@@ -6,7 +6,7 @@ import AiInterviewLLM from '../src/ai-interview/pages/llm-test/ai-interview-llm.
 import AiInterviewAnswerResult from '../src/ai-interview/pages/result/ai-interview-answer-result.vue';
 import AiInterviewLandingpage from "@/ai-interview/pages/ai-interview-landingpage.vue";
 import AiInterviewSelect from "@/ai-interview/pages/ai-interview-select.vue";
-
+import AiInterviewDetail from "@/ai-interview/pages/ai-interview-detail.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -25,6 +25,12 @@ const routes: Array<RouteRecordRaw> = [
         path: '/ai-interview/select',
         name: 'ai-interview-select',
         component: AiInterviewSelect,
+    },
+    {
+        path: '/ai-interview/detail/:type',
+        name: 'ai-interview-detail',
+        component: AiInterviewDetail,
+        props: true,
     },
 
     {
