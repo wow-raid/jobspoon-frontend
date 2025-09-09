@@ -5,6 +5,8 @@ WORKDIR /app
 
 # 소스 전체 복사
 COPY . .
+# vue-account-app 및 vue-ai-interview-app 빌드 시
+ENV MFE_CORS_ORIGIN=https://job-spoon.com
 
 RUN npm install \
   && npm -ws run build -w @jobspoon/theme-bridge -w @jobspoon/app-state
