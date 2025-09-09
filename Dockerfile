@@ -37,7 +37,7 @@ COPY --from=builder /app/main-container/dist /usr/share/nginx/html/html-containe
 COPY --from=builder /app/mypage-app/dist /usr/share/nginx/html/mypage-app
 COPY --from=builder /app/navigation-bar-app/dist /usr/share/nginx/html/navigation-bar-app
 COPY --from=builder /app/studyroom-app/dist /usr/share/nginx/html/studyroom-app
-COPY --from=builder /app/svelte-review-app/dist /usr/share/nginx/html/svelte-review-app
+#COPY --from=builder /app/svelte-review-app/dist /usr/share/nginx/html/svelte-review-app
 COPY --from=builder /app/vue-account-app/dist /usr/share/nginx/html/vue-account-app
 COPY --from=builder /app/vue-ai-interview-app/dist /usr/share/nginx/html/vue-ai-interview-app
 
