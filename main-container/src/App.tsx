@@ -32,6 +32,7 @@ function goHome() {
 const NavigationBarApp = lazy(() => import("navigationBarApp/App"));
 const StudyRoomApp = lazy(() => import("studyRoomApp/App"));
 const MyPageApp = lazy(() => import("myPageApp/App"));
+const SpoonWordApp = lazy(() => import("spoonWordApp/App"));
 
 function InnerApp() {
   const [isNavigationBarLoaded, setIsNavigationBarLoaded] = useState(false);
@@ -104,6 +105,7 @@ function AppRoutes() {
                 <Route path="/" element={<Main/>}/>
                 <Route path="/vue-account/*" element={<VueAccountAppWrapper eventBus={eventBus}/>}/>
                 <Route path="/studies/*" element={<StudyRoomApp />} />
+                <Route path="/spoon-word/*" element={<SpoonWordApp />} />
                 <Route path="/success" element={<SuccessPage />} />
                 <Route
                     path="/vue-ai-interview/*"

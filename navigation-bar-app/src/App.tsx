@@ -133,7 +133,7 @@ const App: React.FC = () => {
           </NavLink>
 
           <NavLink
-              to={isLoggedIn ? "/mypage" : "/vue-account/account/login"}
+              to="/mypage"
               $active={isActive("/mypage")}
           >
             MyPage

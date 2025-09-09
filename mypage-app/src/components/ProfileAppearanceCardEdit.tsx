@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useOutletContext } from "react-router-dom";
 import {
-    fetchMyProfile,
     fetchMyRanks,
     fetchMyTitles,
     updateNickname,
@@ -11,9 +11,16 @@ import {
 } from "../api/profileAppearanceApi.ts";
 import ServiceModal from "./ServiceModal.tsx";
 import styled from "styled-components";
+import defaultProfile from "../assets/default_profile.png";
+
+type OutletContextType = {
+    profile: ProfileAppearanceResponse | null;
+    refreshProfile: () => Promise<void>;
+}
 
 export default function ProfileAppearanceCardEdit() {
-    const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
+    const {profile, refreshProfile} = useOutletContext<OutletContextType>();
+
     const [ranks, setRanks] = useState<HistoryItem[]>([]);
     const [titles, setTitles] = useState<HistoryItem[]>([]);
     const [showRanks, setShowRanks] = useState(false);
@@ -22,63 +29,73 @@ export default function ProfileAppearanceCardEdit() {
     const [nicknameInput, setNicknameInput] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
 
+    // 이력 데이터 불러오기
+    useEffect(() => {
+        const token = localStorage.getItem("userToken");
+        if (!token) {
+            return;
+        }
+        fetchMyRanks(token)
+            .then(setRanks)
+            .catch(console.error);
+        fetchMyTitles(token)
+            .then(setTitles)
+            .catch(console.error);
+    }, []);
+
+    if (!profile) {
+        return <p>불러오는 중...</p>;
+    }
+
     // 닉네임 수정 핸들러
     const handleNicknameUpdate = async () => {
-        const token = "test-token2";
-        if (!nicknameInput.trim()) {
+        const token = localStorage.getItem("userToken");
+        if(!token){
+            return;
+        }
+        if(!nicknameInput.trim()){
             setErrorMessage("닉네임을 입력하세요!");
             return;
         }
-        try {
-            const updated = await updateNickname(token, nicknameInput);
-            setProfile((prev) =>
-                prev ? { ...prev, customNickname: updated.customNickname } : prev
-            );
-            setErrorMessage("");
+        try{
+            await updateNickname(token, nicknameInput);
+            await refreshProfile();
             setNicknameInput("");
-        } catch (error: any) {
+            setErrorMessage("");
+        }catch(error: any){
             setErrorMessage(error.message);
         }
     };
 
     // 랭크 장착 핸들러
     const handleEquipRank = async (rankId: number) => {
-        const token = "test-token2";
+        const token = localStorage.getItem("userToken");
+        if(!token){
+            return;
+        }
         try {
             const updated = await equipRank(token, rankId);
-            setProfile((prev) => (prev ? { ...prev, rank: updated } : prev));
+            await refreshProfile();
             alert(`${updated.displayName} 랭크가 장착되었습니다!`);
-        } catch (error: any) {
+        }catch(error: any){
             alert(error.message || "랭크 장착에 실패했습니다.");
         }
     };
 
     // 칭호 장착 핸들러
     const handleEquipTitle = async (titleId: number) => {
-        const token = "test-token2";
-        try {
-            const updated = await equipTitle(token, titleId);
-            setProfile((prev) => (prev ? { ...prev, title: updated } : prev));
-            alert(`${updated.displayName} 칭호가 장착되었습니다!`);
-        } catch (error: any) {
-            alert(error.message || "칭호 장착에 실패했습니다.");
-        }
-    };
-
-    useEffect(() => {
         const token = localStorage.getItem("userToken");
         if(!token){
-            console.error("로그인 토큰 없음");
             return;
         }
-        fetchMyProfile(token).then(setProfile).catch(console.error);
-        fetchMyRanks(token).then(setRanks).catch(console.error);
-        fetchMyTitles(token).then(setTitles).catch(console.error);
-    }, []);
-
-    if (!profile) {
-        return <p>불러오는 중...</p>;
-    }
+        try{
+            const updated = await equipTitle(token, titleId);
+            await refreshProfile();
+            alert(`${updated.displayName} 칭호가 장착되었습니다!`);
+        }catch(error: any){
+            alert(errorMessage || "칭호 장착에 실패했습니다.");
+        }
+    };
 
     return (
         <Card>
@@ -87,11 +104,13 @@ export default function ProfileAppearanceCardEdit() {
             {/* 프로필 영역 */}
             <ProfileSection>
                 <PhotoWrapper>
-                    {profile.photoUrl ? (
-                        <Photo src={profile.photoUrl} alt="프로필" />
-                    ) : (
-                        <NoPhoto>사진</NoPhoto>
-                    )}
+                    <Photo
+                        src={profile.photoUrl || defaultProfile}
+                        alt="프로필"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).src = defaultProfile; // 이미지 깨질 경우에도 fallback
+                        }}
+                    />
                 </PhotoWrapper>
                 <PhotoButton onClick={() => setIsModalOpen(true)}>사진 변경</PhotoButton>
             </ProfileSection>

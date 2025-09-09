@@ -1,15 +1,36 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import SideBar from "./SideBar";
 import ProfileAppearanceCard from "./ProfileAppearanceCard";
 import styled from "styled-components";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
-
+import { fetchMyProfile, ProfileAppearanceResponse } from "../api/profileAppearanceApi.ts";
 
 export default function MyPageLayout() {
 
     {/* 토글 */}
     const [isProfileOpen, setIsProfileOpen] = useState(true);
+    {/* 프로필 외형 */}
+    const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
+
+    //최신 프로필 불러오기
+    const refreshProfile = async () => {
+        const token = localStorage.getItem("userToken");
+        if(!token) {
+            console.error("로그인 토큰 없음");
+            return;
+        }
+        try{
+            const data = await fetchMyProfile(token);
+            setProfile(data);
+        }catch(error){
+            console.error(error);
+        }
+    };
+
+    useEffect(() => {
+        refreshProfile();
+    }, []);
 
     return (
         <LayoutContainer>
@@ -24,9 +45,11 @@ export default function MyPageLayout() {
                 </ToggleButton>
 
                 {/* 프로필 카드 (토글됨) */}
-                <ProfileWrapper isOpen={isProfileOpen}>
-                    <ProfileAppearanceCard />
-                </ProfileWrapper>
+                {isProfileOpen && profile && (
+                    <ProfileWrapper isOpen={isProfileOpen}>
+                        <ProfileAppearanceCard profile={profile} />
+                    </ProfileWrapper>
+                )}
 
                 {/* 메뉴 */}
                 <SideBar />
@@ -34,7 +57,7 @@ export default function MyPageLayout() {
 
             {/* 메인 컨텐츠 */}
             <Main>
-                <Outlet />
+                <Outlet context={{ profile, refreshProfile }} />
             </Main>
         </LayoutContainer>
     );
@@ -47,7 +70,6 @@ const LayoutContainer = styled.div`
     display: flex;
     min-height: 100vh;
     width: 100%;
-    background: #f9fafb;
 `;
 
 const Aside = styled.aside`
