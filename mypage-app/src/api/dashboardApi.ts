@@ -13,6 +13,11 @@ export interface InterviewCompletionResponse {
     interviewMonthlyCount: number;
 }
 
+export interface QuizCompletionResponse {
+    quizTotalCount: number;
+    quizMonthlyCount: number;
+}
+
 // 출석률(get)
 export const getAttendanceRate = async (token: string) => {
     const res = await axios.get(`${API_BASE_URL}/user-dashboard/attendance/rate`, {
@@ -28,3 +33,11 @@ export const getInterviewCompletion = async (token: string) => {
     });
     return res.data;
 };
+
+// 퀴즈 완료 현황(get)
+export const getQuizCompletion = async (token: string) => {
+    const res = await axios.get(`${API_BASE_URL}/user-dashboard/quiz/completion`, {
+        headers: { Authorization: token },
+    });
+    return res.data;
+}
