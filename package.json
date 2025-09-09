@@ -10,7 +10,8 @@
     "sveltekit-review-app",
     "studyroom-app",
     "packages/*",
-    "mypage-app"
+    "mypage-app",
+    "spoon-word-app"
   ],
   "scripts": {
     "build": "lerna run build --parallel",
