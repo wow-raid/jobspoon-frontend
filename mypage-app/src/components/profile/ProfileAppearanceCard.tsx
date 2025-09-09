@@ -1,9 +1,9 @@
 import React from "react";
-import { ProfileAppearanceResponse } from "../api/profileAppearanceApi.ts";
+import { ProfileAppearanceResponse } from "../../api/profileAppearanceApi.ts";
 import { FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import defaultProfile from "../assets/default_profile.png";
+import defaultProfile from "../../assets/default_profile.png";
 
 export default function ProfileAppearanceCard({profile}: {profile: ProfileAppearanceResponse}) {
     const navigate = useNavigate();

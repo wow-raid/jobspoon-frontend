@@ -10,13 +10,13 @@ import {
     QuizCompletionResponse,
     WritingCountResponse,
     TrustScoreResponse
-} from "../api/dashboardApi.ts";
+} from "../../api/dashboardApi.ts";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import styled from "styled-components";
 import RankSection from "./RankSection.tsx";
 import TitleSection from "./TitleSection.tsx";
-import TrustScoreModal from "./TrustScoreModal.tsx";
-import WritingModal from "./WritingModal.tsx";
+import TrustScoreModal from "../modals/TrustScoreModal.tsx";
+import WritingModal from "../modals/WritingModal.tsx";
 
 const COLORS = ["rgb(59,130,246)", "rgb(229,231,235)"]; // 파랑 / 회색
 

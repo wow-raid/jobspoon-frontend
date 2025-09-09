@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import ServiceModal from "./ServiceModal.tsx";
+import ServiceModal from "../modals/ServiceModal.tsx";
 import {
     FaUser,
     FaRegCommentDots,

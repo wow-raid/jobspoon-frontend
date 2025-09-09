@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { TrustScoreResponse } from "../api/dashboardApi.ts";
+import { TrustScoreResponse } from "../../api/dashboardApi.ts";
 
 type Props = {
     isOpen: boolean;
