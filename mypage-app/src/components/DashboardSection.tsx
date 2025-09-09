@@ -4,6 +4,7 @@ import {
     getInterviewCompletion,
     AttendanceRateResponse,
     InterviewCompletionResponse,
+    QuizCompletionResponse, getQuizCompletion
 } from "../api/dashboardApi.ts";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import styled from "styled-components";
@@ -66,9 +67,9 @@ function DonutChart({
 export default function DashboardSection() {
     const [attendance, setAttendance] = useState<AttendanceRateResponse | null>(null);
     const [interview, setInterview] = useState<InterviewCompletionResponse | null>(null);
+    const [quiz, setQuiz] = useState<QuizCompletionResponse | null>(null);
 
     // 👉 Mock 데이터 (백 준비 전)
-    const [quiz] = useState({ quizTotalCount: 42, quizMonthlyCount: 5 });
     const [review] = useState({ reviewCount: 12 });
     const [studyroom] = useState({ studyroomCount: 3 });
     const [comment] = useState({ commentCount: 27 });
@@ -82,9 +83,10 @@ export default function DashboardSection() {
         }
         getAttendanceRate(token).then(setAttendance).catch(console.error);
         getInterviewCompletion(token).then(setInterview).catch(console.error);
+        getQuizCompletion(token).then(setQuiz).catch(console.error);
     }, []);
 
-    if (!attendance || !interview) {
+    if (!attendance || !interview || !quiz) {
         return <p>불러오는 중...</p>;
     }
 
