@@ -27,6 +27,13 @@ export interface WritingCountResponse {
 
 export interface TrustScoreResponse {
     trustScore: number;
+    attendanceScore: number;
+    interviewScore: number;
+    quizScore: number;
+    reviewScore: number;
+    studyroomScore: number;
+    commentScore: number;
+    bonusApplied: boolean;
 }
 
 // 출석률(get)
