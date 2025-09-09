@@ -102,9 +102,20 @@ const MyApplicationsPage: React.FC = () => {
         fetchMyApplications();
     }, []);
 
-    const handleCancel = (id: number) => {
+    const handleCancel = async (id: number) => {
         if (window.confirm("정말로 신청을 취소하시겠습니까?")) {
-            setApplications((prev) => prev.filter((app) => app.id !== id));
+            try {
+                // ✅ 백엔드에 삭제 요청 API 호출
+                await axiosInstance.delete(`/study-applications/${id}`);
+
+                // ✅ API 호출이 성공하면 화면에서도 해당 내역 제거
+                setApplications((prev) => prev.filter((app) => app.id !== id));
+                alert("신청이 성공적으로 취소되었습니다.");
+
+            } catch (error) {
+                console.error("신청 취소에 실패했습니다:", error);
+                alert("신청 취소 중 오류가 발생했습니다.");
+            }
         }
     };
 
