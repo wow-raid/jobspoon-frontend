@@ -7,12 +7,15 @@ WORKDIR /app
 COPY . .
 
 # 빌드 실행
-# npm install + 각 앱 publicPath 수정 (svelte 제외)
-RUN npm install \
+RUN set -eux \
+  && npm install \
   && echo "\n// publicPath 수정" \
-  && find . -name "rspack.config.ts" -exec sed -i "s|publicPath: \"auto\"|publicPath: '/' + __dirname.split('/').pop() + '/'|g" {} \; \
-  && find . -name "rspack.config.ts" -exec sed -i "s|publicPath: \"http://localhost:[0-9]\\+/\"|publicPath: '/' + __dirname.split('/').pop() + '/'|g" {} \; \
-  && find . -name "rspack.config.ts" -exec sed -i "s|publicPath: \`\${process.env.MFE_PUBLIC_SERVICE}/\`|publicPath: '/' + __dirname.split('/').pop() + '/'|g" {} \; \
+  # auto
+  && find . -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: "auto"|publicPath: "/" + __dirname.split("/").pop() + "/"|g' {} \; \
+  # localhost
+  && find . -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: "http://localhost:[0-9][0-9]*/"|publicPath: "/" + __dirname.split("/").pop() + "/"|g' {} \; \
+  # 환경 변수
+  && find . -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: `${process.env.MFE_PUBLIC_SERVICE}/`|publicPath: "/" + __dirname.split("/").pop() + "/"|g' {} \; \
   && npm run build
 
 # 2단계: Nginx
