@@ -5,6 +5,9 @@ import AiInterview from '../src/ai-interview/pages/ai-interview.vue';
 import AiInterviewLLM from '../src/ai-interview/pages/llm-test/ai-interview-llm.vue';
 import AiInterviewAnswerResult from '../src/ai-interview/pages/result/ai-interview-answer-result.vue';
 import AiInterviewLandingpage from "@/ai-interview/pages/ai-interview-landingpage.vue";
+import AiInterviewSelect from "@/ai-interview/pages/ai-interview-select.vue";
+import AiInterviewDetail from "@/ai-interview/pages/ai-interview-detail.vue";
+import AiInterviewForm from "@/ai-interview/pages/ai-interview-form.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -20,11 +23,28 @@ const routes: Array<RouteRecordRaw> = [
         component: AiInterviewLandingpage,
     },
     {
+        path: '/ai-interview/select',
+        name: 'ai-interview-select',
+        component: AiInterviewSelect,
+    },
+    {
+        path: '/ai-interview/detail/:type',
+        name: 'ai-interview-detail',
+        component: AiInterviewDetail,
+        props: true,
+    },
+    {
+        path: '/ai-interview/form/:type/:subType?/:company?',
+        name: 'ai-interview-form',
+        component: AiInterviewForm,
+        props: true,
+    },
+    {
         path: '/ai-interview/result',
         component: AiInterviewAnswerResult,
     },
     // 필요하다면 기타 라우트 추가
-    { path: "/", redirect: "/ai-interview/llm-test" },
+    { path: "/", redirect: "/ai-interview/select" },
 ];
 
 const router = createRouter({
