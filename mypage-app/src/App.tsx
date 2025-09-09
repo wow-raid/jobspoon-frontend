@@ -3,7 +3,6 @@ import { Routes, Route } from "react-router-dom";
 import MyPageLayout from "./components/MyPageLayout.tsx";
 import DashboardSection from "./components/DashboardSection.tsx";
 import ProfileAppearanceCardEdit from "./components/ProfileAppearanceCardEdit";
-import RankSection from "./components/RankSection.tsx";
 
 export default function App() {
     return (
