@@ -5,6 +5,8 @@ WORKDIR /app
 
 # 소스 전체 복사
 COPY . .
+# vue-account-app 및 vue-ai-interview-app 빌드 시
+ENV MFE_CORS_ORIGIN=https://job-spoon.com
 
 RUN npm install \
   && npm -ws run build -w @jobspoon/theme-bridge -w @jobspoon/app-state
@@ -40,6 +42,7 @@ COPY --from=builder /app/studyroom-app/dist /usr/share/nginx/html/studyroom-app
 #COPY --from=builder /app/svelte-review-app/dist /usr/share/nginx/html/svelte-review-app
 COPY --from=builder /app/vue-account-app/dist /usr/share/nginx/html/vue-account-app
 COPY --from=builder /app/vue-ai-interview-app/dist /usr/share/nginx/html/vue-ai-interview-app
+COPY --from=builder /app/spoon-word-app/dist /usr/share/nginx/html/spoon-word-app
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
