@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import MyPageLayout from "./components/MyPageLayout.tsx";
 import DashboardSection from "./components/DashboardSection.tsx";
 import ProfileAppearanceCardEdit from "./components/ProfileAppearanceCardEdit";
+import RankSection from "./components/RankSection.tsx";
 
 export default function App() {
     return (
@@ -10,7 +11,6 @@ export default function App() {
             <Route path="/" element={<MyPageLayout />}>
                 {/* 기본: 대시보드 (우측 영역) */}
                 <Route index element={<DashboardSection />} />
-
                 {/* 프로필 외형 수정 (우측 영역만 바뀜) */}
                 <Route path="profile/edit" element={<ProfileAppearanceCardEdit />} />
             </Route>

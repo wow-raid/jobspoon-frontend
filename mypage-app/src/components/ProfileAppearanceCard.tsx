@@ -1,23 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { fetchMyProfile, ProfileAppearanceResponse } from "../api/profileAppearanceApi.ts";
+import React from "react";
+import { ProfileAppearanceResponse } from "../api/profileAppearanceApi.ts";
 import { FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import defaultProfile from "../assets/default_profile.png";
 
-export default function ProfileAppearanceCard() {
-    const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
+export default function ProfileAppearanceCard({profile}: {profile: ProfileAppearanceResponse}) {
     const navigate = useNavigate();
-
-    useEffect(() => {
-        const token = localStorage.getItem("userToken");
-        if(!token){
-            console.error("로그인 토큰 없음");
-            return;
-        }
-        fetchMyProfile(token)
-            .then(setProfile)
-            .catch(console.error);
-    }, []);
 
     if (!profile) {
         return <p>불러오는 중...</p>;
@@ -28,10 +17,10 @@ export default function ProfileAppearanceCard() {
             <ImageWrapper>
             {/* 프로필 이미지 */}
                 <ProfileImage
-                    src={profile.photoUrl || "/default_profile.png"}
+                    src={profile.photoUrl || defaultProfile}
                     alt="profile"
                     onError={(e) => {
-                        (e.target as HTMLImageElement).src = "/default_profile.png";
+                        (e.target as HTMLImageElement).src = defaultProfile;
                     }}
                 />
             </ImageWrapper>
@@ -86,9 +75,9 @@ const Card = styled.div`
     flex-direction: column;
     gap: 16px;
 
-    width: 100%;          /* ✅ 사이드바 폭에 맞게 */
-    max-width: 100%;      /* ✅ 강제 제한 제거 */
-    min-width: auto;      /* ✅ 최소 보장 제거 */
+    width: 100%;          /* 사이드바 폭에 맞게 */
+    max-width: 100%;      /* 강제 제한 제거 */
+    min-width: auto;      /* 최소 보장 제거 */
     word-break: break-all; /* 긴 이메일 줄바꿈 */
 `;
 

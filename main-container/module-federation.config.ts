@@ -7,7 +7,8 @@ export const mfConfig = {
     vueAiInterviewApp: `vueAiInterviewApp@${process.env.VUE_AI_INTERVIEW_APP}/remoteEntry.js`,
     svelteReviewApp: `svelteReviewApp@${process.env.SVELTE_REVIEW_APP}/remoteEntry.js`,
     svelteKitReviewApp: `svelteKitReviewApp@${process.env.SVELTEKIT_REVIEW_APP}/remoteEntry.js`,
-    myPageApp: `myPageApp@${process.env.REACT_MYPAGE_APP}/remoteEntry.js`
+    myPageApp: `myPageApp@${process.env.REACT_MYPAGE_APP}/remoteEntry.js`,
+    spoonWordApp: `spoonWordApp@${process.env.REACT_SPOON_WORD_APP}/remoteEntry.js`
   },
   shared: {
     react: { singleton: true, requiredVersion: "^18.2.0" },
