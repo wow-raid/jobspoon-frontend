@@ -6,6 +6,9 @@ WORKDIR /app
 # 소스 전체 복사
 COPY . .
 
+RUN npm install \
+  && npm -ws run build -w @jobspoon/theme-bridge -w @jobspoon/app-state
+
 # 예: Svelte 관련 앱 제외
 RUN npm install \
   && echo "// 각 앱 publicPath 수정" \
