@@ -30,7 +30,7 @@ export default defineConfig({
     // You need to set a unique value that is not equal to other applications
     uniqueName: "studyroom_app",
     // publicPath must be configured if using manifest
-    publicPath: "http://localhost:9692/",
+    publicPath: `${ process.env.MFE_PUBLIC_SERVICE }` ,
   },
 
   experiments: {
@@ -85,7 +85,7 @@ export default defineConfig({
     new DefinePlugin({
 
       "process.env.REACT_APP_API_BASE_URL": JSON.stringify(process.env.REACT_APP_API_BASE_URL),
-
+      "process.env.MFE_PUBLIC_SERVICE": JSON.stringify(process.env.MFE_PUBLIC_SERVICE),
       "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
     }),
     new ModuleFederationPlugin(mfConfig),
