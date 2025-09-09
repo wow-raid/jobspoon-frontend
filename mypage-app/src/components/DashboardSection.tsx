@@ -16,6 +16,7 @@ import styled from "styled-components";
 import RankSection from "./RankSection.tsx";
 import TitleSection from "./TitleSection.tsx";
 import TrustScoreModal from "./TrustScoreModal.tsx";
+import WritingModal from "./WritingModal.tsx";
 
 const COLORS = ["rgb(59,130,246)", "rgb(229,231,235)"]; // 파랑 / 회색
 
@@ -84,6 +85,7 @@ export default function DashboardSection() {
     const [writing, setWriting] = useState<WritingCountResponse | null>(null);
     const [trust, setTrust] = useState<TrustScoreResponse | null>(null);
     const [trustModalOpen, setTrustModalOpen] = useState(false);
+    const [writingModalOpen, setWritingModalOpen] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem("userToken");
@@ -123,14 +125,9 @@ export default function DashboardSection() {
                         <strong>{quiz.quizTotalCount}개</strong>
                     </TopCard>
                     <TopCard>
-                        <p>리뷰 작성</p>
-                        <strong>{writing.reviewCount}개</strong>
-                        <p>스터디룸 개설</p>
-                        <strong>{writing.studyroomCount}개</strong>
-                        <p>댓글 작성</p>
-                        <strong>{writing.commentCount}개</strong>
                         <p>총 글 작성</p>
                         <strong>{writing.totalCount}개</strong>
+                        <DetailButton onClick={() => setWritingModalOpen(true)}>자세히 보기</DetailButton>
                     </TopCard>
                 </TopCardGrid>
 
@@ -142,6 +139,13 @@ export default function DashboardSection() {
                     <DonutChart value={trust.trustScore} label="신뢰 점수" unit="점" max={100} onDetailClick={() => setTrustModalOpen(true)} />
                 </DonutGrid>
             </Section>
+
+            {/* 글작성 모달 */}
+            <WritingModal
+                isOpen={writingModalOpen}
+                onClose={() => setWritingModalOpen(false)}
+                writing={writing}
+            />
 
             {/* 신뢰점수 모달 */}
             <TrustScoreModal
@@ -164,7 +168,6 @@ export default function DashboardSection() {
 }
 
 /* ================== styled-components ================== */
-
 const Section = styled.section`
   padding: 24px;
   border-radius: 12px;
@@ -273,31 +276,5 @@ const DetailButton = styled.button`
   color: white;
   border: none;
   border-radius: 8px;
-  cursor: pointer;
-`;
-
-const ModalOverlay = styled.div`
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const ModalContent = styled.div`
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  width: 320px;
-`;
-
-const CloseButton = styled.button`
-  margin-top: 12px;
-  width: 100%;
-  padding: 8px;
-  border: none;
-  border-radius: 8px;
-  background: rgb(229,231,235);
   cursor: pointer;
 `;
