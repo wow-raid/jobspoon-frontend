@@ -4,10 +4,12 @@ import {
     getInterviewCompletion,
     getQuizCompletion,
     getWritingCount,
+    getTrustScore,
     AttendanceRateResponse,
     InterviewCompletionResponse,
     QuizCompletionResponse,
     WritingCountResponse,
+    TrustScoreResponse
 } from "../api/dashboardApi.ts";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import styled from "styled-components";
@@ -72,9 +74,7 @@ export default function DashboardSection() {
     const [interview, setInterview] = useState<InterviewCompletionResponse | null>(null);
     const [quiz, setQuiz] = useState<QuizCompletionResponse | null>(null);
     const [writing, setWriting] = useState<WritingCountResponse | null>(null);
-
-    // 👉 Mock 데이터 (백 준비 전)
-    const [trust] = useState({ trustScore: 88 });
+    const [trust, setTrust] = useState<TrustScoreResponse | null>(null);
 
     useEffect(() => {
         const token = localStorage.getItem("userToken");
@@ -86,9 +86,10 @@ export default function DashboardSection() {
         getInterviewCompletion(token).then(setInterview).catch(console.error);
         getQuizCompletion(token).then(setQuiz).catch(console.error);
         getWritingCount(token).then(setWriting).catch(console.error);
+        getTrustScore(token).then(setTrust).catch(console.error);
     }, []);
 
-    if (!attendance || !interview || !quiz || !writing) {
+    if (!attendance || !interview || !quiz || !writing || !trust) {
         return <p>불러오는 중...</p>;
     }
 
