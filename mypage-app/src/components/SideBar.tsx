@@ -2,11 +2,9 @@ import React, { useState } from "react";
 import ServiceModal from "./ServiceModal.tsx";
 import {
     FaUser,
-    FaShoppingCart,
     FaRegCommentDots,
     FaCalendarAlt,
     FaCrown,
-    FaEnvelope,
     FaCog,
     FaSignOutAlt,
 } from "react-icons/fa";
@@ -35,13 +33,6 @@ export default function SideBar() {
                         <NavButton onClick={handleOpenModal}>
                             <FaCrown className="icon" />
                             구독 내역
-                        </NavButton>
-                    </li>
-
-                    <li>
-                        <NavButton onClick={handleOpenModal}>
-                            <FaShoppingCart className="icon" />
-                            장바구니
                         </NavButton>
                     </li>
 
@@ -76,14 +67,6 @@ export default function SideBar() {
 
                     {/* 구분선 */}
                     <Divider />
-
-                    <li>
-                        <NavButton onClick={handleOpenModal}>
-                            <FaEnvelope className="icon" />
-                            메시지
-                            <Badge>24</Badge>
-                        </NavButton>
-                    </li>
 
                     <li>
                         <NavButton onClick={handleOpenModal}>
