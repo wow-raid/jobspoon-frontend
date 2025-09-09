@@ -84,7 +84,7 @@ export default defineConfig({
     }),
     new DefinePlugin({
 
-      "process.env.API_BASE_URL": JSON.stringify(process.env.API_BASE_URL),
+      "process.env.REACT_APP_API_BASE_URL": JSON.stringify(process.env.REACT_APP_API_BASE_URL),
 
       "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
     }),
