@@ -194,10 +194,11 @@ const CardList = styled.div`
 `;
 
 const Card = styled.div`
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 12px;
-  background: #fafafa;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px;
+    background: #fff;              /* 밝은 배경 */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* 살짝 그림자 */
 `;
 
 const Title = styled.h4`
