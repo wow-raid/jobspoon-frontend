@@ -10,9 +10,12 @@ COPY . .
 RUN set -eux \
   && npm install \
   && echo "\n// publicPath 수정" \
-  # 모든 rspack.config.ts 파일에서 publicPath 설정 수정
-  && find . -name "rspack.config.ts" -exec sed -i'' -e '/publicPath:/c\    publicPath: "/" + __dirname.split("/").pop() + "/",' {} \; \
-  && npm run build
+  # 모든 rspack.config.ts 파일에서 publicPath 설정 수정 - 다양한 패턴 처리
+  && find . -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: "auto"|publicPath: "/" + __dirname.split("/").pop() + "/"|g' {} \; \
+  && find . -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: "http://localhost:[0-9][0-9]*/"|publicPath: "/" + __dirname.split("/").pop() + "/"|g' {} \; \
+  && find . -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: `${process.env.MFE_PUBLIC_SERVICE}/`|publicPath: "/" + __dirname.split("/").pop() + "/"|g' {} \; \
+  # svelte 관련 앱 제외하고 빌드 실행
+  && npx lerna run build --scope=main-container --scope=navigation-bar-app --scope=vue-account-app --scope=vue-ai-interview-app --scope=studyroom-app --scope=mypage-app --scope=spoon-word-app --parallel
 
 # 2단계: Nginx
 FROM nginx:alpine
