@@ -10,12 +10,8 @@ COPY . .
 RUN set -eux \
   && npm install \
   && echo "\n// publicPath 수정" \
-  # auto
-  && find . -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: "auto"|publicPath: "/" + __dirname.split("/").pop() + "/"|g' {} \; \
-  # localhost
-  && find . -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: "http://localhost:[0-9][0-9]*/"|publicPath: "/" + __dirname.split("/").pop() + "/"|g' {} \; \
-  # 환경 변수
-  && find . -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: `${process.env.MFE_PUBLIC_SERVICE}/`|publicPath: "/" + __dirname.split("/").pop() + "/"|g' {} \; \
+  # 모든 rspack.config.ts 파일에서 publicPath 설정 수정
+  && find . -name "rspack.config.ts" -exec sed -i'' -e '/publicPath:/c\    publicPath: "/" + __dirname.split("/").pop() + "/",' {} \; \
   && npm run build
 
 # 2단계: Nginx
