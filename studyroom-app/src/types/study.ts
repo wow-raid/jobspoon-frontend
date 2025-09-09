@@ -43,3 +43,15 @@ export interface Application {
     status: Status;
     appliedAt: string;
 }
+
+export interface Schedule {
+    id: number;
+    authorId: number;
+    authorNickname: string;
+    title: string;
+    description: string;
+    start: Date;
+    end: Date;
+    startTime: string;
+    endTime: string;
+}
