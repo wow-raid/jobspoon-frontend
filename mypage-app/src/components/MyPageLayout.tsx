@@ -6,7 +6,6 @@ import styled from "styled-components";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 import { fetchMyProfile, ProfileAppearanceResponse } from "../api/profileAppearanceApi.ts";
 
-
 export default function MyPageLayout() {
 
     {/* 토글 */}

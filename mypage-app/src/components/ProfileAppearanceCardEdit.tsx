@@ -11,6 +11,7 @@ import {
 } from "../api/profileAppearanceApi.ts";
 import ServiceModal from "./ServiceModal.tsx";
 import styled from "styled-components";
+import defaultProfile from "../assets/default_profile.png";
 
 type OutletContextType = {
     profile: ProfileAppearanceResponse | null;
@@ -103,11 +104,13 @@ export default function ProfileAppearanceCardEdit() {
             {/* 프로필 영역 */}
             <ProfileSection>
                 <PhotoWrapper>
-                    {profile.photoUrl ? (
-                        <Photo src={profile.photoUrl} alt="프로필" />
-                    ) : (
-                        <NoPhoto>사진</NoPhoto>
-                    )}
+                    <Photo
+                        src={profile.photoUrl || defaultProfile}
+                        alt="프로필"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).src = defaultProfile; // 이미지 깨질 경우에도 fallback
+                        }}
+                    />
                 </PhotoWrapper>
                 <PhotoButton onClick={() => setIsModalOpen(true)}>사진 변경</PhotoButton>
             </ProfileSection>
