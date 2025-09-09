@@ -34,60 +34,50 @@ export default function TrustScoreModal({ isOpen, onClose, trust }: Props) {
                     <Divider />
 
                     <h3>산정 기준표</h3>
-                    <table>
-                        <thead>
-                        <tr>
-                            <th>항목</th>
-                            <th>배점(최대)</th>
-                            <th>산정 방식</th>
-                            <th>설명</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td>출석률</td>
-                            <td>25점</td>
-                            <td>출석률이 높을수록 점수 상승 (100% = 25점)</td>
-                            <td>성실성 지표</td>
-                        </tr>
-                        <tr>
-                            <td>모의면접</td>
-                            <td>20점</td>
-                            <td>누적 참여 횟수 + 최근 한 달 활동 반영</td>
-                            <td>꾸준한 실전 연습</td>
-                        </tr>
-                        <tr>
-                            <td>문제풀이</td>
-                            <td>20점</td>
-                            <td>누적 풀이 수 + 최근 한 달 풀이 반영</td>
-                            <td>학습 꾸준함</td>
-                        </tr>
-                        <tr>
-                            <td>리뷰 작성</td>
-                            <td>10점</td>
-                            <td>작성한 리뷰 개수에 따라 점수 상승</td>
-                            <td>피드백 기여</td>
-                        </tr>
-                        <tr>
-                            <td>스터디룸 개설</td>
-                            <td>10점</td>
-                            <td>스터디룸 개설 시 높은 점수 반영</td>
-                            <td>커뮤니티 리더십</td>
-                        </tr>
-                        <tr>
-                            <td>댓글 작성</td>
-                            <td>10점</td>
-                            <td>작성한 댓글 개수에 따라 점수 상승</td>
-                            <td>커뮤니티 참여</td>
-                        </tr>
-                        <tr>
-                            <td>활성 보너스</td>
-                            <td>+5점</td>
-                            <td>최근 한 달 내 활동이 있으면 +5점</td>
-                            <td>총점은 최대 100점</td>
-                        </tr>
-                        </tbody>
-                    </table>
+                    <CardList>
+                        <Card>
+                            <Title>🗓️ 출석률</Title>
+                            <Point>최대 25점</Point>
+                            <Desc>출석률이 높을수록 점수 상승 (100% = 25점)</Desc>
+                            <Note>성실성 지표</Note>
+                        </Card>
+                        <Card>
+                            <Title>🎤 모의면접</Title>
+                            <Point>최대 20점</Point>
+                            <Desc>누적 참여 횟수 + 최근 한 달 활동 반영</Desc>
+                            <Note>꾸준한 실전 연습</Note>
+                        </Card>
+                        <Card>
+                            <Title>🧩 문제풀이</Title>
+                            <Point>최대 20점</Point>
+                            <Desc>누적 풀이 수 + 최근 한 달 풀이 반영</Desc>
+                            <Note>학습 꾸준함</Note>
+                        </Card>
+                        <Card>
+                            <Title>✍️ 리뷰 작성</Title>
+                            <Point>최대 10점</Point>
+                            <Desc>작성한 리뷰 개수에 따라 점수 상승</Desc>
+                            <Note>피드백 기여</Note>
+                        </Card>
+                        <Card>
+                            <Title>👥 스터디룸 개설</Title>
+                            <Point>최대 10점</Point>
+                            <Desc>스터디룸 개설 시 높은 점수 반영</Desc>
+                            <Note>커뮤니티 리더십</Note>
+                        </Card>
+                        <Card>
+                            <Title>💬 댓글 작성</Title>
+                            <Point>최대 10점</Point>
+                            <Desc>작성한 댓글 개수에 따라 점수 상승</Desc>
+                            <Note>커뮤니티 참여</Note>
+                        </Card>
+                        <Card>
+                            <Title>⚡ 활성 보너스</Title>
+                            <Point>+5점</Point>
+                            <Desc>최근 한 달 내 활동이 있으면 +5점</Desc>
+                            <Note>총점은 최대 100점</Note>
+                        </Card>
+                    </CardList>
                 </Content>
 
                 <Footer>
@@ -194,4 +184,42 @@ const Divider = styled.hr`
   border: none;
   border-top: 1px solid #e5e7eb;
   margin: 16px 0;
+`;
+
+const CardList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+`;
+
+const Card = styled.div`
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fafafa;
+`;
+
+const Title = styled.h4`
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 4px;
+`;
+
+const Point = styled.p`
+  font-size: 13px;
+  font-weight: 500;
+  color: #2563eb;
+  margin: 0 0 4px;
+`;
+
+const Desc = styled.p`
+  font-size: 13px;
+  margin: 0 0 2px;
+`;
+
+const Note = styled.p`
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
 `;
