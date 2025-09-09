@@ -175,7 +175,7 @@ const PreviewWrapper = styled.div`
 
 const PreviewList = styled.div`
     display: flex;
-    gap: 16px;
+    gap: 32px;   /* 👉 16px → 32px */
     justify-content: center;
 `;
 
