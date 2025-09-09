@@ -40,14 +40,14 @@ RUN set -eux \
   && find mypage-app -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: .*|publicPath: "'"${REACT_MYPAGE_APP}"'",|g' {} \; \
   # spoon-word-app의 publicPath 수정
   && find spoon-word-app -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: .*|publicPath: "'"${REACT_SPOON_WORD_APP}"'",|g' {} \; \
-  # 각 앱 개별적으로 빌드
-  && cd main-container && npm run build && cd .. \
-  && cd navigation-bar-app && npm run build && cd .. \
-  && cd vue-account-app && npm run build && cd .. \
-  && cd vue-ai-interview-app && npm run build && cd .. \
-  && cd studyroom-app && npm run build && cd .. \
-  && cd mypage-app && npm run build && cd .. \
-  && cd spoon-word-app && npm run build && cd ..
+  # 각 앱 개별적으로 빌드 - npx를 사용하여 로컬 패키지 실행
+  && cd main-container && npx @rspack/cli build && cd .. \
+  && cd navigation-bar-app && npx @rspack/cli build && cd .. \
+  && cd vue-account-app && npx @rspack/cli build && cd .. \
+  && cd vue-ai-interview-app && npx @rspack/cli build && cd .. \
+  && cd studyroom-app && npx @rspack/cli build && cd .. \
+  && cd mypage-app && npx @rspack/cli build && cd .. \
+  && cd spoon-word-app && npx @rspack/cli build && cd ..
 
 # 2단계: Nginx
 FROM nginx:alpine
