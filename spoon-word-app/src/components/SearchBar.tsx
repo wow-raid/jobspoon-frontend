@@ -79,11 +79,19 @@ const SearchBar: React.FC<Props> = ({ value, onChange, onSearch }) => {
 
     const filtered = useMemo(() => recent, [recent]);
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (!open) return;
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        // @ts-expect-error - nativeEvent typing 차이
+        if (isComposing || e.nativeEvent?.isComposing) return; // 추가: IME 이중 가드
 
-        // ★ 한글/IME 조합 중에는 키 처리 막기
-        if (isComposing) return;
+        if (e.key === "Enter") { // ★ 추가: Enter 항상 처리
+            e.preventDefault();
+            if (open && highlight >= 0 && filtered[highlight]) runSearch(filtered[highlight]);
+            else runSearch(value);
+            return;
+        }
+
+        // ↓ 목록 네비게이션은 팝업이 열렸을 때만
+        if (!open) return;
 
         if (e.key === "ArrowDown") {
             e.preventDefault();
@@ -93,12 +101,6 @@ const SearchBar: React.FC<Props> = ({ value, onChange, onSearch }) => {
         if (e.key === "ArrowUp") {
             e.preventDefault();
             setHighlight((h) => Math.max(-1, h - 1));
-            return;
-        }
-        if (e.key === "Enter") {
-            e.preventDefault();
-            if (highlight >= 0 && filtered[highlight]) runSearch(filtered[highlight]);
-            else runSearch(value);
             return;
         }
         if (e.key === "Escape") {
@@ -176,7 +178,7 @@ const SearchBar: React.FC<Props> = ({ value, onChange, onSearch }) => {
     }, [isFocused, btnHover, btnActive]);
 
     return (
-        <div style={styles.wrapper} ref={wrapperRef} onKeyDown={handleKeyDown}>
+        <div style={styles.wrapper} ref={wrapperRef}>
             <div style={styles.inputShell}>
                 <div style={styles.inputContainer}>
                     <input
@@ -195,9 +197,10 @@ const SearchBar: React.FC<Props> = ({ value, onChange, onSearch }) => {
                         aria-controls={listboxId}
                         aria-label="검색어 입력"
                         style={styles.input}
-                        // ★ IME 조합 상태 트래킹
                         onCompositionStart={() => setIsComposing(true)}
                         onCompositionEnd={() => setIsComposing(false)}
+                        onKeyDown={handleKeyDown}     // Enter/화살표/ESC 처리
+                        enterKeyHint="search"         // 모바일 키보드에 '검색' 표시
                     />
                     <button
                         type="button"
