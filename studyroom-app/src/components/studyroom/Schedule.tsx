@@ -1,18 +1,24 @@
-import React, { useMemo, useState, useCallback } from "react";
+import React, {useMemo, useState, useCallback, useEffect} from "react";
 import styled from "styled-components";
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import moment from "moment";
 import "moment/locale/ko";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { FAKE_EVENTS, ScheduleEvent } from "../../data/mockData";
 import Modal from "../Modal";
 import EventForm from "./EventForm";
 import EventDetail from "./EventDetail";
+import { useOutletContext } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import { Schedule } from "../../types/study"
+import axiosInstance from "../../api/axiosInstance";
 
 moment.locale("ko");
 const localizer = momentLocalizer(moment);
 
-const CURRENT_USER_ID = "모임장";
+interface ScheduleContext {
+  studyId: string;
+  userRole: "LEADER" | "MEMBER";
+}
 
 /* ─ styled-components (scoped) ─ */
 const Container = styled.div`
@@ -145,6 +151,12 @@ const MonthlyItem = styled.div`
   padding: 12px 16px;
   border-radius: 6px;
   margin-bottom: 8px;
+  cursor: pointer; /* ✅ 커서 모양 변경 */
+  transition: background-color 0.2s; /* ✅ 부드러운 효과 */
+
+  &:hover {
+    background-color: ${({ theme }) => theme.surfaceHover}; /* ✅ 마우스 올렸을 때 배경색 변경 */
+  }
 `;
 const MonthlyDate = styled.div`
   font-weight: bold;
@@ -162,15 +174,50 @@ const MonthlyTime = styled.div`
 `;
 
 const Schedule: React.FC = () => {
-  const [events, setEvents] = useState<ScheduleEvent[]>(FAKE_EVENTS);
+  const { studyId, userRole } = useOutletContext<ScheduleContext>();
+  const { currentUserId } = useAuth();
+
+  const [events, setEvents] = useState<Schedule[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
+
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
-  const [editingEvent, setEditingEvent] = useState<ScheduleEvent | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Schedule | null>(null);
+  const [editingEvent, setEditingEvent] = useState<Schedule | null>(null);
+
+  // ✅ [추가] 일정 목록을 불러오는 함수
+  const fetchSchedules = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.get(`/study-rooms/${studyId}/schedules`);
+      const formattedEvents = response.data.map((event: any) => ({
+        ...event,
+        start: new Date(event.startTime),
+        end: new Date(event.endTime),
+      }));
+      setEvents(formattedEvents);
+    } catch (error) {
+      console.error("일정 목록을 불러오는데 실패했습니다:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [studyId]);
+
+  // ✅ [추가] 컴포넌트가 처음 렌더링될 때 일정 목록을 불러옴
+  useEffect(() => {
+    if (studyId) {
+      fetchSchedules();
+    }
+  }, [studyId, fetchSchedules]);
+
+  const handleSelectEvent = (event: Schedule) => {
+    setSelectedEvent(event);
+    setIsDetailModalOpen(true);
+  };
 
   const handleSelectSlot = (slotInfo: { start: Date; action: "select" | "click" | "doubleClick" }) => {
     if (slotInfo.action === "doubleClick") {
@@ -180,19 +227,30 @@ const Schedule: React.FC = () => {
     }
   };
 
-  const handleSelectEvent = (event: ScheduleEvent) => {
-    setSelectedEvent(event);
-    setIsDetailModalOpen(true);
-  };
+  // ✅ [수정] 일정 생성/수정 함수
+  const handleFormSubmit = async (eventData: { title: string; description: string; start: Date; end: Date }) => {
+    const requestData = {
+      title: eventData.title,
+      description: eventData.description,
+      startTime: eventData.start.toISOString(), // 서버가 인식할 수 있는 ISO 문자열로 변환
+      endTime: eventData.end.toISOString(),
+    };
 
-  const handleFormSubmit = (eventData: Omit<ScheduleEvent, "id" | "authorId">) => {
-    if (editingEvent) {
-      setEvents(prev => prev.map(e => (e.id === editingEvent.id ? { ...editingEvent, ...eventData } : e)));
-    } else {
-      const newEvent: ScheduleEvent = { id: Date.now(), authorId: CURRENT_USER_ID, ...eventData };
-      setEvents(prev => [...prev, newEvent]);
+    try {
+      if (editingEvent) {
+        // (추후 구현) 수정 로직
+        // await axiosInstance.put(`/study-rooms/${studyId}/schedules/${editingEvent.id}`, requestData);
+      } else {
+        // 생성 로직
+        await axiosInstance.post(`/study-rooms/${studyId}/schedules`, requestData);
+      }
+      alert("일정이 성공적으로 등록되었습니다.");
+      closeFormModal();
+      fetchSchedules(); // ✅ 목록을 다시 불러와 화면 갱신
+    } catch (error) {
+      console.error("일정 저장에 실패했습니다:", error);
+      alert("일정 저장 중 오류가 발생했습니다.");
     }
-    closeFormModal();
   };
 
   const handleDeleteEvent = () => {
@@ -210,9 +268,8 @@ const Schedule: React.FC = () => {
     setIsFormModalOpen(true);
   };
 
-  const openFormModal = (date?: Date) => {
+  const openFormModal = () => {
     setEditingEvent(null);
-    setSelectedDate(date || new Date());
     setIsFormModalOpen(true);
   };
   const closeFormModal = () => {
@@ -235,11 +292,17 @@ const Schedule: React.FC = () => {
     [selectedDate]
   );
 
+  if (loading) {
+    return <div>로딩 중...</div>;
+  }
+
   return (
     <Container>
       <Header>
         <h2>🗓️ 일정관리</h2>
-        <AddEventBtn onClick={() => openFormModal()}>일정 등록</AddEventBtn>
+        {(userRole === "LEADER" || userRole === "MEMBER") && (
+            <AddEventBtn onClick={openFormModal}>일정 등록</AddEventBtn>
+        )}
       </Header>
 
       <CalendarWrapper>
@@ -262,17 +325,20 @@ const Schedule: React.FC = () => {
       <MonthlyList>
         <h3>{moment(currentDate).format("YYYY년 M월")} 일정 목록</h3>
         {monthlyEvents.length > 0 ? (
-          monthlyEvents.map(event => (
-            <MonthlyItem key={event.id}>
-              <MonthlyDate>{moment(event.start).format("D일 (ddd)")}</MonthlyDate>
-              <MonthlyTitle>{event.title}</MonthlyTitle>
-              <MonthlyTime>
-                {moment(event.start).format("HH:mm")} - {moment(event.end).format("HH:mm")}
-              </MonthlyTime>
-            </MonthlyItem>
-          ))
+            monthlyEvents.map(event => (
+                <MonthlyItem
+                    key={event.id}
+                    onClick={() => handleSelectEvent(event)} // ✅ onClick 이벤트 추가
+                >
+                  <MonthlyDate>{moment(event.start).format("D일 (ddd)")}</MonthlyDate>
+                  <MonthlyTitle>{event.title}</MonthlyTitle>
+                  <MonthlyTime>
+                    {moment(event.start).format("HH:mm")} - {moment(event.end).format("HH:mm")}
+                  </MonthlyTime>
+                </MonthlyItem>
+            ))
         ) : (
-          <p>이번 달에는 등록된 일정이 없습니다.</p>
+            <p>이번 달에는 등록된 일정이 없습니다.</p>
         )}
       </MonthlyList>
 
@@ -282,12 +348,12 @@ const Schedule: React.FC = () => {
 
       <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)}>
         {selectedEvent && (
-          <EventDetail
-            event={selectedEvent}
-            currentUser={{ id: CURRENT_USER_ID }}
-            onEdit={handleEditEvent}
-            onDelete={handleDeleteEvent}
-          />
+            <EventDetail
+                event={selectedEvent}
+                currentUser={{ id: currentUserId }}
+                onEdit={() => {}}
+                onDelete={() => {}}
+            />
         )}
       </Modal>
     </Container>
