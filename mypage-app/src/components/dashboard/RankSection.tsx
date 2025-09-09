@@ -4,10 +4,10 @@ import {
     fetchMyRanks,
     ProfileAppearanceResponse,
     HistoryItem,
-} from "../api/profileAppearanceApi.ts";
+} from "../../api/profileAppearanceApi.ts";
 import styled from "styled-components";
-import defaultRank from "../assets/default_rank.png";
-import RankGuideModal from "./RankGuideModal.tsx";
+import defaultRank from "../../assets/default_rank.png";
+import RankGuideModal from "../modals/RankGuideModal.tsx";
 
 export default function RankSection() {
     const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
@@ -175,7 +175,7 @@ const PreviewWrapper = styled.div`
 
 const PreviewList = styled.div`
     display: flex;
-    gap: 16px;
+    gap: 32px;   /* 👉 16px → 32px */
     justify-content: center;
 `;
 
