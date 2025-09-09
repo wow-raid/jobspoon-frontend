@@ -7,12 +7,15 @@ WORKDIR /app
 COPY . .
 
 # 빌드 실행
-RUN npm install \
-  && echo "\n// 각 앱의 rspack.config.ts 파일에서 publicPath 수정" \
-  && find . -name "rspack.config.ts" -exec sed -i "s|publicPath: \"auto\"|publicPath: '/' + __dirname.split('/').pop() + '/'|g" {} \; \
-  && find . -name "rspack.config.ts" -exec sed -i "s|publicPath: \"http://localhost:[0-9]\\+/\"|publicPath: '/' + __dirname.split('/').pop() + '/'|g" {} \; \
-  && find . -name "rspack.config.ts" -exec sed -i "s|publicPath: \`\${process.env.MFE_PUBLIC_SERVICE}/\`|publicPath: '/' + __dirname.split('/').pop() + '/'|g" {} \; \
-  && npm run build
+RUN set -eux \
+  && npm install \
+  && echo "\n// publicPath 수정" \
+  # 모든 rspack.config.ts 파일에서 publicPath 설정 수정 - 다양한 패턴 처리
+  && find . -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: "auto"|publicPath: "/" + __dirname.split("/").pop() + "/"|g' {} \; \
+  && find . -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: "http://localhost:[0-9][0-9]*/"|publicPath: "/" + __dirname.split("/").pop() + "/"|g' {} \; \
+  && find . -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: `${process.env.MFE_PUBLIC_SERVICE}/`|publicPath: "/" + __dirname.split("/").pop() + "/"|g' {} \; \
+  # svelte 관련 앱 제외하고 빌드 실행
+  && npx lerna run build --scope=main-container --scope=navigation-bar-app --scope=vue-account-app --scope=vue-ai-interview-app --scope=studyroom-app --scope=mypage-app --scope=spoon-word-app --parallel
 
 # 2단계: Nginx
 FROM nginx:alpine
@@ -28,7 +31,9 @@ COPY --from=builder /app/main-container/dist /usr/share/nginx/html/html-containe
 COPY --from=builder /app/mypage-app/dist /usr/share/nginx/html/mypage-app
 COPY --from=builder /app/navigation-bar-app/dist /usr/share/nginx/html/navigation-bar-app
 COPY --from=builder /app/studyroom-app/dist /usr/share/nginx/html/studyroom-app
-COPY --from=builder /app/svelte-review-app/dist /usr/share/nginx/html/svelte-review-app
+# svelte 관련 앱들은 워크스페이스에서 제외됨
+# COPY --from=builder /app/svelte-review-app/dist /usr/share/nginx/html/svelte-review-app
+# COPY --from=builder /app/sveltekit-review-app/dist /usr/share/nginx/html/sveltekit-review-app
 COPY --from=builder /app/vue-account-app/dist /usr/share/nginx/html/vue-account-app
 COPY --from=builder /app/vue-ai-interview-app/dist /usr/share/nginx/html/vue-ai-interview-app
 
