@@ -1,6 +1,6 @@
 import * as path from "node:path";
 import { defineConfig } from "@rspack/cli";
-import { rspack } from "@rspack/core";
+import {DefinePlugin, rspack} from "@rspack/core";
 import * as RefreshPlugin from "@rspack/plugin-react-refresh";
 import { ModuleFederationPlugin } from "@module-federation/enhanced/rspack";
 
@@ -90,8 +90,16 @@ export default defineConfig({
     new rspack.HtmlRspackPlugin({
       template: "./index.html",
     }),
+    new DefinePlugin({
+      "process.env.MFE_PUBLIC_SERVICE": JSON.stringify(process.env.MFE_PUBLIC_SERVICE),
+      "process.env.VUE_ACCOUNT_APP": JSON.stringify(process.env.VUE_ACCOUNT_APP),
+      "process.env.VUE_AI_INTERVIEW_APP": JSON.stringify(process.env.VUE_AI_INTERVIEW_APP),
+      "process.env.REACT_NAVIGATION_APP": JSON.stringify(process.env.REACT_NAVIGATION_APP),
+      "process.env.REACT_STUDYROOM_APP": JSON.stringify(process.env.REACT_STUDYROOM_APP),
+      "process.env.REACT_MYPAGE_APP": JSON.stringify(process.env.REACT_MYPAGE_APP),
+      "process.env.REACT_SPOON_WORD_APP": JSON.stringify(process.env.REACT_SPOON_WORD_APP),
+    }),
     new ModuleFederationPlugin(mfConfig),
-    isDev ? new RefreshPlugin() : null,
   ].filter(Boolean),
   optimization: {
     minimizer: [
