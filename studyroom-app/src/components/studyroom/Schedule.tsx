@@ -253,11 +253,21 @@ const Schedule: React.FC = () => {
     }
   };
 
-  const handleDeleteEvent = () => {
+  const handleDeleteEvent = async () => {
     if (!selectedEvent) return;
+
     if (window.confirm("정말로 일정을 삭제하시겠습니까?")) {
-      setEvents(prev => prev.filter(e => e.id !== selectedEvent.id));
-      setIsDetailModalOpen(false);
+      try {
+        await axiosInstance.delete(`/study-rooms/${studyId}/schedules/${selectedEvent.id}`);
+
+        alert("일정이 성공적으로 삭제되었습니다.");
+        setIsDetailModalOpen(false);
+        fetchSchedules();
+
+      } catch (error) {
+        console.error("일정 삭제에 실패했습니다:", error);
+        alert("일정 삭제 중 오류가 발생했습니다.");
+      }
     }
   };
 
