@@ -1,10 +1,22 @@
-import adapter from '@sveltejs/adapter-node';
+import adapter from '@sveltejs/adapter-static';
 
 const config = {
 	kit: {
-		adapter: adapter(),
-		// MF만 쓰고 정적 프리렌더 안 할 거면 빈 엔트리로 두는 게 안전
-		prerender: { entries: [] }
+		adapter: adapter({
+			pages: 'build-static',   // 산출물 폴더명
+			assets: 'build-static',
+			precompress: true
+		}),
+		prerender: {
+			entries: [
+				'/',                    // 필요시
+				'/ai-interview',
+				'/ai-interview/guide',
+				'/ai-interview/faq',
+				'/sitemap.xml',
+				'/robots.txt'
+			]
+		}
 	}
 };
 export default config;
