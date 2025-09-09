@@ -7,15 +7,47 @@ WORKDIR /app
 COPY . .
 
 # 빌드 실행
+# 환경 변수 설정
+ENV VUE_ACCOUNT_APP=/vue-account-app/ \
+    VUE_AI_INTERVIEW_APP=/vue-ai-interview-app/ \
+    REACT_NAVIGATION_APP=/navigation-bar-app/ \
+    REACT_STUDYROOM_APP=/studyroom-app/ \
+    REACT_MYPAGE_APP=/mypage-app/ \
+    REACT_SPOON_WORD_APP=/spoon-word-app/ \
+    NODE_ENV=production
+
 RUN set -eux \
   && npm install \
   && echo "\n// publicPath 수정" \
-  # 모든 rspack.config.ts 파일에서 publicPath 설정 수정 - 다양한 패턴 처리
-  && find . -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: "auto"|publicPath: "/" + __dirname.split("/").pop() + "/"|g' {} \; \
-  && find . -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: "http://localhost:[0-9][0-9]*/"|publicPath: "/" + __dirname.split("/").pop() + "/"|g' {} \; \
-  && find . -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: `${process.env.MFE_PUBLIC_SERVICE}/`|publicPath: "/" + __dirname.split("/").pop() + "/"|g' {} \; \
-  # svelte 관련 앱 제외하고 빌드 실행
-  && npx lerna run build --scope=main-container --scope=navigation-bar-app --scope=vue-account-app --scope=vue-ai-interview-app --scope=studyroom-app --scope=mypage-app --scope=spoon-word-app --parallel
+  # main-container의 publicPath 수정 및 환경 변수 설정
+  && sed -i'' -e 's|publicPath: .*|publicPath: "/html-container/",|g' main-container/rspack.config.ts \
+  # 환경 변수 설정을 위한 .env 파일 생성
+  && echo "VUE_ACCOUNT_APP=${VUE_ACCOUNT_APP}" > main-container/.env \
+  && echo "VUE_AI_INTERVIEW_APP=${VUE_AI_INTERVIEW_APP}" >> main-container/.env \
+  && echo "REACT_NAVIGATION_APP=${REACT_NAVIGATION_APP}" >> main-container/.env \
+  && echo "REACT_STUDYROOM_APP=${REACT_STUDYROOM_APP}" >> main-container/.env \
+  && echo "REACT_MYPAGE_APP=${REACT_MYPAGE_APP}" >> main-container/.env \
+  && echo "REACT_SPOON_WORD_APP=${REACT_SPOON_WORD_APP}" >> main-container/.env \
+  # studyroom-app의 publicPath 수정
+  && sed -i'' -e 's|publicPath: .*|publicPath: "'"${REACT_STUDYROOM_APP}"'",|g' studyroom-app/rspack.config.ts \
+  # navigation-bar-app의 publicPath 수정
+  && sed -i'' -e 's|publicPath: .*|publicPath: "'"${REACT_NAVIGATION_APP}"'",|g' navigation-bar-app/rspack.config.ts \
+  # vue-account-app의 publicPath 수정
+  && find vue-account-app -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: .*|publicPath: "'"${VUE_ACCOUNT_APP}"'",|g' {} \; \
+  # vue-ai-interview-app의 publicPath 수정
+  && sed -i'' -e 's|publicPath: .*|publicPath: "'"${VUE_AI_INTERVIEW_APP}"'",|g' vue-ai-interview-app/rspack.config.ts \
+  # mypage-app의 publicPath 수정
+  && find mypage-app -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: .*|publicPath: "'"${REACT_MYPAGE_APP}"'",|g' {} \; \
+  # spoon-word-app의 publicPath 수정
+  && find spoon-word-app -name "rspack.config.ts" -exec sed -i'' -e 's|publicPath: .*|publicPath: "'"${REACT_SPOON_WORD_APP}"'",|g' {} \; \
+  # 각 앱 개별적으로 빌드
+  && cd main-container && npm run build && cd .. \
+  && cd navigation-bar-app && npm run build && cd .. \
+  && cd vue-account-app && npm run build && cd .. \
+  && cd vue-ai-interview-app && npm run build && cd .. \
+  && cd studyroom-app && npm run build && cd .. \
+  && cd mypage-app && npm run build && cd .. \
+  && cd spoon-word-app && npm run build && cd ..
 
 # 2단계: Nginx
 FROM nginx:alpine
