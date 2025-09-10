@@ -31,7 +31,7 @@ export default defineConfig({
     uniqueName: "navigation_bar_app",
     // publicPath must be configured if using manifest
     // publicPath: "http://localhost:3005/",
-    publicPath: `${ process.env.MFE_PUBLIC_SERVICE }` ,
+    publicPath: `${ process.env.MFE_PUBLIC_SERVICE }/` ,
   },
 
   experiments: {

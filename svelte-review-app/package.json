@@ -26,8 +26,8 @@
     "zip-cli": "^0.0.0"
   },
   "dependencies": {
+    "@jobspoon/theme-bridge": "0.1.0",
     "@module-federation/enhanced": "^0.8.9",
-    "svelte": "^4.2.9",
-    "@jobspoon/theme-bridge": "0.1.0"
+    "svelte": "^5.38.7"
   }
 }
