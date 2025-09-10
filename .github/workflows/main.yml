@@ -30,6 +30,9 @@ jobs:
           # 스터디룸 앱 환경변수
           echo "${{ secrets.STUDY_ROOM_ENV }}" > studyroom-app/.env
           
+          # 퀴즈 및 단어사전 앱 환경변수
+          echo "${{ secrets.SPOON_WORD_ENV }}" > spoon-word-app/.env
+          
           # navation-bar 앱 환경변수
           echo "${{ secrets.NAVIGATION_BAR_ENV }}" > navigation-bar-app/.env
 

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import SideBar from "./SideBar";
-import ProfileAppearanceCard from "./ProfileAppearanceCard";
+import ProfileAppearanceCard from "../profile/ProfileAppearanceCard.tsx";
 import styled from "styled-components";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
-import { fetchMyProfile, ProfileAppearanceResponse } from "../api/profileAppearanceApi.ts";
+import { fetchMyProfile, ProfileAppearanceResponse } from "../../api/profileAppearanceApi.ts";
 
 export default function MyPageLayout() {
 

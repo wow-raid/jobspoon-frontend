@@ -31,7 +31,7 @@ export default defineConfig({
     uniqueName: "navigation_bar_app",
     // publicPath must be configured if using manifest
     // publicPath: "http://localhost:3005/",
-    publicPath: "auto",
+    publicPath: `${ process.env.MFE_PUBLIC_SERVICE }` ,
   },
 
   experiments: {
@@ -80,7 +80,9 @@ export default defineConfig({
       template: "./index.html",
     }),
     new DefinePlugin({
+
       "process.env.REACT_APP_BASE_URL": JSON.stringify(process.env.REACT_APP_BASE_URL),
+      "process.env.MFE_PUBLIC_SERVICE": JSON.stringify(process.env.MFE_PUBLIC_SERVICE),
       "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
       "process.env.SPRING_SERVER_API_URL": JSON.stringify(process.env.SPRING_SERVER_API_URL)
     }),
