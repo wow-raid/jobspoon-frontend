@@ -5,8 +5,13 @@ WORKDIR /app
 
 # 소스 전체 복사
 COPY . .
-# vue-account-app 및 vue-ai-interview-app 빌드 시
+# 배포 환경 설정
+ENV NODE_ENV=production
 ENV MFE_CORS_ORIGIN=https://job-spoon.com
+
+# 기타 환경 변수는 GitHub Secrets에서 자동으로 주입됨
+# 로컬 개발 환경에서는 .env 파일에서 localhost 경로 사용
+# 배포 환경에서는 GitHub Actions에서 설정된 환경 변수 사용
 
 RUN npm install \
   && npm -ws run build -w @jobspoon/theme-bridge -w @jobspoon/app-state
