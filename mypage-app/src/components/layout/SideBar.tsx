@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 import { MdArticle } from "react-icons/md";
 import styled from "styled-components";
+import { NavLink } from "react-router-dom";
 
 export default function SideBar() {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,10 +24,10 @@ export default function SideBar() {
             <Nav>
                 <ul>
                     <li>
-                        <NavButton onClick={handleOpenModal}>
+                        <NavLink to="/mypage/account/edit" className="nav-button">
                             <FaUser className="icon" />
                             회원정보 수정
-                        </NavButton>
+                        </NavLink>
                     </li>
 
                     <li>
