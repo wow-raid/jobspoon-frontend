@@ -1,2 +1,2 @@
-import ReviewWidget from './ReviewWidget.svelte';
-export default ReviewWidget
+export { default as ReviewWidget } from './ReviewWidget.svelte';
+export { mount } from '../mf/boot';

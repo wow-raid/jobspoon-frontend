@@ -10,7 +10,6 @@
     "packages/*",
     "mypage-app",
     "spoon-word-app",
-    "svelte-review-app",
     "sveltekit-review-app"
   ],
   "scripts": {

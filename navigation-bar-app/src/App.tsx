@@ -140,8 +140,8 @@ const App: React.FC = () => {
           </NavLink>
 
           <NavLink
-            to="/svelte-review/review"
-            $active={isActive("/svelte-review")}
+            to="/sveltekit-review/review"
+            $active={isActive("/sveltekit-review")}
           >
             리뷰
           </NavLink>
