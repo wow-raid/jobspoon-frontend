@@ -30,7 +30,7 @@ export default defineConfig({
     // You need to set a unique value that is not equal to other applications
     uniqueName: "mypage_app",
     // publicPath must be configured if using manifest
-    publicPath: `${ process.env.MFE_PUBLIC_SERVICE }` ,
+    publicPath: `${ process.env.MFE_PUBLIC_SERVICE }/` ,
   },
 
   experiments: {
