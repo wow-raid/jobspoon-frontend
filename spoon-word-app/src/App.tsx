@@ -1,11 +1,42 @@
-// src/App.tsx  — 중첩/서브경로/모듈페더레이션에서도 안전한 라우트 구성
 import React from "react";
 import { Routes, Route, useNavigate, useLocation, Outlet, useSearchParams } from "react-router-dom";
+import styled from "styled-components";
 import SearchBar from "./components/SearchBar";
 import ExploreFilterBar, { FilterSelection } from "./components/ExploreFilterBar";
 import SearchPage from "./pages/SearchPage";
 import TermListPage from "./pages/TermListPage";
-import NoResultsPage from "./pages/NoResultsPage.tsx";
+// import NoResultsPage from "./pages/NoResultsPage.tsx";
+
+/** 디자인 토큰 (간단 버전) */
+const TOKENS = {
+    containerMaxWidth: 768,
+    space: (n: number) => `${n}px`,
+    color: { text: "#111827" },
+    h1FontSize: "clamp(24px, 2.5vw, 30px)",
+};
+
+/** styled-components */
+const Container = styled.div`
+  margin-left: auto;
+  margin-right: auto;
+  max-width: ${TOKENS.containerMaxWidth}px;
+  padding-left: ${TOKENS.space(16)};
+  padding-right: ${TOKENS.space(16)};
+  padding-top: ${TOKENS.space(40)};
+  padding-bottom: ${TOKENS.space(40)};
+`;
+
+const Title = styled.h1`
+  font-size: ${TOKENS.h1FontSize};
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  margin: 0 0 ${TOKENS.space(16)} 0;
+  color: ${TOKENS.color.text};
+`;
+
+const Content = styled.div`
+  margin-top: ${TOKENS.space(24)};
+`;
 
 /** 라우트가 매칭되지 않을 때(또는 베이스 경로 불명확할 때) 자동으로 적절한 페이지를 보여주는 fallback */
 function AutoContent() {
@@ -44,21 +75,12 @@ function AppLayout() {
         nav({ pathname: "search", search: `?${sp.toString()}` });
     };
 
-    // 스타일 토큰/인라인 스타일
-    const TOKENS = React.useMemo(
-        () => ({ containerMaxWidth: 768, space: (n: number) => `${n}px`, color: { text: "#111827" }, h1FontSize: "clamp(24px,2.5vw,30px)" }),
-        []
-    );
-    const styles = React.useMemo(() => ({
-        container: { marginLeft: "auto", marginRight: "auto", maxWidth: TOKENS.containerMaxWidth, paddingLeft: TOKENS.space(16), paddingRight: TOKENS.space(16), paddingTop: TOKENS.space(40), paddingBottom: TOKENS.space(40) } as React.CSSProperties,
-        title: { fontSize: TOKENS.h1FontSize, fontWeight: 750, letterSpacing: "-0.02em", marginTop: 0, marginBottom: TOKENS.space(16), color: TOKENS.color.text } as React.CSSProperties,
-        content: { marginTop: TOKENS.space(24) } as React.CSSProperties,
-    }), [TOKENS]);
-
     /** 필터 변경 → 상대 네비게이션 (상호 배타) */
     const handleFilterChange = (sel: FilterSelection) => {
         const sp = new URLSearchParams(location.search);
-        sp.delete("initial"); sp.delete("alpha"); sp.delete("symbol");
+        sp.delete("initial");
+        sp.delete("alpha");
+        sp.delete("symbol");
         if (sel) sp.set(sel.mode, sel.value);
         sp.delete("page");
         nav({ pathname: "search", search: `?${sp.toString()}` });
@@ -67,7 +89,9 @@ function AppLayout() {
     /** URL → 필터바 선택값 */
     const currentSelection: FilterSelection = React.useMemo(() => {
         const sp = new URLSearchParams(location.search);
-        const initial = sp.get("initial"); const alpha = sp.get("alpha"); const symbol = sp.get("symbol");
+        const initial = sp.get("initial");
+        const alpha = sp.get("alpha");
+        const symbol = sp.get("symbol");
         if (initial) return { mode: "initial", value: initial };
         if (alpha) return { mode: "alpha", value: alpha };
         if (symbol) return { mode: "symbol", value: symbol };
@@ -75,21 +99,23 @@ function AppLayout() {
     }, [location.search]);
 
     return (
-        <div style={styles.container}>
-            <h1 style={styles.title}>잡스푼과 함께, 기술 용어를 나만의 언어로!</h1>
+        <Container>
+            <Title>잡스푼과 함께, 기술 용어를 나만의 언어로!</Title>
 
             <SearchBar value={q} onChange={setQ} onSearch={handleSearch} />
             <ExploreFilterBar value={currentSelection} onChange={handleFilterChange} />
 
-            <div style={styles.content}>
+            <Content>
                 <Outlet />
-            </div>
-        </div>
+            </Content>
+        </Container>
     );
 }
 
 /** 홈(빈 본문 허용) */
-function HomePage() { return null; }
+function HomePage() {
+    return null;
+}
 
 /** 라우트 구성 — 상대 경로 + 캐치올 fallback */
 export default function App() {
@@ -99,7 +125,7 @@ export default function App() {
                 <Route index element={<HomePage />} />
                 <Route path="search" element={<SearchPage />} />
                 <Route path="terms/by-tag" element={<TermListPage />} />
-                <Route path="terms/not-found" element={<NoResultsPage />} />
+                {/*<Route path="terms/not-found" element={<NoResultsPage />} />*/}
                 <Route path="*" element={<AutoContent />} />
             </Route>
         </Routes>

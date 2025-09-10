@@ -1,5 +1,6 @@
 // src/pages/TermListPage.tsx
 import React from "react";
+import styled from "styled-components";
 import { useSearchParams, useNavigationType, useNavigate } from "react-router-dom";
 import TermCardWithTagsLazy from "../components/TermCardWithTagsLazy";
 import { fetchTermsByTag } from "../api/termApi";
@@ -26,16 +27,114 @@ const TOKENS = {
     space: (n: number) => `${n}px`,
     font: { base: "14px", small: "12px", strong: 700 },
     radius: 14,
-};
+} as const;
 
-/* 페이지네이션 */
+const Root = styled.div`
+  margin-top: ${TOKENS.space(16)};
+`;
+
+const InfoRow = styled.div`
+  margin-top: 0;
+  display: flex;
+  align-items: center;
+  gap: ${TOKENS.space(8)};
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  font-size: ${TOKENS.font.base};
+  color: ${TOKENS.color.textMuted};
+`;
+
+const Chip = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: ${TOKENS.space(6)};
+  border-radius: ${TOKENS.radius}px;
+  background: ${TOKENS.color.chipBg};
+  border: 1px solid ${TOKENS.color.chipBorder};
+  padding: ${TOKENS.space(4)} ${TOKENS.space(8)};
+  font-size: ${TOKENS.font.small};
+  color: ${TOKENS.color.textBlue};
+  font-weight: ${TOKENS.font.strong};
+  flex: 0 0 auto;
+`;
+
+const StrongNum = styled.span`
+  font-weight: ${TOKENS.font.strong};
+  color: ${TOKENS.color.textBlue};
+`;
+
+const LoadingMsg = styled.div`
+  margin-top: ${TOKENS.space(16)};
+  color: ${TOKENS.color.textMuted};
+`;
+
+const ErrorMsg = styled.div`
+  margin-top: ${TOKENS.space(16)};
+  color: ${TOKENS.color.red};
+`;
+
+const List = styled.ul`
+  margin-top: ${TOKENS.space(16)};
+  padding: 0;
+  list-style: none;
+`;
+
+const ListItem = styled.li`
+  & + & {
+    margin-top: ${TOKENS.space(16)};
+  }
+`;
+
+const EmptyMsg = styled.div`
+  margin-top: ${TOKENS.space(16)};
+  color: ${TOKENS.color.textMuted};
+`;
+
+/* ---------------- Pagination ---------------- */
 type PaginationProps = {
     page: number; size: number; total: number;
     onChange: (nextPageZeroBased: number) => void;
 };
+
+const PaginationNav = styled.nav`
+  margin-top: ${TOKENS.space(16)};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: ${TOKENS.space(8)};
+  user-select: none;
+`;
+
+const PageNumBtn = styled.button<{ $active: boolean }>`
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid ${({ $active }) => ($active ? TOKENS.color.textBlue : TOKENS.color.border)};
+  background: ${({ $active }) => ($active ? TOKENS.color.textBlue : "#fff")};
+  color: ${({ $active }) => ($active ? "#fff" : TOKENS.color.text)};
+  font-weight: ${({ $active }) => ($active ? 700 : 600)};
+  cursor: pointer;
+`;
+
+const NavBtn = styled.button<{ $disabled: boolean }>`
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid ${TOKENS.color.border};
+  background: #fff;
+  color: ${({ $disabled }) => ($disabled ? "#c7c7c7" : TOKENS.color.text)};
+  cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "pointer")};
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+`;
+
 const Pagination: React.FC<PaginationProps> = ({ page, size, total, onChange }) => {
     const totalPages = Math.max(1, Math.ceil((total || 0) / (size || 1)));
-    const current = page + 1;
+    const current = page + 1; // 1-base
     const maxNumbers = 10;
 
     let start = Math.max(1, current - Math.floor(maxNumbers / 2));
@@ -45,49 +144,32 @@ const Pagination: React.FC<PaginationProps> = ({ page, size, total, onChange }) 
     const nums: number[] = [];
     for (let i = start; i <= end; i++) nums.push(i);
 
-    const styles = {
-        wrap: {
-            marginTop: TOKENS.space(16),
-            display: "flex", alignItems: "center", justifyContent: "center",
-            gap: TOKENS.space(8), userSelect: "none" as const,
-        },
-        numBtn: (active: boolean) => ({
-            minWidth: 34, height: 34, padding: "0 10px", borderRadius: 999,
-            border: `1px solid ${active ? TOKENS.color.textBlue : TOKENS.color.border}`,
-            background: active ? TOKENS.color.textBlue : "#fff",
-            color: active ? "#fff" : TOKENS.color.text,
-            fontWeight: active ? 700 : 600,
-            cursor: "pointer",
-        }) as React.CSSProperties,
-        navBtn: (disabled: boolean) => ({
-            width: 34, height: 34, borderRadius: 999,
-            border: `1px solid ${TOKENS.color.border}`, background: "#fff",
-            color: disabled ? "#c7c7c7" : TOKENS.color.text,
-            cursor: disabled ? "not-allowed" : "pointer",
-            display: "inline-flex", alignItems: "center", justifyContent: "center",
-        }) as React.CSSProperties,
-    };
-
     const go = (p1: number) => {
         if (p1 < 1 || p1 > totalPages || p1 === current) return;
         onChange(p1 - 1);
     };
 
     return (
-        <nav aria-label="페이지네이션" style={styles.wrap}>
-            <button type="button" aria-label="처음" style={styles.navBtn(current === 1)} onClick={() => go(1)} disabled={current === 1}>«</button>
-            <button type="button" aria-label="이전" style={styles.navBtn(current === 1)} onClick={() => go(current - 1)} disabled={current === 1}>‹</button>
-            {nums.map(n => (
-                <button key={n} type="button" style={styles.numBtn(n === current)} onClick={() => go(n)} aria-current={n === current ? "page" : undefined}>
+        <PaginationNav aria-label="페이지네이션">
+            <NavBtn aria-label="처음" onClick={() => go(1)} disabled={current === 1} $disabled={current === 1}>«</NavBtn>
+            <NavBtn aria-label="이전" onClick={() => go(current - 1)} disabled={current === 1} $disabled={current === 1}>‹</NavBtn>
+            {nums.map((n) => (
+                <PageNumBtn
+                    key={n}
+                    onClick={() => go(n)}
+                    aria-current={n === current ? "page" : undefined}
+                    $active={n === current}
+                >
                     {n}
-                </button>
+                </PageNumBtn>
             ))}
-            <button type="button" aria-label="다음" style={styles.navBtn(current === totalPages)} onClick={() => go(current + 1)} disabled={current === totalPages}>›</button>
-            <button type="button" aria-label="마지막" style={styles.navBtn(current === totalPages)} onClick={() => go(totalPages)} disabled={current === totalPages}>»</button>
-        </nav>
+            <NavBtn aria-label="다음" onClick={() => go(current + 1)} disabled={current === totalPages} $disabled={current === totalPages}>›</NavBtn>
+            <NavBtn aria-label="마지막" onClick={() => go(totalPages)} disabled={current === totalPages} $disabled={current === totalPages}>»</NavBtn>
+        </PaginationNav>
     );
 };
 
+/* ---------------- 페이지 컴포넌트 ---------------- */
 const TermListPage: React.FC = () => {
     const [params] = useSearchParams();
     const navType = useNavigationType();
@@ -197,52 +279,27 @@ const TermListPage: React.FC = () => {
         navigate({ pathname: "terms/by-tag", search: `?${sp.toString()}` });
     };
 
-    /* 스타일 */
-    const styles = React.useMemo(() => ({
-        root: { marginTop: TOKENS.space(16) },
-        infoRow: {
-            marginTop: 0, display: "flex", alignItems: "center", gap: TOKENS.space(8),
-            whiteSpace: "nowrap", overflowX: "auto", overflowY: "hidden",
-            WebkitOverflowScrolling: "touch" as any,
-            fontSize: TOKENS.font.base, color: TOKENS.color.textMuted,
-        } as React.CSSProperties,
-        chip: {
-            display: "inline-flex", alignItems: "center", gap: TOKENS.space(6),
-            borderRadius: TOKENS.radius, background: TOKENS.color.chipBg,
-            border: `1px solid ${TOKENS.color.chipBorder}`,
-            padding: `${TOKENS.space(4)} ${TOKENS.space(8)}`,
-            fontSize: TOKENS.font.small, color: TOKENS.color.textBlue,
-            fontWeight: TOKENS.font.strong, flex: "0 0 auto",
-        } as React.CSSProperties,
-        strongNum: { fontWeight: TOKENS.font.strong, color: TOKENS.color.textBlue },
-        loading: { marginTop: TOKENS.space(16), color: TOKENS.color.textMuted },
-        error: { marginTop: TOKENS.space(16), color: TOKENS.color.red },
-        list: { marginTop: TOKENS.space(16), padding: 0, listStyle: "none" as const },
-        listItem: { marginTop: TOKENS.space(16) },
-        empty: { marginTop: TOKENS.space(16), color: TOKENS.color.textMuted },
-    }), []);
-
     return (
-        <div style={styles.root}>
+        <Root>
             {tag ? (
-                <div style={styles.infoRow} aria-live="polite">
-                    <span style={styles.chip}>#{tag}</span>
+                <InfoRow aria-live="polite">
+                    <Chip>#{tag}</Chip>
                     <span>
-            에 대한 <span style={styles.strongNum}>{total}</span>개의 용어가 검색되었습니다.
+            에 대한 <StrongNum>{total}</StrongNum>개의 용어가 검색되었습니다.
           </span>
-                </div>
+                </InfoRow>
             ) : (
-                <div style={styles.infoRow}>해시태그를 선택하면 해당 태그의 용어를 보여드립니다.</div>
+                <InfoRow>해시태그를 선택하면 해당 태그의 용어를 보여드립니다.</InfoRow>
             )}
 
-            {loading && <div style={styles.loading}>불러오는 중...</div>}
-            {error && <div style={styles.error}>{error}</div>}
+            {loading && <LoadingMsg>불러오는 중...</LoadingMsg>}
+            {error && <ErrorMsg>{error}</ErrorMsg>}
 
             {!loading && !error && terms.length > 0 && (
                 <>
-                    <ul style={styles.list}>
-                        {terms.map((t, idx) => (
-                            <li key={t.id} style={idx === 0 ? undefined : styles.listItem}>
+                    <List>
+                        {terms.map((t) => (
+                            <ListItem key={t.id}>
                                 <TermCardWithTagsLazy
                                     id={t.id}
                                     title={t.title}
@@ -251,21 +308,21 @@ const TermListPage: React.FC = () => {
                                     onTagClick={handleTagClick}
                                     onAdd={(id) => console.log("단어장 추가:", id)}
                                 />
-                            </li>
+                            </ListItem>
                         ))}
-                    </ul>
+                    </List>
                     <Pagination page={page} size={size} total={total} onChange={handlePageChange} />
                 </>
             )}
 
             {!loading && !error && tag && terms.length === 0 && (
-                <div style={styles.empty}>해당 태그로 등록된 용어가 없습니다.</div>
+                <EmptyMsg>해당 태그로 등록된 용어가 없습니다.</EmptyMsg>
             )}
 
             {!loading && !error && !tag && (
-                <div style={styles.empty}>용어 카드를 열고 해시태그를 눌러보세요.</div>
+                <EmptyMsg>용어 카드를 열고 해시태그를 눌러보세요.</EmptyMsg>
             )}
-        </div>
+        </Root>
     );
 };
 
