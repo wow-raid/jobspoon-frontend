@@ -1,5 +1,6 @@
 // src/components/RecentSearchList.tsx
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import styled from "styled-components";
 
 type Props = {
     items: string[];
@@ -21,6 +22,105 @@ const COLORS = {
 
 const px = (n: number) => `${n}px`;
 
+/* styled-components */
+const EmptyWrap = styled.div`
+    padding: ${px(16)} ${px(16)};
+    font-size: ${px(14)};
+    color: ${COLORS.textSub};
+`;
+
+const Root = styled.div`
+    max-height: ${px(288)};
+    overflow: auto;
+`;
+
+const SectionTitle = styled.div`
+    padding: ${px(12)} ${px(16)} ${px(8)};
+    font-size: ${px(12)};
+    font-weight: 600;
+    color: ${COLORS.textSub};
+`;
+
+const List = styled.ul`
+    padding: ${px(4)} 0;
+    margin: 0;
+    list-style: none;
+`;
+
+const Row = styled.li<{ $active: boolean; $hovered: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: ${px(8)} ${px(16)};
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 120ms ease;
+  background-color: ${({ $active, $hovered }) =>
+    $active ? COLORS.activeBg : $hovered ? COLORS.hoverBg : "transparent"};
+`;
+
+const SelectBtn = styled.button`
+  text-align: left;
+  flex: 1;
+  outline: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+`;
+
+const ItemContent = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: ${px(8)};
+  font-size: ${px(14)};
+  color: ${COLORS.text};
+`;
+
+const ClockIcon = styled.svg`
+  width: ${px(14)};
+  height: ${px(14)};
+  display: inline-block;
+  color: ${COLORS.textSubLight};
+`;
+
+const DeleteBtn = styled.button<{ $visible: boolean }>`
+  margin-left: ${px(8)};
+  font-size: ${px(12)};
+  color: ${({ $visible }) => ($visible ? "#4b5563" : COLORS.textSubLight)};
+  opacity: ${({ $visible }) => ($visible ? 1 : 0)};
+  transition: opacity 120ms ease, color 120ms ease;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+`;
+
+const Footer = styled.div`
+  border-top: 1px solid ${COLORS.divider};
+  padding: ${px(8)} ${px(16)};
+`;
+
+const ClearBtn = styled.button`
+  font-size: ${px(12)};
+  color: ${COLORS.textSub};
+  background: transparent;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: ${px(4)};
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+`;
+
+const TrashIcon = styled.svg`
+  width: ${px(14)};
+  height: ${px(14)};
+  display: inline-block;
+`;
+
 const RecentSearchList: React.FC<Props> = ({
                                                items,
                                                highlightedIndex,
@@ -32,112 +132,12 @@ const RecentSearchList: React.FC<Props> = ({
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const rootRef = useRef<HTMLDivElement>(null);
 
-    const styles = useMemo(() => {
-        return {
-            emptyWrap: {
-                padding: `${px(16)} ${px(16)}`,
-                fontSize: px(14),
-                color: COLORS.textSub,
-            } as React.CSSProperties,
-
-            root: {
-                maxHeight: px(288),
-                overflow: "auto",
-            } as React.CSSProperties,
-
-            sectionTitle: {
-                padding: `${px(12)} ${px(16)} ${px(8)}`,
-                fontSize: px(12),
-                fontWeight: 600,
-                color: COLORS.textSub,
-            } as React.CSSProperties,
-
-            list: {
-                padding: `${px(4)} 0`,
-                margin: 0,
-                listStyle: "none",
-            } as React.CSSProperties,
-
-            row: (active: boolean, hovered: boolean) =>
-                ({
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: `${px(8)} ${px(16)}`,
-                    cursor: "pointer",
-                    backgroundColor: active ? COLORS.activeBg : hovered ? COLORS.hoverBg : "transparent",
-                    userSelect: "none",
-                    transition: "background-color 120ms ease",
-                }) as React.CSSProperties,
-
-            selectBtn: {
-                textAlign: "left" as const,
-                flex: 1,
-                outline: "none",
-                border: "none",
-                background: "transparent",
-                padding: 0,
-                margin: 0,
-                cursor: "pointer",
-            },
-
-            itemContent: {
-                display: "inline-flex",
-                alignItems: "center",
-                gap: px(8),
-                fontSize: px(14),
-                color: COLORS.text,
-            } as React.CSSProperties,
-
-            clockIcon: {
-                width: px(14),
-                height: px(14),
-                display: "inline-block",
-                color: COLORS.textSubLight,
-            } as React.CSSProperties,
-
-            deleteBtn: (visible: boolean) =>
-                ({
-                    marginLeft: px(8),
-                    fontSize: px(12),
-                    color: visible ? "#4b5563" : COLORS.textSubLight,
-                    opacity: visible ? 1 : 0,
-                    transition: "opacity 120ms ease, color 120ms ease",
-                    background: "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                }) as React.CSSProperties,
-
-            footer: {
-                borderTop: `1px solid ${COLORS.divider}`,
-                padding: `${px(8)} ${px(16)}`,
-            } as React.CSSProperties,
-
-            clearBtn: {
-                fontSize: px(12),
-                color: COLORS.textSub,
-                background: "transparent",
-                border: "none",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: px(4),
-                cursor: "pointer",
-            } as React.CSSProperties,
-
-            trashIcon: {
-                width: px(14),
-                height: px(14),
-                display: "inline-block",
-            } as React.CSSProperties,
-        };
-    }, []);
-
     // 빈 목록
     if (items.length === 0) {
         return (
-            <div role="note" style={styles.emptyWrap} id={listboxId} aria-live="polite">
+            <EmptyWrap role="note" id={listboxId} aria-live="polite">
                 최근 검색어가 없습니다.
-            </div>
+            </EmptyWrap>
         );
     }
 
@@ -151,21 +151,22 @@ const RecentSearchList: React.FC<Props> = ({
     }, [highlightedIndex]);
 
     return (
-        <div ref={rootRef} style={styles.root} id={listboxId} role="listbox" aria-label="최근 검색어">
-            <div style={styles.sectionTitle}>최근 검색어</div>
+        <Root ref={rootRef} id={listboxId} role="listbox" aria-label="최근 검색어">
+            <SectionTitle>최근 검색어</SectionTitle>
 
-            <ul style={styles.list}>
+            <List>
                 {items.map((item, idx) => {
                     const active = idx === highlightedIndex;
                     const hovered = hoveredIndex === idx;
 
                     return (
-                        <li
+                        <Row
                             key={item + idx}
                             data-rs-idx={idx}
                             role="option"
                             aria-selected={active}
-                            style={styles.row(active, hovered)}
+                            $active={active}
+                            $hovered={!!hovered}
                             onMouseDown={(e) => {
                                 // blur 전에 선택 가능하도록
                                 e.preventDefault();
@@ -174,26 +175,30 @@ const RecentSearchList: React.FC<Props> = ({
                             onMouseEnter={() => setHoveredIndex(idx)}
                             onMouseLeave={() => setHoveredIndex(null)}
                         >
-                            <button
+                            <SelectBtn
                                 type="button"
-                                style={styles.selectBtn}
                                 onMouseDown={(e) => e.preventDefault()}
                                 onClick={() => onSelect(item)}
                                 tabIndex={-1}
                                 aria-label={`${item} 선택`}
                             >
-                <span style={styles.itemContent}>
-                  <svg viewBox="0 0 24 24" style={styles.clockIcon}>
-                    <path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
-                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" />
-                  </svg>
-                    {item}
-                </span>
-                            </button>
+                                <ItemContent>
+                                    <ClockIcon viewBox="0 0 24 24">
+                                        <path
+                                            d="M12 7v5l3 3"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            fill="none"
+                                            strokeLinecap="round"
+                                        />
+                                        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" />
+                                    </ClockIcon>
+                                    {item}
+                                </ItemContent>
+                            </SelectBtn>
 
-                            <button
+                            <DeleteBtn
                                 type="button"
-                                style={styles.deleteBtn(hovered)}
                                 aria-label={`${item} 삭제`}
                                 onMouseDown={(e) => {
                                     e.preventDefault();
@@ -205,29 +210,34 @@ const RecentSearchList: React.FC<Props> = ({
                                 }}
                                 tabIndex={-1}
                                 title="삭제"
+                                $visible={!!hovered}
                             >
                                 ✕
-                            </button>
-                        </li>
+                            </DeleteBtn>
+                        </Row>
                     );
                 })}
-            </ul>
+            </List>
 
-            <div style={styles.footer}>
-                <button
+            <Footer>
+                <ClearBtn
                     type="button"
-                    style={styles.clearBtn}
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={onClear}
                     aria-label="최근 검색어 전체 삭제"
                 >
-                    <svg viewBox="0 0 24 24" style={styles.trashIcon}>
-                        <path d="M3 6h18M8 6v12m8-12v12M5 6l1 14a2 2 0 002 2h8a2 2 0 002-2l1-14" stroke="currentColor" strokeWidth="2" fill="none" />
-                    </svg>
+                    <TrashIcon viewBox="0 0 24 24">
+                        <path
+                            d="M3 6h18M8 6v12m8-12v12M5 6l1 14a2 2 0 002 2h8a2 2 0 002-2l1-14"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            fill="none"
+                        />
+                    </TrashIcon>
                     전체 삭제
-                </button>
-            </div>
-        </div>
+                </ClearBtn>
+            </Footer>
+        </Root>
     );
 };
 

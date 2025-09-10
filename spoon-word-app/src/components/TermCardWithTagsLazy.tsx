@@ -15,8 +15,7 @@ const TAGS_CACHE = new Map<number, string[]>();
 const PENDING = new Map<number, Promise<string[]>>();
 
 /** 기본 fetcher: GET /api/terms/{id}/tags -> ["DOM","HTML",...] */
-const defaultFetcher = async (id: number) => {
-    // ★ 타입 보정: Axios 제네릭은 응답 데이터 타입(string[])을 명시
+const defaultFetcher = async (id: number): Promise<string[]> => {
     const { data } = await axiosInstance.get<string[]>(`/terms/${id}/tags`);
     return Array.isArray(data) ? data.filter(Boolean) : [];
 };
@@ -25,7 +24,7 @@ const defaultFetcher = async (id: number) => {
 async function fetchTagsOnce(
     id: number,
     fetcher: (id: number) => Promise<string[]>
-) {
+): Promise<string[]> {
     if (TAGS_CACHE.has(id)) return TAGS_CACHE.get(id)!;
     if (PENDING.has(id)) return PENDING.get(id)!;
 
@@ -43,7 +42,7 @@ async function fetchTagsOnce(
     return p;
 }
 
-/** 테스트/핫리로드용 캐시 유틸(선택) */
+/** 테스트/핫리로드용 캐시 유틸 */
 export const TagCache = {
     get: (id: number) => TAGS_CACHE.get(id),
     has: (id: number) => TAGS_CACHE.has(id),
@@ -64,9 +63,7 @@ const TermCardWithTagsLazy: React.FC<Props> = ({
                                                    fallbackApi,
                                                }) => {
     // tags가 주어지면 그대로 사용, 없으면 lazy 로딩
-    const [loadedTags, setLoadedTags] = React.useState<string[] | null>(
-        tags ?? null
-    );
+    const [loadedTags, setLoadedTags] = React.useState<string[] | null>(tags ?? null);
 
     React.useEffect(() => {
         let cancelled = false;
