@@ -28,24 +28,62 @@ export const githubAuthenticationAction = {
     //     }
     // },
 
-    async requestGithubLoginToDjango(): Promise<void> {
-        // GitHub 로그인 시작 URL을 Django에서 받아와, 해당 URL로 브라우저를 이동.
-        console.log("requestGithubLoginToDjango") // 디버깅 로그.
+    async requestGithubLoginToSpringBoot(): Promise<void> {
+        // GitHub OAuth 로그인을 시작하기 위한 Spring Boot 백엔드에게 "승인 URL"을 달라고 요청한다.
+        // 응답으로 받은 승인 URL(https://github.com/login/oauth/authorize?... 형태)로 브라우저를 리다이렉트한다.
 
-        const { djangoAxiosInstance,springAxiosInstance } = axiosUtility.createAxiosInstances()
-        // Django axios 인스턴스 획득.
+        console.log("requestGithubLoginToSpringBoot"); // 디버깅 로그를 남긴다.
+
+        // 프로젝트 공용 Axios 유틸에서 백엔드별 인스턴스를 만든다.
+        // - springAxiosInstance: baseURL, 공통 헤더, withCredentials 등 사전 설정이 되어 있다고 가정한다.
+        // - djangoAxiosInstance: 여기서는 사용하지 않는다(불필요하다).
+        const { springAxiosInstance } = axiosUtility.createAxiosInstances();
 
         try {
-            return springAxiosInstance.get('/github-authentication/request-login-url').then((res) => {
-                console.log(`res: ${res}`) // 응답 객체 로깅.
-                window.location.href = res.data.url // 서버가 제공한 GitHub OAuth 승인 URL로 리다이렉션.
-            })
-            // GET /github-oauth/request-login-url → { url: string }
-            // 실제 브라우저 이동은 window.location.href로 수행.
+            // [요청 방식]
+            // - HTTP 메서드: GET.
+            // - URL: {springAxiosInstance.baseURL}/github-authentication/request-login-url.
+            // - 요청 본문: 없음(GET이므로).
+            // - 요청 헤더: axios 인스턴스에 설정된 기본 헤더 사용(예: Content-Type: application/json).
+            //              필요 시 쿠키/세션이 있다면 withCredentials 옵션으로 함께 전송될 수 있다.
+            // - 쿼리 파라미터: 없음(백엔드가 서버 측에서 client_id, redirect_uri, scope, state 등을 조립한다고 가정).
+            //
+            // [응답 기대 형식]
+            // - HTTP 200 OK.
+            // - Content-Type: application/json.
+            // - Body(JSON): { "url": "https://github.com/login/oauth/authorize?..."}.
+            //   ⮑ url 속성은 사용자를 보내야 할 GitHub OAuth 승인 페이지의 절대 경로여야 한다.
+            //
+            // [에러 케이스]
+            // - 4xx: 잘못된 요청/권한 없음(예: 401, 403). 백엔드는 { message: string } 형태로 에러 메시지를 줄 수 있다.
+            // - 5xx: 서버 내부 오류(예: 500). 프론트는 콘솔 로그 등으로 원인을 확인한다.
+            return springAxiosInstance
+                .get("/github-authentication/request-login-url")
+                .then((res) => {
+
+                    // [동작]
+                    // - 받은 승인 URL로 현재 탭을 리다이렉트한다.
+                    // - 이후 사용자는 GitHub 로그인 → 권한 승인 → redirect_uri로 콜백된다.
+                    const url = (typeof res.data === "string" ? res.data : res.data?.url) ?? "";
+                    if (res.status === 200 && typeof url === "string" && /^https?:\/\//i.test(url)) {
+                        // window.location.href = url;
+
+                        console.log("receive url = ",url);
+                        // 팝업으로 열기
+                        const popup = window.open(url, '_blank', 'width=500,height=600');
+                        if (!popup) {
+                            alert('팝업 차단되어 있습니다. 팝업 허용 후 다시 시도하세요.');
+                            return;
+                        }
+                    }
+                });
         } catch (error) {
-            console.log('requestGithubLoginToDjango() 중 에러:', error) // 예외 로깅.
+            // 주의: 위에서 .then()을 사용했기 때문에 이 try/catch는 네트워크 에러를 항상 잡지 못할 수 있다.
+            //       에러를 온전히 잡으려면 await 문법으로 바꾸는 것이 안전하다(아래 개선안 참고).
+            console.log("requestGithubLoginToSpringBoot() 중 에러:", error);
         }
     },
+
 
     async requestAccessToken(code: string): Promise<string | null> {
         // GitHub 콜백에서 받은 code를 Django에 전달해 userToken(JWT 등)을 발급받음.
