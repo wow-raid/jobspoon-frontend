@@ -238,26 +238,36 @@ const Schedule: React.FC = () => {
 
     try {
       if (editingEvent) {
-        // (추후 구현) 수정 로직
-        // await axiosInstance.put(`/study-rooms/${studyId}/schedules/${editingEvent.id}`, requestData);
+        await axiosInstance.put(`/study-rooms/${studyId}/schedules/${editingEvent.id}`, requestData);
+        alert("일정이 성공적으로 수정되었습니다."); // 메시지 변경
       } else {
         // 생성 로직
         await axiosInstance.post(`/study-rooms/${studyId}/schedules`, requestData);
+        alert("일정이 성공적으로 등록되었습니다.");
       }
-      alert("일정이 성공적으로 등록되었습니다.");
       closeFormModal();
-      fetchSchedules(); // ✅ 목록을 다시 불러와 화면 갱신
+      fetchSchedules();
     } catch (error) {
       console.error("일정 저장에 실패했습니다:", error);
       alert("일정 저장 중 오류가 발생했습니다.");
     }
   };
 
-  const handleDeleteEvent = () => {
+  const handleDeleteEvent = async () => {
     if (!selectedEvent) return;
+
     if (window.confirm("정말로 일정을 삭제하시겠습니까?")) {
-      setEvents(prev => prev.filter(e => e.id !== selectedEvent.id));
-      setIsDetailModalOpen(false);
+      try {
+        await axiosInstance.delete(`/study-rooms/${studyId}/schedules/${selectedEvent.id}`);
+
+        alert("일정이 성공적으로 삭제되었습니다.");
+        setIsDetailModalOpen(false);
+        fetchSchedules();
+
+      } catch (error) {
+        console.error("일정 삭제에 실패했습니다:", error);
+        alert("일정 삭제 중 오류가 발생했습니다.");
+      }
     }
   };
 
@@ -350,9 +360,9 @@ const Schedule: React.FC = () => {
         {selectedEvent && (
             <EventDetail
                 event={selectedEvent}
-                currentUser={{ id: currentUserId }}
-                onEdit={() => {}}
-                onDelete={() => {}}
+                currentUser={{ id: currentUserId, role: userRole }}
+                onEdit={handleEditEvent}
+                onDelete={handleDeleteEvent}
             />
         )}
       </Modal>

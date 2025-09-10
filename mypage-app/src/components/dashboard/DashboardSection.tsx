@@ -10,11 +10,13 @@ import {
     QuizCompletionResponse,
     WritingCountResponse,
     TrustScoreResponse
-} from "../api/dashboardApi.ts";
+} from "../../api/dashboardApi.ts";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import styled from "styled-components";
 import RankSection from "./RankSection.tsx";
 import TitleSection from "./TitleSection.tsx";
+import TrustScoreModal from "../modals/TrustScoreModal.tsx";
+import WritingModal from "../modals/WritingModal.tsx";
 
 const COLORS = ["rgb(59,130,246)", "rgb(229,231,235)"]; // 파랑 / 회색
 
@@ -30,11 +32,13 @@ function DonutChart({
                         label,
                         unit,
                         max = 100,
+                        onDetailClick,
                     }: {
     value: number;
     label: string;
     unit: string;
     max?: number;
+    onDetailClick?: () => void;
 }) {
     const percent = Math.min(100, (value / max) * 100); // % 변환
 
@@ -65,6 +69,11 @@ function DonutChart({
                 </CenterText>
             </ChartWrapper>
             <DonutLabel>{label}</DonutLabel>
+
+            {/* 신뢰 점수일 때만 버튼 */}
+            {label === "신뢰 점수" && (
+                <DetailButton onClick={onDetailClick}>자세히 보기</DetailButton>
+            )}
         </DonutCard>
     );
 }
@@ -75,6 +84,8 @@ export default function DashboardSection() {
     const [quiz, setQuiz] = useState<QuizCompletionResponse | null>(null);
     const [writing, setWriting] = useState<WritingCountResponse | null>(null);
     const [trust, setTrust] = useState<TrustScoreResponse | null>(null);
+    const [trustModalOpen, setTrustModalOpen] = useState(false);
+    const [writingModalOpen, setWritingModalOpen] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem("userToken");
@@ -114,14 +125,9 @@ export default function DashboardSection() {
                         <strong>{quiz.quizTotalCount}개</strong>
                     </TopCard>
                     <TopCard>
-                        <p>리뷰 작성</p>
-                        <strong>{writing.reviewCount}개</strong>
-                        <p>스터디룸 개설</p>
-                        <strong>{writing.studyroomCount}개</strong>
-                        <p>댓글 작성</p>
-                        <strong>{writing.commentCount}개</strong>
                         <p>총 글 작성</p>
                         <strong>{writing.totalCount}개</strong>
+                        <DetailButton onClick={() => setWritingModalOpen(true)}>자세히 보기</DetailButton>
                     </TopCard>
                 </TopCardGrid>
 
@@ -130,9 +136,23 @@ export default function DashboardSection() {
                     <DonutChart value={attendance.attendanceRate} label="이번 달 출석률" unit="%" max={100} />
                     <DonutChart value={interview.interviewMonthlyCount} label="이번 달 모의면접" unit="회" max={10} />
                     <DonutChart value={quiz.quizMonthlyCount} label="이번 달 문제풀이" unit="개" max={20} />
-                    <DonutChart value={trust.trustScore} label="신뢰 점수" unit="점" max={100} />
+                    <DonutChart value={trust.trustScore} label="신뢰 점수" unit="점" max={100} onDetailClick={() => setTrustModalOpen(true)} />
                 </DonutGrid>
             </Section>
+
+            {/* 글작성 모달 */}
+            <WritingModal
+                isOpen={writingModalOpen}
+                onClose={() => setWritingModalOpen(false)}
+                writing={writing}
+            />
+
+            {/* 신뢰점수 모달 */}
+            <TrustScoreModal
+                isOpen={trustModalOpen}
+                onClose={() => setTrustModalOpen(false)}
+                trust={trust}   // ✅ 여기서 trust 넘겨주기
+            />
 
             {/* 나의 랭크 현황 */}
             <Section>
@@ -148,7 +168,6 @@ export default function DashboardSection() {
 }
 
 /* ================== styled-components ================== */
-
 const Section = styled.section`
   padding: 24px;
   border-radius: 12px;
@@ -247,4 +266,15 @@ const DonutLabel = styled.p`
   font-size: 14px;
   color: rgb(107, 114, 128);
   margin-top: 12px;
+`;
+
+const DetailButton = styled.button`
+  margin-top: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  background: rgb(59,130,246);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
 `;
