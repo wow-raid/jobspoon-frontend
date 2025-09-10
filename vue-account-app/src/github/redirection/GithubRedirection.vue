@@ -2,7 +2,7 @@
   <div></div> <!-- 빈 컨테이너를 렌더링. 콜백 전용 페이지 역할. -->
 </template>
 
-<script setup> <!-- Vue 3 <script setup> 문법 사용. 컴포지션 API 간결화. -->
+<script setup>
 
 import { onMounted } from "vue"; // 마운트 시점 훅을 임포트.
 import { useRouter, useRoute } from "vue-router"; // 라우터, 현재 라우트 접근 훅.
