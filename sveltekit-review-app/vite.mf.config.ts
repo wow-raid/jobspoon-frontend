@@ -1,18 +1,23 @@
 // vite.mf.config.ts
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import federation from '@originjs/vite-plugin-federation';
+import { federation } from '@module-federation/vite';
 import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig({
     plugins: [
-        svelte(),
+        // ✅ federation 먼저
         federation({
             name: 'svelteKitReviewApp',
             filename: 'remoteEntry.js',
-            exposes: { './App': './src/lib/index.ts' },
-            shared: ['svelte']
-        })
+            exposes: {
+                './mount': './src/mf/boot.ts',
+                './ReviewWidget': './src/lib/ReviewWidget.svelte',
+            },
+            // 교차 번들러 공유 이슈 피하기: 비우거나 최소화
+            shared: {}
+        }),
+        svelte(),
     ],
     resolve: {
         dedupe: ['svelte'],
@@ -20,8 +25,8 @@ export default defineConfig({
     },
     server: {
         port: 5174,
-        strictPort: true,     // ← 포트 점유 시 실패(자동 변경 방지)
-        host: true,           // ← 외부 접근 허용(호스트 프로세스에서 접근 가능)
+        strictPort: true,
+        host: true,
         cors: true,
         headers: { 'Access-Control-Allow-Origin': '*' }
     },
@@ -29,5 +34,9 @@ export default defineConfig({
         target: 'esnext',
         modulePreload: false,
         outDir: 'dist/mf'
+    },
+    optimizeDeps: {
+        // svelte를 미리 번들하지 않게 (드물게 필요한 경우)
+        exclude: ['svelte']
     }
 });
