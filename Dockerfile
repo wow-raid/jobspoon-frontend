@@ -5,17 +5,6 @@ WORKDIR /app
 
 # 소스 전체 복사
 COPY . .
-# 모든 앱에 필요한 환경 변수 설정
-ENV MFE_CORS_ORIGIN=https://job-spoon.com
-ENV VUE_ACCOUNT_APP=/vue-account-app/
-ENV VUE_AI_INTERVIEW_APP=/vue-ai-interview-app/
-ENV REACT_NAVIGATION_APP=/navigation-bar-app/
-ENV REACT_STUDYROOM_APP=/studyroom-app/
-ENV REACT_MYPAGE_APP=/mypage-app/
-ENV REACT_SPOON_WORD_APP=/spoon-word-app/
-ENV SVELTE_REVIEW_APP=/svelte-review-app/
-ENV SVELTEKIT_REVIEW_APP=/sveltekit-review-app/
-
 # 먼저 모든 의존성 설치
 RUN npm install
 
