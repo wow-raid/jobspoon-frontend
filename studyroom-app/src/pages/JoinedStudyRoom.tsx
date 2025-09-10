@@ -172,7 +172,7 @@ const JoinedStudyRoom: React.FC = () => {
                 </Sidebar>
 
                 <ContentArea className="room-content-area">
-                    <Outlet context={{ studyId, userRole }} />
+                    <Outlet context={{ studyId, userRole, onLeaveOrClose: handleLeaveOrClose }} />
                 </ContentArea>
             </Main>
         </Container>
