@@ -1,0 +1,79 @@
+.page-top {
+    text-align: center;
+    padding: 20px 0 40px 0;
+    border-bottom: 1px solid #3e414f;
+    margin-bottom: 32px;
+}
+
+.page-main-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 12px 0;
+}
+
+.page-subtitle {
+    font-size: 1rem;
+    color: #a0a0a0;
+    margin: 0;
+}
+
+.list-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.list-page-header h2 {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.list-page-header h2 span {
+    font-size: 20px;
+    color: #a0a0a0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+/* 신청내역 버튼 스타일 */
+.nav-btn-secondary {
+    background-color: #3a3f4c;
+    color: white;
+    text-decoration: none;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+/* 신청내역 버튼에 마우스가 갔을때 색변환 스타일 */
+.nav-btn-secondary:hover {
+    background-color: #4b5563;
+}
+
+/* 스터디 생성 버튼 스타일 */
+.create-study-btn {
+    background-color: #5865f2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.study-list-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 30px;
+}

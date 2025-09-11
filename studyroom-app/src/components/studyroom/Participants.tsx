@@ -3,16 +3,17 @@ import React, { useEffect, useState, useCallback } from 'react';
 import styled from 'styled-components';
 import { useOutletContext, useParams } from 'react-router-dom';
 import axiosInstance from "../../api/axiosInstance";
-import { StudyMember, FAKE_STUDY_MEMBERS } from '../../data/mockData';
+import { useAuth } from "../../hooks/useAuth";
 
 interface Member {
-    id: number; // accountProfileId
+    id: number;
     nickname: string;
     role: 'LEADER' | 'MEMBER';
 }
 
 interface StudyRoomContext {
-    userRole: 'LEADER' | 'MEMBER';
+    studyId: string;
+    userRole: 'LEADER' | 'MEMBER' | null;
     onLeaveOrClose: () => void;
 }
 
@@ -139,9 +140,10 @@ const LeaveButton = styled.button`
 `;
 
 const Participants: React.FC = () => {
-    const { userRole, onLeaveOrClose } = useOutletContext<StudyRoomContext>();
-    const { id: studyId } = useParams<{ id: string }>(); // URL에서 studyId 가져오기
+    const { studyId, userRole, onLeaveOrClose } = useOutletContext<StudyRoomContext>();
+    const { currentUserId } = useAuth();
     const [members, setMembers] = useState<Member[]>([]);
+
     const fetchMembers = useCallback(async () => {
         if (!studyId) return;
         try {
@@ -156,13 +158,14 @@ const Participants: React.FC = () => {
         fetchMembers();
     }, [fetchMembers]);
 
-    const handleKickMember = async (memberId: number, memberName: string) => {
-        if (window.confirm(`정말로 '${memberName}'님을 강퇴하시겠습니까?`)) {
+    const handleKickMember = async (memberId: number, memberNickname: string) => {
+        if (window.confirm(`정말로 '${memberNickname}'님을 강퇴하시겠습니까?`)) {
             try {
                 await axiosInstance.delete(`/study-rooms/${studyId}/members/${memberId}`);
-                alert(`${memberName}님을 강퇴했습니다.`);
+                alert(`${memberNickname}님을 강퇴했습니다.`);
                 fetchMembers(); // 멤버 목록 새로고침
             } catch (error) {
+                console.error("멤버 강퇴 실패:", error);
                 alert("멤버 강퇴에 실패했습니다.");
             }
         }
@@ -198,13 +201,11 @@ const Participants: React.FC = () => {
                         participants.map(p => (
                             <MemberItem key={p.id}>
                                 <MemberInfo>
-                                    {/* 👇 3. .name 대신 .nickname을 사용합니다. */}
                                     <MemberName>{p.nickname}</MemberName>
                                 </MemberInfo>
                                 <MemberActions>
                                     <RoleBadge $type="member">참가자</RoleBadge>
-                                    {/* 👇 userRole도 대문자로 비교합니다. */}
-                                    {userRole === 'LEADER' && (
+                                    {userRole === 'LEADER' && p.id !== currentUserId && (
                                         <KickButton onClick={() => handleKickMember(p.id, p.nickname)}>강퇴하기</KickButton>
                                     )}
                                 </MemberActions>
