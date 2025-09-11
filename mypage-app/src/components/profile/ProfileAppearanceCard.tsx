@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { ProfileAppearanceResponse } from "../../api/profileAppearanceApi.ts";
 import { FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import defaultProfile from "../../assets/default_profile.png";
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 export default function ProfileAppearanceCard({profile}: {profile: ProfileAppearanceResponse}) {
     const navigate = useNavigate();
+    const [isOpen, setIsOpen] = useState(true);
 
     if (!profile) {
         return <p>불러오는 중...</p>;
@@ -14,50 +16,60 @@ export default function ProfileAppearanceCard({profile}: {profile: ProfileAppear
 
     return (
         <Card>
-            <ImageWrapper>
-            {/* 프로필 이미지 */}
-                <ProfileImage
-                    src={profile.photoUrl || defaultProfile}
-                    alt="profile"
-                    onError={(e) => {
-                        (e.target as HTMLImageElement).src = defaultProfile;
-                    }}
-                />
-            </ImageWrapper>
+            {/* 헤더 */}
+            <Header onClick={() => setIsOpen(!isOpen)}>
+                <span>내 프로필</span>
+                <ArrowIcon>
+                    {isOpen ? <FaChevronUp /> : <FaChevronDown />}
+                </ArrowIcon>
+            </Header>
 
-            {/* 기본 정보 */}
-            <InfoTable>
-                <tbody>
-                <tr>
-                    <LabelCell>등급</LabelCell>
-                    <Separator>|</Separator>
-                    <ValueCell>{profile.rank?.displayName ?? "등급 없음"}</ValueCell>
-                </tr>
-                <tr>
-                    <LabelCell>칭호</LabelCell>
-                    <Separator>|</Separator>
-                    <ValueCell>{profile.title?.displayName ?? "칭호 없음"}</ValueCell>
-                </tr>
-                <tr>
-                    <LabelCell>별명</LabelCell>
-                    <Separator>|</Separator>
-                    <ValueCell>{profile.customNickname}</ValueCell>
-                </tr>
-                <tr>
-                    <LabelCell>계정</LabelCell>
-                    <Separator>|</Separator>
-                    <ValueCell>{profile.email}</ValueCell>
-                </tr>
-                </tbody>
-            </InfoTable>
+            {/* 본문 (토글됨) */}
+            {isOpen && (
+                <Content>
+                    <ImageWrapper>
+                        <ProfileImage
+                            src={profile.photoUrl || defaultProfile}
+                            alt="profile"
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).src = defaultProfile;
+                            }}
+                        />
+                    </ImageWrapper>
 
-            {/* 수정 버튼 */}
-            <ButtonWrapper>
-                <EditButton onClick={() => navigate("/mypage/profile/edit")}>
-                    <FaEdit />
-                    수정하기
-                </EditButton>
-            </ButtonWrapper>
+                    <InfoTable>
+                        <tbody>
+                        <tr>
+                            <LabelCell>등급</LabelCell>
+                            <Separator>|</Separator>
+                            <ValueCell>{profile.rank?.displayName ?? "등급 없음"}</ValueCell>
+                        </tr>
+                        <tr>
+                            <LabelCell>칭호</LabelCell>
+                            <Separator>|</Separator>
+                            <ValueCell>{profile.title?.displayName ?? "칭호 없음"}</ValueCell>
+                        </tr>
+                        <tr>
+                            <LabelCell>별명</LabelCell>
+                            <Separator>|</Separator>
+                            <ValueCell>{profile.customNickname}</ValueCell>
+                        </tr>
+                        <tr>
+                            <LabelCell>계정</LabelCell>
+                            <Separator>|</Separator>
+                            <ValueCell>{profile.email}</ValueCell>
+                        </tr>
+                        </tbody>
+                    </InfoTable>
+
+                    <ButtonWrapper>
+                        <EditButton onClick={() => navigate("/mypage/profile/edit")}>
+                            <FaEdit />
+                            수정하기
+                        </EditButton>
+                    </ButtonWrapper>
+                </Content>
+            )}
         </Card>
     );
 }
@@ -65,28 +77,47 @@ export default function ProfileAppearanceCard({profile}: {profile: ProfileAppear
 /* ================== styled-components ================== */
 
 const Card = styled.div`
-    border: 1px solid rgb(229, 231, 235); /* 회색 얇은 테두리 */
+    border: 1px solid rgb(229, 231, 235);
     border-radius: 12px;
-    box-shadow: none;
-    padding: 16px; /* 패딩 조금 줄임 */
-    text-align: center;
+    padding: 12px;
     background: rgb(249, 250, 251);
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
+`;
 
-    width: 100%;          /* 사이드바 폭에 맞게 */
-    max-width: 100%;      /* 강제 제한 제거 */
-    min-width: auto;      /* 최소 보장 제거 */
-    word-break: break-all; /* 긴 이메일 줄바꿈 */
+const Header = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: rgb(17, 24, 39);
+    cursor: pointer;
+`;
+
+const ArrowIcon = styled.span`
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgb(59, 130, 246);
+    color: white;
+    border-radius: 6px;
+    font-size: 14px;
+`;
+
+const Content = styled.div`
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
 `;
 
 const ImageWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
 `;
-
 
 const ProfileImage = styled.img`
     width: 160px;
@@ -97,30 +128,30 @@ const ProfileImage = styled.img`
 `;
 
 const InfoTable = styled.table`
-  margin: 0 auto;
-  font-size: 14px;
-  line-height: 28px;
-  border-collapse: separate;
-  border-spacing: 8px 0;
+    margin: 0 auto;
+    font-size: 14px;
+    line-height: 28px;
+    border-collapse: separate;
+    border-spacing: 8px 0;
 `;
 
 const LabelCell = styled.td`
-  text-align: right;
-  font-weight: 600;
-  color: rgb(55, 65, 81);
-  white-space: nowrap;
+    text-align: right;
+    font-weight: 600;
+    color: rgb(55, 65, 81);
+    white-space: nowrap;
 `;
 
 const Separator = styled.td`
-  text-align: center;
-  color: rgb(209, 213, 219);
+    text-align: center;
+    color: rgb(209, 213, 219);
 `;
 
 const ValueCell = styled.td`
     text-align: left;
     color: rgb(31, 41, 55);
-    word-break: break-all;   /* 긴 단어 강제 줄바꿈 */
-    white-space: normal;     /* nowrap 제거 → 줄바꿈 허용 */
+    word-break: break-all;
+    white-space: normal;
 `;
 
 const ButtonWrapper = styled.div`
@@ -137,7 +168,7 @@ const EditButton = styled.button`
     font-size: 13px;
     color: white;
     background: rgb(59, 130, 246);
-    border: none;          /* 기본 검정 테두리 제거 */
+    border: none;
     border-radius: 6px;
     cursor: pointer;
     transition: background 0.2s ease-in-out;
