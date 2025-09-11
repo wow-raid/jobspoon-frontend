@@ -5,24 +5,21 @@ WORKDIR /app
 
 # 소스 전체 복사
 COPY . .
-# vue-account-app 및 vue-ai-interview-app 빌드 시
-ENV MFE_CORS_ORIGIN=https://job-spoon.com
+# 먼저 모든 의존성 설치
+RUN npm install
 
-RUN npm install \
-  && npm -ws run build -w @jobspoon/theme-bridge -w @jobspoon/app-state
+# 공통 패키지 빌드
+RUN npm -ws run build -w @jobspoon/theme-bridge -w @jobspoon/app-state
 
-# 예: Svelte 관련 앱 제외
-RUN npm install \
-  && echo "// 각 앱 publicPath 수정" \
-  && find main-container navigation-bar-app vue-account-app vue-ai-interview-app studyroom-app mypage-app spoon-word-app -name "rspack.config.ts" \
-       -exec sed -i'' -e 's|publicPath: "auto"|publicPath: "/"+__dirname.split("/").pop()+"/"|g' {} \; \
-  && cd main-container && npm run build && cd .. \
-  && cd navigation-bar-app && npm run build && cd .. \
-  && cd vue-account-app && npm run build && cd .. \
-  && cd vue-ai-interview-app && npm run build && cd .. \
-  && cd studyroom-app && npm run build && cd .. \
-  && cd mypage-app && npm run build && cd .. \
-  && cd spoon-word-app && npm run build && cd ..
+
+# 각 앱 빌드 (npx를 사용하여 로컬 바이너리 실행)
+RUN cd main-container && npx rspack build && cd .. \
+  && cd navigation-bar-app && npx rspack build && cd .. \
+  && cd vue-account-app && npx rspack build && cd .. \
+  && cd vue-ai-interview-app && npx rspack build && cd .. \
+  && cd studyroom-app && npx rspack build && cd .. \
+  && cd mypage-app && npx rspack build && cd .. \
+  && cd spoon-word-app && npx rspack build && cd ..
 
 
 # 2단계: Nginx
