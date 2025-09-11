@@ -1,0 +1,123 @@
+.announcements-container {
+    width: 100%;
+}
+
+.announcements-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #3e414f;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+}
+
+.announcements-header h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.write-btn {
+    background-color: #5865f2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.announcements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.announcement-item {
+    background-color: #1e2129;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    transition: all 0.2s ease-in-out;
+    overflow: hidden;
+    display: flex; /* 👇 자식 요소 정렬을 위해 flex 추가 */
+    align-items: center;
+    gap: 16px;
+}
+
+.announcement-item.clickable {
+    cursor: pointer;
+}
+
+.announcement-item.clickable:hover {
+    background-color: #24262d;
+    transform: scale(1.02);
+    border-color: #5865f2;
+}
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.item-title {
+    font-weight: 600;
+    color: #e0e0e0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+.item-meta {
+    font-size: 12px;
+    color: #8c92a7;
+    flex-shrink: 0;
+}
+/* 👇 텍스트 영역이 남은 공간을 모두 차지하도록 */
+.item-main-content {
+    flex-grow: 1;
+    min-width: 0;
+}
+.search-bar {
+    margin-bottom: 20px;
+}
+.search-bar input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 6px;
+    border: 1px solid #3e414f;
+    background-color: #1e2129;
+    color: #d1d5db;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+/* 👇 고정된 공지사항 스타일 */
+.announcement-item.pinned {
+    background-color: rgba(88, 101, 242, 0.1); /* 은은한 파란색 배경 */
+    border-left: 3px solid #5865f2;
+}
+
+/* 👇 고정 버튼 스타일 */
+.pin-button {
+    background-color: #3a3f4c;
+    color: #d1d5db;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    flex-shrink: 0; /* 버튼이 줄어들지 않도록 */
+    transition: background-color 0.2s;
+}
+.pin-button:hover {
+    background-color: #4b5563;
+}
+.announcement-item.pinned .pin-button {
+    background-color: #5865f2;
+    color: white;
+}

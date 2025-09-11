@@ -1,0 +1,85 @@
+.test-interview-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.test-interview-container h2 {
+    font-size: 22px;
+    margin: 0 0 16px 0;
+}
+
+.test-interview-container p {
+    font-size: 15px;
+    color: #a0a0a0;
+    line-height: 1.6;
+    margin-bottom: 32px;
+}
+
+.channel-btns {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.channel-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #2d3748;
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    padding: 16px;
+    width: 100px;
+    height: 100px;
+    transition: background-color 0.2s;
+}
+.channel-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px; /* 아이콘 버튼과 수정 버튼 사이 간격 */
+}
+.channel-btn:hover {
+    background-color: #4a5568;
+}
+
+.channel-icon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 8px;
+}
+
+.channel-name {
+    font-size: 14px;
+}
+.edit-link-btn {
+    background-color: transparent;
+    color: #a0a0a0;
+    border: 1px solid #4a5568;
+    border-radius: 12px;
+    padding: 4px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.edit-link-btn:hover {
+    border-color: #a0a0a0;
+    color: white;
+}
+
+.channel-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* 비활성화된 버튼은 호버 효과 없음 */
+.channel-btn.disabled:hover {
+    background-color: #2d3748; /* 원래 배경색 유지 */
+}
