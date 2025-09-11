@@ -3,6 +3,7 @@ import { defineConfig } from "@rspack/cli";
 import { DefinePlugin, rspack } from "@rspack/core";
 import { ModuleFederationPlugin } from "@module-federation/enhanced/rspack";
 import { VueLoaderPlugin } from "vue-loader";
+import 'dotenv/config';
 
 import { mfConfig } from "./module-federation.config";
 
