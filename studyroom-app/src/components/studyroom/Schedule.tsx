@@ -7,10 +7,11 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import Modal from "../Modal";
 import EventForm from "./EventForm";
 import EventDetail from "./EventDetail";
-import { useOutletContext } from "react-router-dom";
+import { NavLink, useOutletContext, useParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { Schedule } from "../../types/study"
 import axiosInstance from "../../api/axiosInstance";
+import TabSearchBar from "./TabSearchBar";
 
 moment.locale("ko");
 const localizer = momentLocalizer(moment);
@@ -19,6 +20,43 @@ interface ScheduleContext {
   studyId: string;
   userRole: "LEADER" | "MEMBER";
 }
+
+const NavContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid ${({ theme }) => theme.border};
+
+  background-color: ${({ theme }) => theme.surface};
+  padding: 12px 20px;
+  border-radius: 8px;
+`;
+
+/* --- NEW: Tab Navigation styled-components --- */
+const TabList = styled.nav`
+  display: flex;
+  gap: 8px;
+`;
+
+const TabLink = styled(NavLink)`
+  padding: 10px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.subtle};
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: ${({ theme }) => theme.fg};
+  }
+
+  &.active {
+    color: ${({ theme }) => theme.accent ?? theme.primary};
+    border-bottom-color: ${({ theme }) => theme.accent ?? theme.primary};
+  }
+`;
+/* --- End of Tab Navigation --- */
 
 /* ─ styled-components (scoped) ─ */
 const Container = styled.div`
@@ -29,12 +67,18 @@ const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  padding: 0 8px 24px 8px;
 
   h2 {
     margin: 0;
     font-size: 20px;
     color: ${({ theme }) => theme.fg};
+    span {
+      font-size: 16px;
+      font-weight: 500;
+      color: ${({ theme }) => theme.subtle};
+      margin-left: 8px;
+    }
   }
 `;
 
@@ -54,6 +98,7 @@ const AddEventBtn = styled.button`
 
 /* react-big-calendar 오버라이드 */
 const CalendarWrapper = styled.div`
+  margin-top: 24px;
   background-color: ${({ theme }) => theme.surface};
   padding: 16px;
   border-radius: 8px;
@@ -126,10 +171,14 @@ const CalendarWrapper = styled.div`
 `;
 
 const MonthlyList = styled.div`
-  margin-top: 32px;
+  margin-top: 24px;
+  background-color: ${({ theme }) => theme.surface};
+  border-radius: 8px;
+  padding: 24px;
 
   h3 {
     font-size: 18px;
+    margin-top: 0;
     margin-bottom: 16px;
     border-left: 3px solid ${({ theme }) => theme.accent ?? theme.primary};
     padding-left: 8px;
@@ -174,6 +223,7 @@ const MonthlyTime = styled.div`
 `;
 
 const Schedule: React.FC = () => {
+  // const { id: studyRoomId } = useParams<{ id: string }>();
   const { studyId, userRole } = useOutletContext<ScheduleContext>();
   const { currentUserId } = useAuth();
 
@@ -188,6 +238,8 @@ const Schedule: React.FC = () => {
 
   const [selectedEvent, setSelectedEvent] = useState<Schedule | null>(null);
   const [editingEvent, setEditingEvent] = useState<Schedule | null>(null);
+
+  const [searchTerm, setSearchTerm] = useState('');
 
   // ✅ [추가] 일정 목록을 불러오는 함수
   const fetchSchedules = useCallback(async () => {
@@ -295,6 +347,16 @@ const Schedule: React.FC = () => {
     [events, currentDate]
   );
 
+  const filteredMonthlyEvents = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return monthlyEvents;
+    }
+    const lowercasedTerm = searchTerm.toLowerCase();
+    return monthlyEvents.filter(event =>
+        event.title.toLowerCase().includes(lowercasedTerm)
+    );
+  }, [monthlyEvents, searchTerm]);
+
   const dayPropGetter = useCallback(
     (date: Date) => ({
       className: moment(date).isSame(selectedDate, "day") ? "selected-day" : "",
@@ -309,11 +371,25 @@ const Schedule: React.FC = () => {
   return (
     <Container>
       <Header>
-        <h2>🗓️ 일정관리</h2>
+        <h2>🗓️ 일정관리 <span>({monthlyEvents.length})</span></h2>
         {(userRole === "LEADER" || userRole === "MEMBER") && (
             <AddEventBtn onClick={openFormModal}>일정 등록</AddEventBtn>
         )}
       </Header>
+
+      <NavContainer>
+      <TabList>
+        <TabLink to={`/studies/joined-study/${studyId}`} end>공지사항</TabLink>
+        <TabLink to={`/studies/joined-study/${studyId}/schedule`}>일정관리</TabLink>
+        <TabLink to={`/studies/joined-study/${studyId}/interview`}>모의면접</TabLink>
+        <TabLink to={`/studies/joined-study/${studyId}/members`}>참여인원</TabLink>
+      </TabList>
+        <TabSearchBar
+            searchTerm={searchTerm}
+            onSearchChange={e => setSearchTerm(e.target.value)}
+            placeholder="일정 제목으로 검색..."
+        />
+      </NavContainer>
 
       <CalendarWrapper>
         <Calendar
@@ -333,12 +409,12 @@ const Schedule: React.FC = () => {
       </CalendarWrapper>
 
       <MonthlyList>
-        <h3>{moment(currentDate).format("YYYY년 M월")} 일정 목록</h3>
-        {monthlyEvents.length > 0 ? (
-            monthlyEvents.map(event => (
+        <h3>{moment(currentDate).format("YYYY년 M월")} 일정 목록 </h3>
+        {filteredMonthlyEvents.length > 0 ? (
+            filteredMonthlyEvents.map(event => (
                 <MonthlyItem
                     key={event.id}
-                    onClick={() => handleSelectEvent(event)} // ✅ onClick 이벤트 추가
+                    onClick={() => handleSelectEvent(event)}
                 >
                   <MonthlyDate>{moment(event.start).format("D일 (ddd)")}</MonthlyDate>
                   <MonthlyTitle>{event.title}</MonthlyTitle>

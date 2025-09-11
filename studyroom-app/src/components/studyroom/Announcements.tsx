@@ -7,30 +7,73 @@ import Modal from '../Modal';
 import AnnouncementForm from './AnnouncementForm';
 import AnnouncementDetail from './AnnouncementDetail';
 import { useAuth } from "../../hooks/useAuth";
-import { useParams } from "react-router-dom";
+import { NavLink, useParams } from "react-router-dom";
+import TabSearchBar from "./TabSearchBar";
+
+/* --- NEW: Tab Navigation styled-components --- */
+const NavContainer = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid ${({ theme }) => theme.border};
+
+    background-color: ${({ theme }) => theme.surface};
+    padding: 12px 20px;
+    border-radius: 8px;
+`;
+
+const TabList = styled.nav`
+  display: flex;
+  gap: 8px;
+`;
+
+const TabLink = styled(NavLink)`
+  padding: 10px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.subtle};
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: ${({ theme }) => theme.fg};
+  }
+
+  &.active {
+    color: ${({ theme }) => theme.accent ?? theme.primary};
+    border-bottom-color: ${({ theme }) => theme.accent ?? theme.primary};
+  }
+`;
+/* --- End of Tab Navigation --- */
+
 
 const Container = styled.div`
   width: 100%;
 `;
 
 const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid ${({ theme }) => theme.border};
-  padding-bottom: 16px;
-  margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 8px 24px 8px;
 
-  h2 {
-    margin: 0;
-    font-size: 20px;
-    color: ${({ theme }) => theme.fg};
-  }
+    h2 {
+        margin: 0;
+        font-size: 20px;
+        color: ${({ theme }) => theme.fg};
+
+        span {
+            font-size: 16px;
+            font-weight: 500;
+            color: ${({theme}) => theme.subtle};
+            margin-left: 8px;
+        }
+    }
 `;
 
 const WriteBtn = styled.button`
   background-color: ${({ theme }) => theme.accent ?? theme.primary};
-
   color: #ffffff;
   border: none;
   border-radius: 6px;
@@ -41,55 +84,59 @@ const WriteBtn = styled.button`
   &:hover { background-color: ${({ theme }) => theme.accentHover ?? theme.primaryHover}; }
 `;
 
-const SearchBar = styled.div`
-  margin-bottom: 20px;
+const SearchInput = styled.input`
+    width: 280px; /* 너비 조정 */
+    padding: 8px 12px; /* 패딩 조정 */
+    border-radius: 6px;
+    border: 1px solid ${({ theme }) => theme.inputBorder};
+    background-color: ${({ theme }) => theme.inputBg};
+    color: ${({ theme }) => theme.fg};
+    font-size: 14px;
+    box-sizing: border-box;
+    &::placeholder { color: ${({ theme }) => theme.inputPlaceholder}; }
+
+    &:focus {
+        outline: none;
+        border-color: ${({ theme }) => theme.accent ?? theme.primary};
+        box-shadow: 0 0 0 2px rgba(88,101,242,0.35);
+    }
 `;
 
-const SearchInput = styled.input`
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: 6px;
-  border: 1px solid ${({ theme }) => theme.inputBorder};
-  background-color: ${({ theme }) => theme.inputBg};
-  color: ${({ theme }) => theme.fg};
-  font-size: 14px;
-  box-sizing: border-box;
-  &::placeholder { color: ${({ theme }) => theme.inputPlaceholder}; }
-
-  &:focus {
-    outline: none;
-    border-color: ${({ theme }) => theme.accent ?? theme.primary};
-    box-shadow: 0 0 0 2px rgba(88,101,242,0.35);
-  }
+const ListWrapper = styled.div`
+  margin-top: 24px;
+  background-color: ${({ theme }) => theme.surface};
+  border-radius: 8px;
+  padding: 24px;
+  min-height: 300px;
 `;
 
 const List = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 `;
 
 const Item = styled.div<{ $clickable?: boolean; $pinned?: boolean }>`
-  background-color: ${({ theme, $pinned }) =>
+    background-color: ${({ theme, $pinned }) =>
             $pinned ? (theme.tagBg ?? theme.surfaceHover) : theme.surface };
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  transition: all 0.2s ease-in-out;
-  overflow: hidden;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    transition: all 0.2s ease-in-out;
+    overflow: hidden;
 
-  display: flex;
-  align-items: center;
-  gap: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
 
-  ${({ theme, $pinned }) => ($pinned ? `border-left: 3px solid ${theme.accent ?? theme.primary};` : '')}
-  ${({ $clickable }) => ($clickable ? 'cursor: pointer;' : '')}
+    ${({ theme, $pinned }) => ($pinned ? `border-left: 3px solid ${theme.accent ?? theme.primary};` : '')}
+    ${({ $clickable }) => ($clickable ? 'cursor: pointer;' : '')}
 
-  &:hover {
-   ${({ theme, $clickable }) =>
-              $clickable
-                    ? `background-color: ${theme.surfaceHover}; transform: scale(1.01); border-color: ${theme.accent ?? theme.primary};`
-                : ''}
+    &:hover {
+        ${({ theme, $clickable }) =>
+                $clickable
+                        ? `background-color: ${theme.surfaceHover}; transform: scale(1.01); border-color: ${theme.accent ?? theme.primary};`
+                        : ''}
 `;
 
 const ItemMainContent = styled.div`
@@ -120,21 +167,21 @@ const ItemMeta = styled.span`
 `;
 
 const PinButton = styled.button<{ $pinned?: boolean }>`
-  background-color: ${({ theme, $pinned }) => ($pinned ? (theme.accent ?? theme.primary) : theme.surfaceHover)};
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background-color 0.2s;
+    background-color: ${({ theme, $pinned }) => ($pinned ? (theme.accent ?? theme.primary) : theme.surfaceHover)};
+    color: ${({ theme }) => theme.subtle};
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 0.2s;
 
-  &:hover {
-    background-color: ${({ theme, $pinned }) =>
-    $pinned ? (theme.accentHover ?? theme.primaryHover) : theme.surfaceHover};
-  }
+    &:hover {
+        background-color: ${({ theme, $pinned }) =>
+                $pinned ? (theme.accentHover ?? theme.primaryHover) : theme.surfaceHover};
+    }
 `;
 
 const Announcements: React.FC = () => {
@@ -155,7 +202,7 @@ const Announcements: React.FC = () => {
             const response = await axiosInstance.get(`/study-rooms/${studyRoomId}/announcements`);
             setAnnouncements(response.data);
         } catch (error) {
-            console.error("공지사항 목록을 불러오는데 실패했습니다:", error);
+            console.error("공지사항 목록 로딩 실패:", error);
         }
     }, [studyRoomId]);
 
@@ -163,11 +210,9 @@ const Announcements: React.FC = () => {
         if (!studyRoomId) return;
         try {
             const response = await axiosInstance.get(`/study-rooms/${studyRoomId}/role`);
-            setCurrentUserRole(response.data); // "LEADER" 또는 "MEMBER" 문자열이 저장됩니다.
-            console.log("Fetched user role:", response.data);
+            setCurrentUserRole(response.data);
         } catch (error) {
-            console.error("스터디룸 역할 정보를 불러오는데 실패했습니다:", error);
-            setCurrentUserRole(null); // 에러 발생 시 null로 설정
+            console.error("스터디룸 역할 정보 로딩 실패:", error);
         }
     }, [studyRoomId]);
 
@@ -190,8 +235,8 @@ const Announcements: React.FC = () => {
             fetchAnnouncements();
             closeFormModal();
         } catch (error) {
-            console.error("공지사항 저장에 실패했습니다:", error);
-            alert("오류가 발생했습니다.");
+            console.error("공지사항 저장 실패:", error);
+            alert("공지사항 저장 중 오류가 발생했습니다.");
         }
     };
 
@@ -233,6 +278,11 @@ const Announcements: React.FC = () => {
         }
     };
 
+    const openWriteModal = () => {
+        setEditingAnnouncement(null);
+        setIsWriteModalOpen(true);
+    };
+
     const handleEditClick = () => {
         if (!selectedAnnouncement) return;
         setEditingAnnouncement(selectedAnnouncement);
@@ -240,28 +290,25 @@ const Announcements: React.FC = () => {
         setIsWriteModalOpen(true);
     };
 
-    // 2) 폼 모달 닫기 + 수정상태 초기화
     const closeFormModal = () => {
         setIsWriteModalOpen(false);
         setEditingAnnouncement(null);
     };
 
-    const handleDelete = async () => { // ✅ 1. async 추가
+    const handleDelete = async () => {
         if (!selectedAnnouncement) return;
-
         if (window.confirm('공지사항을 삭제하시겠습니까?')) {
             try {
                 // ✅ 2. 백엔드에 삭제를 요청하는 DELETE API 호출
                 await axiosInstance.delete(
                     `/study-rooms/${studyRoomId}/announcements/${selectedAnnouncement.id}`
                 );
-
                 // ✅ 3. API 호출이 성공하면 화면 상태를 업데이트하여 목록에서 제거
                 setAnnouncements(prev => prev.filter(item => item.id !== selectedAnnouncement.id));
                 setIsDetailModalOpen(false);
                 setSelectedAnnouncement(null);
 
-                alert("공지사항이 삭제되었습니다."); // 사용자에게 성공 피드백
+                alert("공지사항이 삭제되었습니다.");
 
             } catch (error) {
                 console.error("공지사항 삭제에 실패했습니다:", error);
@@ -272,22 +319,16 @@ const Announcements: React.FC = () => {
 
     const handleMarkAsRead = async (announcementId: number) => {
         if (!studyRoomId || !userId) return;
-
         try {
             await axiosInstance.post(`/study-rooms/${studyRoomId}/announcements/${announcementId}/read`);
-            setAnnouncements(prev =>
-                prev.map(item => {
-                    if (item.id === announcementId) {
-                        const newReadBy = [...(item.readBy || []), userId];
-                        return { ...item, readBy: newReadBy };
-                    }
-                    return item;
-                })
-            );
-            setSelectedAnnouncement(prev => (prev ? { ...prev, readBy: [...(prev.readBy || []), userId] } : null));
+            const updateReadStatus = (item: Announcement) => {
+                const newReadBy = [...(item.readBy || []), userId];
+                return { ...item, readBy: newReadBy };
+            };
+            setAnnouncements(prev => prev.map(item => item.id === announcementId ? updateReadStatus(item) : item));
+            setSelectedAnnouncement(prev => (prev ? updateReadStatus(prev) : null));
         } catch (error) {
-            console.error("읽음 처리 중 오류가 발생했습니다:", error);
-            alert("오류가 발생했습니다.");
+            console.error("읽음 처리 중 오류 발생:", error);
         }
     };
 
@@ -303,47 +344,39 @@ const Announcements: React.FC = () => {
     return (
         <Container>
             <Header>
-                <h2>📢 공지사항</h2>
-                {currentUserRole === 'LEADER' && (
-                    <WriteBtn
-                        onClick={() => {
-                            setEditingAnnouncement(null);
-                            setIsWriteModalOpen(true);
-                        }}
-                    >
-                        글쓰기
-                    </WriteBtn>
-                )}
+                <h2>📢 공지사항 <span>({announcements.length})</span></h2>
+                {currentUserRole === 'LEADER' && <WriteBtn onClick={openWriteModal}>글쓰기</WriteBtn>}
             </Header>
 
-            <SearchBar>
-                <SearchInput
-                    type="text"
-                    placeholder="공지사항 제목으로 검색"
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    aria-label="공지사항 검색"
+            <NavContainer>
+                <TabList>
+                    <TabLink to={`/studies/joined-study/${studyRoomId}`} end>공지사항</TabLink>
+                    <TabLink to={`/studies/joined-study/${studyRoomId}/schedule`}>일정관리</TabLink>
+                    <TabLink to={`/studies/joined-study/${studyRoomId}/interview`}>모의면접</TabLink>
+                    <TabLink to={`/studies/joined-study/${studyRoomId}/members`}>참여인원</TabLink>
+                </TabList>
+                <TabSearchBar
+                    searchTerm={searchTerm}
+                    onSearchChange={e => setSearchTerm(e.target.value)}
+                    placeholder="공지사항 제목으로 검색..."
                 />
-            </SearchBar>
+            </NavContainer>
 
+            <ListWrapper>
             <List>
-                {displayedAnnouncements.map(item => (
+                {displayedAnnouncements.length > 0 ? displayedAnnouncements.map(item => (
                     <Item key={item.id} $clickable $pinned={item.isPinned}>
                         <ItemMainContent onClick={() => handleViewDetail(item)}>
                             <ItemHeader>
-                                <ItemTitle>
-                                    {item.isPinned && '📌 '} {item.title}
-                                </ItemTitle>
-                                <ItemMeta>
-                                    {item.author.nickname} · {new Date(item.createdAt).toLocaleDateString()}
-                                </ItemMeta>
+                                <ItemTitle>{item.isPinned && '📌 '} {item.title}</ItemTitle>
+                                <ItemMeta>{item.author.nickname} · {new Date(item.createdAt).toLocaleDateString()}</ItemMeta>
                             </ItemHeader>
                         </ItemMainContent>
 
                         {currentUserRole === 'LEADER' && (
                             <PinButton
                                 $pinned={item.isPinned}
-                                onClick={e => {
+                                onClick={(e) => {
                                     e.stopPropagation();
                                     handlePinToggle(item.id);
                                 }}
@@ -353,23 +386,18 @@ const Announcements: React.FC = () => {
                             </PinButton>
                         )}
                     </Item>
-                ))}
+                )) : <p>작성된 공지사항이 없습니다.</p>}
             </List>
+            </ListWrapper>
 
-            {/* ✅ 1. 글쓰기/수정 모달은 isWriteModalOpen에 연결 */}
             <Modal isOpen={isWriteModalOpen} onClose={closeFormModal}>
                 <AnnouncementForm
                     onSubmit={handleFormSubmit}
-                    initialData={
-                        editingAnnouncement
-                            ? { title: editingAnnouncement.title, content: editingAnnouncement.content }
-                            : undefined
-                    }
-                    isEditing={!!editingAnnouncement} // ✅ 폼이 수정 모드임을 알려줌
+                    initialData={editingAnnouncement ? { title: editingAnnouncement.title, content: editingAnnouncement.content } : undefined}
+                    isEditing={!!editingAnnouncement}
                 />
             </Modal>
 
-            {/* ✅ 2. 상세 보기 모달은 isDetailModalOpen에 연결 */}
             <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)}>
                 {isLoadingDetail ? (
                     <div>로딩 중...</div>
