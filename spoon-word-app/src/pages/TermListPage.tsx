@@ -1,4 +1,3 @@
-// src/pages/TermListPage.tsx
 import React from "react";
 import styled from "styled-components";
 import { useSearchParams, useNavigationType, useNavigate } from "react-router-dom";
@@ -29,107 +28,63 @@ const TOKENS = {
     radius: 14,
 } as const;
 
-const Root = styled.div`
-  margin-top: ${TOKENS.space(16)};
-`;
+const Root = styled.div` margin-top: ${TOKENS.space(16)}; `;
 
 const InfoRow = styled.div`
-  margin-top: 0;
-  display: flex;
-  align-items: center;
-  gap: ${TOKENS.space(8)};
-  white-space: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  font-size: ${TOKENS.font.base};
-  color: ${TOKENS.color.textMuted};
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    gap: ${TOKENS.space(8)};
+    white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    font-size: ${TOKENS.font.base};
+    color: ${TOKENS.color.textMuted};
 `;
 
 const Chip = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: ${TOKENS.space(6)};
-  border-radius: ${TOKENS.radius}px;
-  background: ${TOKENS.color.chipBg};
-  border: 1px solid ${TOKENS.color.chipBorder};
-  padding: ${TOKENS.space(4)} ${TOKENS.space(8)};
-  font-size: ${TOKENS.font.small};
-  color: ${TOKENS.color.textBlue};
-  font-weight: ${TOKENS.font.strong};
-  flex: 0 0 auto;
+    display: inline-flex; align-items: center; gap: ${TOKENS.space(6)};
+    border-radius: ${TOKENS.radius}px;
+    background: ${TOKENS.color.chipBg};
+    border: 1px solid ${TOKENS.color.chipBorder};
+    padding: ${TOKENS.space(4)} ${TOKENS.space(8)};
+    font-size: ${TOKENS.font.small};
+    color: ${TOKENS.color.textBlue};
+    font-weight: ${TOKENS.font.strong};
+    flex: 0 0 auto;
 `;
 
-const StrongNum = styled.span`
-  font-weight: ${TOKENS.font.strong};
-  color: ${TOKENS.color.textBlue};
-`;
-
-const LoadingMsg = styled.div`
-  margin-top: ${TOKENS.space(16)};
-  color: ${TOKENS.color.textMuted};
-`;
-
-const ErrorMsg = styled.div`
-  margin-top: ${TOKENS.space(16)};
-  color: ${TOKENS.color.red};
-`;
-
-const List = styled.ul`
-  margin-top: ${TOKENS.space(16)};
-  padding: 0;
-  list-style: none;
-`;
-
-const ListItem = styled.li`
-  & + & {
-    margin-top: ${TOKENS.space(16)};
-  }
-`;
-
-const EmptyMsg = styled.div`
-  margin-top: ${TOKENS.space(16)};
-  color: ${TOKENS.color.textMuted};
-`;
+const StrongNum = styled.span` font-weight: ${TOKENS.font.strong}; color: ${TOKENS.color.textBlue}; `;
+const LoadingMsg = styled.div` margin-top: ${TOKENS.space(16)}; color: ${TOKENS.color.textMuted}; `;
+const ErrorMsg = styled.div` margin-top: ${TOKENS.space(16)}; color: ${TOKENS.color.red}; `;
+const List = styled.ul` margin-top: ${TOKENS.space(16)}; padding: 0; list-style: none; `;
+const ListItem = styled.li` & + & { margin-top: ${TOKENS.space(16)}; } `;
+const EmptyMsg = styled.div` margin-top: ${TOKENS.space(16)}; color: ${TOKENS.color.textMuted}; `;
 
 /* ---------------- Pagination ---------------- */
 type PaginationProps = {
     page: number; size: number; total: number;
     onChange: (nextPageZeroBased: number) => void;
 };
-
 const PaginationNav = styled.nav`
-  margin-top: ${TOKENS.space(16)};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: ${TOKENS.space(8)};
-  user-select: none;
+    margin-top: ${TOKENS.space(16)};
+    display: flex; align-items: center; justify-content: center;
+    gap: ${TOKENS.space(8)}; user-select: none;
 `;
-
 const PageNumBtn = styled.button<{ $active: boolean }>`
-  min-width: 34px;
-  height: 34px;
-  padding: 0 10px;
-  border-radius: 999px;
-  border: 1px solid ${({ $active }) => ($active ? TOKENS.color.textBlue : TOKENS.color.border)};
-  background: ${({ $active }) => ($active ? TOKENS.color.textBlue : "#fff")};
-  color: ${({ $active }) => ($active ? "#fff" : TOKENS.color.text)};
-  font-weight: ${({ $active }) => ($active ? 700 : 600)};
-  cursor: pointer;
+    min-width: 34px; height: 34px; padding: 0 10px; border-radius: 999px;
+    border: 1px solid ${({ $active }) => ($active ? TOKENS.color.textBlue : TOKENS.color.border)};
+    background: ${({ $active }) => ($active ? TOKENS.color.textBlue : "#fff")};
+    color: ${({ $active }) => ($active ? "#fff" : TOKENS.color.text)};
+    font-weight: ${({ $active }) => ($active ? 700 : 600)};
+    cursor: pointer;
 `;
-
 const NavBtn = styled.button<{ $disabled: boolean }>`
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
-  border: 1px solid ${TOKENS.color.border};
-  background: #fff;
-  color: ${({ $disabled }) => ($disabled ? "#c7c7c7" : TOKENS.color.text)};
-  cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "pointer")};
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+    width: 34px; height: 34px; border-radius: 999px; border: 1px solid ${TOKENS.color.border};
+    background: #fff; color: ${({ $disabled }) => ($disabled ? "#c7c7c7" : TOKENS.color.text)};
+    cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "pointer")};
+    display: inline-flex; align-items: center; justify-content: center;
 `;
 
 const Pagination: React.FC<PaginationProps> = ({ page, size, total, onChange }) => {
@@ -154,12 +109,7 @@ const Pagination: React.FC<PaginationProps> = ({ page, size, total, onChange }) 
             <NavBtn aria-label="처음" onClick={() => go(1)} disabled={current === 1} $disabled={current === 1}>«</NavBtn>
             <NavBtn aria-label="이전" onClick={() => go(current - 1)} disabled={current === 1} $disabled={current === 1}>‹</NavBtn>
             {nums.map((n) => (
-                <PageNumBtn
-                    key={n}
-                    onClick={() => go(n)}
-                    aria-current={n === current ? "page" : undefined}
-                    $active={n === current}
-                >
+                <PageNumBtn key={n} onClick={() => go(n)} aria-current={n === current ? "page" : undefined} $active={n === current}>
                     {n}
                 </PageNumBtn>
             ))}
@@ -198,6 +148,7 @@ const TermListPage: React.FC = () => {
     React.useEffect(() => {
         if (!tag) {
             setTerms([]); setTotal(0); setLoading(false); setError(null);
+            requestAnimationFrame(() => window.scrollTo(0, 0));
             return;
         }
 
@@ -284,9 +235,7 @@ const TermListPage: React.FC = () => {
             {tag ? (
                 <InfoRow aria-live="polite">
                     <Chip>#{tag}</Chip>
-                    <span>
-            에 대한 <StrongNum>{total}</StrongNum>개의 용어가 검색되었습니다.
-          </span>
+                    <span>에 대한 <StrongNum>{total}</StrongNum>개의 용어가 검색되었습니다.</span>
                 </InfoRow>
             ) : (
                 <InfoRow>해시태그를 선택하면 해당 태그의 용어를 보여드립니다.</InfoRow>

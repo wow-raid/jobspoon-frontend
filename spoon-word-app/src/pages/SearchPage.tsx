@@ -1,4 +1,3 @@
-// src/pages/SearchPage.tsx
 import React from "react";
 import styled from "styled-components";
 import { useSearchParams, useNavigationType, useNavigate } from "react-router-dom";
@@ -46,114 +45,71 @@ const TOKENS = {
     shadow: { xl: "0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)" },
 } as const;
 
-/* ----------------------
- * styled-components
- * ---------------------- */
-const Root = styled.div`
-  margin-top: ${TOKENS.space(16)};
-`;
+/* ---------------------- styled-components ---------------------- */
+const Root = styled.div` margin-top: ${TOKENS.space(16)}; `;
 
 const InfoRow = styled.div`
-  margin-top: 0;
-  display: flex;
-  align-items: center;
-  gap: ${TOKENS.space(8)};
-  white-space: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  font-size: ${TOKENS.font.base};
-  color: ${TOKENS.color.textMuted};
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    gap: ${TOKENS.space(8)};
+    white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    font-size: ${TOKENS.font.base};
+    color: ${TOKENS.color.textMuted};
 `;
 
 const InfoStrongNum = styled.span`
-  font-weight: ${TOKENS.font.strong};
-  color: ${TOKENS.color.textBlue};
+    font-weight: ${TOKENS.font.strong};
+    color: ${TOKENS.color.textBlue};
 `;
 
 const Chip = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: ${TOKENS.space(6)};
-  border-radius: ${TOKENS.radius}px;
-  background: ${TOKENS.color.chipBg};
-  border: 1px solid ${TOKENS.color.chipBorder};
-  padding: ${TOKENS.space(4)} ${TOKENS.space(8)};
-  font-size: ${TOKENS.font.small};
-  color: ${TOKENS.color.textBlue};
-  font-weight: 700;
-  flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: ${TOKENS.space(6)};
+    border-radius: ${TOKENS.radius}px;
+    background: ${TOKENS.color.chipBg};
+    border: 1px solid ${TOKENS.color.chipBorder};
+    padding: ${TOKENS.space(4)} ${TOKENS.space(8)};
+    font-size: ${TOKENS.font.small};
+    color: ${TOKENS.color.textBlue};
+    font-weight: 700;
+    flex: 0 0 auto;
 `;
 
-const Tail = styled.span`
-  flex: 0 0 auto;
-`;
-
-const LoadingMsg = styled.div`
-  margin-top: ${TOKENS.space(16)};
-  color: ${TOKENS.color.textMuted};
-`;
-
-const ErrorMsg = styled.div`
-  margin-top: ${TOKENS.space(16)};
-  color: ${TOKENS.color.red};
-`;
-
-const List = styled.ul`
-  margin-top: ${TOKENS.space(16)};
-  padding: 0;
-  list-style: none;
-`;
-
-const ListItem = styled.li`
-  & + & {
-    margin-top: ${TOKENS.space(16)};
-  }
-`;
-
-const EmptyMsg = styled.div`
-  margin-top: ${TOKENS.space(16)};
-  color: ${TOKENS.color.textMuted};
-`;
+const Tail = styled.span` flex: 0 0 auto; `;
+const LoadingMsg = styled.div` margin-top: ${TOKENS.space(16)}; color: ${TOKENS.color.textMuted}; `;
+const ErrorMsg = styled.div` margin-top: ${TOKENS.space(16)}; color: ${TOKENS.color.red}; `;
+const List = styled.ul` margin-top: ${TOKENS.space(16)}; padding: 0; list-style: none; `;
+const ListItem = styled.li` & + & { margin-top: ${TOKENS.space(16)}; } `;
+const EmptyMsg = styled.div` margin-top: ${TOKENS.space(16)}; color: ${TOKENS.color.textMuted}; `;
 
 /* ---------- Pagination ---------- */
 type PaginationProps = {
     page: number; size: number; total: number;
     onChange: (nextPageZeroBased: number) => void;
 };
-
 const PaginationNav = styled.nav`
-  margin-top: ${TOKENS.space(16)};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: ${TOKENS.space(8)};
-  user-select: none;
+    margin-top: ${TOKENS.space(16)};
+    display: flex; align-items: center; justify-content: center;
+    gap: ${TOKENS.space(8)}; user-select: none;
 `;
-
 const PageNumBtn = styled.button<{ $active: boolean }>`
-  min-width: 34px;
-  height: 34px;
-  padding: 0 10px;
-  border-radius: 999px;
-  border: 1px solid ${({ $active }) => ($active ? TOKENS.color.textBlue : TOKENS.color.border)};
-  background: ${({ $active }) => ($active ? TOKENS.color.textBlue : "#fff")};
-  color: ${({ $active }) => ($active ? "#fff" : TOKENS.color.text)};
-  font-weight: ${({ $active }) => ($active ? 700 : 600)};
-  cursor: pointer;
+    min-width: 34px; height: 34px; padding: 0 10px; border-radius: 999px;
+    border: 1px solid ${({ $active }) => ($active ? TOKENS.color.textBlue : TOKENS.color.border)};
+    background: ${({ $active }) => ($active ? TOKENS.color.textBlue : "#fff")};
+    color: ${({ $active }) => ($active ? "#fff" : TOKENS.color.text)};
+    font-weight: ${({ $active }) => ($active ? 700 : 600)};
+    cursor: pointer;
 `;
-
 const NavBtn = styled.button<{ $disabled: boolean }>`
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
-  border: 1px solid ${TOKENS.color.border};
-  background: #fff;
-  color: ${({ $disabled }) => ($disabled ? "#c7c7c7" : TOKENS.color.text)};
-  cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "pointer")};
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+    width: 34px; height: 34px; border-radius: 999px; border: 1px solid ${TOKENS.color.border};
+    background: #fff; color: ${({ $disabled }) => ($disabled ? "#c7c7c7" : TOKENS.color.text)};
+    cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "pointer")};
+    display: inline-flex; align-items: center; justify-content: center;
 `;
 
 const Pagination: React.FC<PaginationProps> = ({ page, size, total, onChange }) => {
@@ -178,12 +134,7 @@ const Pagination: React.FC<PaginationProps> = ({ page, size, total, onChange }) 
             <NavBtn aria-label="처음" onClick={() => go(1)} disabled={current === 1} $disabled={current === 1}>«</NavBtn>
             <NavBtn aria-label="이전" onClick={() => go(current - 1)} disabled={current === 1} $disabled={current === 1}>‹</NavBtn>
             {nums.map((n) => (
-                <PageNumBtn
-                    key={n}
-                    onClick={() => go(n)}
-                    aria-current={n === current ? "page" : undefined}
-                    $active={n === current}
-                >
+                <PageNumBtn key={n} onClick={() => go(n)} aria-current={n === current ? "page" : undefined} $active={n === current}>
                     {n}
                 </PageNumBtn>
             ))}
@@ -197,16 +148,14 @@ const Pagination: React.FC<PaginationProps> = ({ page, size, total, onChange }) 
 const uniqTags = (arr?: string[] | null) =>
     Array.from(new Set((arr ?? []).filter(Boolean))) as string[];
 
-/** ----------------------
- * 검색 페이지
- * ---------------------- */
+/** ---------------------- 검색 페이지 ---------------------- */
 export default function SearchPage() {
     const [params] = useSearchParams();
     const navType = useNavigationType();
     const navigate = useNavigate();
 
     const q = (params.get("q") ?? "").trim();
-    const tag = params.get("tag") ?? "";   // ★ 태그 파라미터
+    const tag = params.get("tag") ?? "";   // 태그 전용
     const page = Number(params.get("page") ?? 0) || 0;
     const size = Number(params.get("size") ?? 20) || 20;
 
@@ -232,12 +181,8 @@ export default function SearchPage() {
         if (Array.isArray(it.tags)) return uniqTags(it.tags);
         if (Array.isArray(it.relatedKeywords)) return uniqTags(it.relatedKeywords);
         if (Array.isArray(it.tagNames)) return uniqTags(it.tagNames);
-        if (Array.isArray(it.termTags)) {
-            return uniqTags(it.termTags.map(x => x?.tag?.name ?? x?.name).filter((v): v is string => !!v));
-        }
-        if (typeof it.tagsCsv === "string" && it.tagsCsv.trim()) {
-            return uniqTags(it.tagsCsv.split(",").map(s => s.trim()));
-        }
+        if (Array.isArray(it.termTags)) return uniqTags(it.termTags.map(x => x?.tag?.name ?? x?.name).filter((v): v is string => !!v));
+        if (typeof it.tagsCsv === "string" && it.tagsCsv.trim()) return uniqTags(it.tagsCsv.split(",").map(s => s.trim()));
         return undefined;
     };
 
@@ -251,8 +196,10 @@ export default function SearchPage() {
 
     /** 검색 + 캐시 복원 */
     React.useEffect(() => {
+        // 🔹 쿼리가 하나도 없으면 완전 초기 상태 (탭 전환 직후 등)
         if (!q && !tag && !initial && !alpha && !symbol) {
             setResults([]); setTotal(0); setLoading(false); setError(null);
+            requestAnimationFrame(() => window.scrollTo(0, 0));
             return;
         }
 
@@ -371,12 +318,10 @@ export default function SearchPage() {
                     {initial && <Chip>초성: {initial}</Chip>}
                     {alpha && <Chip>알파벳: {alpha}</Chip>}
                     {symbol && <Chip>기호: {symbol}</Chip>}
-                    <Tail>
-                        에 대한 <InfoStrongNum>{total}</InfoStrongNum>개의 용어가 검색되었습니다.
-                    </Tail>
+                    <Tail>에 대한 <InfoStrongNum>{total}</InfoStrongNum>개의 용어가 검색되었습니다.</Tail>
                 </InfoRow>
             ) : (
-                <InfoRow>검색어를 입력하거나 상단 필터/태그를 선택해 주세요.</InfoRow>
+                <InfoRow>검색어를 입력하거나 분류를 선택해 주세요.</InfoRow>
             )}
 
             {loading && <LoadingMsg>불러오는 중...</LoadingMsg>}
