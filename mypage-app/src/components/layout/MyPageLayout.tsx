@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import SideBar from "./SideBar";
 import ProfileAppearanceCard from "../profile/ProfileAppearanceCard.tsx";
 import styled from "styled-components";
-import { FaChevronDown, FaChevronRight } from "react-icons/fa";
+import { FaChevronDown, FaChevronUp, FaHome } from "react-icons/fa";
 import { fetchMyProfile, ProfileAppearanceResponse } from "../../api/profileAppearanceApi.ts";
 
 export default function MyPageLayout() {
 
+    const navigate = useNavigate();
+
     {/* 토글 */}
     const [isProfileOpen, setIsProfileOpen] = useState(true);
+
     {/* 프로필 외형 */}
     const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
 
@@ -36,20 +39,17 @@ export default function MyPageLayout() {
         <LayoutContainer>
             {/* 좌측 사이드 영역 (프로필 + 메뉴) */}
             <Aside>
-                {/* 토글 버튼 */}
-                <ToggleButton onClick={() => setIsProfileOpen(!isProfileOpen)}>
-                    <ToggleIcon>
-                        {isProfileOpen ? <FaChevronDown /> : <FaChevronRight />}
-                    </ToggleIcon>
-                    <ToggleLabel>마이페이지</ToggleLabel>
-                </ToggleButton>
 
-                {/* 프로필 카드 (토글됨) */}
-                {isProfileOpen && profile && (
-                    <ProfileWrapper isOpen={isProfileOpen}>
-                        <ProfileAppearanceCard profile={profile} />
-                    </ProfileWrapper>
-                )}
+                {/* ✅ 홈 버튼 */}
+                <HomeButton onClick={() => navigate("/mypage")}>
+                    <HomeIcon>
+                        <FaHome />
+                    </HomeIcon>
+                    <HomeLabel>마이페이지</HomeLabel>
+                </HomeButton>
+
+                {/* 프로필 카드 */}
+                {profile && <ProfileAppearanceCard profile={profile} />}
 
                 {/* 메뉴 */}
                 <SideBar />
@@ -95,8 +95,8 @@ const Main = styled.main`
     gap: 24px;
 `;
 
-/* === 토글 관련 === */
-const ToggleButton = styled.button`
+/* === 홈 버튼 === */
+const HomeButton = styled.button`
   display: flex;
   align-items: center;
   gap: 10px;
@@ -109,7 +109,7 @@ const ToggleButton = styled.button`
   outline: none;
 `;
 
-const ToggleIcon = styled.span`
+const HomeIcon = styled.span`
   width: 28px;
   height: 28px;
   display: flex;
@@ -121,14 +121,40 @@ const ToggleIcon = styled.span`
   font-size: 14px;
 `;
 
-const ToggleLabel = styled.span`
+const HomeLabel = styled.span`
   padding: 2px 6px;
   border-radius: 4px;
 `;
 
 const ProfileWrapper = styled.div<{ isOpen: boolean }>`
-  overflow: hidden;
-  transition: all 0.3s ease-in-out;
-  max-height: ${({ isOpen }) => (isOpen ? "1000px" : "0px")};
-  opacity: ${({ isOpen }) => (isOpen ? 1 : 0)};
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
+    max-height: ${({ isOpen }) => (isOpen ? "1000px" : "0px")};
+    opacity: ${({ isOpen }) => (isOpen ? 1 : 0)};
+`;
+
+/* 헤더는 투명 */
+const ProfileHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: rgb(17, 24, 39);
+    padding: 6px 0;   /* 여백만 주고 배경 제거 */
+    margin-bottom: 6px;
+    cursor: pointer;
+`;
+
+/* 화살표 아이콘만 파란색 배경 */
+const ArrowIcon = styled.span`
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(59, 130, 246);  /* 파란색 */
+  color: white;
+  border-radius: 6px;
+  font-size: 14px;
 `;

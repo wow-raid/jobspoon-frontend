@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 import { MdArticle } from "react-icons/md";
 import styled from "styled-components";
+import { NavLink } from "react-router-dom";
 
 export default function SideBar() {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,10 +24,10 @@ export default function SideBar() {
             <Nav>
                 <ul>
                     <li>
-                        <NavButton onClick={handleOpenModal}>
+                        <StyledNavLink to="account/edit">
                             <FaUser className="icon" />
                             회원정보 수정
-                        </NavButton>
+                        </StyledNavLink>
                     </li>
 
                     <li>
@@ -181,4 +182,43 @@ const Divider = styled.hr`
   border: none;
   border-top: 1px solid rgb(229, 231, 235);
   margin: 12px 0;
+`;
+
+/* NavLink 전용 스타일 */
+const StyledNavLink = styled(NavLink)`
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    font-size: 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+
+    color: rgb(55, 65, 81);
+    background: transparent;
+
+    .icon {
+        color: rgb(107, 114, 128);
+    }
+
+    /* 활성화 상태 */
+    &.active {
+        background: rgb(239, 246, 255);   /* hover와 같은 파란 배경 */
+        color: rgb(37, 99, 235);
+
+        .icon {
+            color: rgb(37, 99, 235);
+        }
+    }
+
+    &:hover {
+        background: rgb(239, 246, 255);
+        color: rgb(37, 99, 235);
+
+        .icon {
+            color: rgb(37, 99, 235);
+        }
+    }
 `;

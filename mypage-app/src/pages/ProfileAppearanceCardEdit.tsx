@@ -8,10 +8,10 @@ import {
     equipTitle,
     HistoryItem,
     ProfileAppearanceResponse,
-} from "../../api/profileAppearanceApi.ts";
-import ServiceModal from "../modals/ServiceModal.tsx";
+} from "../api/profileAppearanceApi.ts";
+import ServiceModal from "../components/modals/ServiceModal.tsx"
 import styled from "styled-components";
-import defaultProfile from "../../assets/default_profile.png";
+import defaultProfile from "../assets/default_profile.png";
 
 type OutletContextType = {
     profile: ProfileAppearanceResponse | null;
