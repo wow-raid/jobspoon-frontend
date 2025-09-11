@@ -155,7 +155,8 @@ export default function SearchPage() {
     const navigate = useNavigate();
 
     const q = (params.get("q") ?? "").trim();
-    const tag = params.get("tag") ?? "";   // 태그 전용
+    const tag = params.get("tag") ?? "";                // 태그 전용
+    const catPath = params.get("catPath") ?? "";        // 카테고리 경로(예: "1/4/12")
     const page = Number(params.get("page") ?? 0) || 0;
     const size = Number(params.get("size") ?? 20) || 20;
 
@@ -163,6 +164,12 @@ export default function SearchPage() {
     const initial = params.get("initial") || "";
     const alpha = params.get("alpha") || "";
     const symbol = params.get("symbol") || "";
+
+    // 선택된 카테고리 id (catPath의 마지막 조각)
+    const catId = React.useMemo(() => {
+        const parts = (catPath || "").split("/").map(s => s.trim()).filter(Boolean);
+        return parts.length ? Number(parts[parts.length - 1]) : null;
+    }, [catPath]);
 
     // 상태
     const [results, setResults] = React.useState<Term[]>([]);
@@ -172,19 +179,9 @@ export default function SearchPage() {
 
     // 캐시 키
     const cacheKey = React.useMemo(
-        () => `term_search:q${q}:tag${tag}:p${page}:s${size}:i${initial}:a${alpha}:s${symbol}`,
-        [q, tag, page, size, initial, alpha, symbol]
+        () => `term_search:q${q}:tag${tag}:cat${catPath || "none"}:p${page}:s${size}:i${initial}:a${alpha}:s${symbol}`,
+        [q, tag, catPath, page, size, initial, alpha, symbol]
     );
-
-    /** 태그 추출 */
-    const extractTags = (it: ApiItem): string[] | undefined => {
-        if (Array.isArray(it.tags)) return uniqTags(it.tags);
-        if (Array.isArray(it.relatedKeywords)) return uniqTags(it.relatedKeywords);
-        if (Array.isArray(it.tagNames)) return uniqTags(it.tagNames);
-        if (Array.isArray(it.termTags)) return uniqTags(it.termTags.map(x => x?.tag?.name ?? x?.name).filter((v): v is string => !!v));
-        if (typeof it.tagsCsv === "string" && it.tagsCsv.trim()) return uniqTags(it.tagsCsv.split(",").map(s => s.trim()));
-        return undefined;
-    };
 
     /** 언마운트 시 스크롤 저장 */
     React.useEffect(() => {
@@ -196,8 +193,8 @@ export default function SearchPage() {
 
     /** 검색 + 캐시 복원 */
     React.useEffect(() => {
-        // 🔹 쿼리가 하나도 없으면 완전 초기 상태 (탭 전환 직후 등)
-        if (!q && !tag && !initial && !alpha && !symbol) {
+        // 쿼리가 하나도 없으면 완전 초기 상태 (탭 전환 직후 등)
+        if (!q && !tag && !initial && !alpha && !symbol && !catId) {
             setResults([]); setTotal(0); setLoading(false); setError(null);
             requestAnimationFrame(() => window.scrollTo(0, 0));
             return;
@@ -225,7 +222,7 @@ export default function SearchPage() {
                 let totalNum = 0;
 
                 if (tag) {
-                    // 🔹 태그 검색
+                    // 태그 검색
                     const res = await fetchTermsByTag(tag, page + 1, size);
                     const rawItems = (res as any).termList ?? [];
                     items = rawItems.map((it: any) => ({
@@ -236,9 +233,9 @@ export default function SearchPage() {
                     }));
                     totalNum = (res as any).totalItems ?? items.length;
                 } else {
-                    // 🔹 일반 검색
+                    // 일반/카테고리/접두 검색
                     const res = await axiosInstance.get<ApiResponse>("/terms/search", {
-                        params: { q, page, size, initial, alpha, symbol },
+                        params: { q, page, size, initial, alpha, symbol, catPath }, // <= catPath 전달
                         signal: ac.signal,
                     });
                     const rawItems = res.data.items ?? res.data.content ?? [];
@@ -251,6 +248,7 @@ export default function SearchPage() {
                     totalNum = res.data.total ?? res.data.totalElements ?? items.length;
                 }
 
+                // 태그 검색 결과 0 → not-found 라우팅
                 if (tag && totalNum === 0) {
                     const spNF = new URLSearchParams();
                     spNF.set("tag", tag);
@@ -267,6 +265,7 @@ export default function SearchPage() {
                     if (initial) sp.set("initial", initial);
                     if (alpha) sp.set("alpha", alpha);
                     if (symbol) sp.set("symbol", symbol);
+                    if (catPath) sp.set("catPath", catPath);       // <= 보존
                     sp.set("page", String(totalPages - 1));
                     sp.set("size", String(size || 20));
                     navigate({ pathname: "search", search: `?${sp.toString()}` }, { replace: true });
@@ -285,7 +284,22 @@ export default function SearchPage() {
         })();
 
         return () => ac.abort();
-    }, [q, tag, page, size, initial, alpha, symbol, navType, cacheKey, navigate]);
+        // 중요한 의존성: catId/catPath까지 포함
+    }, [q, tag, page, size, initial, alpha, symbol, catId, catPath, navType, cacheKey, navigate]);
+
+    /** 태그 배열 추출 유틸 (응답 스키마 방어) */
+    const extractTags = (it: ApiItem): string[] | undefined => {
+        if (Array.isArray(it.tags)) return uniqTags(it.tags);
+        if (Array.isArray(it.relatedKeywords)) return uniqTags(it.relatedKeywords);
+        if (Array.isArray(it.tagNames)) return uniqTags(it.tagNames);
+        if (Array.isArray(it.termTags)) {
+            return uniqTags(it.termTags.map(x => x?.tag?.name ?? x?.name).filter((v): v is string => !!v));
+        }
+        if (typeof it.tagsCsv === "string" && it.tagsCsv.trim()) {
+            return uniqTags(it.tagsCsv.split(",").map(s => s.trim()));
+        }
+        return undefined;
+    };
 
     /** 페이지 이동 핸들러 */
     const handlePageChange = (nextZeroBased: number) => {
@@ -295,12 +309,13 @@ export default function SearchPage() {
         if (initial) sp.set("initial", initial);
         if (alpha) sp.set("alpha", alpha);
         if (symbol) sp.set("symbol", symbol);
+        if (catPath) sp.set("catPath", catPath);     // <= 보존
         sp.set("page", String(nextZeroBased));
         sp.set("size", String(size || 20));
         navigate({ pathname: "search", search: `?${sp.toString()}` });
     };
 
-    /** 태그 클릭 → URL 변경 */
+    /** 카드 내 태그 클릭 → 태그 검색으로 전환 (기존 조건은 리셋) */
     const handleTagClick = (t: string) => {
         const sp = new URLSearchParams();
         sp.set("tag", t);
@@ -311,13 +326,14 @@ export default function SearchPage() {
 
     return (
         <Root>
-            {(q || tag || initial || alpha || symbol) ? (
+            {(q || tag || initial || alpha || symbol || catId) ? (
                 <InfoRow aria-live="polite">
                     {q && <Chip>검색어: {q}</Chip>}
                     {tag && <Chip>#{tag}</Chip>}
                     {initial && <Chip>초성: {initial}</Chip>}
                     {alpha && <Chip>알파벳: {alpha}</Chip>}
                     {symbol && <Chip>기호: {symbol}</Chip>}
+                    {catId && <Chip>분류 필터 적용</Chip>}
                     <Tail>에 대한 <InfoStrongNum>{total}</InfoStrongNum>개의 용어가 검색되었습니다.</Tail>
                 </InfoRow>
             ) : (
@@ -347,7 +363,7 @@ export default function SearchPage() {
                 </>
             )}
 
-            {!loading && !error && (q || tag || initial || alpha || symbol) && results.length === 0 && (
+            {!loading && !error && (q || tag || initial || alpha || symbol || catId) && results.length === 0 && (
                 <EmptyMsg>검색 결과가 없습니다.</EmptyMsg>
             )}
         </Root>

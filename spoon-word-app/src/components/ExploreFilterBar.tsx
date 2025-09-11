@@ -96,7 +96,7 @@ const CapsuleTab = styled.button<{ $active?: boolean }>`
     background: transparent;
     border: 0;
     color: ${TOKENS.color.white};
-    font-size: 16px;
+    font-size: 14px;
     font-weight: ${({ $active }) => ($active ? 800 : 600)};
     letter-spacing: -0.01em;
     cursor: pointer;
