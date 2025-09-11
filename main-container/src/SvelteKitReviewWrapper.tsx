@@ -17,27 +17,25 @@ const SvelteKitReviewAppWrapper: React.FC = () => {
         return off;
     }, []);
 
+    // SvelteKitReviewWrapper.tsx (교체)
     useEffect(() => {
-        let app: any;
+        let destroy: undefined | (() => void);
 
-        import("svelteKitReviewApp/App") // ✅ MFE로 불러온 Svelte 앱
-            .then((mod) => {
-                const SvelteKitApp = mod.default;
-
-                if (containerRef.current) {
-                    app = new SvelteKitApp({
-                        target: containerRef.current,
-                    });
-                }
+        import("svelteKitReviewApp/mount")
+            .then(({ mount }) => {
+                const el = containerRef.current;
+                if (!el) return;
+                destroy = mount(el, {
+                    // 필요하면 props
+                });
             })
             .catch((err) => {
-                console.error("❌ Failed to mount svelteKitReviewApp via Module Federation:", err);
+                console.error("❌ Failed to mount svelteKitReviewApp via MF:", err);
             });
 
-        return () => {
-            if (app) app.$destroy();
-        };
+        return () => destroy?.();
     }, []);
+
 
     return <div ref={containerRef} />;
 };

@@ -1,0 +1,42 @@
+.announcement-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.announcement-form .form-title {
+    text-align: center;
+    font-size: 20px;
+    margin: 0;
+}
+
+.announcement-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.announcement-form .form-group label {
+    font-weight: 600;
+}
+
+.announcement-form .form-group input,
+.announcement-form .form-group textarea {
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #4a5568;
+    background-color: #1f2937;
+    color: #d1d5db;
+    font-size: 14px;
+}
+
+.announcement-form .submit-btn {
+    background-color: #5865f2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}

@@ -1,2 +1,2 @@
-export { default as ReviewWidget } from './ReviewWidget.svelte';
-export { mount } from '../mf/boot';
+export { default } from './ReviewWidget.svelte'; // ⬅️ default export 제공
+export { mount } from '../mf/boot'
