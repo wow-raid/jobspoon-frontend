@@ -14,21 +14,21 @@
                 <v-img :src="githubIconSrc" width="120" class="mx-auto mb-6" />
               </div>
               <v-alert v-if="tokenValid === false" type="warning" variant="tonal" class="mb-4" density="compact">
-                임시 토큰이 없거나 유효하지 않습니다. (지금은 안내만, 차단/이동은 다음 단계에서)
+                임시 토큰이 없거나 유효하지 않습니다.
               </v-alert>
-              <v-btn
-                  block
-                  x-large
-                  rounded
-                  color="gray lighten-1"
-                  class="mt-6"
-                  @click="goToAdminCodeInput"
-              >
-                로그인
-              </v-btn>
+<!--              <v-btn-->
+<!--                  block-->
+<!--                  x-large-->
+<!--                  rounded-->
+<!--                  color="gray lighten-1"-->
+<!--                  class="mt-6"-->
+<!--                  @click="goToAdminCodeInput"-->
+<!--              >-->
+<!--                로그인-->
+<!--              </v-btn>-->
 
               <!-- 필요하면 GitHub로 바로 이동 버튼도 사용 -->
-              <!--
+
               <v-btn
                 block
                 x-large
@@ -37,9 +37,9 @@
                 class="mt-3"
                 @click="goToGithubLogin"
               >
-                GitHub로 계속
+                GitHub 소셜 로그인
               </v-btn>
-              -->
+
             </v-card-text>
           </v-card>
         </v-col>
@@ -69,16 +69,30 @@ const goToAdminCodeInput = () => {
 // UI 확인용: null=미확인, true=유효, false=무효/없음
 const tokenValid = ref<boolean|null>(null);
 
-// (선택) GitHub 로그인 요청
-const goToGithubLogin = async () => {
+/**
+ * GitHub 로그인 플로우 시작 핸들러.
+ * - async: 비동기 작업을 순차적으로 제어.
+ * - await: 스토어 함수가 완료(resolve/reject)될 때까지 대기.
+ * - try/catch: 네트워크/서버 오류를 캐치하고 로깅.
+ */
+const goToGithubLogin = async (): Promise<void> => {
   try {
-    await githubAuthentication.requestGithubLoginToDjango();
+    // GitHub OAuth 시작을 백엔드(Django)에 요청.
+    // 내부에서 redirect URL 수신 후, window.location 으로 실제 GitHub 로그인 페이지로 이동 처리.
+    // 주의: window.location으로 페이지 이동 시, 이후 코드 실행은 사실상 중단될 수 있음.
+    console.log("goToGithubLogin is working")
+    await githubAuthentication.requestGithubLoginToSpringBoot();
+
+    // 여기 도달하는 경우는 보통 (1) 바로 이동하지 않는 설계거나 (2) 예외 상황.
+    // 이동이 즉시 일어나는 설계라면 이 부분은 실행되지 않을 수 있음.
+    // console.log("로그인 요청 완료. 다음 단계로 진행.");
   } catch (e) {
+    // 요청 실패나 예외 상황을 콘솔로 남김. 사용자에게 알림 UI를 띄워도 좋음.
     console.error("[GithubAdminLogin] GitHub 로그인 요청 실패:", e);
+    // 예: showToast("로그인 요청 중 오류가 발생했습니다.");
   }
 };
 
-/** 메타 유틸 */
 function setMeta(
     name: string,
     content: string,
