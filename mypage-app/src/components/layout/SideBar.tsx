@@ -24,7 +24,7 @@ export default function SideBar() {
             <Nav>
                 <ul>
                     <li>
-                        <StyledNavLink to="/mypage/account/edit">
+                        <StyledNavLink to="account/edit">
                             <FaUser className="icon" />
                             회원정보 수정
                         </StyledNavLink>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import defaultProfile from "../../assets/default_profile.png";
+import defaultProfile from "../assets/default_profile.png";
 import { FaPhone, FaEnvelope } from "react-icons/fa";
-import ServiceModal from "../modals/ServiceModal.tsx";
+import ServiceModal from "../components/modals/ServiceModal.tsx"
 
 export default function AccountProfileEdit() {
     // 더미 상태 (추후 API 연동 예정)

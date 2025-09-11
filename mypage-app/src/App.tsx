@@ -2,8 +2,8 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import MyPageLayout from "./components/layout/MyPageLayout.tsx";
 import DashboardSection from "./components/dashboard/DashboardSection.tsx";
-import ProfileAppearanceCardEdit from "./components/profile/ProfileAppearanceCardEdit.tsx";
-import AccountProfileEdit from "./components/account/AccountProfileEdit.tsx";
+import ProfileAppearanceCardEdit from "./pages/ProfileAppearanceCardEdit.tsx";
+import AccountProfileEdit from "./pages/AccountProfileEdit.tsx";
 
 export default function App() {
     return (
