@@ -4,8 +4,11 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
+		"build:ssg": "rimraf build-static && svelte-kit build",
+		"postbuild:ssg": "node scripts/copy-static.cjs && node scripts/zip-mf-types.cjs",
+		"postinstall": "svelte-kit sync",
 		"dev": "svelte-kit dev",
-		"build": "svelte-kit build",
+		"build": "npm run build:ssg", 
 		"preview": "svelte-kit preview",
 		"mf:generate-types": "tsc --project tsconfig-mf.json && node scripts/zip-mf-types.cjs",
 		"start": "npm run mf:generate-types && vite --config vite.mf.config.ts",
@@ -33,6 +36,10 @@
 		"typescript": "^5.9.2",
 		"typescript-eslint": "^8.20.0",
 		"vite": "^5.4.10",
-		"zip-a-folder": "^3.1.9"
+		"zip-a-folder": "^3.1.9",
+		"rimraf": "^5.0.5"
+	},
+	"dependencies": {
+		"@emotion/css": "^11.13.5"
 	}
 }

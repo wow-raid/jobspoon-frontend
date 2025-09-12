@@ -1,6 +1,17 @@
+// src/routes/robots.txt/+server.ts
+import { PUBLIC_BASE_URL } from '$env/static/public';
+
 export const prerender = true;
-export const GET = () =>
-    new Response(
-        `User-agent: *\nAllow: /\nSitemap: https://example.com/sitemap.xml\n`,
-        { headers: { 'Content-Type': 'text/plain' } }
-    );
+
+const BASE = PUBLIC_BASE_URL.replace(/\/+$/, ''); // 끝 슬래시 제거
+
+export const GET = () => {
+    const body = `User-agent: *
+Allow: /
+Sitemap: ${BASE}/sitemap.xml
+`;
+
+    return new Response(body, {
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+    });
+};
