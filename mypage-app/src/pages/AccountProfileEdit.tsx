@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { FaPhone, FaEnvelope } from "react-icons/fa";
 import { useOutletContext } from "react-router-dom";
@@ -7,8 +7,10 @@ import defaultProfile from "../assets/default_profile.png";
 import ServiceModal from "../components/modals/ServiceModal.tsx";
 import {
     updateNickname,
+    fetchMyRanks,
     CustomNicknameResponse,
     ProfileAppearanceResponse,
+    HistoryItem, equipRank,
 } from "../api/profileAppearanceApi.ts";
 
 type OutletContextType = {
@@ -29,24 +31,43 @@ export default function AccountProfileEdit() {
     const [tempNickname, setTempNickname] = useState("");
     const [error, setError] = useState<string | null>(null);
 
+    const [ranks, setRanks] = useState<HistoryItem[]>([]);
+    const [showRanks, setShowRanks] = useState(false);
+
     // TODO: AccountProfile API 나오면 교체
     const [accountInfo] = useState({
         phone: "",
         email: "TestUser01@kakao.com",
     });
 
-    // TODO: Dashboard API 나오면 교체
-    const [history] = useState({
-        login: "2025.09.04 PC (웹)",
-        grades: [
-            { name: "브론즈", date: "2025-08-01" },
-            { name: "실버", date: "2025-08-10", active: true },
-        ],
-        titles: [
-            { name: "얼리버드", date: "2025-08-22" },
-            { name: "나야, 나", date: "2025-08-15", active: true },
-        ],
-    });
+    useEffect(() => {
+        const token = localStorage.getItem("userToken");
+        if(!token){
+            return;
+        }
+        fetchMyRanks(token)
+            .then(setRanks)
+            .catch(console.error);
+    }, []);
+
+    // 랭크 장착 핸들러
+    const handleEquipRank = async (rankId: number) => {
+        const token = localStorage.getItem("userToken");
+        if (!token) {
+            alert("로그인이 필요합니다.");
+            return;
+        }
+        try {
+            const updated = await equipRank(token, rankId);
+            await refreshProfile();
+
+            // 성공 메시지
+            alert(`✅ ${updated.displayName} 랭크가 장착되었습니다!`);
+        } catch (error: any) {
+            // 실패 메시지
+            alert(`❌ ${error.message || "랭크 장착에 실패했습니다."}`);
+        }
+    };
 
     // TODO: AccountProfile API 나오면 교체
     const [consent] = useState({
@@ -88,6 +109,24 @@ export default function AccountProfileEdit() {
         setModalType(type);
         setIsModalOpen(true);
     };
+
+    type HistoryMock = {
+        login: string;
+        grades: { name: string; date: string; active?: boolean }[];
+        titles: { name: string; date: string; active?: boolean }[];
+    };
+
+    const [history] = useState<HistoryMock>({
+        login: "2025.09.04 PC (웹)",
+        grades: [
+            { name: "브론즈", date: "2025-08-01" },
+            { name: "실버", date: "2025-08-10", active: true },
+        ],
+        titles: [
+            { name: "얼리버드", date: "2025-08-22" },
+            { name: "나야, 나", date: "2025-08-15", active: true },
+        ],
+    });
 
     if (!profile) {
         return <p>불러오는 중...</p>;
@@ -200,14 +239,38 @@ export default function AccountProfileEdit() {
                 </Card>
 
                 <Card>
-                    <h3>등급 전체 이력</h3>
-                    <ul>
-                        {history.grades.map((g, i) => (
-                            <li key={i}>
-                                {g.name} ({g.date}) {g.active && <Badge active>사용중</Badge>}
-                            </li>
-                        ))}
-                    </ul>
+                    <HistoryHeader>
+                        <h3>등급 전체 이력</h3>
+                        <ToggleButton onClick={() => setShowRanks(!showRanks)}>
+                            {showRanks ? "숨기기" : "보기"}
+                        </ToggleButton>
+                    </HistoryHeader>
+
+                    {/* 현재 장착된 랭크 */}
+                    {profile.rank && (
+                        <EquippedBox>
+                            <span>{profile.rank.displayName}</span>
+                            <span>장착 중</span>
+                        </EquippedBox>
+                    )}
+
+                    {/* 토글된 경우에만 리스트 표시 */}
+                    {showRanks && (
+                        <ul>
+                            {ranks.map((rank) => (
+                                <HistoryItemBox key={rank.id} active={profile.rank?.id === rank.id}>
+                                    <span>
+                                        {rank.displayName} ({new Date(rank.acquiredAt).toLocaleDateString()})
+                                    </span>
+                                    {profile?.rank?.id === rank.id ? (
+                                        <EquipButton disabled>장착 중</EquipButton>
+                                    ) : (
+                                        <EquipButton onClick={() => handleEquipRank(rank.id)}>장착</EquipButton>
+                                    )}
+                                </HistoryItemBox>
+                            ))}
+                        </ul>
+                    )}
                 </Card>
 
                 <Card>
@@ -482,3 +545,68 @@ const ErrorText = styled.div`
   color: #dc2626; /* Tailwind red-600 */
   margin-top: 4px;
 `;
+
+const EquipButton = styled.button`
+  margin-left: 8px;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+  &:hover {
+    background: #e5e7eb;
+  }
+`;
+
+const HistoryHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const ToggleButton = styled.button`
+  font-size: 13px;
+  color: #3b82f6;
+  border: none;
+  background: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
+const EquippedBox = styled.div`
+  border: 2px solid rgb(59, 130, 246);
+  background: rgb(239, 246, 255);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+
+  span {
+    font-weight: 600;
+    font-size: 14px;
+    color: rgb(29, 78, 216);
+  }
+`;
+
+const HistoryItemBox = styled.li<{ active?: boolean }>`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid ${({ active }) => (active ? "rgb(59,130,246)" : "rgb(229,231,235)")};
+  background: ${({ active }) => (active ? "rgb(239,246,255)" : "white")};
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: 6px;
+
+  span {
+    font-size: 14px;
+    color: ${({ active }) => (active ? "rgb(29,78,216)" : "rgb(31,41,55)")};
+    font-weight: ${({ active }) => (active ? 600 : 400)};
+  }
+`;
+
