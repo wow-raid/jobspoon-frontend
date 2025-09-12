@@ -1,27 +1,42 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
-import defaultProfile from "../assets/default_profile.png";
 import { FaPhone, FaEnvelope } from "react-icons/fa";
-import ServiceModal from "../components/modals/ServiceModal.tsx"
+import { useOutletContext } from "react-router-dom";
+
+import defaultProfile from "../assets/default_profile.png";
+import ServiceModal from "../components/modals/ServiceModal.tsx";
+import {
+    updateNickname,
+    CustomNicknameResponse,
+    ProfileAppearanceResponse,
+} from "../api/profileAppearanceApi.ts";
+
+type OutletContextType = {
+    profile: ProfileAppearanceResponse | null;
+    refreshProfile: () => Promise<void>;
+};
 
 export default function AccountProfileEdit() {
-    // 더미 상태 (추후 API 연동 예정)
-    const [profile, setProfile] = useState({
-        photoUrl: "",
-        nickname: "개발뉴비 김햄찌",
-        email: "TestUser01@kakao.com",
+    const { profile, refreshProfile } = useOutletContext<OutletContextType>();
+
+    // 모달 상태
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    // modalType 타입 확장
+    const [modalType, setModalType] = useState<"phone" | "email" | "photo" | null>(null);
+
+    // 닉네임 수정 상태
+    const [isEditingNickname, setIsEditingNickname] = useState(false);
+    const [tempNickname, setTempNickname] = useState("");
+    const [error, setError] = useState<string | null>(null);
+
+    // TODO: AccountProfile API 나오면 교체
+    const [accountInfo] = useState({
         phone: "",
-        verified: false,
-        rank: "Gold",
-        accountId: "TestUser01",
+        email: "TestUser01@kakao.com",
     });
 
-    const [consent, setConsent] = useState({
-        phone: true,
-        email: false,
-    });
-
-    const [history, setHistory] = useState({
+    // TODO: Dashboard API 나오면 교체
+    const [history] = useState({
         login: "2025.09.04 PC (웹)",
         grades: [
             { name: "브론즈", date: "2025-08-01" },
@@ -30,23 +45,53 @@ export default function AccountProfileEdit() {
         titles: [
             { name: "얼리버드", date: "2025-08-22" },
             { name: "나야, 나", date: "2025-08-15", active: true },
-            { name: "프론트엔드", date: "2025-08-22" },
-            { name: "백엔드", date: "2025-08-22" },
-            { name: "국가대표", date: "2025-08-22" },
         ],
     });
 
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalType, setModalType] = useState<"phone" | "email" | null>(null);
+    // TODO: AccountProfile API 나오면 교체
+    const [consent] = useState({
+        phone: true,
+        email: false,
+    });
 
-    const openModal = (type: "phone" | "email") => {
+    /** 닉네임 수정 시작 */
+    const handleStartEdit = () => {
+        if (profile) {
+            setTempNickname(profile.customNickname);
+            setIsEditingNickname(true);
+        }
+    };
+
+    /** 닉네임 저장 */
+    const handleSaveNickname = async () => {
+        const token = localStorage.getItem("userToken");
+        if (!token) {
+            setError("로그인이 필요합니다.");
+            return;
+        }
+
+        try {
+            const updated: CustomNicknameResponse = await updateNickname(
+                token,
+                tempNickname
+            );
+            await refreshProfile();
+            setIsEditingNickname(false);
+            setError(null);
+        } catch (err: any) {
+            setError(err.message || "닉네임 수정 실패");
+        }
+    };
+
+    /** 모달 열기 */
+    const openModal = (type: "phone" | "email" | "photo") => {
         setModalType(type);
         setIsModalOpen(true);
-    }
+    };
 
-    useEffect(() => {
-        // TODO: fetchAccountProfile();
-    }, []);
+    if (!profile) {
+        return <p>불러오는 중...</p>;
+    }
 
     return (
         <Wrapper>
@@ -64,19 +109,32 @@ export default function AccountProfileEdit() {
                                 }}
                             />
                         </PhotoWrapper>
+
                         <InfoText>
                             <NicknameRow>
-                                <Nickname>{profile.nickname}</Nickname>
+                                {isEditingNickname ? (
+                                    <NicknameInput
+                                        type="text"
+                                        value={tempNickname}
+                                        onChange={(e) => setTempNickname(e.target.value)}
+                                        placeholder="닉네임을 입력해주세요"
+                                    />
+                                ) : (
+                                    <Nickname>{profile.customNickname}</Nickname>
+                                )}
                             </NicknameRow>
+                            {error && <ErrorText>{error}</ErrorText>}
+
                             <Email>{profile.email}</Email>
                         </InfoText>
+
                         <ButtonGroup>
-                            <SmallButton onClick={() => setIsModalOpen(true)}>
-                                별명 수정
-                            </SmallButton>
-                            <SmallButton onClick={() => setIsModalOpen(true)}>
-                                사진 변경
-                            </SmallButton>
+                            {isEditingNickname ? (
+                                <SmallButton onClick={handleSaveNickname}>확인</SmallButton>
+                            ) : (
+                                <SmallButton onClick={handleStartEdit}>별명 수정</SmallButton>
+                            )}
+                            <SmallButton onClick={() => openModal("photo")}>사진 변경</SmallButton>
                         </ButtonGroup>
                     </TopRow>
 
@@ -85,17 +143,15 @@ export default function AccountProfileEdit() {
                     <BottomRow>
                         <InfoItem>
                             <FaPhone style={{ color: "#6b7280", marginRight: "8px" }} />
-                            <span>{profile.phone || "본인확인 번호 없음"}</span>
+                            <span>{accountInfo.phone || "본인확인 번호 없음"}</span>
                             <ActionLink onClick={() => openModal("phone")}>
-                                {profile.phone ? "수정" : "등록"}
+                                {accountInfo.phone ? "수정" : "등록"}
                             </ActionLink>
                         </InfoItem>
                         <InfoItem>
                             <FaEnvelope style={{ color: "#6b7280", marginRight: "8px" }} />
-                            <span>{profile.email}</span>
-                            <ActionLink onClick={() => openModal("email")}>
-                                수정
-                            </ActionLink>
+                            <span>{accountInfo.email}</span>
+                            <ActionLink onClick={() => openModal("email")}>수정</ActionLink>
                         </InfoItem>
                     </BottomRow>
                 </InfoCard>
@@ -112,7 +168,8 @@ export default function AccountProfileEdit() {
                         </Left>
                         <ToggleSwitch
                             checked={consent.phone}
-                            onClick={() => openModal("phone")}>
+                            onClick={() => openModal("phone")}
+                        >
                             <span>{consent.phone ? "ON" : "OFF"}</span>
                         </ToggleSwitch>
                     </ConsentRow>
@@ -126,7 +183,8 @@ export default function AccountProfileEdit() {
                         </Left>
                         <ToggleSwitch
                             checked={consent.email}
-                            onClick={() => openModal("email")}>
+                            onClick={() => openModal("email")}
+                        >
                             <span>{consent.email ? "ON" : "OFF"}</span>
                         </ToggleSwitch>
                     </ConsentRow>
@@ -136,7 +194,6 @@ export default function AccountProfileEdit() {
             {/* 이력 관리 */}
             <Section>
                 <SectionTitle>이력 관리</SectionTitle>
-
                 <Card>
                     <h3>로그인 기록</h3>
                     <p>{history.login}</p>
@@ -147,8 +204,7 @@ export default function AccountProfileEdit() {
                     <ul>
                         {history.grades.map((g, i) => (
                             <li key={i}>
-                                {g.name} ({g.date}){" "}
-                                {g.active && <Badge active>사용중</Badge>}
+                                {g.name} ({g.date}) {g.active && <Badge active>사용중</Badge>}
                             </li>
                         ))}
                     </ul>
@@ -159,19 +215,18 @@ export default function AccountProfileEdit() {
                     <ul>
                         {history.titles.map((t, i) => (
                             <li key={i}>
-                                {t.name} ({t.date}){" "}
-                                {t.active && <Badge active>사용중</Badge>}
+                                {t.name} ({t.date}) {t.active && <Badge active>사용중</Badge>}
                             </li>
                         ))}
                     </ul>
                 </Card>
             </Section>
 
-            {/* ✅ 모달 */}
+            {/* 모달 */}
             <ServiceModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}>
-            </ServiceModal>
+                onClose={() => setIsModalOpen(false)}
+            />
         </Wrapper>
     );
 }
@@ -261,7 +316,10 @@ const ButtonGroup = styled.div`
 `;
 
 const SmallButton = styled.button`
-    padding: 6px 14px;   /* 기존보다 넉넉하게 */
+    width: 100px;   /* ✅ 고정 너비 */
+    text-align: center;
+
+    padding: 6px 0;   /* 좌우 padding 대신 위아래만 */
     font-size: 13px;
     background: #f9fafb;
     border: 1px solid #d1d5db;
@@ -397,4 +455,30 @@ const Badge = styled.span<{ active?: boolean }>`
     background: ${({ active }) => (active ? "rgb(59,130,246)" : "transparent")};
     color: ${({ active }) => (active ? "#fff" : "rgb(107, 114, 128)")};
     border: ${({ active }) => (active ? "none" : "1px solid #d1d5db")};
+`;
+
+const NicknameInput = styled.input`
+    font-size: 22px;
+    font-weight: 700;
+    color: #111827;
+    border: none;
+    border-bottom: 2px solid #3b82f6;  /* 밑줄 강조 */
+    padding: 4px 0;
+    outline: none;
+    width: 100%;
+
+    &::placeholder {
+        color: #9ca3af;
+        font-weight: 500;
+    }
+
+    &:focus {
+        border-color: #2563eb; /* 포커스 시 진한 파랑 */
+    }
+`;
+
+const ErrorText = styled.div`
+  font-size: 13px;
+  color: #dc2626; /* Tailwind red-600 */
+  margin-top: 4px;
 `;

@@ -2,13 +2,24 @@ import axios from "axios";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-// 프로필 조회 응답
+// 전체 프로필 조회 응답
 export interface ProfileAppearanceResponse {
     photoUrl: string | null;
+    email: string;
     customNickname: string;
-    rank?: { id?: number; code: string; displayName: string };
-    title?: { id?: number; code: string; displayName: string };
-    email?: string;
+    rank?: { id: number; code: string; displayName: string; acquiredAt: string };
+    title?: { id: number; code: string; displayName: string; acquiredAt: string };
+}
+
+// PUT /photo 응답
+export interface PhotoResponse {
+    photoUrl: string;
+}
+
+
+// PUT /nickname 응답
+export interface CustomNicknameResponse {
+    customNickname: string;
 }
 
 // 공통 Rank/Title 이력 타입
@@ -30,7 +41,7 @@ export async function fetchMyProfile(token: string) {
 
 // 프로필 사진 교체
 export async function updateProfilePhoto(token: string, photoUrl: string) {
-    const res = await axios.put<ProfileAppearanceResponse>(
+    const res = await axios.put<PhotoResponse>(
         `${API_BASE_URL}/profile-appearance/photo`,
         { photoUrl },
         { headers: { Authorization: token } }
@@ -41,7 +52,7 @@ export async function updateProfilePhoto(token: string, photoUrl: string) {
 // 닉네임 변경
 export async function updateNickname(token: string, customNickname: string) {
     try{
-        const res = await axios.put<ProfileAppearanceResponse>(
+        const res = await axios.put<CustomNicknameResponse>(
             `${API_BASE_URL}/profile-appearance/nickname`,
             { customNickname },
             { headers: { Authorization: token } }
