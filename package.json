@@ -13,10 +13,14 @@
     "sveltekit-review-app"
   ],
   "scripts": {
-    "build": "lerna run build --parallel",
+    "build:seo": "lerna run build --scope sveltekit-review-app --stream",
+    "build:remotes": "lerna run build --stream --parallel --scope navigation-bar-app --scope vue-account-app --scope vue-ai-interview-app --scope studyroom-app --scope mypage-app --scope spoon-word-app",
+    "build:host": "lerna run build --scope main-container --stream",
+    "build": "npm run build:seo && npm run build:remotes && npm run build:host",
     "start": "lerna run start --parallel"
   },
   "devDependencies": {
+    "@sveltejs/adapter-static": "^3.0.9",
     "autoprefixer": "^10.4.21",
     "cross-env": "^7.0.3",
     "external-remotes-plugin": "^1.0.0",
