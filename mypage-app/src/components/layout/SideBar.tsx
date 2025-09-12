@@ -4,6 +4,7 @@ import {
     FaUser,
     FaRegCommentDots,
     FaCalendarAlt,
+    FaFolderOpen,
     FaCrown,
     FaCog,
     FaSignOutAlt,
@@ -33,36 +34,32 @@ export default function SideBar() {
                     <li>
                         <NavButton onClick={handleOpenModal}>
                             <FaCrown className="icon" />
-                            구독 내역
+                            멤버십
+                            {/* 하위에 내 구독 내역 나오도록 페이지 구성 */}
                         </NavButton>
                     </li>
 
                     <li>
                         <NavButton onClick={handleOpenModal}>
-                            <MdArticle className="icon" />
-                            내가 작성한 글
-                        </NavButton>
-                    </li>
-
-                    <li>
-                        <NavButton onClick={handleOpenModal}>
-                            <FaRegCommentDots className="icon" />
-                            내가 작성한 댓글
-                        </NavButton>
-                    </li>
-
-                    <li>
-                        <NavButton onClick={handleOpenModal}>
-                            <FaCalendarAlt className="icon" />
-                            내 일정
+                            <FaFolderOpen className="icon" />
+                            면접 기록 보관함
                             <Badge>4</Badge>
                         </NavButton>
                     </li>
 
                     <li>
                         <NavButton onClick={handleOpenModal}>
-                            <FaCrown className="icon" />
-                            멤버십
+                            <MdArticle className="icon" />
+                            작성한 글
+                            {/* 하위에 모임, 댓글, 리뷰 내역 나오도록 페이지 구성 */}
+                        </NavButton>
+                    </li>
+
+                    <li>
+                        <NavButton onClick={handleOpenModal}>
+                            <FaCalendarAlt className="icon" />
+                            일정
+                            <Badge>4</Badge>
                         </NavButton>
                     </li>
 
