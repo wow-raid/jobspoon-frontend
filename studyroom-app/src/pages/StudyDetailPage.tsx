@@ -176,7 +176,6 @@ const StudyDetailPage: React.FC = () => {
                 return <DisabledButton disabled>거절됨</DisabledButton>;
 
             case 'NOT_APPLIED':
-            case 'CANCELED':
             default:
                 return <ApplyBtn onClick={() => setIsApplyModalOpen(true)}>참가 신청하기</ApplyBtn>;
         }

@@ -31,7 +31,7 @@ export interface Announcement {
     readBy?: number[];
 }
 
-export type ApplicationStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELED' | 'NOT_APPLIED';
+export type ApplicationStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'NOT_APPLIED';
 
 export interface StudyApplication {
     applicationId: number | null;
