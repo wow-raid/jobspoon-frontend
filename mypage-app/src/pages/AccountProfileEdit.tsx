@@ -8,9 +8,12 @@ import ServiceModal from "../components/modals/ServiceModal.tsx";
 import {
     updateNickname,
     fetchMyRanks,
+    fetchMyTitles,
+    equipRank,
+    equipTitle,
     CustomNicknameResponse,
     ProfileAppearanceResponse,
-    HistoryItem, equipRank,
+    HistoryItem
 } from "../api/profileAppearanceApi.ts";
 
 type OutletContextType = {
@@ -34,6 +37,9 @@ export default function AccountProfileEdit() {
     const [ranks, setRanks] = useState<HistoryItem[]>([]);
     const [showRanks, setShowRanks] = useState(false);
 
+    const [titles, setTitles] = useState<HistoryItem[]>([]);
+    const [showTitles, setShowTitles] = useState(false);
+
     // TODO: AccountProfile API 나오면 교체
     const [accountInfo] = useState({
         phone: "",
@@ -42,11 +48,12 @@ export default function AccountProfileEdit() {
 
     useEffect(() => {
         const token = localStorage.getItem("userToken");
-        if(!token){
-            return;
-        }
-        fetchMyRanks(token)
-            .then(setRanks)
+        if (!token) return;
+        Promise.all([fetchMyRanks(token), fetchMyTitles(token)])
+            .then(([r, t]) => {
+                setRanks(r);
+                setTitles(t);
+            })
             .catch(console.error);
     }, []);
 
@@ -66,6 +73,22 @@ export default function AccountProfileEdit() {
         } catch (error: any) {
             // 실패 메시지
             alert(`❌ ${error.message || "랭크 장착에 실패했습니다."}`);
+        }
+    };
+
+    // 칭호 장착 핸들러
+    const handleEquipTitle = async (titleId: number) => {
+        const token = localStorage.getItem("userToken");
+        if (!token) {
+            alert("로그인이 필요합니다.");
+            return;
+        }
+        try {
+            const updated = await equipTitle(token, titleId);
+            await refreshProfile();
+            alert(`✅ ${updated.displayName} 칭호가 장착되었습니다!`);
+        } catch (error: any) {
+            alert(`❌ ${error.message || "칭호 장착에 실패했습니다."}`);
         }
     };
 
@@ -109,24 +132,6 @@ export default function AccountProfileEdit() {
         setModalType(type);
         setIsModalOpen(true);
     };
-
-    type HistoryMock = {
-        login: string;
-        grades: { name: string; date: string; active?: boolean }[];
-        titles: { name: string; date: string; active?: boolean }[];
-    };
-
-    const [history] = useState<HistoryMock>({
-        login: "2025.09.04 PC (웹)",
-        grades: [
-            { name: "브론즈", date: "2025-08-01" },
-            { name: "실버", date: "2025-08-10", active: true },
-        ],
-        titles: [
-            { name: "얼리버드", date: "2025-08-22" },
-            { name: "나야, 나", date: "2025-08-15", active: true },
-        ],
-    });
 
     if (!profile) {
         return <p>불러오는 중...</p>;
@@ -189,7 +194,7 @@ export default function AccountProfileEdit() {
                         </InfoItem>
                         <InfoItem>
                             <FaEnvelope style={{ color: "#6b7280", marginRight: "8px" }} />
-                            <span>{accountInfo.email}</span>
+                            <span>{profile.email}</span>
                             <ActionLink onClick={() => openModal("email")}>수정</ActionLink>
                         </InfoItem>
                     </BottomRow>
@@ -235,7 +240,9 @@ export default function AccountProfileEdit() {
                 <SectionTitle>이력 관리</SectionTitle>
                 <Card>
                     <h3>로그인 기록</h3>
-                    <p>{history.login}</p>
+                    <p>해당 기능은 현재 준비 중입니다.<br />
+                        곧 만나보실 수 있어요 😊
+                    </p>
                 </Card>
 
                 <Card>
@@ -260,7 +267,8 @@ export default function AccountProfileEdit() {
                             {ranks.map((rank) => (
                                 <HistoryItemBox key={rank.id} active={profile.rank?.id === rank.id}>
                                     <span>
-                                        {rank.displayName} ({new Date(rank.acquiredAt).toLocaleDateString()})
+                                        {rank.displayName} (
+                                        {new Date(rank.acquiredAt).toLocaleDateString()})
                                     </span>
                                     {profile?.rank?.id === rank.id ? (
                                         <EquipButton disabled>장착 중</EquipButton>
@@ -274,15 +282,43 @@ export default function AccountProfileEdit() {
                 </Card>
 
                 <Card>
-                    <h3>칭호 전체 이력</h3>
-                    <ul>
-                        {history.titles.map((t, i) => (
-                            <li key={i}>
-                                {t.name} ({t.date}) {t.active && <Badge active>사용중</Badge>}
-                            </li>
-                        ))}
-                    </ul>
+                    <HistoryHeader>
+                        <h3>칭호 전체 이력</h3>
+                        <ToggleButton onClick={() => setShowTitles(!showTitles)}>
+                            {showTitles ? "숨기기" : "보기"}
+                        </ToggleButton>
+                    </HistoryHeader>
+
+                    {profile.title && (
+                        <EquippedBox>
+                            <span>{profile.title.displayName}</span>
+                            <span>장착 중</span>
+                        </EquippedBox>
+                    )}
+
+                    {showTitles && (
+                        <ul>
+                            {titles.map((title) => (
+                                <HistoryItemBox
+                                    key={title.id}
+                                    active={profile.title?.id === title.id}>
+                                    <span>
+                                        {title.displayName} (
+                                        {new Date(title.acquiredAt).toLocaleDateString()})
+                                    </span>
+                                    {profile?.title?.id === title.id ? (
+                                        <EquipButton disabled>장착 중</EquipButton>
+                                    ) : (
+                                        <EquipButton onClick={() => handleEquipTitle(title.id)}>
+                                            장착
+                                        </EquipButton>
+                                    )}
+                                </HistoryItemBox>
+                            ))}
+                        </ul>
+                    )}
                 </Card>
+
             </Section>
 
             {/* 모달 */}
