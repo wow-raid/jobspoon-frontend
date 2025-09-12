@@ -16,7 +16,7 @@ export default function InterviewResultList() {
                 {mockResults.map((item) => (
                     <li key={item.id}>
                         {item.date} | {item.topic} | {item.grade} |{" "}
-                        <Link to={`/interview/history/${item.id}`}>상세보기</Link>
+                        <Link to={`/mypage/interview/history/${item.id}`}>상세보기</Link>
                     </li>
                 ))}
             </ul>
