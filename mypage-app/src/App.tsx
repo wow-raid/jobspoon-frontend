@@ -4,6 +4,8 @@ import MyPageLayout from "./components/layout/MyPageLayout.tsx";
 import DashboardSection from "./components/dashboard/DashboardSection.tsx";
 import ProfileAppearanceCardEdit from "./pages/ProfileAppearanceCardEdit.tsx";
 import AccountProfileEdit from "./pages/AccountProfileEdit.tsx";
+import InterviewResultList from "./pages/InterviewResultList.tsx";
+import InterviewResultDetail from "./pages/InterviewResultDetail.tsx";
 
 import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
 import { getTheme, onThemeChange, type Theme as BridgeTheme } from '@jobspoon/theme-bridge';
@@ -74,7 +76,11 @@ export default function App() {
                         <Route index element={<DashboardSection />} />
                         {/* 프로필 외형 수정 (우측 영역만 바뀜) */}
                         <Route path="profile/edit" element={<ProfileAppearanceCardEdit />} />
+                        {/* 회원정보 수정 */}
                         <Route path="account/edit" element={<AccountProfileEdit />} />
+                        {/* 인터뷰 결과 보관함 */}
+                        <Route path="interview/history" element={<InterviewResultList />} />
+                        <Route path="interview/history/:id" element={<InterviewResultDetail />} />
                     </Route>
                 </Routes>
             </AppShell>

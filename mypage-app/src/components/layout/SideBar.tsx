@@ -40,11 +40,11 @@ export default function SideBar() {
                     </li>
 
                     <li>
-                        <NavButton onClick={handleOpenModal}>
+                        <StyledNavLink to="interview/history">
                             <FaFolderOpen className="icon" />
                             면접 기록 보관함
                             <Badge>4</Badge>
-                        </NavButton>
+                        </StyledNavLink>
                     </li>
 
                     <li>
