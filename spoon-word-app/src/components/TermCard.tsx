@@ -1,6 +1,8 @@
-// src/components/TermCard.tsx
 import React from "react";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
+// 비로그인 시 확인/취소 → 확인 시 로그인 이동, 취소 시 유지
+import { ensureAuthOrAlertRedirect, AUTH_ALERT_MSG } from "../utils/authGuard";
 
 export type TermCardProps = {
     id: number;
@@ -118,8 +120,8 @@ const TagsRow = styled.div`
     display: flex;
     align-items: center;
     gap: ${TOKENS.space(8)};
-    white-space: nowrap;         /* 한 줄 유지 */
-    overflow-x: auto;            /* 많으면 가로 스크롤 */
+    white-space: nowrap; /* 한 줄 유지 */
+    overflow-x: auto; /* 많으면 가로 스크롤 */
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
 `;
@@ -177,33 +179,52 @@ const TermCard: React.FC<TermCardProps> = ({
                                                onAdd,
                                                onTagClick,
                                            }) => {
+    const navigate = useNavigate();
+    const isLoggedIn = undefined; // 전역 상태가 있으면 주입
+
+    const handleAddClick = React.useCallback(() => {
+        const ok = ensureAuthOrAlertRedirect(
+            AUTH_ALERT_MSG,
+            "/vue-account/account/login", // 프로젝트 로그인 경로에 맞춰 조정
+            {
+                isLoggedIn,
+                navigate,
+                promptType: "confirm", // 확인/취소 다이얼로그
+                // useReplace: true,    // 필요하면 히스토리 덮어쓰기
+                tokenKeys: ["userToken", "accessToken"], // 팀 기본키 우선 + 호환
+            }
+        );
+        if (!ok) return; // 비로그인: 확인→로그인 이동 / 취소→그대로 유지 (둘 다 원동작 중단)
+        onAdd?.(id); // 로그인: 원래 동작 수행
+    }, [id, onAdd, isLoggedIn, navigate]);
+
     return (
         <Article aria-labelledby={`term-${id}`}>
-            {/* 헤더: 제목 + (+) */}
             <Header>
                 <Title id={`term-${id}`}>{title}</Title>
-
                 <AddBtn
                     type="button"
                     title="내 단어장에 추가"
                     aria-label="내 단어장에 추가"
-                    onClick={() => onAdd?.(id)}
+                    onClick={handleAddClick} // 가드 적용된 핸들러
                 >
                     <AddIcon viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        <path
+                            d="M12 5v14M5 12h14"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                        />
                     </AddIcon>
                 </AddBtn>
             </Header>
 
-            {/* 본문 */}
             <InnerBox>
                 <Description>{description}</Description>
             </InnerBox>
 
-            {/* 연관 키워드: 한 줄 */}
             <TagsRow aria-label="연관 키워드">
                 <TagLabelInline>연관 키워드</TagLabelInline>
-
                 {tags.length > 0 ? (
                     <TagListInline role="list" aria-label="해시태그 목록">
                         {tags.map((t, idx) => (
