@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-import { Status, Application } from "../types/study";
+import { ApplicationStatus, Application } from "../types/study";
 
 interface ApplicationCardProps {
   application: Application;
@@ -61,21 +61,23 @@ const AppliedDate = styled.p`
   margin: 0;
 `;
 
-const StatusTag = styled.div<{ $status: Status }>`
+const StatusTag = styled.div<{ $status: ApplicationStatus }>`
   padding: 6px 12px;
   border-radius: 16px;
   font-weight: bold;
   font-size: 13px;
   flex-shrink: 0;
 
-  ${({ $status }) => {
+  ${({ $status, theme }) => {
     switch ($status) {
-      case "pending":
-        return `background-color: rgba(255,165,0,0.2); color: #ffa500;`;
-      case "approved":
-        return `background-color: rgba(4,199,114,0.2); color: #04c772;`;
-      case "rejected":
-        return `background-color: rgba(255,107,107,0.2); color: #ff6b6b;`;
+      case "PENDING":
+        return `background-color: rgba(245, 158, 11, 0.2); color: #f59e0b;`;
+      case "APPROVED":
+        return `background-color: rgba(16, 185, 129, 0.2); color: #10b981;`;
+      case "REJECTED":
+        return `background-color: rgba(239, 68, 68, 0.2); color: #ef4444;`;
+      default:
+        return `background-color: ${theme.surfaceAlt}; color: ${theme.muted};`;
     }
   }}
 `;
@@ -110,12 +112,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
 }) => {
   const { id, study, status, appliedAt } = application;
 
-  const STATUS_MAP = {
-    pending: "대기중",
-    approved: "수락됨",
-    rejected: "거절됨",
+  const STATUS_MAP: { [key in ApplicationStatus]?: string } = {
+    PENDING: "대기중",
+    APPROVED: "수락됨",
+    REJECTED: "거절됨",
   };
-  const statusText = STATUS_MAP[status.toLowerCase()] || "알 수 없음";
+
+  const statusText = STATUS_MAP[status] || "알 수 없음";
 
     const formattedDate = new Date(appliedAt).toLocaleDateString("ko-KR", {
       year: "numeric",

@@ -2,8 +2,10 @@ import React, {useEffect, useMemo, useState} from "react";
 import styled from "styled-components";
 import ApplicationCard from "../components/ApplicationCard";
 import FilterBar, { FilterValues } from "../components/FilterBar";
-import { Application } from "../types/study";
+import { Application, ApplicationStatus } from "../types/study";
 import axiosInstance from "../api/axiosInstance";
+
+type StatusFilter = ApplicationStatus | 'all';
 
 /* ─ styled-components (scoped) ─ */
 const Container = styled.div`
@@ -79,7 +81,7 @@ const SectionTitle = styled.h2`
 const MyApplicationsPage: React.FC = () => {
     const [applications, setApplications] = useState<Application[]>([]);
     const [loading, setLoading] = useState(true);
-    const [statusFilter, setStatusFilter] = useState<ApplicationStatus>("all")
+    const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
     const [searchFilters, setSearchFilters] = useState<FilterValues>({
         searchTerm: '',
         location: '전체',
@@ -123,7 +125,7 @@ const MyApplicationsPage: React.FC = () => {
         let filtered = applications;
 
         if (statusFilter !== "all") {
-            filtered = filtered.filter((app) => app.status.toLowerCase() === statusFilter);
+            filtered = filtered.filter((app) => app.status === statusFilter);
         }
 
         if (searchFilters.searchTerm) {
@@ -143,11 +145,11 @@ const MyApplicationsPage: React.FC = () => {
         return filtered;
     }, [applications, statusFilter, searchFilters]);
 
-    const filterTags: { key: ApplicationStatus; text: string }[] = [
+    const filterTags: { key: StatusFilter; text: string }[] = [
         { key: "all", text: "전체" },
-        { key: "pending", text: "대기중" },
-        { key: "approved", text: "수락됨" },
-        { key: "rejected", text: "거절됨" },
+        { key: "PENDING", text: "대기중" },
+        { key: "APPROVED", text: "수락됨" },
+        { key: "REJECTED", text: "거절됨" },
     ];
 
     // ✅ 로딩 상태 UI 추가

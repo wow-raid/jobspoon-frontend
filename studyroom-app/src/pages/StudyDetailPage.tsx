@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useParams, useNavigate } from 'react-router-dom';
-import { StudyRoom } from '../types/study';
+import { StudyRoom, StudyApplication } from '../types/study';
 import axiosInstance from "../api/axiosInstance";
 import { FAKE_STUDY_ROOMS } from '../data/mockData';
-import StudyDetailView from '../components/StudyDetailView';
+import StudyDetailView, {ApplyBtn} from '../components/StudyDetailView';
 import Modal from '../components/Modal';
 import ApplicationForm from '../components/ApplicationForm';
 import CreateStudyForm from "../components/CreateStudyForm";        // 생성폼을 재사용함
@@ -16,6 +16,56 @@ const PageContainer = styled.div`
   margin: 0 auto;
 `;
 
+const ActionButton = styled.button`
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+`;
+
+const PendingButton = styled(ActionButton)`
+  background-color: #f59e0b; /* 주황색 계열 */
+  color: #fff;
+  &:hover:not(:disabled) { background-color: #d97706; }
+`;
+
+const ApprovedButton = styled(ActionButton)`
+  background-color: #10b981; /* 녹색 계열 */
+  color: #fff;
+  &:hover:not(:disabled) { background-color: #059669; }
+`;
+
+const DisabledButton = styled(ActionButton)`
+  background-color: ${({ theme }) => theme.muted};
+  color: ${({ theme }) => theme.subtle};
+  cursor: not-allowed;
+`;
+
+const CancelButton = styled(ActionButton)`
+  background-color: transparent;
+  color: ${({ theme }) => theme.subtle};
+  border: 1px solid ${({ theme }) => theme.border};
+  margin-top: 8px; /* 다른 버튼과 함께 나올 때 간격 */
+
+  &:hover:not(:disabled) {
+    background-color: ${({ theme }) => theme.surfaceHover};
+    border-color: ${({ theme }) => theme.subtle};
+  }
+`;
+
+const ButtonWrapper = styled.div`
+`;
+
+
 const StudyDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -25,25 +75,30 @@ const StudyDetailPage: React.FC = () => {
     const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);  // 수정 모달
 
+    // ✅ 2. 신청 상태와 ID를 저장할 state 추가
+    const [application, setApplication] = useState<StudyApplication | null>(null);
+
     // 👇 2. useEffect를 API 호출 로직으로 변경
     useEffect(() => {
-        const fetchStudyDetail = async () => {
+        const fetchAllData = async () => {
             if (!id) return;
             setLoading(true);
             try {
-                const response = await axiosInstance.get(`/study-rooms/${id}`);
-                console.log("서버 응답 원본!!:", response.data);
-
-                // 👇 백엔드 응답 데이터를 그대로 study 상태에 저장합니다.
-                setStudy(response.data);
+                // ✅ 3. 스터디 상세 정보와 내 지원 상태를 동시에 조회
+                const [studyResponse, applicationResponse] = await Promise.all([
+                    axiosInstance.get(`/study-rooms/${id}`),
+                    axiosInstance.get(`/study-rooms/${id}/my-application`) // 백엔드에 추가된 API
+                ]);
+                setStudy(studyResponse.data);
+                setApplication(applicationResponse.data);
             } catch (error) {
-                console.error("스터디 상세 정보를 불러오는데 실패했습니다:", error);
+                console.error("데이터를 불러오는데 실패했습니다:", error);
                 setStudy(null);
             } finally {
                 setLoading(false);
             }
         };
-        fetchStudyDetail();
+        fetchAllData();
     }, [id]);
 
     const handleUpdateSuccess = (updateStudy: StudyRoom) => {
@@ -53,38 +108,33 @@ const StudyDetailPage: React.FC = () => {
     }
 
     const handleApplicationSubmit = async (message: string) => {
-        // study 객체가 없으면 실행하지 않음
-        if (!study) {
-            alert("스터디 정보가 올바르지 않습니다.");
-            return;
-        }
-        if (!currentUserId) {
-            alert("로그인이 필요합니다.")
-            return;
-        }
-
-        console.log(`--- 스터디 참가 신청 ---`);
-        console.log(`스터디 ID: ${study.id}`);
-        console.log(`신청 메시지: ${message}`);
-
+        if (!study || !currentUserId) return;
         try {
-            // ✅ 1. 백엔드에 보낼 데이터 준비
-            const requestData = {
+            await axiosInstance.post('/study-applications', {
                 studyRoomId: study.id,
                 applicantId: currentUserId,
                 message: message,
-            };
-
-            // ✅ 2. axios를 사용해 POST API 호출
-            await axiosInstance.post('/study-applications', requestData);
-
-            // ✅ 3. API 호출이 성공한 후에 성공 페이지로 이동
+            });
             navigate('/success', { state: { title: study.title } });
-
         } catch (error) {
             console.error("스터디 참가 신청에 실패했습니다:", error);
-            // 백엔드에서 보낸 에러 메시지가 있다면 표시해주는 것이 더 좋습니다.
             alert("참가 신청 중 오류가 발생했습니다. 이미 신청했거나, 모임장일 수 있습니다.");
+        }
+    };
+
+    const handleCancelApplication = async () => {
+        if (!application?.applicationId) return;
+
+        if (window.confirm("정말로 신청을 취소하시겠습니까?")) {
+            try {
+                await axiosInstance.delete(`/study-applications/${application.applicationId}`);
+                alert("신청이 취소되었습니다.");
+                // 상태를 '미신청'으로 변경하여 버튼을 다시 '참가 신청하기'로 바꿈
+                setApplication({ applicationId: null, status: 'NOT_APPLIED' });
+            } catch (error) {
+                console.error("신청 취소에 실패했습니다:", error);
+                alert("처리 중 오류가 발생했습니다.");
+            }
         }
     };
 
@@ -98,18 +148,51 @@ const StudyDetailPage: React.FC = () => {
 
     const isOwner = currentUserId !== null && study.hostId === currentUserId;
 
+    // ✅ 5. 상태에 따라 다른 버튼을 보여주는 렌더링 함수
+    const renderActionButton = () => {
+        if (isOwner) {
+            return <ApplyBtn onClick={() => setIsEditModalOpen(true)}>정보 수정하기</ApplyBtn>;
+        }
+
+        switch (application?.status) {
+            case 'PENDING':
+                return (
+                    <ButtonWrapper>
+                        <PendingButton onClick={() => navigate('/studies/my-applications')}>
+                            참가 신청 중 (내역 보기)
+                        </PendingButton>
+                        <CancelButton onClick={handleCancelApplication}>
+                            신청 취소하기
+                        </CancelButton>
+                    </ButtonWrapper>
+                );
+            case 'APPROVED':
+                return (
+                    <ApprovedButton onClick={() => navigate(`/studies/joined-study/${study.id}`)}>
+                        모임으로 이동
+                    </ApprovedButton>
+                );
+            case 'REJECTED':
+                return <DisabledButton disabled>거절됨</DisabledButton>;
+
+            case 'NOT_APPLIED':
+            default:
+                return <ApplyBtn onClick={() => setIsApplyModalOpen(true)}>참가 신청하기</ApplyBtn>;
+        }
+    };
+
     return (
         <PageContainer>
-            {/* 상세보기 */}
             <StudyDetailView
                 room={study}
-                isOwner={isOwner}
-                onApplyClick={() => setIsApplyModalOpen(true)}
-                onEditClick={() => setIsEditModalOpen(true)}
-                hasApplied={false}
-            />
+                // StudyDetailView가 버튼을 children으로 받도록 구조를 변경했다고 가정합니다.
+            >
+                {/* ✅ 6. 버튼 렌더링 함수 호출 */}
+                <div style={{ marginTop: '24px' }}>
+                    {renderActionButton()}
+                </div>
+            </StudyDetailView>
 
-            {/* 참가 신청 모달 */}
             {isApplyModalOpen && study && (
                 <Modal isOpen={isApplyModalOpen} onClose={() => setIsApplyModalOpen(false)}>
                     <ApplicationForm
@@ -120,12 +203,11 @@ const StudyDetailPage: React.FC = () => {
                 </Modal>
             )}
 
-            {/* 스터디 수정 모달 */}
             {isEditModalOpen && study && (
                 <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
                     <CreateStudyForm
                         isEditMode={true}
-                        initialData={study} // 👈 study 객체를 그대로 전달
+                        initialData={study}
                         onSuccess={handleUpdateSuccess}
                     />
                 </Modal>
