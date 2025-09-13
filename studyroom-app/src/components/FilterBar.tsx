@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { LOCATION, DEV_JOBS } from "../types/filter";
+import TabSearchBar from "./studyroom/TabSearchBar";
 
 export interface FilterValues {
   searchTerm: string;
@@ -46,8 +47,6 @@ const BaseField = styled.input`
   }
 `;
 
-const SearchInput = styled(BaseField)` flex-grow: 1; min-width: 200px; `;
-
 const Select = styled.select`
   padding: 8px 12px;
   font-size: 14px;
@@ -81,10 +80,10 @@ const Checkbox = styled.input.attrs({ type: "checkbox" })`
 `;
 
 const FilterBar: React.FC<FilterBarProps> = ({
-                                                 onFilterChange,
-                                                 showRecruitingFilter = true,
-                                                 searchPlaceholder = "스터디 제목으로 검색",
-                                             }) => {
+    onFilterChange,
+    showRecruitingFilter = true,
+    searchPlaceholder = "스터디 제목으로 검색",
+}) => {
     // 👇 1. 상태를 하나의 객체로 통합하고, 모든 필드를 포함시킵니다.
     const [filters, setFilters] = useState<FilterValues>({
         searchTerm: "",
@@ -93,34 +92,30 @@ const FilterBar: React.FC<FilterBarProps> = ({
         showRecruitingOnly: false,
     });
 
-  // const [searchTerm, setSearchTerm] = useState("");
-  // const [location, setLocation] = useState("전체");
-  // const [job, setJob] = useState("전체");
-  // const [showRecruitingOnly, setShowRecruitingOnly] = useState(false);
-
     useEffect(() => {
         onFilterChange(filters);
     }, [filters, onFilterChange]);
 
-    const handleValueChange = (field: keyof FilterValues, value: string) => {
+    const handleValueChange = (
+        field: keyof FilterValues,
+        value: string
+    ) => {
         setFilters(prev => ({ ...prev, [field]: value }));
     };
 
   return (
     <Container>
-      <SearchInput
-        type="text"
-        placeholder={searchPlaceholder}
-        value={filters.searchTerm}
-        onChange={(e) => handleValueChange("searchTerm", e.target.value)}
-        aria-label="스터디 제목 검색"
-      />
+        <TabSearchBar
+            searchTerm={filters.searchTerm}
+            onSearchChange={(e) => handleValueChange("searchTerm", e.target.value)}
+            placeholder={searchPlaceholder}
+        />
 
-      <Select
-          value={filters.location}
-              onChange={(e) => handleValueChange("location", e.target.value)}
-              aria-label="지역 선택"
-      >
+        <Select
+            value={filters.location}
+            onChange={(e) => handleValueChange("location", e.target.value)}
+            aria-label="지역 선택"
+        >
         {LOCATION.map((region) => (
           <option key={region.value} value={region.value}>
             {region.value === "전체" ? "지역 (전체)" : region.label}

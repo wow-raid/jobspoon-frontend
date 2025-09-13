@@ -83,7 +83,8 @@ function AppRoutes() {
     const hiddenLayouts = [
         "/vue-account/account/login",
         "/vue-ai-interview/ai-interview/select",
-        "/vue-ai-interview/ai-interview/form/*"
+        "/vue-ai-interview/ai-interview/form/*",
+        "vue-ai-interview/ai-test/*"
     ];
 
     const hideLayout = hiddenLayouts.some(path => location.pathname.startsWith(path));
