@@ -48,11 +48,22 @@
               :key="index"
               :value="company"
               clickable
-              @click="selectedCompany = company"
+              @click="selectCompany(company)"
               :style="[companyChipStyle, selectedCompany === company ? companyChipSelectedStyle : {}]"
             >
               {{ company }}
             </v-chip>
+          </div>
+          
+          <div v-if="selectedCompany" :style="companyButtonContainerStyle">
+            <v-btn 
+              color="primary" 
+              :style="companyNextButtonStyle"
+              @click="goToDetailForm"
+            >
+              <v-icon left>mdi-arrow-right</v-icon>
+              다음 단계로
+            </v-btn>
           </div>
         </div>
         
@@ -385,6 +396,30 @@ const backToSelectionBtnStyle = {
   letterSpacing: '0.02em'
 };
 
+// 회사 선택 후 다음 버튼 컨테이너 스타일
+const companyButtonContainerStyle = {
+  display: "flex",
+  justifyContent: "center",
+  marginTop: "2rem",
+  width: "100%"
+};
+
+// 회사 선택 후 다음 버튼 스타일
+const companyNextButtonStyle = {
+  padding: "14px 28px",
+  fontWeight: "600",
+  fontSize: "1.1rem",
+  borderRadius: "12px",
+  boxShadow: "0 8px 16px rgba(59, 130, 246, 0.3)",
+  transition: "all 0.3s ease",
+  textTransform: "none",
+  letterSpacing: "0.02em",
+  backgroundColor: "#3b82f6",
+  color: "white",
+  minWidth: "150px",
+  minHeight: "50px"
+};
+
 const selectedChipStyle = {
   backgroundColor: "#6366f1",
   color: "white",
@@ -425,6 +460,27 @@ const selectedInterviewSubType = ref("");
 // 회사
 const companies = ref(["당근마켓", "Toss", "SK-encore", "KT M mobile", "네이버", "카카오", "라인", "쿠팡"]);
 const selectedCompany = ref("");
+
+// 회사 선택 함수
+const selectCompany = (company) => {
+  selectedCompany.value = company;
+};
+
+// 상세 정보 입력 페이지로 이동 함수
+const goToDetailForm = () => {
+  if (!selectedCompany.value) {
+    alert("회사를 선택해 주세요.");
+    return;
+  }
+  
+  router.push({
+    name: 'ai-interview-form',
+    params: { 
+      type: interviewType.value,
+      company: selectedCompany.value
+    }
+  });
+};
 
 // 전공
 const academicBackgrounds = ref(["전공자", "비전공자"]);
@@ -501,20 +557,20 @@ const selectInterviewSubType = (type) => {
 };
 
 // 상세 정보 입력 페이지로 이동 함수
-const goToDetailForm = () => {
-  if (!selectedCompany.value) {
-    alert("회사를 선택해 주세요.");
-    return;
-  }
-  
-  router.push({
-    name: 'ai-interview-form',
-    params: { 
-      type: interviewType.value,
-      company: selectedCompany.value
-    }
-  });
-};
+// const goToDetailForm = () => {
+//   if (!selectedCompany.value) {
+//     alert("회사를 선택해 주세요.");
+//     return;
+//   }
+//
+//   router.push({
+//     name: 'ai-interview-form',
+//     params: {
+//       type: interviewType.value,
+//       company: selectedCompany.value
+//     }
+//   });
+// };
 
 onMounted(() => {
   // 면접 유형이 없으면 선택 페이지로 리다이렉트
