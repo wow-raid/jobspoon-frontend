@@ -1,9 +1,8 @@
 // JoinedStudyRoom.tsx
 import React, { useEffect, useState } from "react";
-import { NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
+import { Outlet, useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { StudyRoom } from "../types/study";
-import { FAKE_STUDY_ROOMS } from "../data/mockData";
 import axiosInstance from "../api/axiosInstance";
 import { useAuth } from "../hooks/useAuth";
 
@@ -51,45 +50,13 @@ const HeaderBox = styled.header`
 `;
 
 const Main = styled.main`
-  display: flex;
-  gap: 24px;
-`;
-
-const Sidebar = styled.nav`
-  flex: 0 0 200px;
-  background-color: ${({ theme }) => theme.surface};
-  border-radius: 8px;
-  padding: 16px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  height: fit-content;
-`;
-
-const SidebarLink = styled(NavLink)`
-  color: ${({ theme }) => theme.fg};
-  text-decoration: none;
-  padding: 12px 16px;
-  border-radius: 6px;
-  transition: background-color 0.2s;
-  font-weight: 500;
-
-  &:hover {
-    background-color: ${({ theme }) => theme.surfaceHover};
-  }
-  &.active {
-    background-color: ${({ theme }) => theme.accent ?? theme.primary};
-    color: #fff;
-  }
+    display: flex;
+    flex-direction: column; /* 수직 레이아웃으로 변경 */
+    gap: 24px;
 `;
 
 const ContentArea = styled.section`
-  flex-grow: 1;
-  background-color: ${({ theme }) => theme.surface};
-  border-radius: 8px;
-  padding: 24px;
-  min-height: 400px;
+  width: 100%; /* 너비를 100%로 설정 */
 `;
 
 const JoinedStudyRoom: React.FC = () => {
@@ -129,7 +96,7 @@ const JoinedStudyRoom: React.FC = () => {
                 try {
                     await axiosInstance.delete(`/study-rooms/${studyId}`);
                     alert("스터디가 폐쇄되었습니다.");
-                    navigate("/my-studies"); // 내 스터디 목록으로 이동
+                    navigate("/studies/my-studies"); // 내 스터디 목록으로 이동
                 } catch (error) {
                     alert("스터디 폐쇄에 실패했습니다.");
                 }
@@ -139,7 +106,7 @@ const JoinedStudyRoom: React.FC = () => {
                 try {
                     await axiosInstance.delete(`/study-rooms/${studyId}/membership`);
                     alert("스터디에서 탈퇴 처리되었습니다.");
-                    navigate("/my-studies");
+                    navigate("/studies/my-studies");
                 } catch (error) {
                     alert("스터디 탈퇴에 실패했습니다.");
                 }
@@ -156,21 +123,12 @@ const JoinedStudyRoom: React.FC = () => {
             <HeaderBox className="room-header">
                 <h2>{study.title}</h2>
                 <p>
-                    모임장: {study.hostId} | 인원 {study.currentMembers}/{study.maxMembers} | 진행방식:{" "}
+                    모임장: {study.hostNickname} | 인원 {study.currentMembers}/{study.maxMembers} | 진행방식:{" "}
                     {study.location}
                 </p>
             </HeaderBox>
 
             <Main className="room-main-content">
-                <Sidebar className="room-sidebar">
-                    <SidebarLink to="" end>
-                        공지사항
-                    </SidebarLink>
-                    <SidebarLink to="schedule">일정관리</SidebarLink>
-                    <SidebarLink to="interview">모의면접</SidebarLink>
-                    <SidebarLink to="members">참여인원</SidebarLink>
-                </Sidebar>
-
                 <ContentArea className="room-content-area">
                     <Outlet context={{ studyId, userRole, onLeaveOrClose: handleLeaveOrClose }} />
                 </ContentArea>

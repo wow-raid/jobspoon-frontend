@@ -456,13 +456,13 @@ ${selectedCompany.value ? '선택한 회사: ' + selectedCompany.value : ''}
 
 // ---------- 스타일 변수 ---------- //
 const containerStyle = { 
-  marginBottom: "6rem", 
-  marginTop: "2.5rem", 
-  maxWidth: "1200px",
+  marginBottom: "4rem", 
+  marginTop: "2rem", 
+  maxWidth: "1000px",
   position: "relative",
   background: "linear-gradient(180deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.8) 100%)",
-  borderRadius: "30px",
-  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.03)",
+  borderRadius: "24px",
+  boxShadow: "0 8px 25px rgba(0, 0, 0, 0.03)",
   overflow: "hidden",
   backdropFilter: "blur(10px)",
   WebkitBackdropFilter: "blur(10px)"
@@ -470,25 +470,25 @@ const containerStyle = {
 
 const formContainerStyle = {
   width: "100%",
-  maxWidth: "950px",
+  maxWidth: "850px",
   margin: "0 auto",
-  padding: "1.5rem",
+  padding: "1.25rem",
   position: "relative",
   zIndex: "1"
 };
 
 const headerContainerStyle = {
   textAlign: "center",
-  marginBottom: "3rem"
+  marginBottom: "2rem"
 };
 
 const mainTitleStyle = {
-  fontSize: "3rem",
-  fontWeight: "900",
-  marginBottom: "1.2rem",
+  fontSize: "2.4rem",
+  fontWeight: "800",
+  marginBottom: "0.8rem",
   lineHeight: "1.1",
-  letterSpacing: "-0.03em",
-  textShadow: "0 2px 10px rgba(0, 0, 0, 0.08)",
+  letterSpacing: "-0.02em",
+  textShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
   fontFamily: "'Poppins', 'Noto Sans KR', sans-serif"
 };
 
@@ -503,70 +503,70 @@ const highlightTextStyle = {
 };
 
 const titleUnderlineStyle = {
-  width: "100px",
-  height: "5px",
+  width: "80px",
+  height: "4px",
   background: "linear-gradient(90deg, #4f46e5 0%, #3b82f6 50%, rgba(59, 130, 246, 0.3) 100%)",
-  borderRadius: "3px",
-  margin: "1.5rem auto",
+  borderRadius: "2px",
+  margin: "1rem auto",
   boxShadow: "0 2px 6px rgba(59, 130, 246, 0.2)"
 };
 
 const subtitleStyle = {
-  fontSize: "1.25rem",
+  fontSize: "1.1rem",
   color: "#475569",
-  maxWidth: "650px",
+  maxWidth: "600px",
   margin: "0 auto",
-  lineHeight: "1.6",
+  lineHeight: "1.5",
   fontWeight: "400",
   letterSpacing: "0.01em",
   fontFamily: "'Noto Sans KR', sans-serif"
 };
 
 const cardStyle = {
-  borderRadius: "24px",
-  boxShadow: "0 20px 40px rgba(0, 0, 0, 0.06), 0 10px 20px rgba(0, 0, 0, 0.03)",
+  borderRadius: "16px",
+  boxShadow: "0 12px 24px rgba(0, 0, 0, 0.04), 0 6px 12px rgba(0, 0, 0, 0.02)",
   background: "linear-gradient(180deg, #ffffff 0%, #f9fafb 100%)",
-  marginBottom: "3rem",
+  marginBottom: "1.75rem",
   overflow: "hidden",
   border: "1px solid rgba(241, 245, 249, 0.8)",
   backdropFilter: "blur(10px)",
   WebkitBackdropFilter: "blur(10px)",
   position: "relative",
-  padding: "2rem",
+  padding: "1.25rem",
   transition: "transform 0.3s ease, box-shadow 0.3s ease",
   "&:hover": {
-    transform: "translateY(-5px)",
-    boxShadow: "0 25px 50px rgba(0, 0, 0, 0.08), 0 15px 25px rgba(0, 0, 0, 0.04)"
+    transform: "translateY(-2px)",
+    boxShadow: "0 16px 32px rgba(0, 0, 0, 0.05), 0 8px 16px rgba(0, 0, 0, 0.03)"
   }
 };
 
 const sectionStyle = {
-  marginBottom: "3.5rem",
+  marginBottom: "1.25rem",
   position: "relative",
-  padding: "1.5rem",
-  borderRadius: "16px",
+  padding: "1rem",
+  borderRadius: "14px",
   background: "rgba(255, 255, 255, 0.7)",
   backdropFilter: "blur(8px)",
   WebkitBackdropFilter: "blur(8px)",
-  boxShadow: "0 8px 16px rgba(0, 0, 0, 0.03)",
+  boxShadow: "0 6px 14px rgba(0, 0, 0, 0.03)",
   border: "1px solid rgba(241, 245, 249, 0.6)",
   transition: "transform 0.3s ease, box-shadow 0.3s ease",
   "&:hover": {
-    boxShadow: "0 12px 24px rgba(0, 0, 0, 0.05)"
+    boxShadow: "0 10px 20px rgba(0, 0, 0, 0.05)"
   }
 };
 
 const sectionTitleStyle = {
-  fontSize: "1.5rem",
+  fontSize: "1.15rem",
   fontWeight: "700",
   color: "#1e293b",
-  marginBottom: "1.5rem",
+  marginBottom: "0.5rem",
   position: "relative",
-  paddingLeft: "1.2rem",
-  borderLeft: "4px solid transparent",
+  paddingLeft: "0.75rem",
+  borderLeft: "3px solid transparent",
   borderImage: "linear-gradient(to bottom, #4f46e5, #3b82f6) 1",
   display: "inline-block",
-  letterSpacing: "-0.02em",
+  letterSpacing: "-0.01em",
   textShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
   "&::after": {
     content: "\"\"",
@@ -583,14 +583,14 @@ const sectionTitleStyle = {
 const chipContainerStyle = {
   display: "flex",
   flexWrap: "wrap",
-  gap: "12px",
-  marginTop: "1rem"
+  gap: "6px",
+  marginTop: "0.5rem"
 };
 
 const chipStyle = {
-  fontSize: "1rem",
-  padding: "14px 24px",
-  borderRadius: "50px",
+  fontSize: "0.85rem",
+  padding: "8px 14px",
+  borderRadius: "30px",
   backgroundColor: "rgba(248, 250, 252, 0.8)",
   color: "#334155",
   border: "1px solid rgba(226, 232, 240, 0.8)",
@@ -599,11 +599,11 @@ const chipStyle = {
   fontWeight: "500",
   backdropFilter: "blur(5px)",
   WebkitBackdropFilter: "blur(5px)",
-  boxShadow: "0 2px 6px rgba(0, 0, 0, 0.02)",
-  margin: "4px",
+  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.02)",
+  margin: "2px",
   "&:hover": {
     transform: "translateY(-2px)",
-    boxShadow: "0 5px 15px rgba(0, 0, 0, 0.05)",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.05)",
     backgroundColor: "rgba(248, 250, 252, 0.95)"
   }
 };
@@ -612,8 +612,8 @@ const selectedChipStyle = {
   background: "linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)",
   color: "white",
   borderColor: "transparent",
-  boxShadow: "0 8px 20px rgba(59, 130, 246, 0.35), 0 4px 10px rgba(79, 70, 229, 0.2)",
-  transform: "translateY(-3px) scale(1.05)",
+  boxShadow: "0 4px 12px rgba(59, 130, 246, 0.25), 0 2px 6px rgba(79, 70, 229, 0.12)",
+  transform: "translateY(-1px) scale(1.02)",
   fontWeight: "600",
   letterSpacing: "0.01em",
   position: "relative",
@@ -625,23 +625,23 @@ const selectedChipStyle = {
     left: "-2px",
     right: "-2px",
     bottom: "-2px",
-    background: "linear-gradient(135deg, rgba(79, 70, 229, 0.3) 0%, rgba(59, 130, 246, 0.3) 100%)",
-    borderRadius: "52px",
+    background: "linear-gradient(135deg, rgba(79, 70, 229, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%)",
+    borderRadius: "32px",
     zIndex: "-1",
-    filter: "blur(8px)"
+    filter: "blur(4px)"
   }
 };
 
 const helperTextStyle = {
-  fontSize: "0.95rem",
+  fontSize: "0.85rem",
   color: "#64748b",
-  marginTop: "-0.5rem",
-  marginBottom: "0.75rem",
+  marginTop: "-0.25rem",
+  marginBottom: "0.5rem",
   fontStyle: "italic",
   opacity: "0.9",
   display: "flex",
   alignItems: "center",
-  gap: "6px",
+  gap: "4px",
   "&::before": {
     // content: '\'\2022\'',
     color: "#3b82f6",
@@ -652,28 +652,28 @@ const helperTextStyle = {
 };
 
 const sliderStyle = {
-  marginTop: "2rem",
-  marginBottom: "1rem"
+  marginTop: "1rem",
+  marginBottom: "0.75rem"
 };
 
 const buttonContainerStyle = {
   display: "flex",
   justifyContent: "center",
-  marginTop: "3rem",
-  high: "300px"
+  marginTop: "1.5rem",
+  high: "200px"
 };
 
 const startButtonStyle = {
   background: "linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)",
   color: "white",
-  padding: "16px 40px",
-  fontSize: "1.2rem",
+  padding: "12px 28px",
+  fontSize: "1rem",
   fontWeight: "700",
-  borderRadius: "16px",
-  boxShadow: "0 10px 25px rgba(59, 130, 246, 0.4), 0 6px 12px rgba(79, 70, 229, 0.2)",
-  transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+  borderRadius: "12px",
+  boxShadow: "0 6px 16px rgba(59, 130, 246, 0.3), 0 4px 8px rgba(79, 70, 229, 0.12)",
+  transition: "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
   textTransform: "none",
-  letterSpacing: "0.03em",
+  letterSpacing: "0.02em",
   height: "100%",
   border: "none",
   position: "relative",
@@ -683,24 +683,24 @@ const startButtonStyle = {
   WebkitBackdropFilter: "blur(5px)",
   transform: "translateY(0)",
   "&:hover": {
-    transform: "translateY(-5px)",
-    boxShadow: "0 15px 30px rgba(59, 130, 246, 0.5), 0 10px 15px rgba(79, 70, 229, 0.3)"
+    transform: "translateY(-2px)",
+    boxShadow: "0 10px 20px rgba(59, 130, 246, 0.4), 0 6px 10px rgba(79, 70, 229, 0.2)"
   },
   "&:active": {
     transform: "translateY(0)",
-    boxShadow: "0 5px 15px rgba(59, 130, 246, 0.4), 0 3px 8px rgba(79, 70, 229, 0.2)"
+    boxShadow: "0 3px 10px rgba(59, 130, 246, 0.3), 0 2px 5px rgba(79, 70, 229, 0.12)"
   }
 };
 
 const noticeCardStyle = {
-  borderRadius: "20px",
-  boxShadow: "0 15px 30px rgba(0, 0, 0, 0.06), 0 5px 15px rgba(0, 0, 0, 0.03)",
+  borderRadius: "14px",
+  boxShadow: "0 10px 20px rgba(0, 0, 0, 0.04), 0 3px 10px rgba(0, 0, 0, 0.02)",
   border: "1px solid rgba(241, 245, 249, 0.8)",
   background: "linear-gradient(145deg, #f1f5f9, #f8fafc)",
-  padding: "1.5rem",
+  padding: "1rem",
   position: "relative",
   overflow: "hidden",
-  marginTop: "4rem",
+  marginTop: "1.5rem",
   "&::before": {
     content: "\"\"",
     position: "absolute",
@@ -713,12 +713,12 @@ const noticeCardStyle = {
 };
 
 const noticeTitleStyle = {
-  fontSize: "1.2rem",
+  fontSize: "1.1rem",
   fontWeight: "600",
   color: "#334155",
   display: "flex",
   alignItems: "center",
-  gap: "8px"
+  gap: "6px"
 };
 
 const noticeIconStyle = {
@@ -729,8 +729,8 @@ const noticeIconStyle = {
 };
 
 const noticeListStyle = {
-  paddingLeft: "1.5rem",
-  marginTop: "0.5rem"
+  paddingLeft: "1.25rem",
+  marginTop: "0.4rem"
 };
 
 const noticeItemStyle = {

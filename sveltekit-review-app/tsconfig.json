@@ -3,12 +3,10 @@
 	"compilerOptions": {
 		"types": [
 			"svelte",
-			"vite/client"
+			"vite/client",
+			"node"
 		],
 		"skipLibCheck": true,
 		"strict": true
 	},
-	"include": [
-		"src"
-	]
 }

@@ -8,6 +8,7 @@ import googleLogo from '../../assets/google_logo.png';
 import zoomLogo from '../../assets/zoom_logo.png';
 import discordLogo from '../../assets/discord_logo.png';
 import naverLogo from '../../assets/naver_logo.png';
+import { NavLink, useParams } from "react-router-dom";
 
 type Channel = {
     name: string;
@@ -23,26 +24,71 @@ const INITIAL_LINKS: Channel[] = [
     { name: 'Naver', url: '', icon: naverLogo },
 ];
 
+/* --- NEW: Tab Navigation styled-components --- */
+const NavContainer = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid ${({ theme }) => theme.border};
+
+    background-color: ${({ theme }) => theme.surface};
+    padding: 12px 20px;
+    border-radius: 8px;
+`;
+
+const TabList = styled.nav`
+  display: flex;
+  gap: 8px;
+`;
+
+const TabLink = styled(NavLink)`
+    padding: 10px 16px;
+    font-size: 15px;
+    font-weight: 600;
+    color: ${({ theme }) => theme.subtle};
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+
+    &:hover {
+        color: ${({ theme }) => theme.fg};
+    }
+
+    &.active {
+        color: ${({ theme }) => theme.accent ?? theme.primary};
+        border-bottom-color: ${({ theme }) => theme.accent ?? theme.primary};
+    }
+`;
+/* --- End of Tab Navigation --- */
+
 /* ─ styled-components (scoped) ─ */
 const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 40px 20px;
+  width: 100%;
+`;
 
-  h2 {
-    font-size: 22px;
-    margin: 0 0 16px 0;
-    color: #fff;
-  }
+const Header = styled.div`
+    padding: 0 8px 24px 8px;
 
-  p {
+    h2 {
+        margin: 0;
+        font-size: 20px;
+        color: ${({ theme }) => theme.fg};
+    }
+`;
+
+const ContentWrapper = styled.div`
+  margin-top: 24px;
+  background-color: ${({ theme }) => theme.surface};
+  border-radius: 8px;
+  padding: 24px;
+`;
+
+const Description = styled.p`
     font-size: 15px;
-    color: #a0a0a0;
+    color: ${({ theme }) => theme.subtle};
     line-height: 1.6;
     margin-bottom: 32px;
-  }
+    text-align: center;
 `;
 
 const Grid = styled.div`
@@ -60,22 +106,22 @@ const Item = styled.div`
 `;
 
 const channelButtonBase = css`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background-color: #2d3748;
-  color: white;
-  text-decoration: none;
-  border-radius: 10px;
-  padding: 16px;
-  width: 100px;
-  height: 100px;
-  transition: background-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: ${({ theme }) => theme.surfaceHover};
+    color: ${({ theme }) => theme.fg};
+    text-decoration: none;
+    border-radius: 10px;
+    padding: 16px;
+    width: 100px;
+    height: 100px;
+    transition: background-color 0.2s;
 
-  &:hover {
-    background-color: #4a5568;
-  }
+    &:hover {
+        background-color: ${({ theme }) => theme.border};
+    }
 `;
 
 const LinkBtn = styled.a`
@@ -83,13 +129,13 @@ const LinkBtn = styled.a`
 `;
 
 const DisabledBtn = styled.div`
-  ${channelButtonBase}
-  opacity: 0.4;
-  cursor: not-allowed;
+    ${channelButtonBase}
+    opacity 0.4;
+    cursor: not-allowed;
 
-  &:hover {
-    background-color: #2d3748; /* 비활성화 시 호버 없음 */
-  }
+    &:hover {
+        background-color: ${({ theme }) => theme.surfaceHover};
+    }
 `;
 
 const Icon = styled.img`
@@ -103,22 +149,23 @@ const Name = styled.span`
 `;
 
 const EditButton = styled.button`
-  background-color: transparent;
-  color: #a0a0a0;
-  border: 1px solid #4a5568;
-  border-radius: 12px;
-  padding: 4px 12px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
+    background-color: transparent;
+    color: ${({ theme }) => theme.subtle};
+    border: 1px solid ${({ theme }) => theme.border};
+    border-radius: 12px;
+    padding: 4px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
 
-  &:hover {
-    border-color: #a0a0a0;
-    color: white;
-  }
+    &:hover {
+        border-color: ${({ theme }) => theme.fg};
+        color: ${({ theme }) => theme.fg};
+    }
 `;
 
 const TestInterview: React.FC = () => {
+    const { id: studyRoomId } = useParams<{ id: string }>();
     const [channels, setChannels] = useState<Channel[]>(INITIAL_LINKS);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingChannel, setEditingChannel] = useState<Channel | null>(null);
@@ -143,12 +190,25 @@ const TestInterview: React.FC = () => {
 
     return (
         <Container>
-            <h2>🎙️ 모의면접 채널</h2>
-            <p>
+            <Header>
+                <h2>🎙️ 모의면접 채널</h2>
+            </Header>
+
+            <NavContainer>
+            <TabList>
+                <TabLink to={`/studies/joined-study/${studyRoomId}`} end>공지사항</TabLink>
+                <TabLink to={`/studies/joined-study/${studyRoomId}/schedule`}>일정관리</TabLink>
+                <TabLink to={`/studies/joined-study/${studyRoomId}/interview`}>모의면접</TabLink>
+                <TabLink to={`/studies/joined-study/${studyRoomId}/members`}>참여인원</TabLink>
+            </TabList>
+            </NavContainer>
+
+            <ContentWrapper>
+            <Description>
                 선호하는 플랫폼을 선택하여 모의면접 채널에 참여하세요.
                 <br />
                 링크를 등록하거나 수정할 수 있습니다.
-            </p>
+            </Description>
 
             <Grid>
                 {channels.map(channel => {
@@ -175,6 +235,7 @@ const TestInterview: React.FC = () => {
                     );
                 })}
             </Grid>
+            </ContentWrapper>
 
             <Modal isOpen={isModalOpen} onClose={handleCloseModal}>
                 {editingChannel && (

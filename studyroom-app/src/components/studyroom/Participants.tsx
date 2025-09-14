@@ -1,7 +1,7 @@
 // Participants.tsx
 import React, { useEffect, useState, useCallback } from 'react';
 import styled from 'styled-components';
-import { useOutletContext, useParams } from 'react-router-dom';
+import { NavLink, useOutletContext, useParams } from 'react-router-dom';
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -17,41 +17,87 @@ interface StudyRoomContext {
     onLeaveOrClose: () => void;
 }
 
+/* --- NEW: Tab Navigation styled-components --- */
+const NavContainer = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid ${({ theme }) => theme.border};
+
+    background-color: ${({ theme }) => theme.surface};
+    padding: 12px 20px;
+    border-radius: 8px;
+`;
+
+const TabList = styled.nav`
+  display: flex;
+  gap: 8px;
+`;
+
+const TabLink = styled(NavLink)`
+    padding: 10px 16px;
+    font-size: 15px;
+    font-weight: 600;
+    color: ${({ theme }) => theme.subtle};
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+
+    &:hover {
+        color: ${({ theme }) => theme.fg};
+    }
+
+    &.active {
+        color: ${({ theme }) => theme.accent ?? theme.primary};
+        border-bottom-color: ${({ theme }) => theme.accent ?? theme.primary};
+    }
+`;
+/* --- End of Tab Navigation --- */
+
 /* ─ styled-components (scoped) ─ */
 const Container = styled.div`
   width: 100%;
 `;
 
 const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #3e414f;
-  padding-bottom: 16px;
-  margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 8px 24px 8px;
 
-  h2 {
-    margin: 0;
-    font-size: 20px;
-    color: #fff;
+    h2 {
+        margin: 0;
+        font-size: 20px;
+        color: ${({ theme }) => theme.fg};
 
-    span {
-      color: #a0a0a0;
-      font-size: 16px;
-      margin-left: 6px;
+        span {
+            color: ${({ theme }) => theme.subtle};
+            font-size: 16px;
+            margin-left: 6px;
+        }
     }
-  }
+`;
+
+const ContentWrapper = styled.div`
+  margin-top: 24px;
+  background-color: ${({ theme }) => theme.surface};
+  border-radius: 8px;
+  padding: 24px;
 `;
 
 const Section = styled.section`
-  margin-bottom: 32px;
+    margin-bottom: 32px;
+
+    &:last-of-type {
+        margin-bottom: 0;
+    }
 `;
 
 const SectionTitle = styled.h3`
-  font-size: 16px;
-  font-weight: 600;
-  color: #a0a0a0;
-  margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: ${({ theme }) => theme.subtle};
+    margin: 0 0 12px 0;
 `;
 
 const MemberList = styled.div`
@@ -64,7 +110,7 @@ const MemberItem = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #1e2129;
+    background-color: ${({ theme }) => theme.surfaceHover};
   padding: 12px 16px;
   border-radius: 8px;
 `;
@@ -93,7 +139,7 @@ const RoleBadge = styled.span<{ $type: 'leader' | 'member' }>`
 
 const NoMembersText = styled.p`
   font-size: 14px;
-  color: #8c92a7;
+  color: ${({ theme }) => theme.subtle};
   text-align: center;
   padding: 40px;
   margin: 0;
@@ -182,6 +228,16 @@ const Participants: React.FC = () => {
                 </h2>
             </Header>
 
+            <NavContainer>
+            <TabList>
+                <TabLink to={`/studies/joined-study/${studyId}`} end>공지사항</TabLink>
+                <TabLink to={`/studies/joined-study/${studyId}/schedule`}>일정관리</TabLink>
+                <TabLink to={`/studies/joined-study/${studyId}/interview`}>모의면접</TabLink>
+                <TabLink to={`/studies/joined-study/${studyId}/members`}>참여인원</TabLink>
+            </TabList>
+            </NavContainer>
+
+            <ContentWrapper>
             <Section>
                 <SectionTitle>모임장</SectionTitle>
                 {leader && (
@@ -222,6 +278,7 @@ const Participants: React.FC = () => {
                     {userRole === 'LEADER' ? '스터디 폐쇄하기' : '탈퇴하기'}
                 </LeaveButton>
             </Footer>
+            </ContentWrapper>
         </Container>
     );
 };

@@ -1,52 +1,141 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import defaultProfile from "../assets/default_profile.png";
 import { FaPhone, FaEnvelope } from "react-icons/fa";
-import ServiceModal from "../components/modals/ServiceModal.tsx"
+import { useOutletContext } from "react-router-dom";
+
+import defaultProfile from "../assets/default_profile.png";
+import ServiceModal from "../components/modals/ServiceModal.tsx";
+import {
+    updateNickname,
+    fetchMyRanks,
+    fetchMyTitles,
+    equipRank,
+    equipTitle,
+    CustomNicknameResponse,
+    ProfileAppearanceResponse,
+    HistoryItem
+} from "../api/profileAppearanceApi.ts";
+
+type OutletContextType = {
+    profile: ProfileAppearanceResponse | null;
+    refreshProfile: () => Promise<void>;
+};
 
 export default function AccountProfileEdit() {
-    // 더미 상태 (추후 API 연동 예정)
-    const [profile, setProfile] = useState({
-        photoUrl: "",
-        nickname: "개발뉴비 김햄찌",
-        email: "TestUser01@kakao.com",
+    const { profile, refreshProfile } = useOutletContext<OutletContextType>();
+
+    // 모달 상태
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    // modalType 타입 확장
+    const [modalType, setModalType] = useState<"phone" | "email" | "photo" | null>(null);
+
+    // 닉네임 수정 상태
+    const [isEditingNickname, setIsEditingNickname] = useState(false);
+    const [tempNickname, setTempNickname] = useState("");
+    const [error, setError] = useState<string | null>(null);
+
+    const [ranks, setRanks] = useState<HistoryItem[]>([]);
+    const [showRanks, setShowRanks] = useState(false);
+
+    const [titles, setTitles] = useState<HistoryItem[]>([]);
+    const [showTitles, setShowTitles] = useState(false);
+
+    // TODO: AccountProfile API 나오면 교체
+    const [accountInfo] = useState({
         phone: "",
-        verified: false,
-        rank: "Gold",
-        accountId: "TestUser01",
+        email: "TestUser01@kakao.com",
     });
 
-    const [consent, setConsent] = useState({
+    useEffect(() => {
+        const token = localStorage.getItem("userToken");
+        if (!token) return;
+        Promise.all([fetchMyRanks(token), fetchMyTitles(token)])
+            .then(([r, t]) => {
+                setRanks(r);
+                setTitles(t);
+            })
+            .catch(console.error);
+    }, []);
+
+    // 랭크 장착 핸들러
+    const handleEquipRank = async (rankId: number) => {
+        const token = localStorage.getItem("userToken");
+        if (!token) {
+            alert("로그인이 필요합니다.");
+            return;
+        }
+        try {
+            const updated = await equipRank(token, rankId);
+            await refreshProfile();
+
+            // 성공 메시지
+            alert(`✅ ${updated.displayName} 랭크가 장착되었습니다!`);
+        } catch (error: any) {
+            // 실패 메시지
+            alert(`❌ ${error.message || "랭크 장착에 실패했습니다."}`);
+        }
+    };
+
+    // 칭호 장착 핸들러
+    const handleEquipTitle = async (titleId: number) => {
+        const token = localStorage.getItem("userToken");
+        if (!token) {
+            alert("로그인이 필요합니다.");
+            return;
+        }
+        try {
+            const updated = await equipTitle(token, titleId);
+            await refreshProfile();
+            alert(`✅ ${updated.displayName} 칭호가 장착되었습니다!`);
+        } catch (error: any) {
+            alert(`❌ ${error.message || "칭호 장착에 실패했습니다."}`);
+        }
+    };
+
+    // TODO: AccountProfile API 나오면 교체
+    const [consent] = useState({
         phone: true,
         email: false,
     });
 
-    const [history, setHistory] = useState({
-        login: "2025.09.04 PC (웹)",
-        grades: [
-            { name: "브론즈", date: "2025-08-01" },
-            { name: "실버", date: "2025-08-10", active: true },
-        ],
-        titles: [
-            { name: "얼리버드", date: "2025-08-22" },
-            { name: "나야, 나", date: "2025-08-15", active: true },
-            { name: "프론트엔드", date: "2025-08-22" },
-            { name: "백엔드", date: "2025-08-22" },
-            { name: "국가대표", date: "2025-08-22" },
-        ],
-    });
+    /** 닉네임 수정 시작 */
+    const handleStartEdit = () => {
+        if (profile) {
+            setTempNickname(profile.customNickname);
+            setIsEditingNickname(true);
+        }
+    };
 
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalType, setModalType] = useState<"phone" | "email" | null>(null);
+    /** 닉네임 저장 */
+    const handleSaveNickname = async () => {
+        const token = localStorage.getItem("userToken");
+        if (!token) {
+            setError("로그인이 필요합니다.");
+            return;
+        }
 
-    const openModal = (type: "phone" | "email") => {
+        try {
+            const updated: CustomNicknameResponse = await updateNickname(
+                token,
+                tempNickname
+            );
+            await refreshProfile();
+            setIsEditingNickname(false);
+            setError(null);
+        } catch (err: any) {
+            setError(err.message || "닉네임 수정 실패");
+        }
+    };
+
+    /** 모달 열기 */
+    const openModal = (type: "phone" | "email" | "photo") => {
         setModalType(type);
         setIsModalOpen(true);
-    }
+    };
 
-    useEffect(() => {
-        // TODO: fetchAccountProfile();
-    }, []);
+    if (!profile) {
+        return <p>불러오는 중...</p>;
+    }
 
     return (
         <Wrapper>
@@ -64,19 +153,32 @@ export default function AccountProfileEdit() {
                                 }}
                             />
                         </PhotoWrapper>
+
                         <InfoText>
                             <NicknameRow>
-                                <Nickname>{profile.nickname}</Nickname>
+                                {isEditingNickname ? (
+                                    <NicknameInput
+                                        type="text"
+                                        value={tempNickname}
+                                        onChange={(e) => setTempNickname(e.target.value)}
+                                        placeholder="닉네임을 입력해주세요"
+                                    />
+                                ) : (
+                                    <Nickname>{profile.customNickname}</Nickname>
+                                )}
                             </NicknameRow>
+                            {error && <ErrorText>{error}</ErrorText>}
+
                             <Email>{profile.email}</Email>
                         </InfoText>
+
                         <ButtonGroup>
-                            <SmallButton onClick={() => setIsModalOpen(true)}>
-                                별명 수정
-                            </SmallButton>
-                            <SmallButton onClick={() => setIsModalOpen(true)}>
-                                사진 변경
-                            </SmallButton>
+                            {isEditingNickname ? (
+                                <SmallButton onClick={handleSaveNickname}>확인</SmallButton>
+                            ) : (
+                                <SmallButton onClick={handleStartEdit}>별명 수정</SmallButton>
+                            )}
+                            <SmallButton onClick={() => openModal("photo")}>사진 변경</SmallButton>
                         </ButtonGroup>
                     </TopRow>
 
@@ -85,17 +187,15 @@ export default function AccountProfileEdit() {
                     <BottomRow>
                         <InfoItem>
                             <FaPhone style={{ color: "#6b7280", marginRight: "8px" }} />
-                            <span>{profile.phone || "본인확인 번호 없음"}</span>
+                            <span>{accountInfo.phone || "본인확인 번호 없음"}</span>
                             <ActionLink onClick={() => openModal("phone")}>
-                                {profile.phone ? "수정" : "등록"}
+                                {accountInfo.phone ? "수정" : "등록"}
                             </ActionLink>
                         </InfoItem>
                         <InfoItem>
                             <FaEnvelope style={{ color: "#6b7280", marginRight: "8px" }} />
                             <span>{profile.email}</span>
-                            <ActionLink onClick={() => openModal("email")}>
-                                수정
-                            </ActionLink>
+                            <ActionLink onClick={() => openModal("email")}>수정</ActionLink>
                         </InfoItem>
                     </BottomRow>
                 </InfoCard>
@@ -112,7 +212,8 @@ export default function AccountProfileEdit() {
                         </Left>
                         <ToggleSwitch
                             checked={consent.phone}
-                            onClick={() => openModal("phone")}>
+                            onClick={() => openModal("phone")}
+                        >
                             <span>{consent.phone ? "ON" : "OFF"}</span>
                         </ToggleSwitch>
                     </ConsentRow>
@@ -126,7 +227,8 @@ export default function AccountProfileEdit() {
                         </Left>
                         <ToggleSwitch
                             checked={consent.email}
-                            onClick={() => openModal("email")}>
+                            onClick={() => openModal("email")}
+                        >
                             <span>{consent.email ? "ON" : "OFF"}</span>
                         </ToggleSwitch>
                     </ConsentRow>
@@ -136,42 +238,94 @@ export default function AccountProfileEdit() {
             {/* 이력 관리 */}
             <Section>
                 <SectionTitle>이력 관리</SectionTitle>
-
                 <Card>
                     <h3>로그인 기록</h3>
-                    <p>{history.login}</p>
+                    <p>해당 기능은 현재 준비 중입니다.<br />
+                        곧 만나보실 수 있어요 😊
+                    </p>
                 </Card>
 
                 <Card>
-                    <h3>등급 전체 이력</h3>
-                    <ul>
-                        {history.grades.map((g, i) => (
-                            <li key={i}>
-                                {g.name} ({g.date}){" "}
-                                {g.active && <Badge active>사용중</Badge>}
-                            </li>
-                        ))}
-                    </ul>
+                    <HistoryHeader>
+                        <h3>등급 전체 이력</h3>
+                        <ToggleButton onClick={() => setShowRanks(!showRanks)}>
+                            {showRanks ? "숨기기" : "보기"}
+                        </ToggleButton>
+                    </HistoryHeader>
+
+                    {/* 현재 장착된 랭크 */}
+                    {profile.rank && (
+                        <EquippedBox>
+                            <span>{profile.rank.displayName}</span>
+                            <span>장착 중</span>
+                        </EquippedBox>
+                    )}
+
+                    {/* 토글된 경우에만 리스트 표시 */}
+                    {showRanks && (
+                        <ul>
+                            {ranks.map((rank) => (
+                                <HistoryItemBox key={rank.id} active={profile.rank?.id === rank.id}>
+                                    <span>
+                                        {rank.displayName} (
+                                        {new Date(rank.acquiredAt).toLocaleDateString()})
+                                    </span>
+                                    {profile?.rank?.id === rank.id ? (
+                                        <EquipButton disabled>장착 중</EquipButton>
+                                    ) : (
+                                        <EquipButton onClick={() => handleEquipRank(rank.id)}>장착</EquipButton>
+                                    )}
+                                </HistoryItemBox>
+                            ))}
+                        </ul>
+                    )}
                 </Card>
 
                 <Card>
-                    <h3>칭호 전체 이력</h3>
-                    <ul>
-                        {history.titles.map((t, i) => (
-                            <li key={i}>
-                                {t.name} ({t.date}){" "}
-                                {t.active && <Badge active>사용중</Badge>}
-                            </li>
-                        ))}
-                    </ul>
+                    <HistoryHeader>
+                        <h3>칭호 전체 이력</h3>
+                        <ToggleButton onClick={() => setShowTitles(!showTitles)}>
+                            {showTitles ? "숨기기" : "보기"}
+                        </ToggleButton>
+                    </HistoryHeader>
+
+                    {profile.title && (
+                        <EquippedBox>
+                            <span>{profile.title.displayName}</span>
+                            <span>장착 중</span>
+                        </EquippedBox>
+                    )}
+
+                    {showTitles && (
+                        <ul>
+                            {titles.map((title) => (
+                                <HistoryItemBox
+                                    key={title.id}
+                                    active={profile.title?.id === title.id}>
+                                    <span>
+                                        {title.displayName} (
+                                        {new Date(title.acquiredAt).toLocaleDateString()})
+                                    </span>
+                                    {profile?.title?.id === title.id ? (
+                                        <EquipButton disabled>장착 중</EquipButton>
+                                    ) : (
+                                        <EquipButton onClick={() => handleEquipTitle(title.id)}>
+                                            장착
+                                        </EquipButton>
+                                    )}
+                                </HistoryItemBox>
+                            ))}
+                        </ul>
+                    )}
                 </Card>
+
             </Section>
 
-            {/* ✅ 모달 */}
+            {/* 모달 */}
             <ServiceModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}>
-            </ServiceModal>
+                onClose={() => setIsModalOpen(false)}
+            />
         </Wrapper>
     );
 }
@@ -261,7 +415,10 @@ const ButtonGroup = styled.div`
 `;
 
 const SmallButton = styled.button`
-    padding: 6px 14px;   /* 기존보다 넉넉하게 */
+    width: 100px;   /* ✅ 고정 너비 */
+    text-align: center;
+
+    padding: 6px 0;   /* 좌우 padding 대신 위아래만 */
     font-size: 13px;
     background: #f9fafb;
     border: 1px solid #d1d5db;
@@ -398,3 +555,94 @@ const Badge = styled.span<{ active?: boolean }>`
     color: ${({ active }) => (active ? "#fff" : "rgb(107, 114, 128)")};
     border: ${({ active }) => (active ? "none" : "1px solid #d1d5db")};
 `;
+
+const NicknameInput = styled.input`
+    font-size: 22px;
+    font-weight: 700;
+    color: #111827;
+    border: none;
+    border-bottom: 2px solid #3b82f6;  /* 밑줄 강조 */
+    padding: 4px 0;
+    outline: none;
+    width: 100%;
+
+    &::placeholder {
+        color: #9ca3af;
+        font-weight: 500;
+    }
+
+    &:focus {
+        border-color: #2563eb; /* 포커스 시 진한 파랑 */
+    }
+`;
+
+const ErrorText = styled.div`
+  font-size: 13px;
+  color: #dc2626; /* Tailwind red-600 */
+  margin-top: 4px;
+`;
+
+const EquipButton = styled.button`
+  margin-left: 8px;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+  &:hover {
+    background: #e5e7eb;
+  }
+`;
+
+const HistoryHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const ToggleButton = styled.button`
+  font-size: 13px;
+  color: #3b82f6;
+  border: none;
+  background: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
+const EquippedBox = styled.div`
+  border: 2px solid rgb(59, 130, 246);
+  background: rgb(239, 246, 255);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+
+  span {
+    font-weight: 600;
+    font-size: 14px;
+    color: rgb(29, 78, 216);
+  }
+`;
+
+const HistoryItemBox = styled.li<{ active?: boolean }>`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid ${({ active }) => (active ? "rgb(59,130,246)" : "rgb(229,231,235)")};
+  background: ${({ active }) => (active ? "rgb(239,246,255)" : "white")};
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: 6px;
+
+  span {
+    font-size: 14px;
+    color: ${({ active }) => (active ? "rgb(29,78,216)" : "rgb(31,41,55)")};
+    font-weight: ${({ active }) => (active ? 600 : 400)};
+  }
+`;
+
