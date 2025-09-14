@@ -1,3 +1,4 @@
+// src/App.tsx
 import React from "react";
 import { Routes, Route, useNavigate, useLocation, Outlet, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
@@ -5,9 +6,10 @@ import SearchBar from "./components/SearchBar";
 import ExploreFilterBar, { FilterSelection } from "./components/ExploreFilterBar";
 import SearchPage from "./pages/SearchPage";
 import TermListPage from "./pages/TermListPage";
-// import NoResultsPage from "./pages/NoResultsPage.tsx";
+// import NoResultsPage from "./pages/NoResultsPage";
 import SpoonNoteModal from "./components/SpoonNoteModal";
 import http, { authHeader } from "./utils/http";
+import { fetchUserFolders, patchReorderFolders } from "./api/userWordbook";
 
 const TOKENS = {
     containerMaxWidth: 768,
@@ -38,6 +40,17 @@ const Content = styled.div`
     margin-top: ${TOKENS.space(24)};
 `;
 
+function extractTermIdFromArticle(el: HTMLElement | null): number | null {
+    const article = el?.closest("article");
+    if (!article) return null;
+    const labelled = article.getAttribute("aria-labelledby"); // "term-<id>"
+    if (!labelled) return null;
+    const m = /^term-(\d+)$/.exec(labelled);
+    if (!m) return null;
+    const idNum = Number(m[1]);
+    return Number.isFinite(idNum) ? idNum : null;
+}
+
 /** 폴더 정규화 (프론트 로컬 중복 체크용) */
 function normalizeName(s: string) {
     return (s ?? "").trim().replace(/\s+/g, " ").toLowerCase();
@@ -64,41 +77,56 @@ function AppLayout() {
     // 모달/노트 상태
     const [modalOpen, setModalOpen] = React.useState(false);
     const [selectedTermId, setSelectedTermId] = React.useState<number | null>(null);
-    const [notebooks, setNotebooks] = React.useState<{ id: string; name: string }[]>([
-        { id: "nb-1", name: "내가 찾은 용어" },
-        { id: "nb-2", name: "Frontend" },
-    ]);
+    const [notebooks, setNotebooks] = React.useState<{ id: string; name: string }[]>([]);
 
-    // 전역 위임: TermCard의 + 버튼 클릭 시 모달 오픈 (로그인 체크는 TermCard 가드가 처리)
+    // 폴더 순서 저장
+    const handleReorder = React.useCallback(async (orderedIds: string[]) => {
+        let serverOk = true;
+        try {
+            // 서버는 숫자 id만 허용 → 유틸에서 숫자로 변환, 실패 시 NON_NUMERIC_ID throw
+            await patchReorderFolders(orderedIds as unknown as Array<string | number>);
+        } catch (e: any) {
+            serverOk = false;
+            if (e?.message === "NON_NUMERIC_ID") {
+                console.warn("[reorder] 서버 저장 생략: 숫자 id가 아님", orderedIds);
+            } else {
+                console.error("[reorder] 서버 오류:", e);
+                // 서버 오류면 모달 컴포넌트가 롤백함. 부모는 그대로 두고 종료.
+                return;
+            }
+        }
+
+        // 성공(또는 개발용 생략) 시 부모 상태도 동일하게 재정렬
+        setNotebooks((prev) => {
+            const map = new Map(prev.map((n) => [n.id, n]));
+            const next = orderedIds.map((id) => map.get(id)).filter(Boolean) as typeof prev;
+            const leftovers = prev.filter((n) => !orderedIds.includes(n.id));
+            return [...next, ...leftovers];
+        });
+
+        if (serverOk) console.debug("[reorder] 서버 저장 완료", orderedIds);
+    }, []);
+
+    // 모달 열릴 때 폴더 로드
     React.useEffect(() => {
-        function extractTermIdFromArticle(btnEl: HTMLElement): number | null {
-            const article = btnEl.closest("article");
-            if (!article) return null;
-            const labelled = article.getAttribute("aria-labelledby"); // "term-<id>"
-            if (!labelled) return null;
-            const m = /^term-(\d+)$/.exec(labelled);
-            if (!m) return null;
-            const idNum = Number(m[1]);
-            return Number.isFinite(idNum) ? idNum : null;
-        }
+        if (!modalOpen) return;
+        // 이미 로드되어 있으면 재호출 안 함
+        if (notebooks.length > 0) return;
 
-        function onDocClick(e: MouseEvent) {
-            const target = e.target as HTMLElement | null;
-            if (!target) return;
-            const addBtn = target.closest('button[aria-label="내 단어장에 추가"]') as HTMLElement | null;
-            if (!addBtn) return;
-            if (modalOpen) return;
-
-            const termId = extractTermIdFromArticle(addBtn);
-            if (!termId) return;
-
-            setSelectedTermId(termId);
-            setModalOpen(true);
-        }
-
-        document.addEventListener("click", onDocClick, true);
-        return () => document.removeEventListener("click", onDocClick, true);
-    }, [modalOpen]);
+        let aborted = false;
+        (async () => {
+            try {
+                const list = await fetchUserFolders();
+                if (!aborted) setNotebooks(list);
+            } catch (e) {
+                console.warn("[folders] 목록 조회 실패", e);
+                // 실패해도 모달은 열려 있고, '새로 만들기'로 진행 가능
+            }
+        })();
+        return () => {
+            aborted = true;
+        };
+    }, [modalOpen, notebooks.length]);
 
     const closeModal = React.useCallback(() => {
         setModalOpen(false);
@@ -111,19 +139,11 @@ function AppLayout() {
             // 1) 로컬 프리체크 (공백/중복)
             const raw = name;
             const normalized = normalizeName(raw);
-            if (!normalized) {
-                // 모달에서 메시지를 보여줄 수 있도록 에러 throw
-                throw new Error("EMPTY_NAME");
-            }
+            if (!normalized) throw new Error("EMPTY_NAME");
             const localDup = notebooks.some((n) => normalizeName(n.name) === normalized);
-            if (localDup) {
-                throw new Error("DUPLICATE_LOCAL");
-            }
+            if (localDup) throw new Error("DUPLICATE_LOCAL");
 
             // 2) 서버 호출
-            //    POST /api/user-terms/folders
-            //    Body: { folderName: "<raw>" }
-            //    Header: Authorization: Bearer <token>
             try {
                 const { data } = await http.post(
                     "/api/user-terms/folders",
@@ -139,19 +159,10 @@ function AppLayout() {
                 setNotebooks((prev) => [{ id: newId, name: newName }, ...prev]);
                 return newId;
             } catch (err: any) {
-                // 백엔드 표준 에러 매핑
                 const status = err?.response?.status;
                 const msg: string | undefined = err?.response?.data?.message;
-
-                if (status === 409 || msg?.includes("이미 존재")) {
-                    // 서버 중복
-                    throw new Error("DUPLICATE_SERVER");
-                }
-                if (status === 400 || msg?.includes("폴더명") || msg?.includes("입력")) {
-                    // 서버 공백/유효성
-                    throw new Error("EMPTY_NAME");
-                }
-                // 그 외는 상위에서 처리(토스트 등)
+                if (status === 409 || msg?.includes("이미 존재")) throw new Error("DUPLICATE_SERVER");
+                if (status === 400 || msg?.includes("폴더명") || msg?.includes("입력")) throw new Error("EMPTY_NAME");
                 throw err;
             }
         },
@@ -168,8 +179,7 @@ function AppLayout() {
             //   { termId: selectedTermId },
             //   { headers: { ...authHeader() } }
             // );
-
-            closeModal(); // 임시 성공 처리: 저장 시에만 모달 닫기
+            closeModal(); // 임시 성공 처리: 저장 시에만 모달 닫힘
         },
         [selectedTermId, closeModal]
     );
@@ -181,6 +191,28 @@ function AppLayout() {
         if (qp !== q) setQ(qp);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location.search]);
+
+    React.useEffect(() => {
+        function onDocClick(e: MouseEvent) {
+            const target = e.target as HTMLElement | null;
+            if (!target) return;
+
+            // TermCard의 + 버튼 (aria-label 그대로 사용)
+            const addBtn = target.closest('button[aria-label="내 단어장에 추가"]') as HTMLElement | null;
+            if (!addBtn) return;
+            if (modalOpen) return; // 이미 열려 있으면 무시
+
+            const termId = extractTermIdFromArticle(addBtn);
+            if (!termId) return;
+
+            setSelectedTermId(termId);
+            setModalOpen(true);
+        }
+
+        document.addEventListener("click", onDocClick, true);
+        return () => document.removeEventListener("click", onDocClick, true);
+    }, [modalOpen]);
+
 
     const handleSearch = (term: string) => {
         const t = term.trim();
@@ -229,8 +261,9 @@ function AppLayout() {
                 open={modalOpen}
                 notebooks={notebooks}
                 onClose={closeModal}
-                onCreate={handleCreateNotebook}   // ← 생성 시 모달 유지 + 새 id 반환
-                onSave={handleSaveToNotebook}     // ← 저장 시에만 모달 닫힘 (엔드포인트 확정 후 교체)
+                onCreate={handleCreateNotebook} // 생성 시 모달 유지 + 새 id 반환
+                onSave={handleSaveToNotebook}   // 저장 시에만 모달 닫힘
+                onReorder={handleReorder}
             />
         </Container>
     );
@@ -249,7 +282,7 @@ export default function App() {
                 <Route index element={<HomePage />} />
                 <Route path="search" element={<SearchPage />} />
                 <Route path="terms/by-tag" element={<TermListPage />} />
-                {/*<Route path="terms/not-found" element={<NoResultsPage />} />*/}
+                {/* <Route path="terms/not-found" element={<NoResultsPage />} /> */}
                 <Route path="*" element={<AutoContent />} />
             </Route>
         </Routes>
