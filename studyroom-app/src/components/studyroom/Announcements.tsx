@@ -7,8 +7,14 @@ import Modal from '../Modal';
 import AnnouncementForm from './AnnouncementForm';
 import AnnouncementDetail from './AnnouncementDetail';
 import { useAuth } from "../../hooks/useAuth";
-import { NavLink, useParams } from "react-router-dom";
+import {NavLink, useOutletContext, useParams} from "react-router-dom";
 import TabSearchBar from "./TabSearchBar";
+
+interface StudyRoomContext {
+    studyId: string;
+    userRole: 'LEADER' | 'MEMBER' | null;
+    handleLeaveOrClose: () => void;
+}
 
 /* --- NEW: Tab Navigation styled-components --- */
 const NavContainer = styled.div`
@@ -195,6 +201,7 @@ const Announcements: React.FC = () => {
     const { userId } = useAuth();
     const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
     const [isLoadingDetail, setIsLoadingDetail] = useState(false)
+    const { studyId, userRole, handleLeaveOrClose } = useOutletContext<StudyRoomContext>();
 
     const fetchAnnouncements = useCallback(async () => {
         if (!studyRoomId) return;
@@ -350,10 +357,13 @@ const Announcements: React.FC = () => {
 
             <NavContainer>
                 <TabList>
-                    <TabLink to={`/studies/joined-study/${studyRoomId}`} end>공지사항</TabLink>
-                    <TabLink to={`/studies/joined-study/${studyRoomId}/schedule`}>일정관리</TabLink>
-                    <TabLink to={`/studies/joined-study/${studyRoomId}/interview`}>모의면접</TabLink>
-                    <TabLink to={`/studies/joined-study/${studyRoomId}/members`}>참여인원</TabLink>
+                    <TabLink to={`/studies/joined-study/${studyId}`} end>공지사항</TabLink>
+                    <TabLink to={`/studies/joined-study/${studyId}/schedule`}>일정관리</TabLink>
+                    <TabLink to={`/studies/joined-study/${studyId}/interview`}>모의면접</TabLink>
+                    <TabLink to={`/studies/joined-study/${studyId}/members`}>참여인원</TabLink>
+                    {userRole === 'LEADER' && (
+                        <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청 관리</TabLink>
+                    )}
                 </TabList>
                 <TabSearchBar
                     searchTerm={searchTerm}
