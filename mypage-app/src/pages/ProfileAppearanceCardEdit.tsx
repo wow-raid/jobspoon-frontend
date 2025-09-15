@@ -1,3 +1,5 @@
+{/* 프로필 외형 수정 */}
+
 import React, { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import {

@@ -1,3 +1,5 @@
+{/* 마이페이지 전체 레이아웃 */}
+
 import React, { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import SideBar from "./SideBar";
