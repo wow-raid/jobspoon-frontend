@@ -69,13 +69,6 @@ export default function SideBar() {
                     <Divider />
 
                     <li>
-                        <NavButton onClick={handleOpenModal}>
-                            <FaCog className="icon" />
-                            설정
-                        </NavButton>
-                    </li>
-
-                    <li>
                         <StyledNavLink to="withdrawal">
                             <FaSignOutAlt className="icon" />
                             회원탈퇴
