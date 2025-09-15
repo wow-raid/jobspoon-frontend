@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 import WithdrawalConfirmModal from "../components/modals/WithdrawalConfirmModal.tsx";
 import ServiceModal from "../components/modals/ServiceModal.tsx";
 
@@ -7,6 +8,12 @@ export default function AccountWithdrawal() {
     const [reason, setReason] = useState("");
     const [showConfirm, setShowConfirm] = useState(false);
     const [showServiceModal, setShowServiceModal] = useState(false);
+    const navigate = useNavigate();
+
+    const toggleReason = (value: string) => {
+        // 같은 걸 다시 누르면 해제
+        setReason(reason === value ? "" : value);
+    };
 
     const handleWithdrawalClick = () => {
         if (!reason.trim()) {
@@ -36,13 +43,22 @@ export default function AccountWithdrawal() {
             <p>탈퇴 사유를 선택해주세요.</p>
 
             <Form>
-                <Option onClick={() => setReason("서비스가 기대에 미치지 못함")} active={reason === "서비스가 기대에 미치지 못함"}>
+                <Option
+                    onClick={() => toggleReason("서비스가 기대에 미치지 못함")}
+                    active={reason === "서비스가 기대에 미치지 못함"}
+                >
                     서비스가 기대에 미치지 못함
                 </Option>
-                <Option onClick={() => setReason("사용 빈도가 낮음")} active={reason === "사용 빈도가 낮음"}>
+                <Option
+                    onClick={() => toggleReason("사용 빈도가 낮음")}
+                    active={reason === "사용 빈도가 낮음"}
+                >
                     사용 빈도가 낮음
                 </Option>
-                <Option onClick={() => setReason("개인정보 보호 우려")} active={reason === "개인정보 보호 우려"}>
+                <Option
+                    onClick={() => toggleReason("개인정보 보호 우려")}
+                    active={reason === "개인정보 보호 우려"}
+                >
                     개인정보 보호 우려
                 </Option>
                 <OtherBox>
@@ -51,23 +67,25 @@ export default function AccountWithdrawal() {
                         type="text"
                         placeholder="직접 입력"
                         value={reason.startsWith("기타:") ? reason.replace("기타:", "") : ""}
-                        onChange={(e) => setReason(`기타:${e.target.value}`)}
+                        onChange={(e) => setReason(e.target.value ? `기타:${e.target.value}` : "")}
                     />
                 </OtherBox>
             </Form>
 
             <ButtonGroup>
-                <CancelButton onClick={() => history.back()}>취소</CancelButton>
+                <CancelButton onClick={() => navigate("/mypage")}>취소</CancelButton>
                 <DangerButton onClick={handleWithdrawalClick}>회원탈퇴</DangerButton>
             </ButtonGroup>
 
-            {/* 모달 영역 */}
+            {/* 확인 모달 */}
             {showConfirm && (
                 <WithdrawalConfirmModal
                     onClose={() => setShowConfirm(false)}
                     onConfirm={handleConfirm}
                 />
             )}
+
+            {/* 서비스 준비중 모달 */}
             {showServiceModal && (
                 <ServiceModal
                     isOpen={showServiceModal}
@@ -91,49 +109,49 @@ const Section = styled.section`
 `;
 
 const Title = styled.h2`
-  font-size: 18px;
-  font-weight: 700;
-  color: rgb(17, 24, 39);
+    font-size: 18px;
+    font-weight: 700;
+    color: rgb(17, 24, 39);
 `;
 
 const WarningBox = styled.div`
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #b91c1c;
-  padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 20px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
 
-  h3 {
-    margin: 0 0 8px 0;
-    font-weight: 700;
-    font-size: 16px;
-  }
-  p {
-    margin: 0;
-    font-size: 14px;
-    line-height: 1.5;
-  }
+    h3 {
+        margin: 0 0 8px 0;
+        font-weight: 700;
+        font-size: 16px;
+    }
+    p {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.5;
+    }
 `;
 
 const Form = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 `;
 
 const OtherBox = styled.label`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
 
-  input {
-    flex: 1;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    padding: 6px 8px;
-  }
+    input {
+        flex: 1;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        padding: 6px 8px;
+    }
 `;
 
 const Option = styled.div<{ active: boolean }>`
@@ -141,7 +159,7 @@ const Option = styled.div<{ active: boolean }>`
     border: 2px solid ${({ active }) => (active ? "#dc2626" : "#e5e7eb")};
     border-radius: 10px;
     cursor: pointer;
-    background: white;  /* ✅ 항상 흰색 유지 */
+    background: white; /* ✅ 배경 흰색 고정 */
     font-size: 15px;
     font-weight: 500;
     transition: all 0.2s ease;
@@ -150,44 +168,43 @@ const Option = styled.div<{ active: boolean }>`
     align-items: center;
 
     &:hover {
-        background: #f9fafb;  /* ✅ hover만 살짝 회색 */
-        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        background: #f9fafb; /* hover만 연회색 */
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     }
 `;
 
 const ButtonGroup = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  margin-top: 24px;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 24px;
 `;
 
 const CancelButton = styled.button`
-  background: white;
-  border: 1px solid #d1d5db;
-  color: #374151;
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-weight: 500;
-  cursor: pointer;
+    background: white;
+    border: 1px solid #d1d5db;
+    color: #374151;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
 
-  &:hover {
-    background: #f3f4f6;
-  }
+    &:hover {
+        background: #f3f4f6;
+    }
 `;
 
 const DangerButton = styled.button`
-  background: #dc2626;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(220,38,38,0.3);
+    background: #dc2626;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
 
-  &:hover {
-    background: #b91c1c;
-  }
+    &:hover {
+        background: #b91c1c;
+    }
 `;
-
