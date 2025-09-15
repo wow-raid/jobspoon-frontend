@@ -28,8 +28,6 @@ export default function AccountProfileEdit() {
 
     // 모달 상태
     const [isModalOpen, setIsModalOpen] = useState(false);
-    // modalType 타입 확장
-    const [modalType, setModalType] = useState<"phone" | "email" | "photo" | null>(null);
 
     // 닉네임 수정 상태
     const [isEditingNickname, setIsEditingNickname] = useState(false);
@@ -45,7 +43,6 @@ export default function AccountProfileEdit() {
     // TODO: AccountProfile API 나오면 교체
     const [accountInfo] = useState({
         phone: "",
-        email: "TestUser01@kakao.com",
     });
 
     useEffect(() => {
@@ -130,8 +127,7 @@ export default function AccountProfileEdit() {
     };
 
     /** 모달 열기 */
-    const openModal = (type: "phone" | "email" | "photo") => {
-        setModalType(type);
+    const openModal = () => {
         setIsModalOpen(true);
     };
 
@@ -180,7 +176,7 @@ export default function AccountProfileEdit() {
                             ) : (
                                 <SmallButton onClick={handleStartEdit}>별명 수정</SmallButton>
                             )}
-                            <SmallButton onClick={() => openModal("photo")}>사진 변경</SmallButton>
+                            <SmallButton onClick={openModal}>사진 변경</SmallButton>
                         </ButtonGroup>
                     </TopRow>
 
@@ -190,17 +186,35 @@ export default function AccountProfileEdit() {
                         <InfoItem>
                             <FaPhone style={{ color: "#6b7280", marginRight: "8px" }} />
                             <span>{accountInfo.phone || "본인확인 번호 없음"}</span>
-                            <ActionLink onClick={() => openModal("phone")}>
+                            <ActionLink onClick={openModal}>
                                 {accountInfo.phone ? "수정" : "등록"}
                             </ActionLink>
                         </InfoItem>
                         <InfoItem>
                             <FaEnvelope style={{ color: "#6b7280", marginRight: "8px" }} />
                             <span>{profile.email}</span>
-                            <ActionLink onClick={() => openModal("email")}>수정</ActionLink>
+                            <ActionLink onClick={openModal}>수정</ActionLink>
                         </InfoItem>
                     </BottomRow>
                 </InfoCard>
+            </Section>
+
+            {/* 프로필 공개 여부 */}
+            <Section>
+                <SectionTitle>프로필 공개 설정</SectionTitle>
+                <ConsentCard>
+                    <ConsentRow>
+                        <Left>
+                            <span>스터디 모임 프로필 공개</span>
+                        </Left>
+                        <ToggleSwitch
+                            checked={profile?.isProfilePublic ?? true}
+                            onClick={openModal}
+                        >
+                            <span>{profile?.isProfilePublic ? "ON" : "OFF"}</span>
+                        </ToggleSwitch>
+                    </ConsentRow>
+                </ConsentCard>
             </Section>
 
             {/* 프로모션 정보수신 동의 */}
@@ -214,7 +228,7 @@ export default function AccountProfileEdit() {
                         </Left>
                         <ToggleSwitch
                             checked={consent.phone}
-                            onClick={() => openModal("phone")}
+                            onClick={openModal}
                         >
                             <span>{consent.phone ? "ON" : "OFF"}</span>
                         </ToggleSwitch>
@@ -229,7 +243,7 @@ export default function AccountProfileEdit() {
                         </Left>
                         <ToggleSwitch
                             checked={consent.email}
-                            onClick={() => openModal("email")}
+                            onClick={openModal}
                         >
                             <span>{consent.email ? "ON" : "OFF"}</span>
                         </ToggleSwitch>
