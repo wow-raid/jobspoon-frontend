@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { FaPhone, FaEnvelope } from "react-icons/fa";
+import { FaPhone, FaEnvelope, FaLock } from "react-icons/fa";
 import { useOutletContext } from "react-router-dom";
-
 import defaultProfile from "../assets/default_profile.png";
 import ServiceModal from "../components/modals/ServiceModal.tsx";
 import {
@@ -26,7 +25,7 @@ type OutletContextType = {
 export default function AccountProfileEdit() {
     const { profile, refreshProfile } = useOutletContext<OutletContextType>();
 
-    // 모달 상태
+    // 서비스 모달 상태
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // 닉네임 수정 상태
@@ -34,17 +33,29 @@ export default function AccountProfileEdit() {
     const [tempNickname, setTempNickname] = useState("");
     const [error, setError] = useState<string | null>(null);
 
+    // 랭크 상태
     const [ranks, setRanks] = useState<HistoryItem[]>([]);
     const [showRanks, setShowRanks] = useState(false);
 
+    // 칭호 상태
     const [titles, setTitles] = useState<HistoryItem[]>([]);
     const [showTitles, setShowTitles] = useState(false);
+
+    // 프로필 공개 여부 상태
+    const [isProfilePublic, setIsProfilePublic] = useState(true);
 
     // TODO: AccountProfile API 나오면 교체
     const [accountInfo] = useState({
         phone: "",
     });
 
+    // TODO: AccountProfile API 나오면 교체
+    const [consent, setConsent] = useState({
+        phone: true,
+        email: false,
+    });
+
+    // 랭크, 칭호 이력 가져오기
     useEffect(() => {
         const token = localStorage.getItem("userToken");
         if (!token) return;
@@ -91,12 +102,6 @@ export default function AccountProfileEdit() {
         }
     };
 
-    // TODO: AccountProfile API 나오면 교체
-    const [consent] = useState({
-        phone: true,
-        email: false,
-    });
-
     /** 닉네임 수정 시작 */
     const handleStartEdit = () => {
         if (profile) {
@@ -129,6 +134,23 @@ export default function AccountProfileEdit() {
     /** 모달 열기 */
     const openModal = () => {
         setIsModalOpen(true);
+    };
+
+    // 토글 핸들러
+    const handleToggleProfilePublic = () => {
+        setIsProfilePublic((prev) => !prev);
+        setIsModalOpen(true); // 안내 모달도 같이 열림
+        // TODO: 나중에 API 연동
+    };
+
+    // 토글 핸들러
+    const handleToggleConsent = (key: "phone" | "email") => {
+        setConsent((prev) => ({
+            ...prev,
+            [key]: !prev[key],
+        }));
+        setIsModalOpen(true); // 안내 모달도 같이 열기
+        // TODO: 나중에 API 연동
     };
 
     if (!profile) {
@@ -195,6 +217,11 @@ export default function AccountProfileEdit() {
                             <span>{profile.email}</span>
                             <ActionLink onClick={openModal}>수정</ActionLink>
                         </InfoItem>
+                        <InfoItem>
+                            <FaLock style={{ color: "#6b7280", marginRight: "8px" }} />
+                            <span>비밀번호</span>
+                            <ActionLink onClick={openModal}>변경</ActionLink>
+                        </InfoItem>
                     </BottomRow>
                 </InfoCard>
             </Section>
@@ -208,10 +235,9 @@ export default function AccountProfileEdit() {
                             <span>스터디 모임 프로필 공개</span>
                         </Left>
                         <ToggleSwitch
-                            checked={profile?.isProfilePublic ?? true}
-                            onClick={openModal}
-                        >
-                            <span>{profile?.isProfilePublic ? "ON" : "OFF"}</span>
+                            checked={isProfilePublic}
+                            onClick={handleToggleProfilePublic}>
+                            <span>{isProfilePublic ? "ON" : "OFF"}</span>
                         </ToggleSwitch>
                     </ConsentRow>
                 </ConsentCard>
@@ -228,8 +254,7 @@ export default function AccountProfileEdit() {
                         </Left>
                         <ToggleSwitch
                             checked={consent.phone}
-                            onClick={openModal}
-                        >
+                            onClick={() => handleToggleConsent("phone")}>
                             <span>{consent.phone ? "ON" : "OFF"}</span>
                         </ToggleSwitch>
                     </ConsentRow>
@@ -243,8 +268,7 @@ export default function AccountProfileEdit() {
                         </Left>
                         <ToggleSwitch
                             checked={consent.email}
-                            onClick={openModal}
-                        >
+                            onClick={() => handleToggleConsent("email")}>
                             <span>{consent.email ? "ON" : "OFF"}</span>
                         </ToggleSwitch>
                     </ConsentRow>
