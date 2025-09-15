@@ -15,11 +15,9 @@ type Props = {
 };
 
 export default function WritingModal({ isOpen, onClose, writing }: Props) {
-    if (!isOpen) return null;
-
     return (
-        <Overlay>
-            <Modal>
+        <Overlay isOpen={isOpen}>
+            <Modal isOpen={isOpen}>
                 <Header>
                     <h2>글 작성 상세</h2>
                     <CloseButton onClick={onClose}>×</CloseButton>
@@ -45,16 +43,21 @@ export default function WritingModal({ isOpen, onClose, writing }: Props) {
 
 /* ================== styled-components ================== */
 
-const Overlay = styled.div`
+const Overlay = styled.div<{ isOpen: boolean }>`
     position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.4);
-    display: flex; align-items: center; justify-content: center;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     z-index: 1000;
+
+    background: ${({ isOpen }) => (isOpen ? "rgba(0,0,0,0.4)" : "transparent")};
+    opacity: ${({ isOpen }) => (isOpen ? 1 : 0)};
+    visibility: ${({ isOpen }) => (isOpen ? "visible" : "hidden")};
+    transition: all 0.3s ease-in-out;
 `;
 
-const Modal = styled.div`
+const Modal = styled.div<{ isOpen: boolean }>`
     background: white;
     padding: 20px;
     border-radius: 12px;
@@ -65,6 +68,9 @@ const Modal = styled.div`
     display: flex;
     flex-direction: column;
     gap: 16px;
+
+    transform: ${({ isOpen }) => (isOpen ? "scale(1)" : "scale(0.95)")};
+    transition: all 0.3s ease-in-out;
 `;
 
 const Header = styled.div`
@@ -119,6 +125,7 @@ const ConfirmButton = styled.button`
     border-radius: 6px;
     cursor: pointer;
 
+    transition: background 0.2s ease-in-out;
     &:hover {
         background: rgb(37, 99, 235);
     }
