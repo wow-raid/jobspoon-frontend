@@ -203,7 +203,9 @@ export default function ProfileAppearanceCardEdit() {
                 </HistoryCard>
             </HistoryGrid>
 
-            <ServiceModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+            <ServiceModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)} />
         </Card>
     );
 }

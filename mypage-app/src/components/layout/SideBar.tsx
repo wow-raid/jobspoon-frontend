@@ -85,7 +85,9 @@ export default function SideBar() {
             </Nav>
 
             {/* 모달 */}
-            <ServiceModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+            <ServiceModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)} />
         </Container>
     );
 }
