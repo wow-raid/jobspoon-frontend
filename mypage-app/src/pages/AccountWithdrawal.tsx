@@ -3,8 +3,9 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import WithdrawalConfirmModal from "../components/modals/WithdrawalConfirmModal.tsx";
 import ServiceModal from "../components/modals/ServiceModal.tsx";
+import {withdrawAccount} from "../api/profileAppearanceApi.ts";
 
-export default function AccountWithdrawal() {
+export function AccountWithdrawal() {
     const [reason, setReason] = useState("");
     const [showConfirm, setShowConfirm] = useState(false);
     const [showServiceModal, setShowServiceModal] = useState(false);
@@ -23,9 +24,22 @@ export default function AccountWithdrawal() {
         setShowConfirm(true);
     };
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
+
+        try {
+            const token = localStorage.getItem("userToken") ?? "";
+            const reuslt = await withdrawAccount(token);
+            console.log(reuslt);
+        } catch (error) {
+            console.log(error);
+        }
+
         setShowConfirm(false);
-        setShowServiceModal(true);
+        localStorage.removeItem("userToken");
+        alert("회원 탈퇴 되었습니다.");
+        window.location.href = "/";
+
+        // setShowServiceModal(true);
     };
 
     return (
@@ -35,7 +49,7 @@ export default function AccountWithdrawal() {
             <WarningBox>
                 <h3>탈퇴 전 꼭 확인하세요</h3>
                 <p>
-                    회원탈퇴 시 모든 데이터가 삭제되며, 복구가 불가능합니다. <br />
+                    회원탈퇴 시 모든 데이터가 삭제되며, 복구가 불가능합니다. <br/>
                     정말 떠나시겠습니까? 😢
                 </p>
             </WarningBox>

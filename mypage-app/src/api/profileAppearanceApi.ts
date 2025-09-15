@@ -16,6 +16,9 @@ export interface PhotoResponse {
     photoUrl: string;
 }
 
+export interface accountResponse {
+    token: string;
+}
 
 // PUT /nickname 응답
 export interface CustomNicknameResponse {
@@ -101,6 +104,14 @@ export async function equipTitle(token: string, titleId: number): Promise<Histor
         `${API_BASE_URL}/profile-appearance/title/${titleId}/equip`,
         {},
         { headers: { Authorization: token } }
+    );
+    return res.data;
+}
+
+export async function withdrawAccount(token: string){
+    const res = await axios.post(`${API_BASE_URL}/api/account/withdraw`,
+        {},
+        {headers: {Authorization: token}}
     );
     return res.data;
 }

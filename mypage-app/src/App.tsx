@@ -6,7 +6,7 @@ import ProfileAppearanceCardEdit from "./pages/ProfileAppearanceCardEdit.tsx";
 import AccountProfileEdit from "./pages/AccountProfileEdit.tsx";
 import InterviewResultList from "./pages/InterviewResultList.tsx";
 import InterviewResultDetail from "./pages/InterviewResultDetail.tsx";
-import AccountWithdrawal from "./pages/AccountWithdrawal.tsx";
+import {AccountWithdrawal} from "./pages/AccountWithdrawal.tsx";
 
 import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
 import { getTheme, onThemeChange, type Theme as BridgeTheme } from '@jobspoon/theme-bridge';
