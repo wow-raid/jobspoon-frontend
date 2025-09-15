@@ -1,6 +1,7 @@
-// src/components/TermCard.tsx
 import React from "react";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
+import { ensureAuthOrAlertRedirect, AUTH_ALERT_MSG } from "../utils/authGuard";
 
 export type TermCardProps = {
     id: number;
@@ -11,7 +12,6 @@ export type TermCardProps = {
     onTagClick?: (tag: string) => void;
 };
 
-/* 디자인 토큰 */
 const TOKENS = {
     color: {
         bgWhite: "#ffffff",
@@ -40,15 +40,14 @@ const TOKENS = {
     },
 } as const;
 
-const CONTENT_INSET = 16; // 본문 시작점과 정렬
+const CONTENT_INSET = 16;
 
-/* styled-components */
 const Article = styled.article`
-    border-radius: ${TOKENS.radius.card}px;
-    border: ${TOKENS.border.card};
-    background: ${TOKENS.color.bgWhite};
-    padding: ${TOKENS.space(20)};
-    box-shadow: ${TOKENS.shadow.card};
+  border-radius: ${TOKENS.radius.card}px;
+  border: ${TOKENS.border.card};
+  background: ${TOKENS.color.bgWhite};
+  padding: ${TOKENS.space(20)};
+  box-shadow: ${TOKENS.shadow.card};
 `;
 
 const Header = styled.div`
@@ -82,18 +81,14 @@ const AddBtn = styled.button`
     box-shadow: none;
     transition: background-color 120ms ease, transform 40ms ease;
 
-    &:hover {
-        background: ${TOKENS.color.indigo50};
-    }
-    &:active {
-        transform: scale(0.98);
-    }
+    &:hover { background: ${TOKENS.color.indigo50}; }
+    &:active { transform: scale(0.98); }
 `;
 
 const AddIcon = styled.svg`
-    width: 16px;
-    height: 16px;
-    display: inline-block;
+  width: 16px;
+  height: 16px;
+  display: inline-block;
 `;
 
 const InnerBox = styled.div`
@@ -108,7 +103,7 @@ const Description = styled.p`
     line-height: 1.7;
     color: ${TOKENS.color.textSecondary};
     margin: 0;
-    white-space: pre-wrap; /* 개행 보존 */
+    white-space: pre-wrap;
     word-break: keep-all;
 `;
 
@@ -118,8 +113,8 @@ const TagsRow = styled.div`
     display: flex;
     align-items: center;
     gap: ${TOKENS.space(8)};
-    white-space: nowrap;         /* 한 줄 유지 */
-    overflow-x: auto;            /* 많으면 가로 스크롤 */
+    white-space: nowrap;
+    overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
 `;
@@ -145,49 +140,62 @@ const TagEmptyInline = styled.span`
 `;
 
 const TagChipBtn = styled.button`
-    flex: 0 0 auto;
-    border-radius: ${TOKENS.radius.chip}px;
-    border: ${TOKENS.border.chip};
-    background: ${TOKENS.color.bgWhite};
-    padding: ${TOKENS.space(4)} ${TOKENS.space(12)};
-    font-size: ${TOKENS.font.chip};
-    color: ${TOKENS.color.textSecondary};
-    box-shadow: ${TOKENS.shadow.chip};
-    cursor: pointer;
-    outline: none;
-    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, transform 40ms ease;
+  flex: 0 0 auto;
+  border-radius: ${TOKENS.radius.chip}px;
+  border: ${TOKENS.border.chip};
+  background: ${TOKENS.color.bgWhite};
+  padding: ${TOKENS.space(4)} ${TOKENS.space(12)};
+  font-size: ${TOKENS.font.chip};
+  color: ${TOKENS.color.textSecondary};
+  box-shadow: ${TOKENS.shadow.chip};
+  cursor: pointer;
+  outline: none;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, transform 40ms ease;
 
-    &:hover {
-        border: ${TOKENS.border.chipHover};
-        background: ${TOKENS.color.chipBg};
-        color: ${TOKENS.color.textBlue};
-    }
-    &:active {
-        background: ${TOKENS.color.chipActiveBg};
-        transform: scale(0.98);
-    }
+  &:hover {
+    border: ${TOKENS.border.chipHover};
+    background: ${TOKENS.color.chipBg};
+    color: ${TOKENS.color.textBlue};
+  }
+  &:active {
+    background: ${TOKENS.color.chipActiveBg};
+    transform: scale(0.98);
+  }
 `;
 
-/* 컴포넌트 */
-const TermCard: React.FC<TermCardProps> = ({
-                                               id,
-                                               title,
-                                               description,
-                                               tags = [],
-                                               onAdd,
-                                               onTagClick,
-                                           }) => {
+const TermCard: React.FC<TermCardProps> = ({ id, title, description, tags = [], onAdd, onTagClick }) => {
+    const navigate = useNavigate();
+
+    // 실제 로그인 여부를 localStorage에서 계산
+    const isLoggedIn = React.useMemo(() => {
+        const t = localStorage.getItem("userToken") || localStorage.getItem("accessToken");
+        return !!t;
+    }, []);
+
+    const handleAddClick = React.useCallback(() => {
+        if (!isLoggedIn) {
+            // 비로그인: 확인 시 로그인 이동, 취소 시 아무 것도 안 함
+            ensureAuthOrAlertRedirect(AUTH_ALERT_MSG, "/vue-account/account/login", {
+                isLoggedIn,
+                navigate,
+                promptType: "confirm",
+                tokenKeys: ["userToken", "accessToken"],
+            });
+            return;
+        }
+        // 로그인: 바로 콜백 실행
+        onAdd?.(id);
+    }, [id, isLoggedIn, navigate, onAdd]);
+
     return (
         <Article aria-labelledby={`term-${id}`}>
-            {/* 헤더: 제목 + (+) */}
             <Header>
                 <Title id={`term-${id}`}>{title}</Title>
-
                 <AddBtn
                     type="button"
                     title="내 단어장에 추가"
                     aria-label="내 단어장에 추가"
-                    onClick={() => onAdd?.(id)}
+                    onClick={handleAddClick}
                 >
                     <AddIcon viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -195,26 +203,16 @@ const TermCard: React.FC<TermCardProps> = ({
                 </AddBtn>
             </Header>
 
-            {/* 본문 */}
             <InnerBox>
                 <Description>{description}</Description>
             </InnerBox>
 
-            {/* 연관 키워드: 한 줄 */}
             <TagsRow aria-label="연관 키워드">
                 <TagLabelInline>연관 키워드</TagLabelInline>
-
                 {tags.length > 0 ? (
                     <TagListInline role="list" aria-label="해시태그 목록">
                         {tags.map((t, idx) => (
-                            <TagChipBtn
-                                key={`${t}-${idx}`}
-                                type="button"
-                                role="listitem"
-                                title={`#${t}`}
-                                aria-label={`해시태그 ${t}`}
-                                onClick={() => onTagClick?.(t)}
-                            >
+                            <TagChipBtn key={`${t}-${idx}`} type="button" role="listitem" title={`#${t}`} aria-label={`해시태그 ${t}`} onClick={() => onTagClick?.(t)}>
                                 #{t}
                             </TagChipBtn>
                         ))}
