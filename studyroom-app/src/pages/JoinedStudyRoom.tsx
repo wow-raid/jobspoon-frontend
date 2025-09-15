@@ -56,7 +56,10 @@ const Main = styled.main`
 `;
 
 const ContentArea = styled.section`
-  width: 100%; /* 너비를 100%로 설정 */
+    background-color: ${({ theme }) => theme.surface};
+    border-radius: 8px;
+    padding: 24px;
+    min-height: 400px;
 `;
 
 const JoinedStudyRoom: React.FC = () => {
@@ -64,34 +67,31 @@ const JoinedStudyRoom: React.FC = () => {
     const navigate = useNavigate();
     const { currentUserId } = useAuth();
     const [study, setStudy] = useState<StudyRoom | null>(null);
-    const [userRole, setUserRole] = useState<UserRole>("MEMBER");
     const [loading, setLoading] = useState(true);
+    const [userRole, setUserRole] = useState<"LEADER" | "MEMBER">("MEMBER");
 
     useEffect(() => {
         if (!studyId) return;
         const fetchStudyDetails = async () => {
+            setLoading(true);
             try {
-                const response = await axiosInstance.get<StudyRoom>(`/study-rooms/${studyId}`);
-                setStudy(response.data);
-                // 모임장 ID와 현재 사용자 ID를 비교하여 역할 결정
-                if (response.data.hostId === currentUserId) {
-                    setUserRole("LEADER");
-                } else {
-                    setUserRole("MEMBER");
-                }
+                const [studyResponse, roleResponse] = await Promise.all([
+                    axiosInstance.get<StudyRoom>(`/study-rooms/${studyId}`),
+                    axiosInstance.get<string>(`/study-rooms/${studyId}/role`)
+                ]);
+                setStudy(studyResponse.data);
+                setUserRole(roleResponse.data as "LEADER" | "MEMBER");
             } catch (error) {
-                console.error("스터디 정보 로딩 실패:", error);
-                alert("스터디 정보를 불러올 수 없습니다.");
-                navigate("/");
+                // ...
             } finally {
                 setLoading(false);
             }
         };
         fetchStudyDetails();
-    }, [studyId, currentUserId, navigate]);
+    }, [studyId, navigate]);
 
     const handleLeaveOrClose = async () => {
-        if (userRole === "LEADER") {
+        if (userRole === 'LEADER') {
             if (window.confirm("정말로 스터디를 폐쇄하시겠습니까? 모든 데이터가 삭제됩니다.")) {
                 try {
                     await axiosInstance.delete(`/study-rooms/${studyId}`);
@@ -130,7 +130,7 @@ const JoinedStudyRoom: React.FC = () => {
 
             <Main className="room-main-content">
                 <ContentArea className="room-content-area">
-                    <Outlet context={{ studyId, userRole, onLeaveOrClose: handleLeaveOrClose }} />
+                    <Outlet context={{ studyId, userRole, handleLeaveOrClose }} />
                 </ContentArea>
             </Main>
         </Container>
