@@ -383,6 +383,9 @@ const Schedule: React.FC = () => {
         <TabLink to={`/studies/joined-study/${studyId}/schedule`}>일정관리</TabLink>
         <TabLink to={`/studies/joined-study/${studyId}/interview`}>모의면접</TabLink>
         <TabLink to={`/studies/joined-study/${studyId}/members`}>참여인원</TabLink>
+        {userRole === 'LEADER' && (
+            <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청 관리</TabLink>
+        )}
       </TabList>
         <TabSearchBar
             searchTerm={searchTerm}

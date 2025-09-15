@@ -8,7 +8,7 @@ import googleLogo from '../../assets/google_logo.png';
 import zoomLogo from '../../assets/zoom_logo.png';
 import discordLogo from '../../assets/discord_logo.png';
 import naverLogo from '../../assets/naver_logo.png';
-import { NavLink, useParams } from "react-router-dom";
+import {NavLink, useOutletContext, useParams} from "react-router-dom";
 
 type Channel = {
     name: string;
@@ -166,6 +166,7 @@ const EditButton = styled.button`
 
 const TestInterview: React.FC = () => {
     const { id: studyRoomId } = useParams<{ id: string }>();
+    const { studyId, userRole, onLeaveOrClose } = useOutletContext<StudyRoomContext>();
     const [channels, setChannels] = useState<Channel[]>(INITIAL_LINKS);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingChannel, setEditingChannel] = useState<Channel | null>(null);
@@ -195,12 +196,15 @@ const TestInterview: React.FC = () => {
             </Header>
 
             <NavContainer>
-            <TabList>
-                <TabLink to={`/studies/joined-study/${studyRoomId}`} end>공지사항</TabLink>
-                <TabLink to={`/studies/joined-study/${studyRoomId}/schedule`}>일정관리</TabLink>
-                <TabLink to={`/studies/joined-study/${studyRoomId}/interview`}>모의면접</TabLink>
-                <TabLink to={`/studies/joined-study/${studyRoomId}/members`}>참여인원</TabLink>
-            </TabList>
+                <TabList>
+                    <TabLink to={`/studies/joined-study/${studyId}`} end>공지사항</TabLink>
+                    <TabLink to={`/studies/joined-study/${studyId}/schedule`}>일정관리</TabLink>
+                    <TabLink to={`/studies/joined-study/${studyId}/interview`}>모의면접</TabLink>
+                    <TabLink to={`/studies/joined-study/${studyId}/members`}>참여인원</TabLink>
+                    {userRole === 'LEADER' && (
+                        <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청 관리</TabLink>
+                    )}
+                </TabList>
             </NavContainer>
 
             <ContentWrapper>
