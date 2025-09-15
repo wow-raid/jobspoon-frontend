@@ -61,13 +61,19 @@ export default function AccountWithdrawal() {
                 >
                     개인정보 보호 우려
                 </Option>
-                <OtherBox>
+                <OtherBox active={reason.startsWith("기타:")}>
                     기타:
                     <input
                         type="text"
                         placeholder="직접 입력"
                         value={reason.startsWith("기타:") ? reason.replace("기타:", "") : ""}
-                        onChange={(e) => setReason(e.target.value ? `기타:${e.target.value}` : "")}
+                        onFocus={() => {
+                            if (!reason.startsWith("기타:")) setReason("기타:");
+                        }}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            setReason(value ? `기타:${value}` : "");
+                        }}
                     />
                 </OtherBox>
             </Form>
@@ -140,7 +146,7 @@ const Form = styled.div`
     gap: 12px;
 `;
 
-const OtherBox = styled.label`
+const OtherBox = styled.label<{ active?: boolean }>`
     display: flex;
     align-items: center;
     gap: 8px;
@@ -148,9 +154,14 @@ const OtherBox = styled.label`
 
     input {
         flex: 1;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
+        border: 2px solid ${({ active }) => (active ? "#dc2626" : "#e5e7eb")};
+        border-radius: 10px;
         padding: 6px 8px;
+        transition: all 0.2s ease;
+
+        &:focus {
+            outline: none;
+        }
     }
 `;
 
