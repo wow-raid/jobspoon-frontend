@@ -76,10 +76,10 @@ export default function SideBar() {
                     </li>
 
                     <li>
-                        <DangerButton onClick={handleOpenModal}>
+                        <StyledNavLink to="withdrawal">
                             <FaSignOutAlt className="icon" />
                             회원탈퇴
-                        </DangerButton>
+                        </StyledNavLink>
                     </li>
                 </ul>
             </Nav>
@@ -143,23 +143,6 @@ const NavButton = styled.button<{ active?: boolean }>`
             color: rgb(37, 99, 235);
         }
     }
-`;
-
-const DangerButton = styled(NavButton)`
-  color: rgb(220, 38, 38);
-
-  .icon {
-    color: rgb(220, 38, 38);
-  }
-
-  &:hover {
-    background: rgb(254, 242, 242);
-    color: rgb(185, 28, 28);
-
-    .icon {
-      color: rgb(185, 28, 28);
-    }
-  }
 `;
 
 const Badge = styled.span`

@@ -1,4 +1,4 @@
-{/* 마이페이지 전체 레이아웃 */}
+{/* 마이페이지 전체 레이아웃(좌, 우만 담당) */}
 
 import React, { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
