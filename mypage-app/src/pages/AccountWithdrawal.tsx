@@ -98,12 +98,11 @@ export function AccountWithdrawal() {
             </ButtonGroup>
 
             {/* 확인 모달 */}
-            {showConfirm && (
-                <WithdrawalConfirmModal
-                    onClose={() => setShowConfirm(false)}
-                    onConfirm={handleConfirm}
-                />
-            )}
+            <WithdrawalConfirmModal
+                isOpen={showConfirm}
+                onClose={() => setShowConfirm(false)}
+                onConfirm={handleConfirm}
+            />
 
             {/* 서비스 준비중 모달 */}
             {showServiceModal && (

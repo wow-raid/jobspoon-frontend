@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import styled from "styled-components";
 
 interface WithdrawalConfirmModalProps {
+    isOpen: boolean;
     onClose: () => void;
     onConfirm: () => void;
 }
 
 export default function WithdrawalConfirmModal({
+                                                   isOpen,
                                                    onClose,
                                                    onConfirm,
                                                }: WithdrawalConfirmModalProps) {
@@ -16,8 +18,8 @@ export default function WithdrawalConfirmModal({
     const isMatch = inputValue.trim() === requiredPhrase;
 
     return (
-        <Overlay>
-            <ModalContent>
+        <Overlay isOpen={isOpen}>
+            <ModalContent isOpen={isOpen}>
                 <Title>정말 탈퇴하시겠습니까?</Title>
 
                 <Message>
@@ -51,7 +53,7 @@ export default function WithdrawalConfirmModal({
 
 /* ================== styled-components ================== */
 
-const Overlay = styled.div`
+const Overlay = styled.div<{ isOpen: boolean }>`
     position: fixed;
     inset: 0;
     display: flex;
@@ -59,16 +61,22 @@ const Overlay = styled.div`
     justify-content: center;
     z-index: 50;
 
-    background: rgba(0, 0, 0, 0.5);
+    background: ${({ isOpen }) => (isOpen ? "rgba(0, 0, 0, 0.5)" : "transparent")};
+    opacity: ${({ isOpen }) => (isOpen ? 1 : 0)};
+    visibility: ${({ isOpen }) => (isOpen ? "visible" : "hidden")};
+    transition: all 0.3s ease-in-out;
 `;
 
-const ModalContent = styled.div`
+const ModalContent = styled.div<{ isOpen: boolean }>`
     background: white;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     padding: 24px;
     width: 360px;
     text-align: center;
+
+    transform: ${({ isOpen }) => (isOpen ? "scale(1)" : "scale(0.95)")};
+    transition: all 0.3s ease-in-out;
 `;
 
 const Title = styled.h2`
@@ -120,6 +128,8 @@ const CancelButton = styled.button`
     font-weight: 500;
     cursor: pointer;
 
+
+    transition: background 0.2s ease-in-out;
     &:hover {
         background: #d1d5db;
     }

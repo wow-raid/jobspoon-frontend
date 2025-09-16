@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { FaPhone, FaEnvelope } from "react-icons/fa";
+import { FaPhone, FaEnvelope, FaLock } from "react-icons/fa";
 import { useOutletContext } from "react-router-dom";
-
 import defaultProfile from "../assets/default_profile.png";
 import ServiceModal from "../components/modals/ServiceModal.tsx";
 import {
@@ -26,28 +25,37 @@ type OutletContextType = {
 export default function AccountProfileEdit() {
     const { profile, refreshProfile } = useOutletContext<OutletContextType>();
 
-    // 모달 상태
+    // 서비스 모달 상태
     const [isModalOpen, setIsModalOpen] = useState(false);
-    // modalType 타입 확장
-    const [modalType, setModalType] = useState<"phone" | "email" | "photo" | null>(null);
 
     // 닉네임 수정 상태
     const [isEditingNickname, setIsEditingNickname] = useState(false);
     const [tempNickname, setTempNickname] = useState("");
     const [error, setError] = useState<string | null>(null);
 
+    // 랭크 상태
     const [ranks, setRanks] = useState<HistoryItem[]>([]);
     const [showRanks, setShowRanks] = useState(false);
 
+    // 칭호 상태
     const [titles, setTitles] = useState<HistoryItem[]>([]);
     const [showTitles, setShowTitles] = useState(false);
+
+    // 프로필 공개 여부 상태
+    const [isProfilePublic, setIsProfilePublic] = useState(true);
 
     // TODO: AccountProfile API 나오면 교체
     const [accountInfo] = useState({
         phone: "",
-        email: "TestUser01@kakao.com",
     });
 
+    // TODO: AccountProfile API 나오면 교체
+    const [consent, setConsent] = useState({
+        phone: true,
+        email: false,
+    });
+
+    // 랭크, 칭호 이력 가져오기
     useEffect(() => {
         const token = localStorage.getItem("userToken");
         if (!token) return;
@@ -94,12 +102,6 @@ export default function AccountProfileEdit() {
         }
     };
 
-    // TODO: AccountProfile API 나오면 교체
-    const [consent] = useState({
-        phone: true,
-        email: false,
-    });
-
     /** 닉네임 수정 시작 */
     const handleStartEdit = () => {
         if (profile) {
@@ -130,9 +132,25 @@ export default function AccountProfileEdit() {
     };
 
     /** 모달 열기 */
-    const openModal = (type: "phone" | "email" | "photo") => {
-        setModalType(type);
+    const openModal = () => {
         setIsModalOpen(true);
+    };
+
+    // 토글 핸들러
+    const handleToggleProfilePublic = () => {
+        setIsProfilePublic((prev) => !prev);
+        setIsModalOpen(true); // 안내 모달도 같이 열림
+        // TODO: 나중에 API 연동
+    };
+
+    // 토글 핸들러
+    const handleToggleConsent = (key: "phone" | "email") => {
+        setConsent((prev) => ({
+            ...prev,
+            [key]: !prev[key],
+        }));
+        setIsModalOpen(true); // 안내 모달도 같이 열기
+        // TODO: 나중에 API 연동
     };
 
     if (!profile) {
@@ -180,7 +198,7 @@ export default function AccountProfileEdit() {
                             ) : (
                                 <SmallButton onClick={handleStartEdit}>별명 수정</SmallButton>
                             )}
-                            <SmallButton onClick={() => openModal("photo")}>사진 변경</SmallButton>
+                            <SmallButton onClick={openModal}>사진 변경</SmallButton>
                         </ButtonGroup>
                     </TopRow>
 
@@ -190,17 +208,39 @@ export default function AccountProfileEdit() {
                         <InfoItem>
                             <FaPhone style={{ color: "#6b7280", marginRight: "8px" }} />
                             <span>{accountInfo.phone || "본인확인 번호 없음"}</span>
-                            <ActionLink onClick={() => openModal("phone")}>
+                            <ActionLink onClick={openModal}>
                                 {accountInfo.phone ? "수정" : "등록"}
                             </ActionLink>
                         </InfoItem>
                         <InfoItem>
                             <FaEnvelope style={{ color: "#6b7280", marginRight: "8px" }} />
                             <span>{profile.email}</span>
-                            <ActionLink onClick={() => openModal("email")}>수정</ActionLink>
+                            <ActionLink onClick={openModal}>수정</ActionLink>
+                        </InfoItem>
+                        <InfoItem>
+                            <FaLock style={{ color: "#6b7280", marginRight: "8px" }} />
+                            <span>비밀번호</span>
+                            <ActionLink onClick={openModal}>변경</ActionLink>
                         </InfoItem>
                     </BottomRow>
                 </InfoCard>
+            </Section>
+
+            {/* 프로필 공개 여부 */}
+            <Section>
+                <SectionTitle>프로필 공개 설정</SectionTitle>
+                <ConsentCard>
+                    <ConsentRow>
+                        <Left>
+                            <span>스터디 모임 프로필 공개</span>
+                        </Left>
+                        <ToggleSwitch
+                            checked={isProfilePublic}
+                            onClick={handleToggleProfilePublic}>
+                            <span>{isProfilePublic ? "ON" : "OFF"}</span>
+                        </ToggleSwitch>
+                    </ConsentRow>
+                </ConsentCard>
             </Section>
 
             {/* 프로모션 정보수신 동의 */}
@@ -214,8 +254,7 @@ export default function AccountProfileEdit() {
                         </Left>
                         <ToggleSwitch
                             checked={consent.phone}
-                            onClick={() => openModal("phone")}
-                        >
+                            onClick={() => handleToggleConsent("phone")}>
                             <span>{consent.phone ? "ON" : "OFF"}</span>
                         </ToggleSwitch>
                     </ConsentRow>
@@ -229,8 +268,7 @@ export default function AccountProfileEdit() {
                         </Left>
                         <ToggleSwitch
                             checked={consent.email}
-                            onClick={() => openModal("email")}
-                        >
+                            onClick={() => handleToggleConsent("email")}>
                             <span>{consent.email ? "ON" : "OFF"}</span>
                         </ToggleSwitch>
                     </ConsentRow>
