@@ -46,6 +46,11 @@ export default defineConfig({
         type: "asset",
       },
       {
+        test: /\.(png|jpe?g|gif|webp|avif)$/i,
+        type: "asset/resource",
+        generator: { filename: "assets/[name].[contenthash:6][ext]" }
+      },
+      {
         test: /\.css$/,
         use: ["postcss-loader"],
         type: "css",

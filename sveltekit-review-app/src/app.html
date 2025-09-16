@@ -1,9 +1,15 @@
+<!-- sveltekit-review-app/src/app.html -->
 <!doctype html>
-<html lang="ko"> <!-- ko로! -->
+<html lang="ko" class="no-js">
 
 <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<!-- JS가 켜져 있으면 즉시 js 클래스로 전환 -->
+	<script>
+		document.documentElement.classList.remove('no-js');
+		document.documentElement.classList.add('js');
+	</script>
 	%sveltekit.head%
 </head>
 

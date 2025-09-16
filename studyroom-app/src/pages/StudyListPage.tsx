@@ -1,13 +1,14 @@
 // studyroom-app/src/pages/StudyListPage.tsx
 import React, { useMemo, useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import StudyRoomCard from '../components/StudyRoomCard';
 import Modal from '../components/Modal';
 import CreateStudyForm from '../components/CreateStudyForm';
 import FilterBar, { FilterValues } from '../components/FilterBar';
 import { StudyRoom } from "../types/study";
 import axiosInstance from "../api/axiosInstance";
+import { useAuth } from "../hooks/useAuth";
 
 const PageTop = styled.div`
   text-align: center;
@@ -102,6 +103,9 @@ const StudyListPage: React.FC = () => {
     });
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    const { isLoggedIn } = useAuth();
+    const navigate = useNavigate();
+
     useEffect(() => {
         const fetchStudyRooms = async () => {
             try {
@@ -132,6 +136,11 @@ const StudyListPage: React.FC = () => {
         return rooms;
     }, [filters, studyRooms]);
 
+    const handleLoginRedirect = () => {
+        alert('로그인 후 이용할 수 있습니다.');
+        window.location.href = 'http://localhost/vue-account/account/login';
+    };
+
     const handleCreateSuccess = (newStudy: StudyRoom) => {
         if (!newStudy || !newStudy.id) {
             console.warn("생성된 스터디 데이터가 유효하지 않습니다:", newStudy);
@@ -154,9 +163,19 @@ const StudyListPage: React.FC = () => {
                     모든 스터디 <span>({filteredRooms.length})</span>
                 </h2>
                 <HeaderActions>
-                    <NavBtnSecondary to="my-studies">나의 스터디</NavBtnSecondary>
-                    <NavBtnSecondary to="my-applications">신청 내역</NavBtnSecondary>
-                    <CreateStudyBtn onClick={() => setIsModalOpen(true)}>스터디 생성</CreateStudyBtn>
+                    {isLoggedIn ? (
+                        <>
+                            <NavBtnSecondary to="my-studies">나의 스터디</NavBtnSecondary>
+                            <NavBtnSecondary to="my-applications">신청 내역</NavBtnSecondary>
+                            <CreateStudyBtn onClick={() => setIsModalOpen(true)}>스터디 생성</CreateStudyBtn>
+                        </>
+                    ) : (
+                        <>
+                            <NavBtnSecondary to="#" onClick={handleLoginRedirect}>나의 스터디</NavBtnSecondary>
+                            <NavBtnSecondary to="#" onClick={handleLoginRedirect}>신청 내역</NavBtnSecondary>
+                            <CreateStudyBtn onClick={handleLoginRedirect}>스터디 생성</CreateStudyBtn>
+                        </>
+                    )}
                 </HeaderActions>
             </ListHeader>
 
@@ -164,7 +183,12 @@ const StudyListPage: React.FC = () => {
 
             <StudyListContainer>
                 {filteredRooms.map((room) => (
-                    <StudyRoomCard key={room.id} room={room} />
+                    <StudyRoomCard
+                        key={room.id}
+                        room={room}
+                        isLoggedIn={isLoggedIn}
+                        onCardClick={isLoggedIn ? undefined : handleLoginRedirect}
+                    />
                 ))}
             </StudyListContainer>
 

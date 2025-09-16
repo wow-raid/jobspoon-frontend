@@ -56,6 +56,8 @@ export const kakaoAuthenticationAction = {
                     router.push("/account/privacy");
                 } else if(!isNewUser) {
                     localStorage.setItem("userToken", accessToken);
+                    localStorage.removeItem("tempLoginType");
+                    localStorage.setItem("nickname", user.nickname);
                     window.location.href = MAIN_CONTAINER_URL;
 
                 } else{
