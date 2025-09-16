@@ -11,15 +11,14 @@ type Props = {
 };
 
 export default function TrustScoreModal({ isOpen, onClose, trust }: Props) {
-    if (!isOpen) return null;
-
     return (
-        <Overlay>
-            <Modal>
+        <Overlay isOpen={isOpen}>
+            <Modal isOpen={isOpen}>
                 <Header>
                     <h2>신뢰 점수 산정 기준</h2>
                     <CloseButton onClick={onClose}>×</CloseButton>
                 </Header>
+
                 <Content>
                     <h3>내 점수 현황</h3>
                     <ul>
@@ -90,27 +89,35 @@ export default function TrustScoreModal({ isOpen, onClose, trust }: Props) {
     );
 }
 
-/* styled-components (RankGuideModal 과 동일) */
-const Overlay = styled.div`
+/* ================= styled-components ================= */
+const Overlay = styled.div<{ isOpen: boolean }>`
     position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.4);
-    display: flex; align-items: center; justify-content: center;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     z-index: 1000;
+
+    background: ${({ isOpen }) => (isOpen ? "rgba(0,0,0,0.4)" : "transparent")};
+    opacity: ${({ isOpen }) => (isOpen ? 1 : 0)};
+    visibility: ${({ isOpen }) => (isOpen ? "visible" : "hidden")};
+    transition: all 0.3s ease-in-out;
 `;
 
-const Modal = styled.div`
+const Modal = styled.div<{ isOpen: boolean }>`
     background: white;
     padding: 20px;
     border-radius: 12px;
     width: 400px;
     max-width: 90%;
-    max-height: 80vh;      /* 🔹 화면 높이 80%까지만 */
-    overflow-y: auto;      /* 🔹 넘치면 스크롤 */
+    max-height: 80vh;      /* 화면 높이 80%까지만 */
+    overflow-y: auto;      /* 넘치면 스크롤 */
     display: flex;
     flex-direction: column;
     gap: 16px;
+
+    transform: ${({ isOpen }) => (isOpen ? "scale(1)" : "scale(0.95)")};
+    transition: all 0.3s ease-in-out;
 `;
 
 const Header = styled.div`
@@ -144,24 +151,6 @@ const Content = styled.div`
     li {
         margin-bottom: 4px;
     }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 12px;
-        font-size: 13px;
-    }
-
-    th, td {
-        border: 1px solid #ddd;
-        padding: 6px 8px;
-        text-align: left;
-    }
-
-    th {
-        background: #f9fafb;
-        font-weight: 600;
-    }
 `;
 
 const Footer = styled.div`
@@ -177,52 +166,53 @@ const ConfirmButton = styled.button`
     border-radius: 6px;
     cursor: pointer;
 
+    transition: background 0.2s ease-in-out;
     &:hover {
         background: rgb(37, 99, 235);
     }
 `;
 
 const Divider = styled.hr`
-  border: none;
-  border-top: 1px solid #e5e7eb;
-  margin: 16px 0;
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 16px 0;
 `;
 
 const CardList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
 `;
 
 const Card = styled.div`
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     padding: 12px;
-    background: #fff;              /* 밝은 배경 */
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* 살짝 그림자 */
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 `;
 
 const Title = styled.h4`
-  font-size: 15px;
-  font-weight: 600;
-  margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 4px;
 `;
 
 const Point = styled.p`
-  font-size: 13px;
-  font-weight: 500;
-  color: #2563eb;
-  margin: 0 0 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #2563eb;
+    margin: 0 0 4px;
 `;
 
 const Desc = styled.p`
-  font-size: 13px;
-  margin: 0 0 2px;
+    font-size: 13px;
+    margin: 0 0 2px;
 `;
 
 const Note = styled.p`
-  font-size: 12px;
-  color: #6b7280;
-  margin: 0;
+    font-size: 12px;
+    color: #6b7280;
+    margin: 0;
 `;

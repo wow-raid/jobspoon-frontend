@@ -34,11 +34,11 @@ export default function SideBar() {
                     </li>
 
                     <li>
-                        <NavButton onClick={handleOpenModal}>
+                        <StyledNavLink to="membership">
                             <FaCrown className="icon" />
                             멤버십
                             {/* 하위에 내 구독 내역 나오도록 페이지 구성 */}
-                        </NavButton>
+                        </StyledNavLink>
                     </li>
 
                     <li>
@@ -67,13 +67,6 @@ export default function SideBar() {
 
                     {/* 구분선 */}
                     <Divider />
-
-                    <li>
-                        <NavButton onClick={handleOpenModal}>
-                            <FaCog className="icon" />
-                            설정
-                        </NavButton>
-                    </li>
 
                     <li>
                         <StyledNavLink to="withdrawal">

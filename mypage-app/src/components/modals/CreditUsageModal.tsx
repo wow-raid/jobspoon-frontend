@@ -1,73 +1,59 @@
-{/* 게시글 안내 모달 */}
-
 import React from "react";
 import styled from "styled-components";
 
-type Props = {
+interface CreditUsageModalProps {
     isOpen: boolean;
     onClose: () => void;
-    writing: {
-        reviewCount: number;
-        studyroomCount: number;
-        commentCount: number;
-        totalCount: number;
-    };
-};
+}
 
-export default function WritingModal({ isOpen, onClose, writing }: Props) {
+export default function CreditUsageModal({ isOpen, onClose }: CreditUsageModalProps) {
     return (
         <Overlay isOpen={isOpen}>
-            <Modal isOpen={isOpen}>
+            <ModalBox isOpen={isOpen}>
                 <Header>
-                    <h2>글 작성 상세</h2>
+                    <h3>크레딧 사용 안내</h3>
                     <CloseButton onClick={onClose}>×</CloseButton>
                 </Header>
 
                 <Content>
-                    <h3>내 글 현황</h3>
                     <ul>
-                        <li>✍️ 리뷰 작성: {writing.reviewCount}개</li>
-                        <li>📚 스터디룸 개설: {writing.studyroomCount}개</li>
-                        <li>💬 댓글 작성: {writing.commentCount}개</li>
-                        <li>📝 총 글 작성: {writing.totalCount}개</li>
+                        <li><strong>AI 모의면접</strong>: 5 크레딧 / 1회</li>
+                        <li><strong>문제풀이</strong>: 2 크레딧 / 1문제</li>
+                        <li><strong>스터디룸 개설</strong>: 10 크레딧 / 1회</li>
                     </ul>
+                    <p>※ 크레딧은 결제일 기준 6개월간 유효합니다.</p>
                 </Content>
 
                 <Footer>
                     <ConfirmButton onClick={onClose}>확인</ConfirmButton>
                 </Footer>
-            </Modal>
+            </ModalBox>
         </Overlay>
     );
 }
 
-/* ================== styled-components ================== */
-
+/* ============= styled-components ============= */
 const Overlay = styled.div<{ isOpen: boolean }>`
     position: fixed;
     inset: 0;
+    background: ${({ isOpen }) => (isOpen ? "rgba(0, 0, 0, 0.4)" : "transparent")};
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 999;
 
-    background: ${({ isOpen }) => (isOpen ? "rgba(0,0,0,0.4)" : "transparent")};
     opacity: ${({ isOpen }) => (isOpen ? 1 : 0)};
     visibility: ${({ isOpen }) => (isOpen ? "visible" : "hidden")};
     transition: all 0.3s ease-in-out;
 `;
 
-const Modal = styled.div<{ isOpen: boolean }>`
-    background: white;
+const ModalBox = styled.div<{ isOpen: boolean }>`
+    background: #fff;
     padding: 20px;
     border-radius: 12px;
     width: 400px;
     max-width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
 
     transform: ${({ isOpen }) => (isOpen ? "scale(1)" : "scale(0.95)")};
     transition: all 0.3s ease-in-out;
@@ -78,37 +64,33 @@ const Header = styled.div`
     justify-content: space-between;
     align-items: center;
 
-    h2 {
+    h3 {
+        margin: 0;
         font-size: 18px;
         font-weight: 700;
-        margin: 0;
     }
 `;
 
 const CloseButton = styled.button`
-    font-size: 20px;
+    background: none;
     border: none;
-    background: transparent;
+    font-size: 20px;
     cursor: pointer;
 `;
 
 const Content = styled.div`
-    font-size: 14px;
-    line-height: 1.6;
-
-    h3 {
-        margin-bottom: 8px;
-        font-size: 15px;
-        font-weight: 600;
-    }
+    margin: 16px 0;
 
     ul {
-        margin: 8px 0;
-        padding-left: 18px;
+        margin: 0 0 12px;
+        padding-left: 20px;
+        font-size: 14px;
+        color: rgb(55, 65, 81);
     }
 
-    li {
-        margin-bottom: 6px;
+    p {
+        font-size: 13px;
+        color: rgb(107, 114, 128);
     }
 `;
 
@@ -119,14 +101,15 @@ const Footer = styled.div`
 
 const ConfirmButton = styled.button`
     padding: 8px 16px;
-    background: rgb(59, 130, 246);
+    font-size: 14px;
+    background: rgb(59,130,246);
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
 
     transition: background 0.2s ease-in-out;
     &:hover {
-        background: rgb(37, 99, 235);
+        background: rgb(37,99,235);
     }
 `;
