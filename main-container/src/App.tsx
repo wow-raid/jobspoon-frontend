@@ -1,3 +1,4 @@
+// src/App.tsx
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import ReactDOM from "react-dom/client";
 
@@ -5,11 +6,13 @@ import { CircularProgress, CssBaseline, GlobalStyles } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { RecoilRoot, useRecoilValue } from "recoil";
+import { Helmet, HelmetProvider } from "react-helmet-async";
 
 import mitt from "mitt";
 
 import Main from "./components/Main.tsx";
 import Footer from "./components/Footer";
+import ScrollToTop from "./components/ScrollToTop";
 
 import VueAccountAppWrapper from "./VueAccountWrapper.tsx";
 import VueAiInterviewAppWrapper from "./VueAiInterviewWrapper.tsx";
@@ -19,14 +22,13 @@ import ThemeSync from "./ThemeSync";
 import ThemeToggleButton from "./ThemeToggleButton";
 import { themeAtom } from "@jobspoon/app-state";
 import SuccessPage from "studyroom-app/src/pages/SuccessPage.tsx";
-import Logo from './assets/img.png'
+import Logo from "./assets/img.png";
 
 const eventBus = mitt();
 
 function goHome() {
-    window.location.href = '/'
+  window.location.href = "/";
 }
-
 
 const NavigationBarApp = lazy(() => import("navigationBarApp/App"));
 const StudyRoomApp = lazy(() => import("studyRoomApp/App"));
@@ -41,13 +43,13 @@ function InnerApp() {
   const paletteTokens =
     mode === "dark"
       ? {
-          background: { default: "#0f1115", paper: "#151922" },
-          text: { primary: "#eaeaea", secondary: "#a0a0a0" },
-        }
+        background: { default: "#0f1115", paper: "#151922" },
+        text: { primary: "#eaeaea", secondary: "#a0a0a0" },
+      }
       : {
-          background: { default: "#ffffff", paper: "#ffffff" },
-          text: { primary: "#111111", secondary: "#666666" },
-        };
+        background: { default: "#ffffff", paper: "#ffffff" },
+        text: { primary: "#111111", secondary: "#666666" },
+      };
 
   // ✅ 테마 생성 + CssBaseline에서 body에 강제 적용
   const muiTheme = useMemo(
@@ -62,7 +64,7 @@ function InnerApp() {
                 backgroundColor: themeParam.palette.background.default,
                 color: themeParam.palette.text.primary,
                 transition: "background-color .2s ease, color .2s ease",
-                backgroundImage: "none", // 브라우저 기본 그라데이션 등 제거
+                backgroundImage: "none",
               },
             }),
           },
@@ -77,65 +79,96 @@ function InnerApp() {
       .catch((err) => console.error("Failed to load navigation bar:", err));
   }, []);
 
-
-function AppRoutes() {
+  function AppRoutes() {
     const location = useLocation();
-    const hiddenLayouts = [
-        "/vue-account/account/login",
-        "/vue-ai-interview/ai-interview/select",
-        "/vue-ai-interview/ai-interview/form/*",
-        "vue-ai-interview/ai-test/*"
-    ];
 
-    const hideLayout = hiddenLayouts.some(path => location.pathname.startsWith(path));
+    // 네비게이션바 숨길 경로
+    const hiddenLayouts = [
+      "/vue-account/account/login",
+      "/vue-ai-interview/ai-interview/select",
+      "/vue-ai-interview/ai-interview/form/",
+      "/vue-ai-interview/ai-test/",
+    ];
+    const hideLayout = hiddenLayouts.some((path) =>
+      location.pathname.startsWith(path)
+    );
+
+    // 🔒 SPA 하위 경로는 noindex (정적 랜딩은 인덱싱 허용)
+    // - '/studies' (정적 랜딩) → index 허용
+    // - '/studies/...'(리모트 SPA) → noindex
+    // - '/spoon-word'도 동일 정책
+    const noindexPrefixes = [
+      "/vue-account",
+      "/vue-ai-interview",
+      "/mypage",
+      "/sveltekit-review",
+      "/studies/", // 슬래시 포함 → 정확히 하위만 매칭
+      "/spoon-word/",
+    ];
+    const noindex = noindexPrefixes.some((p) =>
+      location.pathname.startsWith(p)
+    );
 
     return (
-        <Suspense fallback={<CircularProgress />}>
-            {!hideLayout && <NavigationBarApp />}
-            {hideLayout && (
-                <div className="fixed top-0 left-0 p-4 z-50">
-                    <img
-                        src={Logo} // JSX에서는 :src → src
-                        alt="Logo"
-                        style={{ width: 180, height: 70, objectFit: "contain" }} // JSX에서는 스타일 객체
-                        onClick={goHome} // @click → onClick
-                    />
-                </div>
-            )}
-            <Routes>
-                <Route path="/" element={<Main/>}/>
-                <Route path="/vue-account/*" element={<VueAccountAppWrapper eventBus={eventBus}/>}/>
-                <Route path="/studies/*" element={<StudyRoomApp />} />
-                <Route path="/spoon-word/*" element={<SpoonWordApp />} />
-                <Route path="/success" element={<SuccessPage />} />
-                <Route
-                    path="/vue-ai-interview/*"
-                    element={
-                        <RequireToken loginPath="/vue-account/account/login">
-                            <VueAiInterviewAppWrapper eventBus={eventBus} />
-                        </RequireToken>
-                    }
-                />
-                <Route
-                    path="/mypage/*"
-                    element={
-                        <RequireToken loginPath="/vue-account/account/login">
-                            <MyPageApp />
-                        </RequireToken>
-                    }
-                />
-                <Route path="/sveltekit-review/*" element={<SvelteKitReviewAppWrapper />} />
-            </Routes>
-            {!hideLayout && <Footer />}
-        </Suspense>
-    );
-}
+      <Suspense fallback={<CircularProgress />}>
+        {/* robots 메타 */}
+        {noindex && (
+          <Helmet>
+            <meta name="robots" content="noindex, nofollow" />
+          </Helmet>
+        )}
 
+        {!hideLayout && <NavigationBarApp />}
+        {hideLayout && (
+          <div className="fixed top-0 left-0 p-4 z-50">
+            <img
+              src={Logo}
+              alt="Logo"
+              style={{ width: 180, height: 70, objectFit: "contain" }}
+              onClick={goHome}
+            />
+          </div>
+        )}
+
+        <Routes>
+          <Route path="/" element={<Main />} />
+          <Route
+            path="/vue-account/*"
+            element={<VueAccountAppWrapper eventBus={eventBus} />}
+          />
+          <Route path="/studies/*" element={<StudyRoomApp />} />
+          <Route path="/spoon-word/*" element={<SpoonWordApp />} />
+          <Route path="/success" element={<SuccessPage />} />
+          <Route
+            path="/vue-ai-interview/*"
+            element={
+              <RequireToken loginPath="/vue-account/account/login">
+                <VueAiInterviewAppWrapper eventBus={eventBus} />
+              </RequireToken>
+            }
+          />
+          <Route
+            path="/mypage/*"
+            element={
+              <RequireToken loginPath="/vue-account/account/login">
+                <MyPageApp />
+              </RequireToken>
+            }
+          />
+          <Route
+            path="/sveltekit-review/*"
+            element={<SvelteKitReviewAppWrapper />}
+          />
+        </Routes>
+
+        {!hideLayout && <Footer />}
+      </Suspense>
+    );
+  }
 
   return (
     <ThemeProvider theme={muiTheme}>
       <CssBaseline />
-      {/* (선택) 전역 CSS 변수로 호스트 배경/텍스트도 노출하고 싶으면 */}
       <GlobalStyles
         styles={(theme) => ({
           ":root": {
@@ -144,11 +177,11 @@ function AppRoutes() {
           },
         })}
       />
-      {/* 호스트 → theme-bridge/DOM 동기화 */}
       <ThemeSync />
 
       <BrowserRouter>
-          <AppRoutes />
+        <ScrollToTop />
+        <AppRoutes />
       </BrowserRouter>
 
       <ThemeToggleButton />
@@ -156,12 +189,11 @@ function AppRoutes() {
   );
 }
 
-
-
-
 const App = () => (
   <RecoilRoot>
-    <InnerApp />
+    <HelmetProvider>
+      <InnerApp />
+    </HelmetProvider>
   </RecoilRoot>
 );
 

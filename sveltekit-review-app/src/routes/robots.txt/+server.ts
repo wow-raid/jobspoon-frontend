@@ -1,17 +1,12 @@
-// src/routes/robots.txt/+server.ts
 import { PUBLIC_BASE_URL } from '$env/static/public';
-
 export const prerender = true;
 
-const BASE = PUBLIC_BASE_URL.replace(/\/+$/, ''); // 끝 슬래시 제거
+const BASE = PUBLIC_BASE_URL.replace(/\/+$/, '');
 
 export const GET = () => {
     const body = `User-agent: *
 Allow: /
 Sitemap: ${BASE}/sitemap.xml
 `;
-
-    return new Response(body, {
-        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
-    });
+    return new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
 };

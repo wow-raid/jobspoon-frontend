@@ -3,8 +3,10 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import springAxiosInst from "./utility/AxiosInst.ts";
-import {logoutRequest} from "./utility/AccountApi.ts";
+import { logoutRequest } from "./utility/AccountApi.ts";
 
+// 로고 이미지
+import logoBlack from "./assets/jobspoonLOGO_black.png";
 
 const Header = styled.header`
   position: sticky;
@@ -30,20 +32,19 @@ const Inner = styled.div`
 const Brand = styled(Link)`
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  font-weight: 800;
-  font-size: 20px;
   text-decoration: none;
   color: #000;
-
-  &:hover {
-    opacity: 0.8;
-  }
 `;
 
-/* 실제 로고 이미지 넣을 자리
-   <img src="/path/to/logo.svg" alt="JobSpoon" style={{height: 28}} />
-*/
+// 1440px 기준: 93×53
+// 93/1440 = 6.458333vw, 53/1440 = 3.680556vw
+// clamp(min, fluid, max) → 작아질 땐 줄고, 커질 땐 93×53을 넘지 않음
+const LogoImg = styled.img`
+  width: clamp(60px, 6.458333vw, 93px);
+  height: clamp(34px, 3.680556vw, 53px);
+  object-fit: contain;
+  display: block;
+`;
 
 const Nav = styled.nav`
   display: flex;
@@ -59,10 +60,7 @@ const NavLink = styled(Link) <{ $active?: boolean }>`
   padding: 6px 2px;
   border-bottom: ${({ $active }) => ($active ? "2px solid #000" : "2px solid transparent")};
   transition: opacity 0.15s ease;
-
-  &:hover {
-    opacity: 0.7;
-  }
+  &:hover { opacity: 0.7; }
 `;
 
 const AuthButton = styled.button`
@@ -74,10 +72,7 @@ const AuthButton = styled.button`
   font-weight: 600;
   cursor: pointer;
   padding: 6px 0;
-
-  &:hover {
-    opacity: 0.7;
-  }
+  &:hover { opacity: 0.7; }
 `;
 
 const App: React.FC = () => {
@@ -85,30 +80,25 @@ const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-
   useEffect(() => {
     const token = localStorage.getItem("userToken");
     setIsLoggedIn(!!token);
   }, [location]);
 
   const handleLogout = async () => {
-    const token = localStorage.getItem("userToken");
-
-    try{
+    try {
       const axiosResponse = await logoutRequest();
-      console.log("성공 했나");
-      if(axiosResponse.status === 200 && axiosResponse.data == "success"){
+      if (axiosResponse.status === 200 && axiosResponse.data === "success") {
         setIsLoggedIn(false);
         localStorage.removeItem("userToken");
         navigate("/");
-      } else{
+      } else {
         alert("로그아웃에 실패 하였습니다.");
       }
-    } catch(err){
-      console.log(err);
+    } catch (err) {
+      console.error(err);
       alert("로그아웃중 문제 발생");
     }
-
   };
 
   const isActive = (to: string) =>
@@ -117,41 +107,21 @@ const App: React.FC = () => {
   return (
     <Header>
       <Inner>
-        <Brand to="/">
-          {/* <img src="/logo.svg" alt="JobSpoon" style={{ height: 28 }} /> */}
-          JobSpoon
+        <Brand to="/" aria-label="JobSpoon 홈">
+          <LogoImg src={logoBlack} alt="JobSpoon" />
         </Brand>
 
         <Nav>
           <NavLink to="/" $active={isActive("/")}>홈</NavLink>
           <NavLink to="/studies" $active={isActive("/studies")}>스터디모임</NavLink>
-          <NavLink
-            to="/vue-ai-interview/ai-interview/landing"
-            $active={isActive("/vue-ai-interview")}
-          >
+          <NavLink to="/vue-ai-interview/ai-interview/landing" $active={isActive("/vue-ai-interview")}>
             AI 인터뷰
           </NavLink>
+          <NavLink to="/mypage" $active={isActive("/mypage")}>MyPage</NavLink>
+          <NavLink to="/sveltekit-review/review" $active={isActive("/sveltekit-review")}>리뷰</NavLink>
 
-          <NavLink
-              to="/mypage"
-              $active={isActive("/mypage")}
-          >
-            MyPage
-          </NavLink>
-
-          <NavLink
-            to="/sveltekit-review/review"
-            $active={isActive("/sveltekit-review")}
-          >
-            리뷰
-          </NavLink>
-
-          {/* ✅ 비로그인: 링크로 렌더 → active 밑줄 표시 / 로그인: 로그아웃 버튼 */}
           {!isLoggedIn ? (
-            <NavLink
-              to="/vue-account/account/login"
-              $active={isActive("/vue-account")}
-            >
+            <NavLink to="/vue-account/account/login" $active={isActive("/vue-account")}>
               로그인
             </NavLink>
           ) : (
