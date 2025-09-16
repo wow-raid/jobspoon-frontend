@@ -1,5 +1,5 @@
 <script lang="ts">
-  import favicon from '$lib/assets/favicon.svg';
+  import favicon from '$lib/assets/jobspoon-icon-white.svg';
   import { PUBLIC_BASE_URL } from '$env/static/public';
 
   const BASE = PUBLIC_BASE_URL.replace(/\/+$/, '');
