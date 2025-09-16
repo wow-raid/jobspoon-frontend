@@ -1,4 +1,3 @@
-// src/App.tsx
 import React from "react";
 import { Routes, Route, useNavigate, useLocation, Outlet, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
@@ -6,10 +5,10 @@ import SearchBar from "./components/SearchBar";
 import ExploreFilterBar, { FilterSelection } from "./components/ExploreFilterBar";
 import SearchPage from "./pages/SearchPage";
 import TermListPage from "./pages/TermListPage";
-// import NoResultsPage from "./pages/NoResultsPage";
 import SpoonNoteModal from "./components/SpoonNoteModal";
 import http, { authHeader } from "./utils/http";
 import { fetchUserFolders, patchReorderFolders } from "./api/userWordbook";
+import WordbookFolderPage from "./pages/WordbookFolderPage";
 
 const TOKENS = {
     containerMaxWidth: 768,
@@ -64,6 +63,7 @@ function AutoContent() {
     const hasFilter = !!(params.get("initial") || params.get("alpha") || params.get("symbol"));
     if (tag) return <TermListPage />;
     if (q || hasFilter) return <SearchPage />;
+    console.debug("[AutoContent] fallback rendered (no search/filter).");
     return null;
 }
 
@@ -71,6 +71,11 @@ function AutoContent() {
 function AppLayout() {
     const nav = useNavigate();
     const location = useLocation();
+    console.debug("[AppLayout] pathname =", location.pathname);
+
+    const isFolderRoute =
+        location.pathname.startsWith("/spoon-word/folders") ||
+        location.pathname.startsWith("/folders/");
 
     const [q, setQ] = React.useState("");
 
@@ -83,7 +88,6 @@ function AppLayout() {
     const handleReorder = React.useCallback(async (orderedIds: string[]) => {
         let serverOk = true;
         try {
-            // 서버는 숫자 id만 허용 → 유틸에서 숫자로 변환, 실패 시 NON_NUMERIC_ID throw
             await patchReorderFolders(orderedIds as unknown as Array<string | number>);
         } catch (e: any) {
             serverOk = false;
@@ -91,12 +95,10 @@ function AppLayout() {
                 console.warn("[reorder] 서버 저장 생략: 숫자 id가 아님", orderedIds);
             } else {
                 console.error("[reorder] 서버 오류:", e);
-                // 서버 오류면 모달 컴포넌트가 롤백함. 부모는 그대로 두고 종료.
                 return;
             }
         }
 
-        // 성공(또는 개발용 생략) 시 부모 상태도 동일하게 재정렬
         setNotebooks((prev) => {
             const map = new Map(prev.map((n) => [n.id, n]));
             const next = orderedIds.map((id) => map.get(id)).filter(Boolean) as typeof prev;
@@ -110,7 +112,6 @@ function AppLayout() {
     // 모달 열릴 때 폴더 로드
     React.useEffect(() => {
         if (!modalOpen) return;
-        // 이미 로드되어 있으면 재호출 안 함
         if (notebooks.length > 0) return;
 
         let aborted = false;
@@ -120,7 +121,6 @@ function AppLayout() {
                 if (!aborted) setNotebooks(list);
             } catch (e) {
                 console.warn("[folders] 목록 조회 실패", e);
-                // 실패해도 모달은 열려 있고, '새로 만들기'로 진행 가능
             }
         })();
         return () => {
@@ -136,27 +136,22 @@ function AppLayout() {
     // 서버 연동: 새 폴더 생성 (모달 닫지 않음)
     const handleCreateNotebook = React.useCallback(
         async (name: string) => {
-            // 1) 로컬 프리체크 (공백/중복)
             const raw = name;
             const normalized = normalizeName(raw);
             if (!normalized) throw new Error("EMPTY_NAME");
             const localDup = notebooks.some((n) => normalizeName(n.name) === normalized);
             if (localDup) throw new Error("DUPLICATE_LOCAL");
 
-            // 2) 서버 호출
             try {
                 const { data } = await http.post(
                     "/api/user-terms/folders",
                     { folderName: raw },
                     { headers: { ...authHeader() } }
                 );
-
-                // 3) 응답 스키마 예시: { id, folderName }
                 const newId: string = String(data.id);
                 const newName: string = data.folderName ?? raw;
-
-                // 4) 모달은 유지, 새 폴더를 상단에 추가하고 자동 선택되도록 id 반환
                 setNotebooks((prev) => [{ id: newId, name: newName }, ...prev]);
+                console.debug("[createFolder] created id/name =", newId, newName);
                 return newId;
             } catch (err: any) {
                 const status = err?.response?.status;
@@ -169,19 +164,30 @@ function AppLayout() {
         [notebooks]
     );
 
-    // 서버 연동(선택): 용어를 폴더에 저장(attach) — 엔드포인트 확정되면 교체
+    // 서버 연동: 용어를 폴더에 저장(attach)
     const handleSaveToNotebook = React.useCallback(
         async (notebookId: string) => {
             if (!selectedTermId) return;
-            // TODO: 백엔드 엔드포인트 확정 시 아래 호출로 교체
-            // await http.post(
-            //   `/api/user-terms/folders/${notebookId}/terms`,
-            //   { termId: selectedTermId },
-            //   { headers: { ...authHeader() } }
-            // );
-            closeModal(); // 임시 성공 처리: 저장 시에만 모달 닫힘
+
+            try {
+                await http.post(
+                    `/api/user-terms/folders/${notebookId}/terms`,
+                    { termId: selectedTermId },
+                    { headers: { ...authHeader() } }
+                );
+                console.debug("[attach] term", selectedTermId, "-> folder", notebookId, "OK");
+                closeModal();
+            } catch (err: any) {
+                const status = err?.response?.status;
+                if (status === 401) {
+                    closeModal();
+                    nav("/login", { state: { from: `/spoon-word/folders/${notebookId}` } });
+                } else {
+                    console.error("[attach] 폴더에 용어 추가 실패:", err);
+                }
+            }
         },
-        [selectedTermId, closeModal]
+        [selectedTermId, closeModal, nav]
     );
 
     // URL ?q= ↔ 입력값 동기화
@@ -200,7 +206,7 @@ function AppLayout() {
             // TermCard의 + 버튼 (aria-label 그대로 사용)
             const addBtn = target.closest('button[aria-label="내 단어장에 추가"]') as HTMLElement | null;
             if (!addBtn) return;
-            if (modalOpen) return; // 이미 열려 있으면 무시
+            if (modalOpen) return;
 
             const termId = extractTermIdFromArticle(addBtn);
             if (!termId) return;
@@ -213,7 +219,6 @@ function AppLayout() {
         return () => document.removeEventListener("click", onDocClick, true);
     }, [modalOpen]);
 
-
     const handleSearch = (term: string) => {
         const t = term.trim();
         if (!t) return;
@@ -221,6 +226,7 @@ function AppLayout() {
         sp.set("q", t);
         sp.delete("page");
         sp.delete("tag");
+        console.debug("[search] -> /search?q=%s", t);
         nav({ pathname: "search", search: `?${sp.toString()}` });
     };
 
@@ -231,6 +237,7 @@ function AppLayout() {
         sp.delete("symbol");
         if (sel) sp.set(sel.mode, sel.value);
         sp.delete("page");
+        console.debug("[filter] -> /search with", sel);
         nav({ pathname: "search", search: `?${sp.toString()}` });
     };
 
@@ -245,25 +252,39 @@ function AppLayout() {
         return null;
     }, [location.search]);
 
+    const handleGoToFolder = React.useCallback(
+        (folderId: string, name?: string) => {
+            console.debug("[goToFolder] id=", folderId, "name=", name, "from", location.pathname);
+            closeModal();
+            // 호스트가 /spoon-word/* 또는 루트에 마운트되어도 안전하게
+            if (location.pathname.startsWith("/spoon-word")) {
+                nav(`/spoon-word/folders/${folderId}`, { state: { folderName: name } });
+            } else {
+                nav(`/folders/${folderId}`, { state: { folderName: name } });
+            }
+        },
+        [closeModal, nav, location.pathname]
+    );
+
     return (
         <Container>
             <Title>잡스푼과 함께, 기술 용어를 나만의 언어로!</Title>
 
             <SearchBar value={q} onChange={setQ} onSearch={handleSearch} />
-            <ExploreFilterBar value={currentSelection} onChange={handleFilterChange} />
+            {!isFolderRoute && <ExploreFilterBar value={currentSelection} onChange={handleFilterChange} />}
 
             <Content>
                 <Outlet />
             </Content>
 
-            {/* 생성은 onCreate, 저장은 onSave */}
             <SpoonNoteModal
                 open={modalOpen}
                 notebooks={notebooks}
                 onClose={closeModal}
-                onCreate={handleCreateNotebook} // 생성 시 모달 유지 + 새 id 반환
-                onSave={handleSaveToNotebook}   // 저장 시에만 모달 닫힘
+                onCreate={handleCreateNotebook}
+                onSave={handleSaveToNotebook}
                 onReorder={handleReorder}
+                onGoToFolder={handleGoToFolder}
             />
         </Container>
     );
@@ -274,7 +295,7 @@ function HomePage() {
     return null;
 }
 
-/** 라우트 구성 — 상대 경로 + 캐치올 fallback */
+/** 라우트 구성 — 폴더 라우트를 캐치올보다 먼저! (+ 경로 2가지 모두 지원) */
 export default function App() {
     return (
         <Routes>
@@ -282,7 +303,12 @@ export default function App() {
                 <Route index element={<HomePage />} />
                 <Route path="search" element={<SearchPage />} />
                 <Route path="terms/by-tag" element={<TermListPage />} />
-                {/* <Route path="terms/not-found" element={<NoResultsPage />} /> */}
+
+                {/* 폴더 상세: 두 경로 모두 지원 */}
+                <Route path="spoon-word/folders/:folderId" element={<WordbookFolderPage />} />
+                <Route path="folders/:folderId" element={<WordbookFolderPage />} />
+
+                {/* 캐치올은 맨 마지막 */}
                 <Route path="*" element={<AutoContent />} />
             </Route>
         </Routes>

@@ -8,13 +8,10 @@ export type SpoonNoteModalProps = {
     open: boolean;
     notebooks: Notebook[];
     onClose: () => void;
-    // attach(저장) 전용 콜백
     onSave: (notebookId: string) => void | Promise<void>;
-    // 새 폴더 생성 전용 콜백 (모달은 닫지 않음)
-    // 반환값은 생성된 notebook의 id (동기/비동기 모두 허용)
     onCreate?: (name: string) => string | Promise<string>;
-    // 폴더 순서 저장 콜백 (서버 PATCH 위임)
     onReorder?: (orderedIds: string[]) => void | Promise<void>;
+    onGoToFolder?: (folderId: string, name?: string) => void | Promise<void>;
 };
 
 const TOKENS = {
@@ -56,7 +53,7 @@ const Panel = styled.div`
     background: ${TOKENS.color.panelBg};
     border-radius: ${TOKENS.radius.panel}px;
     box-shadow: ${TOKENS.shadow.panel};
-    overflow: hidden;
+    overflow: visible; /* 툴팁이 패널 밖으로 나와도 보이도록 */
 `;
 
 const Header = styled.div`
@@ -76,7 +73,12 @@ const List = styled.div<{ $disabled?: boolean }>`
     opacity: ${({ $disabled }) => ($disabled ? 0.6 : 1)};
 `;
 
-const Row = styled.button<{ $dragging?: boolean; $barTop?: boolean; $barBottom?: boolean }>`
+/** 버튼 대신 div로 변경 (중첩 버튼 이슈 해결) */
+const Row = styled.div<{
+    $dragging?: boolean;
+    $barTop?: boolean;
+    $barBottom?: boolean;
+}>`
     width: 100%;
     display: flex;
     align-items: center;
@@ -89,9 +91,6 @@ const Row = styled.button<{ $dragging?: boolean; $barTop?: boolean; $barBottom?:
     position: relative;
 
     cursor: grab;
-    &:active {
-        cursor: grabbing;
-    }
 
     &:hover {
         background: #f9fafb;
@@ -100,7 +99,8 @@ const Row = styled.button<{ $dragging?: boolean; $barTop?: boolean; $barBottom?:
         border-top: 1px solid ${TOKENS.color.line};
     }
 
-    outline: ${({ $dragging }) => ($dragging ? `2px dashed ${TOKENS.color.primary}` : "none")};
+    outline: ${({ $dragging }) =>
+            $dragging ? `2px dashed ${TOKENS.color.primary}` : "none"};
 
     &::before {
         content: "";
@@ -110,7 +110,8 @@ const Row = styled.button<{ $dragging?: boolean; $barTop?: boolean; $barBottom?:
         height: 3px;
         top: ${({ $barTop }) => ($barTop ? "-2px" : "auto")};
         bottom: ${({ $barBottom }) => ($barBottom ? "-2px" : "auto")};
-        background: ${({ $barTop, $barBottom }) => ($barTop || $barBottom ? TOKENS.color.bar : "transparent")};
+        background: ${({ $barTop, $barBottom }) =>
+                $barTop || $barBottom ? TOKENS.color.bar : "transparent"};
         border-radius: 3px;
     }
 `;
@@ -126,16 +127,11 @@ const Checkbox = styled.input.attrs({ type: "checkbox" })`
     width: 18px;
     height: 18px;
     cursor: pointer;
-
-    /* 체크박스 안쪽(체크 마크+배경) 색상을 파란색으로 고정 */
     accent-color: ${TOKENS.color.primary};
-
-    /* 접근성 포커스 링도 동일 톤으로 */
     &:focus-visible {
         outline: 2px solid ${TOKENS.color.primary};
         outline-offset: 2px;
     }
-
     &:disabled {
         opacity: 0.55;
         cursor: not-allowed;
@@ -147,9 +143,111 @@ const Name = styled.span`
     font-size: ${TOKENS.font.body};
 `;
 
-const Arrow = styled.span`
+// 체브론 아이콘
+const ChevronIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+        <path
+            d="M9 6l6 6-6 6"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+    </svg>
+);
+
+/** ➜ 실제 네비게이션을 담당하는 버튼 (Row는 div라 중첩 문제 없음) */
+const ArrowBtn = styled.button`
     margin-left: auto;
-    color: ${TOKENS.color.textMuted};
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+
+    border-radius: 999px;
+    border: 1px solid ${TOKENS.color.line};
+    background: #f9fafb;
+    color: ${TOKENS.color.textSecondary};
+    cursor: pointer;
+    touch-action: manipulation; /* 모바일 탭 지연 방지 */
+
+    &:hover {
+        background: #f3f4f6;
+    }
+    &:active {
+        transform: translateY(0.5px);
+    }
+
+    &:focus-visible {
+        outline: 2px solid ${TOKENS.color.primary};
+        outline-offset: 2px;
+    }
+
+    /* 손가락 포인터(모바일/태블릿)에서는 44px로 확대 */
+    @media (pointer: coarse) {
+        width: 44px;
+        height: 44px;
+        flex-basis: 44px;
+    }
+`;
+
+/* ===== 커스텀 말풍선 툴팁 (체크박스/화살표 전용) ===== */
+const TipWrap = styled.span`
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+`;
+
+const TipBubble = styled.span`
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translate(-50%, -6px);
+    padding: 6px 10px;
+    background: rgba(17, 24, 39, 0.92);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    opacity: 0;
+    /* hover-intent: show 140ms 지연, hide 60ms 지연 */
+    transition: opacity 160ms ease, transform 160ms ease;
+    transition-delay: 60ms; /* 기본(비호버) 상태에서 hide 딜레이 */
+    z-index: 2;
+
+    &::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: rgba(17, 24, 39, 0.92);
+    }
+
+    ${TipWrap}:hover &,
+    ${TipWrap}:focus-within & {
+        opacity: 1;
+        transform: translate(-50%, -8px);
+        transition-delay: 140ms; /* show 딜레이 */
+    }
+
+    /* 드래그/정렬 저장 중엔 숨김 (Row 상위 data-attr로 제어) */
+    ${Row}[data-block-tips="true"] & {
+        opacity: 0 !important;
+        transition-delay: 0ms !important;
+    }
+
+    /* 터치 기기 비활성 */
+    @media (pointer: coarse) {
+        display: none;
+    }
 `;
 
 const CreateBar = styled.div<{ $invalid?: boolean }>`
@@ -164,9 +262,9 @@ const CreateBar = styled.div<{ $invalid?: boolean }>`
 `;
 
 const Plus = styled.span`
-    color: ${TOKENS.color.primary};
-    font-weight: 700;
-    font-size: 18px;
+  color: ${TOKENS.color.primary};
+  font-weight: 700;
+  font-size: 18px;
 `;
 
 const Input = styled.input`
@@ -245,7 +343,6 @@ const Divider = styled.div`
     margin: ${TOKENS.space(12)} 0;
 `;
 
-/* 저장됨 체크 뱃지 */
 const SavedBadge = styled.div<{ $show: boolean }>`
     position: absolute;
     top: 8px;
@@ -272,19 +369,20 @@ export default function SpoonNoteModal({
                                            onSave,
                                            onCreate,
                                            onReorder,
+                                           onGoToFolder,
                                        }: SpoonNoteModalProps) {
     const [selectedId, setSelectedId] = React.useState<string | null>(null);
     const [creating, setCreating] = React.useState(false);
     const [newName, setNewName] = React.useState("");
     const [error, setError] = React.useState<string>("");
 
-    // 로컬 목록 상태 + 드래그 상태 + 저장 상태
     const [list, setList] = React.useState<Notebook[]>([]);
     const [draggingId, setDraggingId] = React.useState<string | null>(null);
-    const [dragOver, setDragOver] = React.useState<{ id: string; edge: "top" | "bottom" } | null>(null);
+    const [dragOver, setDragOver] =
+        React.useState<{ id: string; edge: "top" | "bottom" } | null>(null);
     const [savingOrder, setSavingOrder] = React.useState(false);
     const [showSaved, setShowSaved] = React.useState(false);
-    const lastStableRef = React.useRef<Notebook[]>([]); // 롤백용
+    const lastStableRef = React.useRef<Notebook[]>([]);
 
     React.useEffect(() => {
         if (!open) {
@@ -299,7 +397,6 @@ export default function SpoonNoteModal({
         }
     }, [open]);
 
-    // 모달이 열릴 때/리스트 갱신 시 동기화
     React.useEffect(() => {
         if (open) {
             setList(notebooks);
@@ -307,7 +404,6 @@ export default function SpoonNoteModal({
         }
     }, [open, notebooks]);
 
-    // 이름 정규화 (공백 정리 + 소문자)
     const normalizeName = React.useCallback((s: string) => {
         return s.trim().replace(/\s+/g, " ").toLowerCase();
     }, []);
@@ -323,7 +419,7 @@ export default function SpoonNoteModal({
     }, [open, creating, selectedId, newName, error]);
 
     const handleToggle = (id: string) => {
-        if (draggingId) return; // 드래그 중 클릭 방지
+        if (draggingId) return;
         setSelectedId((prev) => (prev === id ? null : id));
     };
 
@@ -333,7 +429,6 @@ export default function SpoonNoteModal({
         setError("");
     };
 
-    // 입력 변경 시 즉시 검증(프론트 1차)
     const handleChangeName = (val: string) => {
         setNewName(val);
         const normalized = normalizeName(val);
@@ -349,7 +444,6 @@ export default function SpoonNoteModal({
         setError("");
     };
 
-    // 생성 모드의 기본 액션 (모달 닫지 않음)
     const handleCreate = async () => {
         const name = newName.trim();
         if (!name) {
@@ -362,9 +456,9 @@ export default function SpoonNoteModal({
             let newId: string | undefined;
             if (onCreate) {
                 const r = onCreate(name);
-                newId = typeof (r as any)?.then === "function" ? await (r as Promise<string>) : (r as string);
+                newId =
+                    typeof (r as any)?.then === "function" ? await (r as Promise<string>) : (r as string);
             }
-            // 성공 시 입력/에러 초기화 + 생성한 폴더 선택
             setCreating(false);
             setNewName("");
             setError("");
@@ -381,19 +475,16 @@ export default function SpoonNoteModal({
         }
     };
 
-    // 저장(attach) 액션 — 이때만 부모가 모달을 닫음
     const handleSave = async () => {
         if (!selectedId) return;
         await Promise.resolve(onSave(selectedId));
     };
 
-    // 현재 모드에 따른 기본 버튼 액션
     const handlePrimary = () => {
         if (creating) handleCreate();
         else handleSave();
     };
 
-    // 유틸: 배열 이동
     const moveItem = (arr: Notebook[], from: number, to: number) => {
         const copy = arr.slice();
         const [m] = copy.splice(from, 1);
@@ -401,13 +492,11 @@ export default function SpoonNoteModal({
         return copy;
     };
 
-    // DnD: 시작
     const onDragStart = (id: string, e: React.DragEvent) => {
         setDraggingId(id);
         setDragOver(null);
         try {
             e.dataTransfer.effectAllowed = "move";
-            // Firefox에서 drag 이미지가 이상하게 잡히는 것을 방지
             const img = document.createElement("div");
             img.style.position = "absolute";
             img.style.top = "-99999px";
@@ -415,13 +504,10 @@ export default function SpoonNoteModal({
             document.body.appendChild(img);
             e.dataTransfer.setDragImage(img, 0, 0);
             setTimeout(() => document.body.removeChild(img), 0);
-        } catch {
-            // setDragImage 미지원/에러 시 무시
-        }
+        } catch {}
     };
 
-    // 행 전체 드래그 시작 가드 (체크박스에서 시작한 드래그는 취소)
-    const onRowDragStart = (id: string, e: React.DragEvent<HTMLButtonElement>) => {
+    const onRowDragStart = (id: string, e: React.DragEvent<HTMLDivElement>) => {
         const target = e.target as HTMLElement;
         if (target.closest('input[type="checkbox"]')) {
             e.preventDefault();
@@ -430,17 +516,17 @@ export default function SpoonNoteModal({
         onDragStart(id, e);
     };
 
-    const onDragOverRow = (overId: string, e: React.DragEvent<HTMLButtonElement>) => {
+    const onDragOverRow = (overId: string, e: React.DragEvent<HTMLDivElement>) => {
         if (!draggingId || draggingId === overId) return;
-        e.preventDefault();                   // drop 허용
-        e.dataTransfer.dropEffect = "move";   // 시각적 피드백
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
 
         const rect = e.currentTarget.getBoundingClientRect();
         const isBottom = e.clientY - rect.top > rect.height / 2;
         setDragOver({ id: overId, edge: isBottom ? "bottom" : "top" });
     };
 
-    const onDropRow = async (overId: string, e: React.DragEvent<HTMLButtonElement>) => {
+    const onDropRow = async (overId: string, e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         if (!draggingId || draggingId === overId) {
             setDraggingId(null);
@@ -448,22 +534,18 @@ export default function SpoonNoteModal({
             return;
         }
 
-        const from = list.findIndex(n => n.id === draggingId);
-        const base = list.findIndex(n => n.id === overId);
-        if (from < 0 || base < 0) {  // 안전가드
+        const from = list.findIndex((n) => n.id === draggingId);
+        const base = list.findIndex((n) => n.id === overId);
+        if (from < 0 || base < 0) {
             setDraggingId(null);
             setDragOver(null);
             return;
         }
 
         let to = base + (dragOver?.edge === "bottom" ? 1 : 0);
-
-        // 아래 방향 이동 시 제거로 인한 인덱스 당김 보정
         if (from < to) to--;
-
-        // 범위 클램프 + 변화 없음 가드
         to = Math.max(0, Math.min(to, list.length - 1));
-        if (from === to) {            // 위치가 같다면 작업 불필요
+        if (from === to) {
             setDraggingId(null);
             setDragOver(null);
             return;
@@ -472,26 +554,22 @@ export default function SpoonNoteModal({
         const prev = list;
         const next = moveItem(list, from, to);
 
-        // 낙관적 갱신 + 저장 중 잠금
         setList(next);
         setSavingOrder(true);
         setDraggingId(null);
         setDragOver(null);
 
         try {
-            lastStableRef.current = prev; // 롤백 기준
+            lastStableRef.current = prev;
             if (onReorder) {
-                await Promise.resolve(onReorder(next.map(n => n.id)));
+                await Promise.resolve(onReorder(next.map((n) => n.id)));
             }
-            // 성공 배지
             setShowSaved(true);
             setTimeout(() => setShowSaved(false), 1200);
-
-            // 성공 시 안정 상태 갱신
             lastStableRef.current = next;
         } catch (err) {
-            console.error("[folders reorder] PATCH failed:", err); // 원인 보이게
-            setList(lastStableRef.current);                        // 실패 롤백
+            console.error("[folders reorder] PATCH failed:", err);
+            setList(lastStableRef.current);
         } finally {
             setSavingOrder(false);
         }
@@ -516,12 +594,21 @@ export default function SpoonNoteModal({
                 <Header>내 SpoonNote에 저장하기</Header>
                 <Body>
                     {!creating ? (
-                        <Row onClick={handleCreateToggle} type="button" aria-label="새로운 SpoonNote에 만들기">
+                        <Row
+                            role="button"
+                            tabIndex={0}
+                            draggable={!savingOrder}
+                            data-block-tips={savingOrder}
+                            onClick={() => handleCreateToggle()}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") handleCreateToggle();
+                            }}
+                        >
                             <Left>
                                 <Plus>＋</Plus>
                                 <Name>새로운 SpoonNote에 만들기</Name>
                             </Left>
-                            <Arrow>›</Arrow>
+                            <span aria-hidden="true">›</span>
                         </Row>
                     ) : (
                         <>
@@ -541,7 +628,15 @@ export default function SpoonNoteModal({
                                 <ErrorRow>
                                     <ErrorIcon viewBox="0 0 24 24" aria-hidden="true">
                                         <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
-                                        <line x1="12" y1="7" x2="12" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                        <line
+                                            x1="12"
+                                            y1="7"
+                                            x2="12"
+                                            y2="13"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                        />
                                         <circle cx="12" cy="17" r="1.5" fill="currentColor" />
                                     </ErrorIcon>
                                     <ErrorText id="notebook-name-error" aria-live="assertive">
@@ -554,7 +649,6 @@ export default function SpoonNoteModal({
 
                     <Divider />
 
-                    {/* 드래그 가능한 리스트. 저장 중에는 잠깐 비활성화 */}
                     <List $disabled={savingOrder}>
                         {list.map((nb) => {
                             const isDragging = draggingId === nb.id;
@@ -564,29 +658,62 @@ export default function SpoonNoteModal({
                             return (
                                 <Row
                                     key={nb.id}
-                                    type="button"
+                                    role="button"
+                                    tabIndex={0}
                                     draggable={!savingOrder}
-                                    title="드래그하여 순서 변경"
+                                    data-block-tips={isDragging || savingOrder}
                                     onDragStart={(e) => onRowDragStart(nb.id, e)}
                                     onDragOver={(e) => onDragOverRow(nb.id, e)}
                                     onDrop={(e) => onDropRow(nb.id, e)}
                                     onDragEnd={onDragEnd}
-                                    onClick={() => handleToggle(nb.id)}
+                                    onClick={(e) => {
+                                        const el = e.target as HTMLElement;
+                                        if (el.closest('input,button,[role="checkbox"],[role="switch"]')) return;
+                                        handleToggle(nb.id);
+                                    }}
+                                    onKeyDown={(e) => {
+                                        const el = e.target as HTMLElement;
+                                        if (el.closest('input, button, [role="checkbox"], [role="switch"]')) return;
+                                        if (e.key === "Enter" || e.key === " ") handleToggle(nb.id);
+                                    }}
                                     $dragging={isDragging}
                                     $barTop={!!isOverTop}
                                     $barBottom={!!isOverBottom}
                                 >
                                     <Left>
-                                        <Checkbox
-                                            draggable={false}
-                                            onMouseDown={(e) => e.stopPropagation()} // 클릭-드래그 충돌 방지
-                                            checked={selectedId === nb.id}
-                                            onChange={() => handleToggle(nb.id)}
-                                            aria-label={`${nb.name} 선택`}
-                                        />
+                                        {/* 체크박스: 개별 말풍선 */}
+                                        <TipWrap data-tip>
+                                            <Checkbox
+                                                draggable={false}
+                                                onMouseDown={(e) => e.stopPropagation()}
+                                                onClick={(e) => e.stopPropagation()} // click 버블링 차단
+                                                checked={selectedId === nb.id}
+                                                onChange={() => handleToggle(nb.id)}
+                                                aria-label={`${nb.name} 선택`}
+                                            />
+                                            <TipBubble>저장할 단어장 선택하기</TipBubble>
+                                        </TipWrap>
+
                                         <Name>{nb.name}</Name>
                                     </Left>
-                                    <Arrow>›</Arrow>
+
+                                    {/* 화살표 버튼: 개별 말풍선 */}
+                                    <TipWrap data-tip>
+                                        <ArrowBtn
+                                            type="button"
+                                            aria-label={`${nb.name} 폴더로 이동`}
+                                            draggable={false}
+                                            onMouseDown={(e) => e.stopPropagation()}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onGoToFolder?.(nb.id, nb.name);
+                                            }}
+                                            data-testid="go-to-folder"
+                                        >
+                                            <ChevronIcon />
+                                        </ArrowBtn>
+                                        <TipBubble>해당 단어장으로 이동하기</TipBubble>
+                                    </TipWrap>
                                 </Row>
                             );
                         })}
