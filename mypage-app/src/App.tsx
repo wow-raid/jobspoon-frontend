@@ -6,6 +6,7 @@ import ProfileAppearanceCardEdit from "./pages/ProfileAppearanceCardEdit.tsx";
 import AccountProfileEdit from "./pages/AccountProfileEdit.tsx";
 import InterviewResultList from "./pages/InterviewResultList.tsx";
 import InterviewResultDetail from "./pages/InterviewResultDetail.tsx";
+import AccountWithdrawal from "./pages/AccountWithdrawal.tsx";
 
 import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
 import { getTheme, onThemeChange, type Theme as BridgeTheme } from '@jobspoon/theme-bridge';
@@ -81,6 +82,8 @@ export default function App() {
                         {/* 인터뷰 결과 보관함 */}
                         <Route path="interview/history" element={<InterviewResultList />} />
                         <Route path="interview/history/:id" element={<InterviewResultDetail />} />
+                        {/* 회원탈퇴 */}
+                        <Route path="withdrawal" element={<AccountWithdrawal />} />
                     </Route>
                 </Routes>
             </AppShell>

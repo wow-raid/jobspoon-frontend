@@ -1,3 +1,5 @@
+{/* 프로필 카드 */}
+
 import React, { useState } from "react";
 import { ProfileAppearanceResponse } from "../../api/profileAppearanceApi.ts";
 import { FaEdit } from "react-icons/fa";

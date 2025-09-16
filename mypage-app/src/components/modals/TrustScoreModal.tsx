@@ -1,3 +1,5 @@
+{/* 신뢰점수 안내 모달 */}
+
 import React from "react";
 import styled from "styled-components";
 import { TrustScoreResponse } from "../../api/dashboardApi.ts";

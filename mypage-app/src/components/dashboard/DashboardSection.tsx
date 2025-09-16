@@ -1,3 +1,5 @@
+{/* 마이페이지 대쉬보드 */}
+
 import React, { useEffect, useState } from "react";
 import {
     getAttendanceRate,

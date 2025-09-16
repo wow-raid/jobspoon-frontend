@@ -1,3 +1,5 @@
+{/* 랭크 안내 모달 */}
+
 import React from "react";
 import styled from "styled-components";
 
