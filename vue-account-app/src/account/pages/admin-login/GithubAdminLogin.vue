@@ -81,7 +81,7 @@ const goToGithubLogin = async (): Promise<void> => {
     // 내부에서 redirect URL 수신 후, window.location 으로 실제 GitHub 로그인 페이지로 이동 처리.
     // 주의: window.location으로 페이지 이동 시, 이후 코드 실행은 사실상 중단될 수 있음.
     console.log("goToGithubLogin is working")
-    await githubAuthentication.requestGithubLoginToSpringBoot();
+    await githubAuthentication.requestGithubLoginToSpringBoot(router);
 
     // 여기 도달하는 경우는 보통 (1) 바로 이동하지 않는 설계거나 (2) 예외 상황.
     // 이동이 즉시 일어나는 설계라면 이 부분은 실행되지 않을 수 있음.
