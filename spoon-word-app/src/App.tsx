@@ -144,7 +144,7 @@ function AppLayout() {
 
             try {
                 const { data } = await http.post(
-                    "/api/user-terms/folders",
+                    "/api/me/folders",
                     { folderName: raw },
                     { headers: { ...authHeader() } }
                 );
@@ -171,7 +171,7 @@ function AppLayout() {
 
             try {
                 await http.post(
-                    `/api/user-terms/folders/${notebookId}/terms`,
+                    `/api/me/folders/${notebookId}/terms`,
                     { termId: selectedTermId },
                     { headers: { ...authHeader() } }
                 );

@@ -3,7 +3,7 @@ import http, { authHeader } from "../utils/http";
 type FolderDTO = { id: number | string; folderName?: string; name?: string; sortOrder?: number };
 
 export async function fetchUserFolders(): Promise<Array<{ id: string; name: string }>> {
-    const res = await http.get("/api/user-terms/folders", {
+    const res = await http.get("/api/me/folders", {
         headers: { ...authHeader() }, // 반드시 토큰 전송
     });
     const data = res?.data;
@@ -30,7 +30,7 @@ export async function patchReorderFolders(orderedIds: Array<string | number>) {
     // 서버가 숫자 id만 받는다면 여기서 숫자로 캐스팅해 전송
     const ids = orderedIds.map((v) => Number(v)).filter((n) => Number.isFinite(n));
     await http.patch(
-        "/api/user-terms/folders/reorder",
+        "/api/me/folders:reorder",
         { ids },
         { headers: { ...authHeader() } }
     );
