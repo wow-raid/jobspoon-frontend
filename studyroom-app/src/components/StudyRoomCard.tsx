@@ -4,7 +4,11 @@ import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { StudyRoom } from "../types/study";
 
-interface StudyRoomCardProps { room: StudyRoom; }
+interface StudyRoomCardProps {
+    room: StudyRoom;
+    isLoggedIn: boolean;
+    onCardClick?: () => void;
+}
 
 /* ─ styled-components (scoped) ─ */
 const Card = styled.div`
@@ -24,6 +28,19 @@ const WrapperLink = styled(Link)`
   color: inherit;
   display: block;
   height: 100%;
+
+  &:hover ${Card} {
+    transform: scale(1.03);
+    border-color: ${({ theme }) => theme.primary};
+  }
+`;
+
+const ClickableWrapper = styled.div`
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  height: 100%;
+  cursor: pointer;
 
   &:hover ${Card} {
     transform: scale(1.03);
@@ -120,9 +137,9 @@ const ClosedCardOverlay = styled(Card)`
 `;
 
 /* ─ Component ─ */
-const StudyRoomCard: React.FC<StudyRoomCardProps> = ({ room }) => {
-  if (!room || !room.id) return null;
-  const isClosed = room.status === "CLOSED";
+const StudyRoomCard: React.FC<StudyRoomCardProps> = ({ room, isLoggedIn, onCardClick }) => {
+    if (!room || !room.id) return null;
+    const isClosed = room.status === "CLOSED";
 
   const content = (
     <>
@@ -157,6 +174,14 @@ const StudyRoomCard: React.FC<StudyRoomCardProps> = ({ room }) => {
       </WrapperDiv>
     );
   }
+
+    if (!isLoggedIn) {
+        return (
+            <ClickableWrapper onClick={onCardClick}>
+                <Card>{content}</Card>
+            </ClickableWrapper>
+        );
+    }
 
   return (
     <WrapperLink to={`study/${room.id}`}>

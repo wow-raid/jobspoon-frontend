@@ -78,6 +78,17 @@ const Header = styled.div`
     }
 `;
 
+const Footer = styled.footer`
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+`;
+
+const LeaveButton = styled.button`
+  background-color: #ff6b6b;
+  color: white;
+`;
+
 const ContentWrapper = styled.div`
   margin-top: 24px;
   background-color: ${({ theme }) => theme.surface};
@@ -166,23 +177,6 @@ const KickButton = styled.button`
     background-color: #ff6b6b;
     color: white;
   }
-`;
-
-const Footer = styled.footer`
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 24px;
-`;
-
-const LeaveButton = styled.button`
-  background-color: #ff6b6b;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
 `;
 
 const Participants: React.FC = () => {
@@ -275,13 +269,12 @@ const Participants: React.FC = () => {
                     )}
                 </MemberList>
             </Section>
-
+            </ContentWrapper>
             <Footer>
                 <LeaveButton onClick={onLeaveOrClose}>
                     {userRole === 'LEADER' ? '스터디 폐쇄하기' : '탈퇴하기'}
                 </LeaveButton>
             </Footer>
-            </ContentWrapper>
         </Container>
     );
 };

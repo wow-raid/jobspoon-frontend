@@ -29,5 +29,7 @@ export const useAuth = () => {
         }
     }, []);
 
-    return { userId, userNickname, userRole, currentUserId };
+    const isLoggedIn = userId !== null;
+
+    return { userId, userNickname, userRole, currentUserId, isLoggedIn };
 };
