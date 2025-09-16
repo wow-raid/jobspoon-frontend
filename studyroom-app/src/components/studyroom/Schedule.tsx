@@ -19,6 +19,7 @@ const localizer = momentLocalizer(moment);
 interface ScheduleContext {
   studyId: string;
   userRole: "LEADER" | "MEMBER";
+  studyStatus: 'RECRUITING' | 'COMPLETED' | 'CLOSED';
 }
 
 const NavContainer = styled.div`
@@ -224,7 +225,7 @@ const MonthlyTime = styled.div`
 
 const Schedule: React.FC = () => {
   // const { id: studyRoomId } = useParams<{ id: string }>();
-  const { studyId, userRole } = useOutletContext<ScheduleContext>();
+  const { studyId, userRole, studyStatus } = useOutletContext<ScheduleContext>();
   const { currentUserId } = useAuth();
 
   const [events, setEvents] = useState<Schedule[]>([]);
@@ -272,6 +273,10 @@ const Schedule: React.FC = () => {
   };
 
   const handleSelectSlot = (slotInfo: { start: Date; action: "select" | "click" | "doubleClick" }) => {
+    if (studyStatus === 'CLOSED') {
+      setSelectedDate(slotInfo.start);
+      return;
+    }
     if (slotInfo.action === "doubleClick") {
       openFormModal(slotInfo.start);
     } else {
@@ -372,7 +377,7 @@ const Schedule: React.FC = () => {
     <Container>
       <Header>
         <h2>🗓️ 일정관리 <span>({monthlyEvents.length})</span></h2>
-        {(userRole === "LEADER" || userRole === "MEMBER") && (
+        {(userRole === "LEADER" || userRole === "MEMBER") && studyStatus !== 'CLUSED' && (
             <AddEventBtn onClick={openFormModal}>일정 등록</AddEventBtn>
         )}
       </Header>
@@ -440,8 +445,8 @@ const Schedule: React.FC = () => {
             <EventDetail
                 event={selectedEvent}
                 currentUser={{ id: currentUserId, role: userRole }}
-                onEdit={handleEditEvent}
-                onDelete={handleDeleteEvent}
+                onEdit={studyStatus !== 'CLOSED' ? handleEditEvent : undefined}
+                onDelete={studyStatus !== 'CLOSED' ? handleDeleteEvent : undefined}
             />
         )}
       </Modal>
