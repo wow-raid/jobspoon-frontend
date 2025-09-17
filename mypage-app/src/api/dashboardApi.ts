@@ -8,9 +8,9 @@ export interface AttendanceRateResponse {
     totalDays: number;
 }
 
-export interface InterviewCompletionResponse {
-    interviewTotalCount: number;
-    interviewMonthlyCount: number;
+export interface InterviewParticipationResponse {
+    interviewTotalCount: number; // 누적 참여 횟수
+    interviewMonthlyCount: number; // 최근 1개월 참여 횟수
 }
 
 export interface QuizCompletionResponse {
@@ -45,8 +45,8 @@ export const getAttendanceRate = async (token: string) => {
 };
 
 // 인터뷰 완료 현황(get)
-export const getInterviewCompletion = async (token: string) => {
-    const res = await axios.get(`${API_BASE_URL}/user-dashboard/interview/completion`, {
+export const getInterviewParticipation = async (token: string) => {
+    const res = await axios.get(`${API_BASE_URL}/user-dashboard/interview/participation`, {
         headers: { Authorization: token },
     });
     return res.data;
