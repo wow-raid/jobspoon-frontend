@@ -9,7 +9,8 @@ type InterviewItem = {
     id: number;
     topic: string;
     yearsOfExperience: number;
-    created_at: Date; // ✅ Date 타입
+    created_at: Date;
+    status: "IN_PROGRESS" | "COMPLETED"; // ✅ 추가
 };
 
 export default function InterviewResultList() {
@@ -20,12 +21,11 @@ export default function InterviewResultList() {
         if (!userToken) return;
 
         fetchInterviewList(userToken).then((data) => {
-            const normalized: InterviewItem[] = (data.interviewList || []).map(
-                (item: any) => ({
-                    ...item,
-                    created_at: new Date(item.created_at), // ✅ 변환
-                })
-            );
+            const normalized: InterviewItem[] = (data.interviewList || []).map((item: any) => ({
+                ...item,
+                created_at: new Date(item.created_at),
+                status: item.status, // ✅ 추가
+            }));
             setInterviews(normalized);
         });
     }, []);
@@ -34,18 +34,25 @@ export default function InterviewResultList() {
         <Section>
             <Title>면접 기록 보관함</Title>
             <List>
-                {interviews.map((item) => (
+                {interviews.map((item, index) => (
                     <Card key={item.id}>
                         <Info>
+                            <IndexCircle>{index + 1}</IndexCircle>
                             <DateText>{item.created_at.toLocaleDateString()}</DateText>
                             <Topic>{item.topic}</Topic>
                         </Info>
-                        <DetailLink to={`/mypage/interview/history/${item.id}`}>
-                            상세보기
-                        </DetailLink>
+                        <DetailSection>
+                            <StatusBadge status={item.status}>
+                                {item.status === "COMPLETED" ? "완료" : "진행 중"}
+                            </StatusBadge>
+                            <DetailLink to={`/mypage/interview/history/${item.id}`}>
+                                상세보기
+                            </DetailLink>
+                        </DetailSection>
                     </Card>
                 ))}
             </List>
+
         </Section>
     );
 }
@@ -107,4 +114,35 @@ const DetailLink = styled(Link)`
     &:hover {
         text-decoration: underline;
     }
+`;
+
+const IndexCircle = styled.div`
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: #93C5FD; /* 연한 하늘색 */
+    color: #1E3A8A; /* 남색 글씨 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+`;
+
+/* styled-components */
+const DetailSection = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 12px;
+`;
+
+const StatusBadge = styled.span<{ status: string }>`
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: ${({ status }) =>
+    status === "COMPLETED" ? "#065f46" : "#92400e"};
+  background-color: ${({ status }) =>
+    status === "COMPLETED" ? "#d1fae5" : "#fef3c7"};
 `;
