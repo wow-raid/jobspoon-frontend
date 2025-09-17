@@ -1,141 +1,183 @@
 {/* 프로필 외형 수정 */}
 
 import React, { useState, useEffect } from "react";
+import styled from "styled-components";
+import { FaPhone, FaEnvelope, FaLock } from "react-icons/fa";
 import { useOutletContext } from "react-router-dom";
+import defaultProfile from "../assets/default_profile.png";
+import ServiceModal from "../components/modals/ServiceModal.tsx";
 import {
+    updateNickname,
     fetchMyRanks,
     fetchMyTitles,
-    updateNickname,
     equipRank,
     equipTitle,
-    HistoryItem,
+    CustomNicknameResponse,
     ProfileAppearanceResponse,
+    HistoryItem
 } from "../api/profileAppearanceApi.ts";
-import ServiceModal from "../components/modals/ServiceModal.tsx"
-import styled from "styled-components";
-import defaultProfile from "../assets/default_profile.png";
 
 type OutletContextType = {
     profile: ProfileAppearanceResponse | null;
     refreshProfile: () => Promise<void>;
-}
+};
 
 export default function ProfileAppearanceCardEdit() {
-    const {profile, refreshProfile} = useOutletContext<OutletContextType>();
+    const { profile, refreshProfile } = useOutletContext<OutletContextType>();
 
-    const [ranks, setRanks] = useState<HistoryItem[]>([]);
-    const [titles, setTitles] = useState<HistoryItem[]>([]);
-    const [showRanks, setShowRanks] = useState(false);
-    const [showTitles, setShowTitles] = useState(false);
+    // 서비스 모달 상태
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [nicknameInput, setNicknameInput] = useState("");
-    const [errorMessage, setErrorMessage] = useState("");
 
-    // 이력 데이터 불러오기
+    // 닉네임 수정 상태
+    const [isEditingNickname, setIsEditingNickname] = useState(false);
+    const [tempNickname, setTempNickname] = useState("");
+    const [error, setError] = useState<string | null>(null);
+
+    // 랭크 상태
+    const [ranks, setRanks] = useState<HistoryItem[]>([]);
+    const [showRanks, setShowRanks] = useState(false);
+
+    // 칭호 상태
+    const [titles, setTitles] = useState<HistoryItem[]>([]);
+    const [showTitles, setShowTitles] = useState(false);
+
+    // 랭크, 칭호 이력 가져오기
     useEffect(() => {
         const token = localStorage.getItem("userToken");
-        if (!token) {
-            return;
-        }
-        fetchMyRanks(token)
-            .then(setRanks)
-            .catch(console.error);
-        fetchMyTitles(token)
-            .then(setTitles)
+        if (!token) return;
+        Promise.all([fetchMyRanks(token), fetchMyTitles(token)])
+            .then(([r, t]) => {
+                setRanks(r);
+                setTitles(t);
+            })
             .catch(console.error);
     }, []);
-
-    if (!profile) {
-        return <p>불러오는 중...</p>;
-    }
-
-    // 닉네임 수정 핸들러
-    const handleNicknameUpdate = async () => {
-        const token = localStorage.getItem("userToken");
-        if(!token){
-            return;
-        }
-        if(!nicknameInput.trim()){
-            setErrorMessage("닉네임을 입력하세요!");
-            return;
-        }
-        try{
-            await updateNickname(token, nicknameInput);
-            await refreshProfile();
-            setNicknameInput("");
-            setErrorMessage("");
-        }catch(error: any){
-            setErrorMessage(error.message);
-        }
-    };
 
     // 랭크 장착 핸들러
     const handleEquipRank = async (rankId: number) => {
         const token = localStorage.getItem("userToken");
-        if(!token){
+        if (!token) {
+            alert("로그인이 필요합니다.");
             return;
         }
         try {
             const updated = await equipRank(token, rankId);
             await refreshProfile();
-            alert(`${updated.displayName} 랭크가 장착되었습니다!`);
-        }catch(error: any){
-            alert(error.message || "랭크 장착에 실패했습니다.");
+
+            // 성공 메시지
+            alert(`✅ ${updated.displayName} 랭크가 장착되었습니다!`);
+        } catch (error: any) {
+            // 실패 메시지
+            alert(`❌ ${error.message || "랭크 장착에 실패했습니다."}`);
         }
     };
 
     // 칭호 장착 핸들러
     const handleEquipTitle = async (titleId: number) => {
         const token = localStorage.getItem("userToken");
-        if(!token){
+        if (!token) {
+            alert("로그인이 필요합니다.");
             return;
         }
-        try{
+        try {
             const updated = await equipTitle(token, titleId);
             await refreshProfile();
-            alert(`${updated.displayName} 칭호가 장착되었습니다!`);
-        }catch(error: any){
-            alert(errorMessage || "칭호 장착에 실패했습니다.");
+            alert(`✅ ${updated.displayName} 칭호가 장착되었습니다!`);
+        } catch (error: any) {
+            alert(`❌ ${error.message || "칭호 장착에 실패했습니다."}`);
         }
     };
 
+    /** 닉네임 수정 시작 */
+    const handleStartEdit = () => {
+        if (profile) {
+            setTempNickname(profile.customNickname);
+            setIsEditingNickname(true);
+        }
+    };
+
+    /** 닉네임 저장 */
+    const handleSaveNickname = async () => {
+        const token = localStorage.getItem("userToken");
+        if (!token) {
+            setError("로그인이 필요합니다.");
+            return;
+        }
+
+        try {
+            const updated: CustomNicknameResponse = await updateNickname(
+                token,
+                tempNickname
+            );
+            await refreshProfile();
+            setIsEditingNickname(false);
+            setError(null);
+        } catch (err: any) {
+            setError(err.message || "닉네임 수정 실패");
+        }
+    };
+
+    /** 모달 열기 */
+    const openModal = () => {
+        setIsModalOpen(true);
+    };
+
+    if (!profile) {
+        return <p>불러오는 중...</p>;
+    }
+
     return (
-        <Card>
-            <Title>프로필 외형 수정</Title>
+        <Wrapper>
+            {/* 기본정보 */}
+            <Section>
+                <SectionTitle>기본정보</SectionTitle>
+                <InfoCard>
+                    <TopRow>
+                        <PhotoWrapper>
+                            <Photo
+                                src={profile.photoUrl || defaultProfile}
+                                alt="프로필"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).src = defaultProfile;
+                                }}
+                            />
+                        </PhotoWrapper>
 
-            {/* 프로필 영역 */}
-            <ProfileSection>
-                <PhotoWrapper>
-                    <Photo
-                        src={profile.photoUrl || defaultProfile}
-                        alt="프로필"
-                        onError={(e) => {
-                            (e.target as HTMLImageElement).src = defaultProfile; // 이미지 깨질 경우에도 fallback
-                        }}
-                    />
-                </PhotoWrapper>
-                <PhotoButton onClick={() => setIsModalOpen(true)}>사진 변경</PhotoButton>
-            </ProfileSection>
+                        <InfoText>
+                            <NicknameRow>
+                                {isEditingNickname ? (
+                                    <NicknameInput
+                                        type="text"
+                                        value={tempNickname}
+                                        onChange={(e) => setTempNickname(e.target.value)}
+                                        placeholder="닉네임을 입력해주세요"
+                                    />
+                                ) : (
+                                    <Nickname>{profile.customNickname}</Nickname>
+                                )}
+                            </NicknameRow>
+                            {error && <ErrorText>{error}</ErrorText>}
 
-            {/* 닉네임 수정 */}
-            <NicknameSection>
-                <label>현재: {profile?.customNickname ?? "불러오는 중..."}</label>
-                <NicknameForm>
-                    <NicknameInput
-                        type="text"
-                        placeholder="닉네임 입력"
-                        value={nicknameInput}
-                        onChange={(e) => setNicknameInput(e.target.value)}
-                    />
-                    <SaveButton onClick={handleNicknameUpdate}>수정</SaveButton>
-                </NicknameForm>
-                {errorMessage && <ErrorText>{errorMessage}</ErrorText>}
-            </NicknameSection>
+                            <Email>{profile.email}</Email>
+                        </InfoText>
 
-            {/* 이력 카드 */}
-            <HistoryGrid>
-                {/* 등급 */}
-                <HistoryCard>
+                        <ButtonGroup>
+                            {isEditingNickname ? (
+                                <SmallButton onClick={handleSaveNickname}>확인</SmallButton>
+                            ) : (
+                                <SmallButton onClick={handleStartEdit}>별명 수정</SmallButton>
+                            )}
+                            <SmallButton onClick={openModal}>사진 변경</SmallButton>
+                        </ButtonGroup>
+                    </TopRow>
+                </InfoCard>
+            </Section>
+
+            {/* 이력 관리 */}
+            <Section>
+                <SectionTitle>이력 관리</SectionTitle>
+
+                <Card>
                     <HistoryHeader>
                         <h3>등급 전체 이력</h3>
                         <ToggleButton onClick={() => setShowRanks(!showRanks)}>
@@ -143,33 +185,40 @@ export default function ProfileAppearanceCardEdit() {
                         </ToggleButton>
                     </HistoryHeader>
 
-                    <Equipped>
-                        <span>{profile.rank?.displayName}</span>
-                        <span>장착 중</span>
-                    </Equipped>
-
-                    {showRanks && (
-                        <HistoryList>
-                            {ranks.map((rank) => (
-                                <HistoryItemBox key={rank.code}>
-                                    <span>
-                                        {rank.displayName} (
-                                        {new Date(rank.acquiredAt).toLocaleDateString()})
-                                    </span>
-                                    <EquipButton
-                                        disabled={profile.rank?.id === rank.id}
-                                        onClick={() => handleEquipRank(rank.id)}
-                                    >
-                                        {profile.rank?.id === rank.id ? "장착 중" : "장착"}
-                                    </EquipButton>
-                                </HistoryItemBox>
-                            ))}
-                        </HistoryList>
+                    {/* 현재 장착된 랭크 */}
+                    {profile.rank && (
+                        <EquippedBox>
+                            <span>{profile.rank.displayName}</span>
+                            <span>장착 중</span>
+                        </EquippedBox>
                     )}
-                </HistoryCard>
 
-                {/* 칭호 */}
-                <HistoryCard>
+                    {/* 토글된 경우에만 리스트 표시 */}
+                    {showRanks && (
+                        ranks.length > 0 ? (   // ✅ 조건 추가
+                            <ul>
+                                {ranks.map((rank) => (
+                                    <HistoryItemBox key={rank.id} active={profile.rank?.id === rank.id}>
+                                        <span>
+                                            {rank.displayName} ({new Date(rank.acquiredAt).toLocaleDateString()})
+                                        </span>
+                                        {profile?.rank?.id === rank.id ? (
+                                            <EquipButton disabled>장착 중</EquipButton>
+                                        ) : (
+                                            <EquipButton onClick={() => handleEquipRank(rank.id)}>장착</EquipButton>
+                                        )}
+                                    </HistoryItemBox>
+                                ))}
+                            </ul>
+                        ) : (   // ✅ 여기서 else 처리
+                            <p style={{ fontSize: "14px", color: "#9ca3af" }}>
+                                아직 획득한 등급이 없습니다.
+                            </p>  // ✅ 획득 내역 없을 때 안내
+                        )
+                    )}
+                </Card>
+
+                <Card>
                     <HistoryHeader>
                         <h3>칭호 전체 이력</h3>
                         <ToggleButton onClick={() => setShowTitles(!showTitles)}>
@@ -177,73 +226,96 @@ export default function ProfileAppearanceCardEdit() {
                         </ToggleButton>
                     </HistoryHeader>
 
-                    <Equipped>
-                        <span>{profile.title?.displayName}</span>
-                        <span>장착 중</span>
-                    </Equipped>
+                    {profile.title && (
+                        <EquippedBox>
+                            <span>{profile.title.displayName}</span>
+                            <span>장착 중</span>
+                        </EquippedBox>
+                    )}
 
                     {showTitles && (
-                        <HistoryList>
-                            {titles.map((title) => (
-                                <HistoryItemBox key={title.code}>
-                                    <span>
-                                        {title.displayName} (
-                                        {new Date(title.acquiredAt).toLocaleDateString()})
-                                    </span>
-                                    <EquipButton
-                                        disabled={profile.title?.id === title.id}
-                                        onClick={() => handleEquipTitle(title.id)}
-                                    >
-                                        {profile.title?.id === title.id ? "장착 중" : "장착"}
-                                    </EquipButton>
-                                </HistoryItemBox>
-                            ))}
-                        </HistoryList>
+                        titles.length > 0 ? (   // ✅ 조건 추가
+                            <ul>
+                                {titles.map((title) => (
+                                    <HistoryItemBox
+                                        key={title.id}
+                                        active={profile.title?.id === title.id}>
+                                        <span>
+                                            {title.displayName} (
+                                            {new Date(title.acquiredAt).toLocaleDateString()})
+                                        </span>
+                                        {profile?.title?.id === title.id ? (
+                                            <EquipButton disabled>장착 중</EquipButton>
+                                        ) : (
+                                            <EquipButton onClick={() => handleEquipTitle(title.id)}>
+                                                장착
+                                            </EquipButton>
+                                        )}
+                                    </HistoryItemBox>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p style={{ fontSize: "14px", color: "#9ca3af" }}>
+                                아직 획득한 칭호가 없습니다.
+                            </p>
+                        )
                     )}
-                </HistoryCard>
-            </HistoryGrid>
+                </Card>
+            </Section>
 
+            {/* 모달 */}
             <ServiceModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)} />
-        </Card>
+                onClose={() => setIsModalOpen(false)}
+            />
+        </Wrapper>
     );
 }
 
 /* ================== styled-components ================== */
+const Wrapper = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+`;
 
-const Card = styled.section`
+const Section = styled.section`
     padding: 24px;
     border-radius: 12px;
-    background: white;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
     display: flex;
     flex-direction: column;
     gap: 20px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 `;
 
-const Title = styled.h2`
+const SectionTitle = styled.h2`
     font-size: 18px;
     font-weight: 700;
     color: rgb(17, 24, 39);
 `;
 
-const ProfileSection = styled.div`
+const InfoCard = styled.div`
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 28px 32px;  /* 여유 있는 패딩 */
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 12px;
+    gap: 20px;
+`;
+
+const TopRow = styled.div`
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
 `;
 
 const PhotoWrapper = styled.div`
-    width: 112px;
-    height: 112px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
-    background: rgb(229, 231, 235);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+    background: #e5e7eb;
     overflow: hidden;
 `;
 
@@ -251,172 +323,267 @@ const Photo = styled.img`
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
 `;
 
-const NoPhoto = styled.span`
-    font-size: 14px;
-    color: rgb(107, 114, 128);
-`;
-
-const PhotoButton = styled.button`
-    padding: 4px 16px;
-    background: rgb(59, 130, 246);
-    color: white;
-    font-size: 14px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    &:hover {
-        background: rgb(37, 99, 235);
-    }
-`;
-
-const NicknameSection = styled.div`
+const InfoText = styled.div`
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-
-    label {
-        font-size: 14px;
-        color: rgb(75, 85, 99);
-    }
 `;
 
-const NicknameForm = styled.div`
+const NicknameRow = styled.div`
     display: flex;
+    align-items: center;
     gap: 8px;
 `;
 
-const NicknameInput = styled.input`
-    flex: 1;
-    border: 1px solid rgb(209, 213, 219);
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 14px;
-
-    &:focus {
-        outline: none;
-        box-shadow: 0 0 0 2px rgb(147, 197, 253);
-    }
+const Nickname = styled.div`
+    font-size: 22px;   /* 기존 20 → 22 */
+    font-weight: 700;
+    color: #111827;
 `;
 
-const SaveButton = styled.button`
-    padding: 8px 16px;
-    background: rgb(34, 197, 94);
-    color: white;
+const Email = styled.div`
     font-size: 14px;
-    border: none;
-    border-radius: 8px;
+    color: #6b7280;
+`;
+
+const ButtonGroup = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-end;
+`;
+
+const SmallButton = styled.button`
+    width: 100px;   /* ✅ 고정 너비 */
+    text-align: center;
+
+    padding: 6px 0;   /* 좌우 padding 대신 위아래만 */
+    font-size: 13px;
+    background: #f9fafb;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
     cursor: pointer;
+    color: #374151;
+
     &:hover {
-        background: rgb(22, 163, 74);
+        background: #f3f4f6;
     }
 `;
 
-const HistoryGrid = styled.div`
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 24px;
-
-    @media (min-width: 1024px) {
-        grid-template-columns: repeat(2, 1fr);
-    }
+const Divider = styled.hr`
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 0;
 `;
 
-const HistoryCard = styled.div`
-    padding: 16px;
-    background: rgb(249, 250, 251);
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+const BottomRow = styled.div`
     display: flex;
     flex-direction: column;
     gap: 12px;
+`;
 
-    h3 {
-        font-weight: 600;
-        color: rgb(31, 41, 55);
+const InfoItem = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #374151;
+
+    span {
+        flex: 1;
+        margin-left: 8px;
+        color: #6b7280;
     }
 `;
 
-const HistoryHeader = styled.div`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-`;
-
-const ToggleButton = styled.button`
-    font-size: 14px;
-    color: rgb(59, 130, 246);
+const ActionLink = styled.button`
+    font-size: 13px;
+    color: #3b82f6;
+    background: none;
     border: none;
-    background: transparent;
     cursor: pointer;
+
     &:hover {
         text-decoration: underline;
     }
 `;
 
-const Equipped = styled.div`
-    border: 2px solid rgb(59, 130, 246);
-    background: rgb(239, 246, 255);
-    border-radius: 8px;
-    padding: 8px 12px;
-    display: flex;
-    justify-content: space-between;
+const Card = styled.div`
+    background: rgb(249, 250, 251);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 
-    span {
-        font-weight: 500;
-        font-size: 14px;
-        color: rgb(29, 78, 216);
-    }
-
-    span:last-child {
-        font-size: 12px;
-        font-weight: 600;
-    }
-`;
-
-const HistoryList = styled.ul`
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
+
+    h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: rgb(17, 24, 39);
+    }
+
+    p, li {
+        font-size: 14px;
+        color: rgb(107, 114, 128);
+    }
 `;
 
-const HistoryItemBox = styled.li`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border: 1px solid rgb(229, 231, 235);
-    border-radius: 8px;
-    padding: 8px 12px;
+const ConsentCard = styled.div`
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+`;
 
-    span {
-        font-size: 14px;
-        color: rgb(31, 41, 55); /* ✅ 진한 글씨색 */
+const ConsentRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+`;
+
+const Left = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  svg {
+    color: #9ca3af;
+  }
+
+  span {
+    font-size: 14px;
+    color: #374151;
+    font-weight: 500;
+  }
+`;
+
+const ToggleSwitch = styled.button<{ checked: boolean }>`
+  width: 50px;
+  height: 26px;
+  border-radius: 20px;
+  background: ${({ checked }) => (checked ? "#0ea5e9" : "#d1d5db")};
+  border: none;
+  cursor: pointer;
+  position: relative;
+
+  span {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    font-weight: 600;
+    color: white;
+    left: ${({ checked }) => (checked ? "8px" : "auto")};
+    right: ${({ checked }) => (checked ? "auto" : "8px")};
+  }
+`;
+
+const Badge = styled.span<{ active?: boolean }>`
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-left: 6px;
+
+    background: ${({ active }) => (active ? "rgb(59,130,246)" : "transparent")};
+    color: ${({ active }) => (active ? "#fff" : "rgb(107, 114, 128)")};
+    border: ${({ active }) => (active ? "none" : "1px solid #d1d5db")};
+`;
+
+const NicknameInput = styled.input`
+    font-size: 22px;
+    font-weight: 700;
+    color: #111827;
+    border: none;
+    border-bottom: 2px solid #3b82f6;  /* 밑줄 강조 */
+    padding: 4px 0;
+    outline: none;
+    width: 100%;
+
+    &::placeholder {
+        color: #9ca3af;
+        font-weight: 500;
     }
+
+    &:focus {
+        border-color: #2563eb; /* 포커스 시 진한 파랑 */
+    }
+`;
+
+const ErrorText = styled.div`
+  font-size: 13px;
+  color: #dc2626; /* Tailwind red-600 */
+  margin-top: 4px;
 `;
 
 const EquipButton = styled.button`
-    font-size: 12px;
-    padding: 4px 8px;
-    background: rgb(243, 244, 246);
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-
-    &:hover {
-        background: rgb(229, 231, 235);
-    }
-
-    &:disabled {
-        background: transparent;
-        color: rgb(37, 99, 235);
-        font-weight: 600;
-        cursor: default;
-    }
+  margin-left: 8px;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+  &:hover {
+    background: #e5e7eb;
+  }
 `;
 
-const ErrorText = styled.p`
-    font-size: 13px;
-    color: rgb(220, 38, 38);
-    margin-top: 4px;
+const HistoryHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const ToggleButton = styled.button`
+  font-size: 13px;
+  color: #3b82f6;
+  border: none;
+  background: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
+const EquippedBox = styled.div`
+  border: 2px solid rgb(59, 130, 246);
+  background: rgb(239, 246, 255);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+
+  span {
+    font-weight: 600;
+    font-size: 14px;
+    color: rgb(29, 78, 216);
+  }
+`;
+
+const HistoryItemBox = styled.li<{ active?: boolean }>`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid ${({ active }) => (active ? "rgb(59,130,246)" : "rgb(229,231,235)")};
+  background: ${({ active }) => (active ? "rgb(239,246,255)" : "white")};
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: 6px;
+
+  span {
+    font-size: 14px;
+    color: ${({ active }) => (active ? "rgb(29,78,216)" : "rgb(31,41,55)")};
+    font-weight: ${({ active }) => (active ? 600 : 400)};
+  }
 `;
