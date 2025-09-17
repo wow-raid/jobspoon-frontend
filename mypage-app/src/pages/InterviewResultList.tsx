@@ -1,7 +1,6 @@
 {/* 인터뷰 목록 보기 */}
 
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { fetchInterviewList } from "../api/interviewApi";
 import ServiceModal from "../components/modals/ServiceModal";
@@ -86,7 +85,7 @@ export default function InterviewResultList() {
                                     paddingAngle={4}
                                     dataKey="value">
                                     {chartData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
                                 <Tooltip />
@@ -122,12 +121,18 @@ export default function InterviewResultList() {
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                 />
-                <Select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                <Select
+                    value={filterStatus}
+                    onChange={(e) =>
+                            setFilterStatus(e.target.value as "IN_PROGRESS" | "COMPLETED" | "all")}>
                     <option value="all">전체</option>
                     <option value="COMPLETED">완료</option>
                     <option value="IN_PROGRESS">진행 중</option>
                 </Select>
-                <Select value={sortOption} onChange={(e) => setSortOption(e.target.value)}>
+                <Select
+                    value={sortOption}
+                    onChange={(e) =>
+                        setSortOption(e.target.value as "latest" | "oldest" | "status")}>
                     <option value="latest">최신순</option>
                     <option value="oldest">오래된순</option>
                     <option value="status">상태별</option>
@@ -210,14 +215,6 @@ const ChartWrapper = styled.div`
     display: flex;
     justify-content: center;
     align-items: center;
-`;
-
-const ChartContent = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 32px; /* 차트와 범례 간격 */
-  margin-top: 16px;
 `;
 
 const CenterText = styled.div`
@@ -312,15 +309,6 @@ const Topic = styled.span`
     font-size: 16px;
     font-weight: 500;
     color: #111827;
-`;
-
-const DetailLink = styled(Link)`
-    font-size: 14px;
-    font-weight: 500;
-    color: rgb(37, 99, 235);
-    &:hover {
-        text-decoration: underline;
-    }
 `;
 
 const DetailButton = styled.button`
