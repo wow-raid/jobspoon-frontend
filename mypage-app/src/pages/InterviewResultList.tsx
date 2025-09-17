@@ -33,7 +33,7 @@ export default function InterviewResultList() {
         });
     }, []);
 
-    // ✅ 도넛 차트용 데이터 계산
+    // 도넛 차트용 데이터 계산
     const completedCount = interviews.filter((i) => i.status === "COMPLETED").length;
     const inProgressCount = interviews.filter((i) => i.status === "IN_PROGRESS").length;
 
@@ -44,12 +44,30 @@ export default function InterviewResultList() {
 
     const COLORS = ["#10B981", "#F59E0B"]; // 완료=초록, 진행중=노랑
 
+    // 검색/필터/정렬용
+    const [searchText, setSearchText] = useState("");
+    const [filterStatus, setFilterStatus] = useState<"all" | "COMPLETED" | "IN_PROGRESS">("all");
+    const [sortOption, setSortOption] = useState<"latest" | "oldest" | "status">("latest");
+
+    const displayedInterviews = interviews
+        .filter((i) =>
+            filterStatus === "all" || i.status === filterStatus
+        )
+        .filter((i) =>
+            i.topic.toLowerCase().includes(searchText.toLowerCase())
+        )
+        .sort((a, b) => {
+            if (sortOption === "latest") return b.created_at.getTime() - a.created_at.getTime();
+            if (sortOption === "oldest") return a.created_at.getTime() - b.created_at.getTime();
+            if (sortOption === "status") return a.status.localeCompare(b.status);
+            return 0;
+        });
+
     return (
         <Section>
             <Title>면접 기록 보관함</Title>
 
-
-            {/* ✅ 도넛 차트 */}
+            {/* 도넛 차트 */}
             <ChartBox>
                 <ChartTitle>상태별 분포</ChartTitle>
                 <Desc>📊 완료/진행 중 비율을 한눈에 확인할 수 있습니다.</Desc>
@@ -82,7 +100,7 @@ export default function InterviewResultList() {
                         </CenterText>
                     </ChartWrapper>
 
-                    {/* ✅ 범례는 오른쪽 */}
+                    {/* 범례는 오른쪽 */}
                     <Legend>
                         <LegendItem>
                             <ColorDot color={COLORS[0]} />
@@ -96,9 +114,28 @@ export default function InterviewResultList() {
                 </ChartRow>
             </ChartBox>
 
+            {/* 목록 헤더 */}
+            <ListHeader>
+                <SearchInput
+                    type="text"
+                    placeholder="주제 검색..."
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                />
+                <Select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                    <option value="all">전체</option>
+                    <option value="COMPLETED">완료</option>
+                    <option value="IN_PROGRESS">진행 중</option>
+                </Select>
+                <Select value={sortOption} onChange={(e) => setSortOption(e.target.value)}>
+                    <option value="latest">최신순</option>
+                    <option value="oldest">오래된순</option>
+                    <option value="status">상태별</option>
+                </Select>
+            </ListHeader>
 
             <List>
-                {interviews.map((item, index) => (
+                {displayedInterviews.map((item, index) => (
                     <Card key={item.id}>
                         <Info>
                             <IndexCircle>{index + 1}</IndexCircle>
@@ -326,4 +363,60 @@ const StatusBadge = styled.span<{ status: string }>`
     status === "COMPLETED" ? "#065f46" : "#92400e"};
   background-color: ${({ status }) =>
     status === "COMPLETED" ? "#d1fae5" : "#fef3c7"};
+`;
+
+const ListHeader = styled.div`
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0 16px;
+`;
+
+const SearchInput = styled.input`
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #374151;
+    width: 220px;
+    background-color: #f9fafb;
+    transition: all 0.2s;
+
+    &:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        background-color: #fff;
+    }
+
+    &::placeholder {
+        color: #9ca3af;
+    }
+`;
+
+const Select = styled.select`
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #374151;
+    background: #f9fafb;
+    cursor: pointer;
+    appearance: none; /* 기본 화살표 제거 */
+    background-image: url("data:image/svg+xml;utf8,<svg fill='%236b7280' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+
+    &:hover {
+        border-color: #9ca3af;
+    }
+
+    &:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        background-color: #fff;
+    }
 `;
