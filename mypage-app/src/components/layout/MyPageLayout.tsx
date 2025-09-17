@@ -5,7 +5,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import SideBar from "./SideBar";
 import ProfileAppearanceCard from "../profile/ProfileAppearanceCard.tsx";
 import styled from "styled-components";
-import { FaChevronDown, FaChevronUp, FaHome } from "react-icons/fa";
+import { FaHome } from "react-icons/fa";
 import { fetchMyProfile, ProfileAppearanceResponse } from "../../api/profileAppearanceApi.ts";
 
 export default function MyPageLayout() {
