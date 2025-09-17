@@ -1,5 +1,6 @@
 // 서버에 요청을 보내는 도메인
 import axios, { type AxiosInstance } from "axios";
+import { clearAdminSession } from "@/security/adminSession"; // ⬅️ 추가"
 
 export let djangoAxiosInstance: AxiosInstance | null = null;
 export let springAxiosInstance: AxiosInstance | null = null;
@@ -66,4 +67,37 @@ export async function validateTempTokenOnServer(token:string): Promise<boolean>{
     }catch {
         return false;
     }
+}
+
+export async function verifyAdminOnServer(accessToken:string):Promise<boolean>{
+    if(!springAdminAxiosInst)createAxiosInstances();
+    try{
+        const resp= await springAdminAxiosInst!.post(
+            "/admin-auth/session/validate",
+            null,
+            {
+                headers:{Authorization: `Bearer ${accessToken}`},
+                validateStatus:() =>true,
+            }
+        );
+        return resp.status === 200 && resp.data?.isAdmin === true;
+    }catch{
+        return false;
+    }
+}
+
+export function setupAdminInterceptors(){
+    if(!springAdminAxiosInst)createAxiosInstances();
+    springAxiosInstance!.interceptors.response.use(
+        (res)=>{
+            if(res.status ===401 || res.status===403){
+                clearAdminSession();
+                window.dispatchEvent(new CustomEvent("admin-unauthorized"));
+            }
+            return res;
+        },
+        (error)=> {
+            return Promise.reject(error);
+        }
+    );
 }
