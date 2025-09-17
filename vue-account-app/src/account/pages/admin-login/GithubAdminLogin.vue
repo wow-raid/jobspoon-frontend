@@ -29,12 +29,8 @@
 
               <!-- 필요하면 GitHub로 바로 이동 버튼도 사용 -->
 
-              <v-btn
-                block
-                x-large
-                rounded
-                color="black"
-                class="mt-3"
+              <v-btn block x-large rounded color="black" class="mt-3"
+                     :disabled="tokenValid === false"
                 @click="goToGithubLogin"
               >
                 GitHub 소셜 로그인
@@ -133,6 +129,10 @@ onMounted(async () => {
   setMeta("og:description", "잡스틱(JobStick)의 관리자용 페이지입니다. GitHub 계정으로 안전하게 로그인하세요.", "property");
   setMeta("og:image", "/assets/images/fixed/icon-github.svg", "property");
   setMeta("robots", "noindex, nofollow");
+  if (tokenValid.value === false) {
+    alert("인증되지않은 토큰이 발견되었습니다");
+    router.replace({ name: "AdminAuthCode" });
+  }
 });
 </script>
 

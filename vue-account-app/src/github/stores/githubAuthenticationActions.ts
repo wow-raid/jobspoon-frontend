@@ -1,42 +1,18 @@
 import * as axiosUtility from "../../account/utility/axiosInstance";
+import { saveAdminSession, clearAdminSession } from "@/security/adminSession";
+import { verifyAdminOnServer } from "@/account/utility/axiosInstance"; // 아래 4번 참고
+
 // 공용 Axios 인스턴스 생성 유틸을 불러옴. (각 백엔드용 axios 인스턴스를 반환)
 
 export const githubAuthenticationAction = {
-    // Pinia actions 객체. GitHub 인증 및 세션 관련 동작 메서드들을 모음.
-
-    // async requestAdminCodeToSpringBoot(adminCode: string): Promise<boolean> {
-    //     // 관리자 코드 유효성 검증 요청. 유효하면 true, 아니면 false를 반환.
-    //     console.log("requestAdminCodeToDjango") // 디버깅 로그.
-    //
-    //     const { djangoAxiosInstance, } = axiosUtility.createAxiosInstances()
-    //     // Django 서버로 요청을 보낼 axios 인스턴스 획득.
-    //
-    //     try {
-    //         const response = await djangoAxiosInstance.post('/github-oauth/request-admin-code-validation', {
-    //             admin_code: adminCode  // 서버가 기대하는 필드명으로 관리자 코드 전송.
-    //         });
-    //         // POST /github-oauth/request-admin-code-validation
-    //         // { admin_code: string } → { isValid: boolean } 형태의 응답을 가정.
-    //
-    //         console.log('response:', response) // 전체 응답 로깅.
-    //         console.log('response,data:', response.data) // 응답 바디 로깅.
-    //
-    //         return response.data.isValid; // 서버 판단 결과를 반환.
-    //     } catch (error) {
-    //         console.error('관리자 코드 검증 실패:', error); // 예외 상황 로깅.
-    //         return false; // 실패 시 안전하게 false 반환.
-    //     }
-    // },
 
     async requestGithubLoginToSpringBoot(router: any): Promise<void> {
         // GitHub OAuth 로그인을 시작하기 위한 Spring Boot 백엔드에게 "승인 URL"을 달라고 요청한다.
         // 응답으로 받은 승인 URL(https://github.com/login/oauth/authorize?... 형태)로 브라우저를 리다이렉트한다.
 
-        console.log("requestGithubLoginToSpringBoot"); // 디버깅 로그를 남긴다.
-
+        console.log("requestGithubLoginToSpringBoot");
         // 프로젝트 공용 Axios 유틸에서 백엔드별 인스턴스를 만든다.
         // - springAxiosInstance: baseURL, 공통 헤더, withCredentials 등 사전 설정이 되어 있다고 가정한다.
-        // - djangoAxiosInstance: 여기서는 사용하지 않는다(불필요하다).
         const { springAxiosInstance } = axiosUtility.createAxiosInstances();
         try {
             const res= await springAxiosInstance.get("/github-authentication/request-login-url");
@@ -55,7 +31,7 @@ export const githubAuthenticationAction = {
             }
 
             // 팝업 메시지 받기
-            const receiveMessage = (event: MessageEvent) => {
+            const receiveMessage = async (event: MessageEvent) => {
                 // console.log("event origin="+event.origin);
                 // console.log("env origin="+process.env.ORIGIN);
                 // console.log('📨 받은 메시지:', event.origin, event.data);
@@ -72,6 +48,7 @@ export const githubAuthenticationAction = {
                 // console.log("팝업 관리자 정보 user:", user);
                 if (!accessToken) {
                     console.warn('❌ accessToken 없음');
+                    window.removeEventListener("message", receiveMessage);
                     return;
                 }
                 window.dispatchEvent(new Event("user-token-changed"));
@@ -83,14 +60,21 @@ export const githubAuthenticationAction = {
                     // sessionStorage.setItem("userInfo", JSON.stringify(user));
                     alert("현재 신규 관리자를 받고 있지 않습니다");
                     window.location.href = MAIN_CONTAINER_URL;
-                } else if(!isNewUser) {
-                    localStorage.setItem("userToken", accessToken);
+                    return;
+                }else{
+                    const ok=await verifyAdminOnServer(accessToken);
+                    if(!ok){
+                        clearAdminSession();
+                        alert("관리자 권한이 없습니다");
+                        router.replace({name: "AdminAuthCode"});
+                        return;
+                    }
+                    localStorage.setItem("userToken",accessToken);
                     localStorage.removeItem("temporaryAdminToken");
-                    // localStorage.setItem("nickname", user.nickname);
-                    router.push("/account/admin");
-                } else{
-                    alert("로그인중 문제가 발생하였습니다.")
+                    saveAdminSession();
+                    router.push({name: "AdminOverview"});
                 }
+
                 try {
                     popup.close();
                     alert("환영합니다 "+ user.nickname);
@@ -159,6 +143,31 @@ export const githubAuthenticationAction = {
     //         return false // 실패 시 false 반환.
     //     }
     // }
+    // Pinia actions 객체. GitHub 인증 및 세션 관련 동작 메서드들을 모음.
+
+    // async requestAdminCodeToSpringBoot(adminCode: string): Promise<boolean> {
+    //     // 관리자 코드 유효성 검증 요청. 유효하면 true, 아니면 false를 반환.
+    //     console.log("requestAdminCodeToDjango") // 디버깅 로그.
+    //
+    //     const { djangoAxiosInstance, } = axiosUtility.createAxiosInstances()
+    //     // Django 서버로 요청을 보낼 axios 인스턴스 획득.
+    //
+    //     try {
+    //         const response = await djangoAxiosInstance.post('/github-oauth/request-admin-code-validation', {
+    //             admin_code: adminCode  // 서버가 기대하는 필드명으로 관리자 코드 전송.
+    //         });
+    //         // POST /github-oauth/request-admin-code-validation
+    //         // { admin_code: string } → { isValid: boolean } 형태의 응답을 가정.
+    //
+    //         console.log('response:', response) // 전체 응답 로깅.
+    //         console.log('response,data:', response.data) // 응답 바디 로깅.
+    //
+    //         return response.data.isValid; // 서버 판단 결과를 반환.
+    //     } catch (error) {
+    //         console.error('관리자 코드 검증 실패:', error); // 예외 상황 로깅.
+    //         return false; // 실패 시 안전하게 false 반환.
+    //     }
+    // },
 }
 
 /*
