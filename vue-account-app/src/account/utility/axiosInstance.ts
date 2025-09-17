@@ -73,14 +73,14 @@ export async function verifyAdminOnServer(accessToken:string):Promise<boolean>{
     if(!springAdminAxiosInst)createAxiosInstances();
     try{
         const resp= await springAdminAxiosInst!.post(
-            "/admin-auth/session/validate",
+            "/administrator/social_login",
             null,
             {
                 headers:{Authorization: `Bearer ${accessToken}`},
                 validateStatus:() =>true,
             }
         );
-        return resp.status === 200 && resp.data?.isAdmin === true;
+        return resp.status === 200;
     }catch{
         return false;
     }
