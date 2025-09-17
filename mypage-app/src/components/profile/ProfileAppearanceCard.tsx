@@ -64,12 +64,13 @@ export default function ProfileAppearanceCard({profile}: {profile: ProfileAppear
                         </tbody>
                     </InfoTable>
 
-                    <ButtonWrapper>
-                        <EditButton onClick={() => navigate("/mypage/profile/edit")}>
-                            <FaEdit />
-                            수정하기
-                        </EditButton>
-                    </ButtonWrapper>
+                    {/* 수정하기 버튼 제거 */}
+                    {/*<ButtonWrapper>*/}
+                    {/*    <EditButton onClick={() => navigate("/mypage/profile/edit")}>*/}
+                    {/*        <FaEdit />*/}
+                    {/*        수정하기*/}
+                    {/*    </EditButton>*/}
+                    {/*</ButtonWrapper>*/}
                 </Content>
             )}
         </Card>
@@ -113,6 +114,7 @@ const ArrowIcon = styled.span`
 const Content = styled.div`
     overflow: hidden;
     transition: all 0.3s ease-in-out;
+    padding-bottom: 24px;   /* 하단 공간 확보 */
 `;
 
 const ImageWrapper = styled.div`
