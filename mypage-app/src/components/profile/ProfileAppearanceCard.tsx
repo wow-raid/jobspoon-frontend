@@ -2,14 +2,11 @@
 
 import React, { useState } from "react";
 import { ProfileAppearanceResponse } from "../../api/profileAppearanceApi.ts";
-import { FaEdit } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import defaultProfile from "../../assets/default_profile.png";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 export default function ProfileAppearanceCard({profile}: {profile: ProfileAppearanceResponse}) {
-    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(true);
 
     if (!profile) {
@@ -56,20 +53,13 @@ export default function ProfileAppearanceCard({profile}: {profile: ProfileAppear
                             <Separator>|</Separator>
                             <ValueCell>{profile.customNickname}</ValueCell>
                         </tr>
-                        <tr>
-                            <LabelCell>계정</LabelCell>
-                            <Separator>|</Separator>
-                            <ValueCell>{profile.email}</ValueCell>
-                        </tr>
+                        {/*<tr>*/}
+                        {/*    <LabelCell>계정</LabelCell>*/}
+                        {/*    <Separator>|</Separator>*/}
+                        {/*    <ValueCell>{profile.email}</ValueCell>*/}
+                        {/*</tr>*/}
                         </tbody>
                     </InfoTable>
-
-                    <ButtonWrapper>
-                        <EditButton onClick={() => navigate("/mypage/profile/edit")}>
-                            <FaEdit />
-                            수정하기
-                        </EditButton>
-                    </ButtonWrapper>
                 </Content>
             )}
         </Card>
@@ -113,6 +103,7 @@ const ArrowIcon = styled.span`
 const Content = styled.div`
     overflow: hidden;
     transition: all 0.3s ease-in-out;
+    padding-bottom: 24px;   /* 하단 공간 확보 */
 `;
 
 const ImageWrapper = styled.div`

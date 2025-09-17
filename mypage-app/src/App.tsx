@@ -6,8 +6,9 @@ import ProfileAppearanceCardEdit from "./pages/ProfileAppearanceCardEdit.tsx";
 import AccountProfileEdit from "./pages/AccountProfileEdit.tsx";
 import InterviewResultList from "./pages/InterviewResultList.tsx";
 import InterviewResultDetail from "./pages/InterviewResultDetail.tsx";
-import {AccountWithdrawal} from "./pages/AccountWithdrawal.tsx";
+import AccountWithdrawal from "./pages/AccountWithdrawal.tsx";
 import MembershipPage from "./pages/MemebershipPage.tsx";
+import UserHistoryPage from "./pages/UserHistoryPage.tsx";
 
 import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
 import { getTheme, onThemeChange, type Theme as BridgeTheme } from '@jobspoon/theme-bridge';
@@ -87,6 +88,8 @@ export default function App() {
                         <Route path="withdrawal" element={<AccountWithdrawal />} />
                         {/* 멤버십 */}
                         <Route path="membership" element={<MembershipPage />} />
+                        {/* 이력 관리 */}
+                        <Route path="user/history" element={<UserHistoryPage />} />
                     </Route>
                 </Routes>
             </AppShell>
