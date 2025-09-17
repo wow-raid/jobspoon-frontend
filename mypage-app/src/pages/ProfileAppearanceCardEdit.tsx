@@ -1,4 +1,4 @@
-{/* 프로필 외형 수정 */}
+{/* 프로필 외형 수정 -> 사용 안 할 예정 */}
 
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";

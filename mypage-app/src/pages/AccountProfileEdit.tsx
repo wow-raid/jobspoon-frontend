@@ -6,7 +6,7 @@ import { FaPhone, FaEnvelope, FaLock } from "react-icons/fa";
 import { useOutletContext } from "react-router-dom";
 import defaultProfile from "../assets/default_profile.png";
 import ServiceModal from "../components/modals/ServiceModal.tsx";
-import { ProfileAppearanceResponse } from "../api/profileAppearanceApi.ts";
+import {CustomNicknameResponse, ProfileAppearanceResponse, updateNickname} from "../api/profileAppearanceApi.ts";
 
 type OutletContextType = {
     profile: ProfileAppearanceResponse | null;
@@ -14,10 +14,15 @@ type OutletContextType = {
 };
 
 export default function AccountProfileEdit() {
-    const { profile } = useOutletContext<OutletContextType>();
+    const { profile, refreshProfile } = useOutletContext<OutletContextType>();
 
     // 서비스 모달 상태
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // 닉네임 수정 상태
+    const [isEditingNickname, setIsEditingNickname] = useState(false);
+    const [tempNickname, setTempNickname] = useState("");
+    const [error, setError] = useState<string | null>(null);
 
     // 프로필 공개 여부 상태
     const [isProfilePublic, setIsProfilePublic] = useState(true);
@@ -32,6 +37,42 @@ export default function AccountProfileEdit() {
         phone: true,
         email: false,
     });
+
+    /** 닉네임 수정 시작 */
+    const handleStartEdit = () => {
+        if (profile) {
+            setTempNickname(profile.customNickname);
+            setIsEditingNickname(true);
+        }
+    };
+
+    /** 닉네임 저장 */
+    const handleSaveNickname = async () => {
+        const token = localStorage.getItem("userToken");
+        if (!token) {
+            setError("로그인이 필요합니다.");
+            return;
+        }
+
+        try {
+            const updated: CustomNicknameResponse = await updateNickname(
+                token,
+                tempNickname
+            );
+            await refreshProfile();
+            setIsEditingNickname(false);
+            setError(null);
+        } catch (err: any) {
+            setError(err.message || "닉네임 수정 실패");
+        }
+    };
+
+    /** 닉네임 수정 취소 */
+    const handleCancelEdit = () => {
+        setTempNickname("");        // 입력값 초기화
+        setIsEditingNickname(false); // 수정 모드 종료
+        setError(null);             // 에러 메시지도 초기화
+    };
 
     /** 모달 열기 */
     const openModal = () => {
@@ -77,9 +118,34 @@ export default function AccountProfileEdit() {
                         </PhotoWrapper>
 
                         <InfoText>
-                            <Nickname>{profile.customNickname}</Nickname>
+                            <NicknameRow>
+                                {isEditingNickname ? (
+                                    <NicknameInput
+                                        type="text"
+                                        value={tempNickname}
+                                        onChange={(e) => setTempNickname(e.target.value)}
+                                        placeholder="닉네임을 입력해주세요"
+                                    />
+                                ) : (
+                                    <Nickname>{profile.customNickname}</Nickname>
+                                )}
+                            </NicknameRow>
+                            {error && <ErrorText>{error}</ErrorText>}
+
                             <Email>{profile.email}</Email>
                         </InfoText>
+
+                        <ButtonGroup>
+                            {isEditingNickname ? (
+                                <Row>
+                                    <SmallButton onClick={handleSaveNickname}>확인</SmallButton>
+                                    <SmallButton onClick={handleCancelEdit}>취소</SmallButton>
+                                </Row>
+                            ) : (
+                                <SmallButton onClick={handleStartEdit}>별명 수정</SmallButton>
+                            )}
+                            <SmallButton onClick={openModal}>사진 변경</SmallButton>
+                        </ButtonGroup>
                     </TopRow>
 
                     <Divider />
@@ -403,6 +469,63 @@ const ToggleSwitch = styled.button<{ checked: boolean }>`
         color: white;
         left: ${({ checked }) => (checked ? "8px" : "auto")};
         right: ${({ checked }) => (checked ? "auto" : "8px")};
+    }
+`;
+
+const NicknameRow = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+`;
+
+const NicknameInput = styled.input`
+    font-size: 22px;
+    font-weight: 700;
+    color: #111827;
+    border: none;
+    border-bottom: 2px solid #3b82f6;
+    padding: 4px 0;
+    outline: none;
+    width: 100%;
+`;
+
+const ErrorText = styled.div`
+  font-size: 13px;
+  color: #dc2626;
+  margin-top: 4px;
+`;
+
+const ButtonGroup = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-end;
+`;
+
+const Row = styled.div`
+    display: flex;
+    gap: 6px;
+    width: 100px;
+`;
+
+const SmallButton = styled.button`
+    width: 100px;
+    text-align: center;
+    padding: 6px 0;
+    font-size: 13px;
+    background: #f9fafb;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #374151;
+
+    &:hover {
+        background: #f3f4f6;
+    }
+
+    ${Row} & {
+        flex: 1;
+        width: auto;
     }
 `;
 
