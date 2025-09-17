@@ -154,6 +154,13 @@ const StudyDetailPage: React.FC = () => {
             return <ApplyBtn onClick={() => setIsEditModalOpen(true)}>정보 수정하기</ApplyBtn>;
         }
 
+        if (study.status === 'COMPLETED') {
+            return <DisabledButton disabled>모집이 완료되었습니다</DisabledButton>;
+        }
+        if (study.status === 'CLOSED') {
+            return <DisabledButton disabled>폐쇄된 스터디입니다</DisabledButton>;
+        }
+
         switch (application?.status) {
             case 'PENDING':
                 return (

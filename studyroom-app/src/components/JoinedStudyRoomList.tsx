@@ -41,10 +41,11 @@ const Details = styled.div`
 `;
 
 const Actions = styled.div`
-  width: 100%;
+  flex-grow: 1;
   display: flex;
   justify-content: center;
-  margin-top: 16px;
+  align-items: flex-end; 
+  margin-top: 24px;
 `;
 
 const GoButton = styled(Link)`
@@ -64,6 +65,19 @@ const GoButton = styled(Link)`
   &:hover {
     background-color: ${({ theme }) => theme.primaryHover};
   }
+`;
+
+const ClosedButton = styled.div`
+  background-color: ${({ theme }) => theme.muted};
+  color: ${({ theme }) => theme.subtle};
+  text-decoration: none;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: not-allowed;
+  text-align: center;
 `;
 
 /* ─ Component ─ */
@@ -89,7 +103,11 @@ const JoinedStudyRoomList: React.FC<JoinedStudyRoomListProps> = ({ room }) => {
       </div>
 
       <Actions>
-        <GoButton to={`../joined-study/${room.id}`}>면접스터디룸 바로가기</GoButton>
+        {room.status === 'CLOSED' ? (
+            <ClosedButton>폐쇄된 스터디모임</ClosedButton>
+        ) : (
+            <GoButton to={`../joined-study/${room.id}`}>면접스터디룸 바로가기</GoButton>
+        )}
       </Actions>
     </Wrapper>
   );
