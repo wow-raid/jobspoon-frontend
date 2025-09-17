@@ -2,14 +2,11 @@
 
 import React, { useState } from "react";
 import { ProfileAppearanceResponse } from "../../api/profileAppearanceApi.ts";
-import { FaEdit } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import defaultProfile from "../../assets/default_profile.png";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 export default function ProfileAppearanceCard({profile}: {profile: ProfileAppearanceResponse}) {
-    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(true);
 
     if (!profile) {
@@ -63,14 +60,6 @@ export default function ProfileAppearanceCard({profile}: {profile: ProfileAppear
                         {/*</tr>*/}
                         </tbody>
                     </InfoTable>
-
-                    {/* 수정하기 버튼 제거 */}
-                    {/*<ButtonWrapper>*/}
-                    {/*    <EditButton onClick={() => navigate("/mypage/profile/edit")}>*/}
-                    {/*        <FaEdit />*/}
-                    {/*        수정하기*/}
-                    {/*    </EditButton>*/}
-                    {/*</ButtonWrapper>*/}
                 </Content>
             )}
         </Card>
