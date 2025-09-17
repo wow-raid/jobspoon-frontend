@@ -37,6 +37,7 @@ const HeaderBox = styled.header`
   border-radius: 8px;
   margin-bottom: 24px;
   text-align: center;
+  position: relative;
 
   h2 {
     margin: 0 0 8px 0;
@@ -47,6 +48,18 @@ const HeaderBox = styled.header`
     margin: 0;
     color: ${({ theme }) => theme.subtle};
   }
+`;
+
+const StatusBadge = styled.span`
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background-color: #ff6b6b;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: bold;
 `;
 
 const Main = styled.main`
@@ -121,6 +134,9 @@ const JoinedStudyRoom: React.FC = () => {
     return (
         <Container>
             <HeaderBox className="room-header">
+                {study.status === 'CLOSED' && (
+                    <StatusBadge> 폐쇄된 스터디 </StatusBadge>
+                )}
                 <h2>{study.title}</h2>
                 <p>
                     모임장: {study.hostNickname} | 인원 {study.currentMembers}/{study.maxMembers} | 진행방식:{" "}
@@ -129,7 +145,7 @@ const JoinedStudyRoom: React.FC = () => {
             </HeaderBox>
             <Main>
                 <ContentArea>
-                    <Outlet context={{ studyId, userRole, onLeaveOrClose: handleLeaveOrClose }} />
+                    <Outlet context={{ studyId, userRole, studyStatus: study.status, onLeaveOrClose: handleLeaveOrClose }} />
                 </ContentArea>
             </Main>
         </Container>

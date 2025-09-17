@@ -1,9 +1,11 @@
+export type StudyStatus = 'RECRUITING' | 'COMPLETED' | 'CLOSED';
+
 export interface StudyRoom {
     id: number;
     title: string;
     description: string;
     maxMembers: number;
-    status: 'RECRUITING' | 'CLOSED';
+    status: StudyStatus;
     location: string;
     studyLevel: string;
     recruitingRoles: string[];
