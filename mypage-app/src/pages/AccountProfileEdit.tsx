@@ -63,7 +63,7 @@ export default function AccountProfileEdit() {
         <Wrapper>
             {/* 기본정보 */}
             <Section>
-                <SectionTitle>기본정보</SectionTitle>
+                <SectionTitle>회원정보</SectionTitle>
                 <InfoCard>
                     <TopRow>
                         <PhotoWrapper>
