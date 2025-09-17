@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { FaPhone, FaEnvelope, FaLock } from "react-icons/fa";
 import { useOutletContext } from "react-router-dom";
 import defaultProfile from "../assets/default_profile.png";
 import ServiceModal from "../components/modals/ServiceModal.tsx";
@@ -117,6 +116,13 @@ export default function ProfileAppearanceCardEdit() {
         }
     };
 
+    /** 닉네임 수정 취소 */
+    const handleCancelEdit = () => {
+        setTempNickname("");        // 입력값 초기화
+        setIsEditingNickname(false); // 수정 모드 종료
+        setError(null);             // 에러 메시지도 초기화
+    };
+
     /** 모달 열기 */
     const openModal = () => {
         setIsModalOpen(true);
@@ -130,7 +136,7 @@ export default function ProfileAppearanceCardEdit() {
         <Wrapper>
             {/* 기본정보 */}
             <Section>
-                <SectionTitle>기본정보</SectionTitle>
+                <SectionTitle>프로필 정보</SectionTitle>
                 <InfoCard>
                     <TopRow>
                         <PhotoWrapper>
@@ -163,12 +169,16 @@ export default function ProfileAppearanceCardEdit() {
 
                         <ButtonGroup>
                             {isEditingNickname ? (
-                                <SmallButton onClick={handleSaveNickname}>확인</SmallButton>
+                                <Row>
+                                    <SmallButton onClick={handleSaveNickname}>확인</SmallButton>
+                                    <SmallButton onClick={handleCancelEdit}>취소</SmallButton>
+                                </Row>
                             ) : (
                                 <SmallButton onClick={handleStartEdit}>별명 수정</SmallButton>
                             )}
                             <SmallButton onClick={openModal}>사진 변경</SmallButton>
                         </ButtonGroup>
+
                     </TopRow>
                 </InfoCard>
             </Section>
@@ -356,11 +366,16 @@ const ButtonGroup = styled.div`
     align-items: flex-end;
 `;
 
-const SmallButton = styled.button`
-    width: 100px;   /* ✅ 고정 너비 */
-    text-align: center;
+const Row = styled.div`
+    display: flex;
+    gap: 6px;
+    width: 100px;
+`;
 
-    padding: 6px 0;   /* 좌우 padding 대신 위아래만 */
+const SmallButton = styled.button`
+    width: 100px;   /* 기본 단독 사용 시 100px */
+    text-align: center;
+    padding: 6px 0;
     font-size: 13px;
     background: #f9fafb;
     border: 1px solid #d1d5db;
@@ -371,45 +386,14 @@ const SmallButton = styled.button`
     &:hover {
         background: #f3f4f6;
     }
-`;
 
-const Divider = styled.hr`
-    border: none;
-    border-top: 1px solid #e5e7eb;
-    margin: 0;
-`;
-
-const BottomRow = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-`;
-
-const InfoItem = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 14px;
-    color: #374151;
-
-    span {
+    /* Row 안에서만 flex-grow */
+    ${Row} & {
         flex: 1;
-        margin-left: 8px;
-        color: #6b7280;
+        width: auto;  /* Row 안에서는 자동으로 나눠짐 */
     }
 `;
 
-const ActionLink = styled.button`
-    font-size: 13px;
-    color: #3b82f6;
-    background: none;
-    border: none;
-    cursor: pointer;
-
-    &:hover {
-        text-decoration: underline;
-    }
-`;
 
 const Card = styled.div`
     background: rgb(249, 250, 251);
@@ -431,71 +415,6 @@ const Card = styled.div`
         font-size: 14px;
         color: rgb(107, 114, 128);
     }
-`;
-
-const ConsentCard = styled.div`
-  background: #f9fafb;
-  border-radius: 12px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-`;
-
-const ConsentRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-`;
-
-const Left = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  svg {
-    color: #9ca3af;
-  }
-
-  span {
-    font-size: 14px;
-    color: #374151;
-    font-weight: 500;
-  }
-`;
-
-const ToggleSwitch = styled.button<{ checked: boolean }>`
-  width: 50px;
-  height: 26px;
-  border-radius: 20px;
-  background: ${({ checked }) => (checked ? "#0ea5e9" : "#d1d5db")};
-  border: none;
-  cursor: pointer;
-  position: relative;
-
-  span {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 10px;
-    font-weight: 600;
-    color: white;
-    left: ${({ checked }) => (checked ? "8px" : "auto")};
-    right: ${({ checked }) => (checked ? "auto" : "8px")};
-  }
-`;
-
-const Badge = styled.span<{ active?: boolean }>`
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 500;
-    margin-left: 6px;
-
-    background: ${({ active }) => (active ? "rgb(59,130,246)" : "transparent")};
-    color: ${({ active }) => (active ? "#fff" : "rgb(107, 114, 128)")};
-    border: ${({ active }) => (active ? "none" : "1px solid #d1d5db")};
 `;
 
 const NicknameInput = styled.input`
