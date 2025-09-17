@@ -56,7 +56,8 @@ export const githubAuthenticationAction = {
 
             // 팝업 메시지 받기
             const receiveMessage = (event: MessageEvent) => {
-
+                // console.log("event origin="+event.origin);
+                // console.log("env origin="+process.env.ORIGIN);
                 // console.log('📨 받은 메시지:', event.origin, event.data);
 
                 // 허용된 origin만 허용
@@ -65,23 +66,16 @@ export const githubAuthenticationAction = {
                     console.warn('❌ 허용되지 않은 origin:', event.origin);
                     return;
                 }
-
                 sessionStorage.setItem("tempLoginType", loginType);
                 const { accessToken, isNewUser, user } = event.data;
                 const MAIN_CONTAINER_URL = process.env.MAIN_CONTAINER_URL as string;
-
                 // console.log("팝업 관리자 정보 user:", user);
-
-
                 if (!accessToken) {
                     console.warn('❌ accessToken 없음');
                     return;
                 }
-
                 window.dispatchEvent(new Event("user-token-changed"));
                 window.removeEventListener('message', receiveMessage);
-
-
 
                 if(isNewUser) {
                     // console.log("신규 유저 진입");
@@ -90,7 +84,6 @@ export const githubAuthenticationAction = {
                     alert("현재 신규 관리자를 받고 있지 않습니다");
                     window.location.href = MAIN_CONTAINER_URL;
                 } else if(!isNewUser) {
-
                     localStorage.setItem("userToken", accessToken);
                     localStorage.removeItem("temporaryAdminToken");
                     // localStorage.setItem("nickname", user.nickname);
