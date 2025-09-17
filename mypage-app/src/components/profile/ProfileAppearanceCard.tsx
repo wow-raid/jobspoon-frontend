@@ -56,11 +56,11 @@ export default function ProfileAppearanceCard({profile}: {profile: ProfileAppear
                             <Separator>|</Separator>
                             <ValueCell>{profile.customNickname}</ValueCell>
                         </tr>
-                        <tr>
-                            <LabelCell>계정</LabelCell>
-                            <Separator>|</Separator>
-                            <ValueCell>{profile.email}</ValueCell>
-                        </tr>
+                        {/*<tr>*/}
+                        {/*    <LabelCell>계정</LabelCell>*/}
+                        {/*    <Separator>|</Separator>*/}
+                        {/*    <ValueCell>{profile.email}</ValueCell>*/}
+                        {/*</tr>*/}
                         </tbody>
                     </InfoTable>
 
