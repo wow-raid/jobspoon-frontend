@@ -303,21 +303,26 @@ export default function AccountProfileEdit() {
 
                     {/* 토글된 경우에만 리스트 표시 */}
                     {showRanks && (
-                        <ul>
-                            {ranks.map((rank) => (
-                                <HistoryItemBox key={rank.id} active={profile.rank?.id === rank.id}>
-                                    <span>
-                                        {rank.displayName} (
-                                        {new Date(rank.acquiredAt).toLocaleDateString()})
-                                    </span>
-                                    {profile?.rank?.id === rank.id ? (
-                                        <EquipButton disabled>장착 중</EquipButton>
-                                    ) : (
-                                        <EquipButton onClick={() => handleEquipRank(rank.id)}>장착</EquipButton>
-                                    )}
-                                </HistoryItemBox>
-                            ))}
-                        </ul>
+                        ranks.length > 0 ? (   // ✅ 조건 추가
+                            <ul>
+                                {ranks.map((rank) => (
+                                    <HistoryItemBox key={rank.id} active={profile.rank?.id === rank.id}>
+                                        <span>
+                                            {rank.displayName} ({new Date(rank.acquiredAt).toLocaleDateString()})
+                                        </span>
+                                        {profile?.rank?.id === rank.id ? (
+                                            <EquipButton disabled>장착 중</EquipButton>
+                                        ) : (
+                                            <EquipButton onClick={() => handleEquipRank(rank.id)}>장착</EquipButton>
+                                        )}
+                                    </HistoryItemBox>
+                                ))}
+                            </ul>
+                        ) : (   // ✅ 여기서 else 처리
+                            <p style={{ fontSize: "14px", color: "#9ca3af" }}>
+                                아직 획득한 등급이 없습니다.
+                            </p>  // ✅ 획득 내역 없을 때 안내
+                        )
                     )}
                 </Card>
 
@@ -337,28 +342,33 @@ export default function AccountProfileEdit() {
                     )}
 
                     {showTitles && (
-                        <ul>
-                            {titles.map((title) => (
-                                <HistoryItemBox
-                                    key={title.id}
-                                    active={profile.title?.id === title.id}>
-                                    <span>
-                                        {title.displayName} (
-                                        {new Date(title.acquiredAt).toLocaleDateString()})
-                                    </span>
-                                    {profile?.title?.id === title.id ? (
-                                        <EquipButton disabled>장착 중</EquipButton>
-                                    ) : (
-                                        <EquipButton onClick={() => handleEquipTitle(title.id)}>
-                                            장착
-                                        </EquipButton>
-                                    )}
-                                </HistoryItemBox>
-                            ))}
-                        </ul>
+                        titles.length > 0 ? (   // ✅ 조건 추가
+                            <ul>
+                                {titles.map((title) => (
+                                    <HistoryItemBox
+                                        key={title.id}
+                                        active={profile.title?.id === title.id}>
+                                        <span>
+                                            {title.displayName} (
+                                            {new Date(title.acquiredAt).toLocaleDateString()})
+                                        </span>
+                                        {profile?.title?.id === title.id ? (
+                                            <EquipButton disabled>장착 중</EquipButton>
+                                        ) : (
+                                            <EquipButton onClick={() => handleEquipTitle(title.id)}>
+                                                장착
+                                            </EquipButton>
+                                        )}
+                                    </HistoryItemBox>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p style={{ fontSize: "14px", color: "#9ca3af" }}>
+                                아직 획득한 칭호가 없습니다.
+                            </p>
+                        )
                     )}
                 </Card>
-
             </Section>
 
             {/* 모달 */}
