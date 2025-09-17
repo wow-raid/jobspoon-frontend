@@ -120,6 +120,36 @@ export default function AccountProfileEdit() {
                             <span>{isProfilePublic ? "ON" : "OFF"}</span>
                         </ToggleSwitch>
                     </ConsentRow>
+
+                    {/* 하위 공개 옵션 */}
+                    {isProfilePublic && (
+                        <>
+                            <Divider />
+                            <ConsentRow className="sub-consent">
+                                <Left sub>
+                                    <span>휴대전화 공개</span>
+                                </Left>
+                                <ToggleSwitch
+                                    checked={consent.phone}
+                                    onClick={() => handleToggleConsent("phone")}>
+                                    <span>{consent.phone ? "ON" : "OFF"}</span>
+                                </ToggleSwitch>
+                            </ConsentRow>
+
+                            <Divider />
+
+                            <ConsentRow className="sub-consent">
+                                <Left sub>
+                                    <span>이메일 공개</span>
+                                </Left>
+                                <ToggleSwitch
+                                    checked={consent.email}
+                                    onClick={() => handleToggleConsent("email")}>
+                                    <span>{consent.email ? "ON" : "OFF"}</span>
+                                </ToggleSwitch>
+                            </ConsentRow>
+                        </>
+                    )}
                 </ConsentCard>
             </Section>
 
@@ -320,21 +350,38 @@ const ConsentRow = styled.div`
     justify-content: space-between;
     align-items: center;
     padding: 12px 0;
+
+    &.sub-consent {
+        margin-left: 12px;   /* ✅ padding-left → margin-left */
+    }
 `;
 
-const Left = styled.div`
+const Left = styled.div<{ sub?: boolean }>`
     display: flex;
     align-items: center;
     gap: 8px;
 
+    /* 상위는 아이콘 표시, 하위는 아이콘 제거 */
     svg {
         color: #9ca3af;
+        ${({ sub }) => sub && "display: none;"}
     }
 
     span {
         font-size: 14px;
-        color: #374151;
         font-weight: 500;
+        position: relative;
+        color: #374151;
+
+        ${({ sub }) =>
+                sub &&
+                `
+            &::before {
+              content: "•";
+              margin-right: 6px;
+              display: inline-block;
+            }
+        `}
     }
 `;
 
@@ -358,3 +405,4 @@ const ToggleSwitch = styled.button<{ checked: boolean }>`
         right: ${({ checked }) => (checked ? "auto" : "8px")};
     }
 `;
+
