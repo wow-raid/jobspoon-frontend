@@ -2,7 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-import { StudyRoom } from "../types/study";
+import { StudyRoom, StudyStatus } from "../types/study";
 
 interface StudyRoomCardProps {
     room: StudyRoom;
@@ -64,15 +64,23 @@ const CardTop = styled.div`
   font-size: 13px;
 `;
 
-const StatusBadge = styled.span<{ $status: "RECRUITING" | "CLOSED" }>`
+const StatusBadge = styled.span<{ $status: StudyStatus }>`
   padding: 4px 10px;
   border-radius: 12px;
   font-weight: bold;
-  ${({ $status, theme }) =>
-    $status === "RECRUITING"
-      ? `background-color: ${theme.badgeRecruitingBg}; color: ${theme.badgeRecruitingFg};`
-      : `background-color: ${theme.badgeClosedBg}; color: ${theme.badgeClosedFg};`
-  }
+
+    ${({ $status, theme }) => {
+        switch ($status) {
+            case "RECRUITING":
+                return `background-color: ${theme.badgeRecruitingBg}; color: ${theme.badgeRecruitingFg};`;
+            case "COMPLETED":
+                return `background-color: ${theme.badgeCompletedBg}; color: ${theme.badgeCompletedFg};`;
+            case "CLOSED":
+                return `background-color: ${theme.badgeClosedBg}; color: ${theme.badgeClosedFg};`;
+            default:
+                return "";
+        }
+    }}
 `;
 
 const LocationInfo = styled.span`
@@ -136,6 +144,12 @@ const ClosedCardOverlay = styled(Card)`
   background-color: ${({ theme }) => theme.surfaceAlt};
 `;
 
+const STATUS_TEXT: { [key in StudyStatus]: string } = {
+    RECRUITING: "모집중",
+    COMPLETED: "모집완료",
+    CLOSED: "폐쇄됨",
+};
+
 /* ─ Component ─ */
 const StudyRoomCard: React.FC<StudyRoomCardProps> = ({ room, isLoggedIn, onCardClick }) => {
     if (!room || !room.id) return null;
@@ -143,12 +157,12 @@ const StudyRoomCard: React.FC<StudyRoomCardProps> = ({ room, isLoggedIn, onCardC
 
   const content = (
     <>
-      <CardTop>
-        <StatusBadge $status={room.status}>
-          {isClosed ? "모집완료" : "모집중"}
-        </StatusBadge>
-        <LocationInfo>{room.location}</LocationInfo>
-      </CardTop>
+        <CardTop>
+            <StatusBadge $status={room.status}>
+                {STATUS_TEXT[room.status]}
+            </StatusBadge>
+            <LocationInfo>{room.location}</LocationInfo>
+        </CardTop>
 
       <CardBody>
         <JobCategory>{room.recruitingRoles?.[0] || '기타'}</JobCategory>
