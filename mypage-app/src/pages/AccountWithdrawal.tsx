@@ -5,7 +5,7 @@ import WithdrawalConfirmModal from "../components/modals/WithdrawalConfirmModal.
 import ServiceModal from "../components/modals/ServiceModal.tsx";
 import {withdrawAccount} from "../api/profileAppearanceApi.ts";
 
-export function AccountWithdrawal() {
+export default function AccountWithdrawal() {
     const [reason, setReason] = useState("");
     const [showConfirm, setShowConfirm] = useState(false);
     const [showServiceModal, setShowServiceModal] = useState(false);

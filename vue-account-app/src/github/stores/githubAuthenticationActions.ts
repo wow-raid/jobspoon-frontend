@@ -1,89 +1,94 @@
 import * as axiosUtility from "../../account/utility/axiosInstance";
+import { saveAdminSession, clearAdminSession } from "@/security/adminSession";
+import { verifyAdminOnServer } from "@/account/utility/axiosInstance"; // 아래 4번 참고
+
 // 공용 Axios 인스턴스 생성 유틸을 불러옴. (각 백엔드용 axios 인스턴스를 반환)
 
 export const githubAuthenticationAction = {
-    // Pinia actions 객체. GitHub 인증 및 세션 관련 동작 메서드들을 모음.
 
-    // async requestAdminCodeToSpringBoot(adminCode: string): Promise<boolean> {
-    //     // 관리자 코드 유효성 검증 요청. 유효하면 true, 아니면 false를 반환.
-    //     console.log("requestAdminCodeToDjango") // 디버깅 로그.
-    //
-    //     const { djangoAxiosInstance, } = axiosUtility.createAxiosInstances()
-    //     // Django 서버로 요청을 보낼 axios 인스턴스 획득.
-    //
-    //     try {
-    //         const response = await djangoAxiosInstance.post('/github-oauth/request-admin-code-validation', {
-    //             admin_code: adminCode  // 서버가 기대하는 필드명으로 관리자 코드 전송.
-    //         });
-    //         // POST /github-oauth/request-admin-code-validation
-    //         // { admin_code: string } → { isValid: boolean } 형태의 응답을 가정.
-    //
-    //         console.log('response:', response) // 전체 응답 로깅.
-    //         console.log('response,data:', response.data) // 응답 바디 로깅.
-    //
-    //         return response.data.isValid; // 서버 판단 결과를 반환.
-    //     } catch (error) {
-    //         console.error('관리자 코드 검증 실패:', error); // 예외 상황 로깅.
-    //         return false; // 실패 시 안전하게 false 반환.
-    //     }
-    // },
-
-    async requestGithubLoginToSpringBoot(): Promise<void> {
+    async requestGithubLoginToSpringBoot(router: any): Promise<void> {
         // GitHub OAuth 로그인을 시작하기 위한 Spring Boot 백엔드에게 "승인 URL"을 달라고 요청한다.
         // 응답으로 받은 승인 URL(https://github.com/login/oauth/authorize?... 형태)로 브라우저를 리다이렉트한다.
 
-        console.log("requestGithubLoginToSpringBoot"); // 디버깅 로그를 남긴다.
-
+        console.log("requestGithubLoginToSpringBoot");
         // 프로젝트 공용 Axios 유틸에서 백엔드별 인스턴스를 만든다.
         // - springAxiosInstance: baseURL, 공통 헤더, withCredentials 등 사전 설정이 되어 있다고 가정한다.
-        // - djangoAxiosInstance: 여기서는 사용하지 않는다(불필요하다).
         const { springAxiosInstance } = axiosUtility.createAxiosInstances();
-
         try {
-            // [요청 방식]
-            // - HTTP 메서드: GET.
-            // - URL: {springAxiosInstance.baseURL}/github-authentication/request-login-url.
-            // - 요청 본문: 없음(GET이므로).
-            // - 요청 헤더: axios 인스턴스에 설정된 기본 헤더 사용(예: Content-Type: application/json).
-            //              필요 시 쿠키/세션이 있다면 withCredentials 옵션으로 함께 전송될 수 있다.
-            // - 쿼리 파라미터: 없음(백엔드가 서버 측에서 client_id, redirect_uri, scope, state 등을 조립한다고 가정).
-            //
-            // [응답 기대 형식]
-            // - HTTP 200 OK.
-            // - Content-Type: application/json.
-            // - Body(JSON): { "url": "https://github.com/login/oauth/authorize?..."}.
-            //   ⮑ url 속성은 사용자를 보내야 할 GitHub OAuth 승인 페이지의 절대 경로여야 한다.
-            //
-            // [에러 케이스]
-            // - 4xx: 잘못된 요청/권한 없음(예: 401, 403). 백엔드는 { message: string } 형태로 에러 메시지를 줄 수 있다.
-            // - 5xx: 서버 내부 오류(예: 500). 프론트는 콘솔 로그 등으로 원인을 확인한다.
-            return springAxiosInstance
-                .get("/github-authentication/request-login-url")
-                .then((res) => {
+            const res= await springAxiosInstance.get("/github-authentication/request-login-url");
+            console.log("res.data:", res.data);
+            const loginType = "GITHUB";
 
-                    // [동작]
-                    // - 받은 승인 URL로 현재 탭을 리다이렉트한다.
-                    // - 이후 사용자는 GitHub 로그인 → 권한 승인 → redirect_uri로 콜백된다.
-                    const url = (typeof res.data === "string" ? res.data : res.data?.url) ?? "";
-                    if (res.status === 200 && typeof url === "string" && /^https?:\/\//i.test(url)) {
-                        // window.location.href = url;
+            if (!res.data) {
+                throw new Error("응답에 URL이 없습니다.");
+            }
 
-                        console.log("receive url = ",url);
-                        // 팝업으로 열기
-                        const popup = window.open(url, '_blank', 'width=500,height=600');
-                        if (!popup) {
-                            alert('팝업 차단되어 있습니다. 팝업 허용 후 다시 시도하세요.');
-                            return;
-                        }
+            // 팝업으로 열기
+            const popup = window.open(res.data, '_blank', 'width=500,height=600');
+            if (!popup) {
+                alert('팝업 차단되어 있습니다. 팝업 허용 후 다시 시도하세요.');
+                return;
+            }
+
+            // 팝업 메시지 받기
+            const receiveMessage = async (event: MessageEvent) => {
+                // console.log("event origin="+event.origin);
+                // console.log("env origin="+process.env.ORIGIN);
+                // console.log('📨 받은 메시지:', event.origin, event.data);
+
+                // 허용된 origin만 허용
+                if (event.origin !== process.env.ORIGIN) {
+                    console.log("원본 Origin : ", process.env.ORIGIN);
+                    console.warn('❌ 허용되지 않은 origin:', event.origin);
+                    return;
+                }
+                sessionStorage.setItem("tempLoginType", loginType);
+                const { accessToken, isNewUser, user } = event.data;
+                const MAIN_CONTAINER_URL = process.env.MAIN_CONTAINER_URL as string;
+                // console.log("팝업 관리자 정보 user:", user);
+                if (!accessToken) {
+                    console.warn('❌ accessToken 없음');
+                    window.removeEventListener("message", receiveMessage);
+                    return;
+                }
+                window.dispatchEvent(new Event("user-token-changed"));
+                window.removeEventListener('message', receiveMessage);
+
+                if(isNewUser) {
+                    // console.log("신규 유저 진입");
+                    // sessionStorage.setItem("tempToken", accessToken);
+                    // sessionStorage.setItem("userInfo", JSON.stringify(user));
+                    alert("현재 신규 관리자를 받고 있지 않습니다");
+                    window.location.href = MAIN_CONTAINER_URL;
+                    return;
+                }else{
+                    const ok=await verifyAdminOnServer(accessToken);
+                    if(!ok){
+                        clearAdminSession();
+                        alert("관리자 권한이 없습니다");
+                        router.replace({name: "AdminAuthCode"});
+                        return;
                     }
-                });
+                    localStorage.setItem("userToken",accessToken);
+                    localStorage.removeItem("temporaryAdminToken");
+                    saveAdminSession();
+                    router.push({name: "AdminOverview"});
+                }
+
+                try {
+                    popup.close();
+                    alert("환영합니다 "+ user.nickname);
+                } catch (e) {
+                    console.warn('팝업 닫기 실패:', e);
+                }
+            };
+            window.addEventListener('message', receiveMessage);
+
         } catch (error) {
-            // 주의: 위에서 .then()을 사용했기 때문에 이 try/catch는 네트워크 에러를 항상 잡지 못할 수 있다.
-            //       에러를 온전히 잡으려면 await 문법으로 바꾸는 것이 안전하다(아래 개선안 참고).
-            console.log("requestGithubLoginToSpringBoot() 중 에러:", error);
+            console.log("requestGithubOauthRedirectionToSpring() 중 에러:", error);
+            throw error;
         }
     },
-
 
     async requestAccessToken(code: string): Promise<string | null> {
         // GitHub 콜백에서 받은 code를 Django에 전달해 userToken(JWT 등)을 발급받음.
@@ -138,6 +143,31 @@ export const githubAuthenticationAction = {
     //         return false // 실패 시 false 반환.
     //     }
     // }
+    // Pinia actions 객체. GitHub 인증 및 세션 관련 동작 메서드들을 모음.
+
+    // async requestAdminCodeToSpringBoot(adminCode: string): Promise<boolean> {
+    //     // 관리자 코드 유효성 검증 요청. 유효하면 true, 아니면 false를 반환.
+    //     console.log("requestAdminCodeToDjango") // 디버깅 로그.
+    //
+    //     const { djangoAxiosInstance, } = axiosUtility.createAxiosInstances()
+    //     // Django 서버로 요청을 보낼 axios 인스턴스 획득.
+    //
+    //     try {
+    //         const response = await djangoAxiosInstance.post('/github-oauth/request-admin-code-validation', {
+    //             admin_code: adminCode  // 서버가 기대하는 필드명으로 관리자 코드 전송.
+    //         });
+    //         // POST /github-oauth/request-admin-code-validation
+    //         // { admin_code: string } → { isValid: boolean } 형태의 응답을 가정.
+    //
+    //         console.log('response:', response) // 전체 응답 로깅.
+    //         console.log('response,data:', response.data) // 응답 바디 로깅.
+    //
+    //         return response.data.isValid; // 서버 판단 결과를 반환.
+    //     } catch (error) {
+    //         console.error('관리자 코드 검증 실패:', error); // 예외 상황 로깅.
+    //         return false; // 실패 시 안전하게 false 반환.
+    //     }
+    // },
 }
 
 /*
