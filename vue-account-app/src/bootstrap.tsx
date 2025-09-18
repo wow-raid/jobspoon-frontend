@@ -4,8 +4,8 @@ import type { App as VueApp } from "vue";
 import App from "./App.vue";
 import { loadFonts } from "./plugins/webfontloader";
 import { setupAdminInterceptors } from "@/account/utility/axiosInstance";
-import { listenAdminSessionSync } from "@/security/adminSession"; // (선택) 멀티탭 동기화
-import { loadAdminSession, clearAdminSession } from "@/security/adminSession"; // (선택)
+import { listenAdminSessionSync } from "@/security/admin/adminSession.ts"; // (선택) 멀티탭 동기화
+import { loadAdminSession, clearAdminSession } from "@/security/admin/adminSession.ts"; // (선택)
 import "vuetify/styles";
 // ⚠️ MDI CSS는 Shadow DOM에 주입하므로 전역 import 제거 권장
 // import "@mdi/font/css/materialdesignicons.css";

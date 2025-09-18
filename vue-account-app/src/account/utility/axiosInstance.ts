@@ -1,6 +1,6 @@
 // 서버에 요청을 보내는 도메인
 import axios, { type AxiosInstance } from "axios";
-import { clearAdminSession } from "@/security/adminSession"; // ⬅️ 추가"
+import { clearAdminSession } from "@/security/admin/adminSession.ts"; // ⬅️ 추가"
 
 export let djangoAxiosInstance: AxiosInstance | null = null;
 export let springAxiosInstance: AxiosInstance | null = null;
