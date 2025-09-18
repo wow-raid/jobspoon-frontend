@@ -7,12 +7,13 @@ import { fetchUserFolders, patchReorderFolders } from "../api/userWordbook";
 import TermCard from "../components/TermCard";
 import { setMemorization } from "../api/memorization";
 import { fetchMemorizationStatuses } from "../api/memorization";
+import { moveFolderTerms } from "../api/userWordbookTerms";
 
 /** 서버 응답에서 안전하게 뽑아둘 필드들 */
 type TermRow = any;
 type TermItem = {
-    uwtId: string;   // user_wordbook_term.id
-    termId: string;  // 사전 term.id
+    uwtId: string;
+    termId: string | null;
     title: string;
     description: string;
     createdAt?: string;
@@ -373,16 +374,55 @@ export default function WordbookFolderPage() {
 
     /* ------ data fetch ------ */
     const mapRow = (row: TermRow): TermItem | null => {
-        const uwtId = row.userTermId ?? row.userWordbookTermId ?? row.id;
-        const description = row.description ?? row.term?.description ?? row.explain ?? "";
-        const termId = row.termId ?? row.term?.id ?? row.id;
-        if (uwtId == null || termId == null) return null;
+        const uwt =
+            row.userWordbookTermId ??
+            row.userTermId ??
+            row.uwtId ??
+            row.id ??
+            row.user_wordbook_term_id;
+        if (uwt == null) return null;
 
-        const title = row.word ?? row.title ?? row.term?.title ?? "(제목 없음)";
+        // 1) 가장 믿을 수 있는 소스: 중첩 객체의 term.id
+        let tId: number | null =
+            row?.term?.id ?? row?.term_id ?? null;
+
+        // 2) 루트의 termId가 있긴 한데, 이게 uwtId와 같으면 가짜일 확률 높음 → 버림
+        if (tId == null) {
+            const rootTermId = row.termId ?? row.tid ?? row?.term?.termId;
+            if (
+                rootTermId != null &&
+                String(rootTermId) !== String(uwt) // uwtId와 같으면 쓰지 않음
+            ) {
+                tId = Number(rootTermId);
+                if (!Number.isFinite(tId)) tId = null;
+            }
+        }
+
+        const title =
+            row.word ??
+            row.title ??
+            row.term?.title ??
+            row.term?.word ??
+            "(제목 없음)";
+
+        const description =
+            row.description ??
+            row.term?.description ??
+            row.explain ??
+            row.meaning ??
+            "";
+
         const createdAt = row.createdAt ?? row.created_at;
         const tags: string[] = row.tags ?? row.term?.tags ?? [];
 
-        return { uwtId: String(uwtId), termId: String(termId), title: String(title), description: String(description), createdAt, tags };
+        return {
+            uwtId: String(uwt),
+            termId: tId != null ? String(tId) : null, // ← term.id 없으면 null
+            title: String(title),
+            description: String(description),
+            createdAt,
+            tags,
+        };
     };
 
     const fetchPage = React.useCallback(async (p: number) => {
@@ -390,7 +430,7 @@ export default function WordbookFolderPage() {
         setLoading(true); setError(null);
         try {
             const res = await http.get(`/api/folders/${folderId}/terms`, {
-                params: { page: p, perPage: 20, sort: "createdAt,DESC" },
+                params: { page: p+1, perPage: 20, sort: "createdAt,DESC" },
                 headers: { ...authHeader() },
             });
             const d = res.data ?? {};
@@ -488,15 +528,79 @@ export default function WordbookFolderPage() {
 
     const openMove = async () => {
         if (selectedIds.length === 0) return;
-        try { setNotebooks(await fetchUserFolders()); } catch { setNotebooks([]); }
+
+        const sel = items.filter(it => selectedIds.includes(it.uwtId));
+        console.table(sel.map(it => ({
+            uwtId: it.uwtId,
+            termId: it.termId, // 반드시 term.id 여야 함
+            title: it.title,
+        })));
+
+        try {
+            const list = await fetchUserFolders();
+            setNotebooks(list);
+        } catch { setNotebooks([]); }
         setMoveOpen(true); setMenuOpen(false);
     };
 
+
     const handleConfirmMove = async (destFolderId: string) => {
-        if (selectedIds.length === 0) return;
-        // TODO: API 연결
-        setItems((prev) => prev.filter((it) => !selectedIds.includes(it.uwtId)));
-        setChecked({}); setSelectMode(false); setMoveOpen(false);
+        if (!folderId || selectedIds.length === 0) return;
+        if (String(destFolderId) === String(folderId)) { setMoveOpen(false); return; }
+
+        const selected = items.filter(it => selectedIds.includes(it.uwtId));
+
+        // ✅ termId가 진짜 숫자인 것만 전송
+        const termIds = Array.from(
+            new Set(
+                selected
+                    .map(it => Number(it.termId))
+                    .filter(n => Number.isFinite(n) && n > 0)
+            )
+        );
+
+        // termId 없던 카드들 로그
+        const missing = selected.filter(it => !(Number(it.termId) > 0));
+        if (missing.length) {
+            console.warn("[move] term.id를 알 수 없어 제외된 항목:", missing.map(m => ({ uwtId: m.uwtId, termId: m.termId, title: m.title })));
+        }
+
+        if (termIds.length === 0) { setMoveOpen(false); return; }
+
+        try {
+            const res = await moveFolderTerms(Number(folderId), {
+                targetFolderId: Number(destFolderId),
+                termIds,
+            });
+
+            console.group("[moveFolderTerms] result");
+            console.log("source -> target:", folderId, "->", destFolderId);
+            console.log("requested termIds:", termIds);
+            console.log("movedCount:", res.movedCount);
+            console.log("movedTermIds:", res.movedTermIds);
+            console.log("skippedCount:", res.skippedCount);
+            console.table(res.skipped?.map(s => ({ termId: s.termId, reason: `'${s.reason}'` })) ?? []);
+            console.groupEnd();
+
+            const moved = new Set((res.movedTermIds ?? []).map(String));
+            if (moved.size > 0) {
+                setItems(prev => prev.filter(it => !moved.has(String(it.termId))));
+            }
+            setPage(0);
+            await fetchPage(0);
+
+            setChecked({});
+            setSelectMode(false);
+        } catch (err: any) {
+            const s = err?.response?.status;
+            if (s === 401) alert("로그인이 필요합니다.");
+            else if (s === 403) alert("해당 폴더 접근 권한이 없습니다.");
+            else if (s === 404) alert("대상/소스 폴더를 찾을 수 없습니다.");
+            else alert("이동 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.");
+            console.error("[moveFolderTerms] failed:", err);
+        } finally {
+            setMoveOpen(false);
+        }
     };
 
     /* ------ settings menu : outside click/esc ------ */
@@ -644,8 +748,8 @@ export default function WordbookFolderPage() {
 
                                             try {
                                                 await setMemorization({
-                                                    termId: it.termId,       // termId 우선
-                                                    userTermId: it.uwtId,    // 백업용
+                                                    termId: it.termId ?? undefined,
+                                                    userTermId: it.uwtId,
                                                     done: nextLocal === "memorized",
                                                 });
                                                 // 성공 시 유지
