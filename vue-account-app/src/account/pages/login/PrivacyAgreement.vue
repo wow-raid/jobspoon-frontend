@@ -1,102 +1,84 @@
 <template>
-  <v-container>
-    <v-row>
-      <v-col cols="12">
-        <v-card>
-          <v-card-title class="headline">개인정보 동의</v-card-title>
-          <v-card-text>
-            <!-- 약관 내용 -->
-            <p><strong>제 1 조 (목적)</strong></p>
-            <p>
-              본 약관은 본 서비스가 제공하는 면접 연습 및 모의 면접 서비스(이하
-              "서비스")의 이용 조건 및 절차, 이용자와 서비스 제공자의 권리, 의무
-              및 책임사항을 규정함을 목적으로 합니다.
-            </p>
+  <v-container :style="containerStyle" class="py-6">
+    <v-row justify="center">
+      <v-col cols="12" md="10" lg="8">
+        <div :style="titleContainerStyle">
+          <h1 :style="mainTitleStyle">회원가입 약관 동의</h1>
+          <p :style="subtitleStyle">개인정보처리방침과 및 이용약관 내용에 동의하셔야 회원가입 하실 수 있습니다.</p>
+          <p :style="subtitleStyle">이용약관과 개인정보처리방침에 대한 안내를 읽고 동의 해주세요.</p>
+        </div>
 
-            <p><strong>제 2 조 (약관의 효력과 변경)</strong></p>
-            <p>
-              ① 본 서비스는 이용자가 본 약관 내용에 동의하는 것을 조건으로
-              서비스를 제공하며, 본 서비스의 이용 행위에는 본 약관을 우선적으로
-              적용합니다.
-            </p>
-            <p>
-              ② 본 서비스는 사전 고지 없이 본 약관을 변경할 수 있으며, 변경된
-              약관은 서비스 내 공지를 통해 이용자가 직접 확인할 수 있도록
-              합니다.
-            </p>
+        <!-- 개인정보처리방침 섹션 -->
+        <div :style="sectionStyle">
+          <h2 :style="sectionTitleStyle">개인정보처리방침</h2>
+          <div :style="dividerStyle"></div>
+          
+          <div :style="termsContainerStyle">
+            <div :style="termsContentStyle">
+              <p :style="termsParagraphStyle">① 개인 정보 처리 목적</p>
+              <p :style="termsTextStyle">1. 회원과 비회원의 접속 빈도나 방문 시간 등을 분석, 이용자의 취향과 관심분야를 파악 및 자취 추적, 각종 이벤트 참여 정도 및 방문 횟수 파악 등을 통한 타겟 마케팅 및 개인 맞춤 서비스 제공</p>
+              <p :style="termsTextStyle">2. 귀하는 개인 정보에 대한 선택권을 가지고 있습니다. 따라서, 귀하는 웹브라우저에서의 쿠키를 설정하므로써 모든 쿠키를 허용하거나, 쿠키가 저장될 때마다 확인을 거치거나, 아니면 모든 쿠키의 저장을 거부할 수도 있습니다.</p>
+              
+              <p :style="termsParagraphStyle">② 개인 정보 처리 방법</p>
+              <p :style="termsTextStyle">1. 쿠키 설정을 거부하는 방법으로는 회원님이 사용하시는 웹 브라우저의 옵션을 선택함으로써 모든 쿠키를 허용하거나 쿠키를 저장할 때마다 확인을 거치거나, 모든 쿠키의 저장을 거부할 수 있습니다.</p>
+              <p :style="termsTextStyle">2. 설정방법 예(인터넷 익스플로러의 경우): 웹 브라우저 상단의 도구 > 인터넷 옵션 > 개인정보</p>
+              <p :style="termsTextStyle">3. 단, 귀하께서 쿠키 설치를 거부하였을 경우 서비스 제공에 어려움이 있을 수 있습니다.</p>
+            </div>
+          </div>
+          
+          <div :style="agreementTextStyle">개인정보처리방침 내용에 동의합니다.</div>
+        </div>
 
-            <p><strong>제 3 조 (개인정보의 수집 및 이용)</strong></p>
-            <ul>
-              <li>
-                <strong>필수 정보:</strong> 이메일, 닉네임, 성별, 생년월일, 소셜
-                로그인 타입, 연령대
-              </li>
-              <li>
-                <strong>자동 수집 정보:</strong> 이용 기록, 방문 기록, IP 주소
-              </li>
-            </ul>
+        <!-- 이용약관 섹션 -->
+        <div :style="sectionStyle">
+          <h2 :style="sectionTitleStyle">이용약관</h2>
+          <div :style="dividerStyle"></div>
+          
+          <div :style="termsContainerStyle">
+            <div :style="termsContentStyle">
+              <p :style="termsParagraphStyle">1. 제1조 목 적</p>
+              <p :style="termsTextStyle">제1조 【목 적】</p>
+              <p :style="termsTextStyle">디텍스는 인정하의 서비스를 제공함 의무가 있으며, 구체적 정보에 상실의 동의를 의하가 있다. 상실는 이래의 조건에 의거하여 이 '이용약관'을 '계약서'로 형성코, 이에 따라 디텍스의 서비스를 제공자에게 제공한다.</p>
+              
+              <p :style="termsParagraphStyle">제2조 【용어의 정의】</p>
+              <p :style="termsTextStyle">이 계약서에 있어서, 다음 용어들은 각각 다음과 같은 의미로 사용한다.</p>
+              <p :style="termsTextStyle">가. 디텍스는(이하 '갑'이라 칭한다.)</p>
+              <p :style="termsTextStyle">인터넷서비스 제공을 목적 중 하나로 운영하다를 제공한다.</p>
+              <p :style="termsTextStyle">나. 계약자는(이하 '을' 이라 칭한다.)</p>
+              <p :style="termsTextStyle">당사의 서비스 이용 계약을 체결하고 있는 자.</p>
+            </div>
+          </div>
+          
+          <div :style="agreementTextStyle">이용약관 내용에 동의합니다.</div>
+        </div>
 
-            <p><strong>제 4 조 (보관 및 파기)</strong></p>
-            <p>
-              ① 회원 탈퇴 시 즉시 삭제, 단 법령에 따라 보관할 필요가 있는 경우
-              예외
-            </p>
-            <p>② 복구 불가능한 방식으로 파기</p>
+        <!-- 모든 약관 동의 체크박스 -->
+<!--        <div :style="allAgreeContainerStyle">-->
+<!--          <v-checkbox-->
+<!--            v-model="allAgreed"-->
+<!--            :style="checkboxStyle"-->
+<!--            label="모든 약관에 동의합니다."-->
+<!--            hide-details-->
+<!--          ></v-checkbox>-->
+<!--        </div>-->
 
-            <p><strong>제 5 조 (제공 및 공유)</strong></p>
-            <ul>
-              <li>이용자 동의 시</li>
-              <li>법령에 따른 요청 시</li>
-            </ul>
-
-            <p><strong>제 6 조 (이용자의 권리)</strong></p>
-            <ul>
-              <li>언제든지 열람, 수정, 삭제 요청 가능</li>
-              <li>회원 탈퇴 시 개인정보 즉시 삭제</li>
-            </ul>
-
-            <p><strong>제 7 조 (서비스 이용 제한)</strong></p>
-            <ul>
-              <li>타인 정보 도용</li>
-              <li>불법적 이용</li>
-              <li>운영 방해 행위</li>
-            </ul>
-
-            <p><strong>제 8 조 (책임 및 면책)</strong></p>
-            <p>① 무료 제공, 정보의 정확성 보장하지 않음</p>
-            <p>② 데이터 손실, 오류, 피해에 책임 없음</p>
-
-            <p><strong>제 9 조 (관할 법원)</strong></p>
-            <p>대한민국 법 적용, 대한민국 관할 법원</p>
-
-            <p><strong>부칙</strong></p>
-            <p>본 약관은 2025년 3월 1일부터 시행됩니다.</p>
-
-            <v-btn
-              v-if="loginType === 'KAKAO'"
-              @click="agreeAndLogin"
-              color="primary"
-              >동의 후 카카오 로그인</v-btn
-            >
-            <v-btn
-              v-if="loginType === 'GOOGLE'"
-              @click="agreeAndLogin"
-              color="primary"
-              >동의 후 구글 로그인</v-btn
-            >
-            <v-btn
-              v-if="loginType === 'NAVER'"
-              @click="agreeAndLogin"
-              color="primary"
-              >동의 후 네이버 로그인</v-btn
-            >
-
-            <v-alert v-if="!loginType" type="error" class="mt-5">
-              로그인 방식이 확인되지 않았습니다. 로그인 페이지에서 다시
-              시도해주세요.
-            </v-alert>
-          </v-card-text>
-        </v-card>
+        <!-- 버튼 영역 -->
+        <div :style="buttonContainerStyle">
+          <v-btn
+            @click="agreeAndLogin"
+            :style="agreeBtnStyle"
+            elevation="0"
+          >
+            모두 동의 후 회원가입
+          </v-btn>
+          <v-btn
+            @click="goBack"
+            :style="cancelBtnStyle"
+            elevation="0"
+          >
+            뒤로 가기
+          </v-btn>
+        </div>
       </v-col>
     </v-row>
   </v-container>
@@ -108,10 +90,139 @@ import { useRouter } from "vue-router";
 import { useKakaoAuthenticationStore } from "../../../kakao/stores/kakaoAuthenticationStore";
 import { useGoogleAuthenticationStore } from "../../../google/stores/googleAuthenticationStore";
 import { useNaverAuthenticationStore } from "../../../naver/stores/naverAuthenticationStore";
-import { useHead } from '@vueuse/head'
+import { useHead } from '@vueuse/head';
 
+// 스타일 객체 정의
+const containerStyle = {
+  backgroundColor: "#ffffff",
+  fontFamily: "'Noto Sans KR', sans-serif",
+  maxWidth: "1200px",
+  margin: "0 auto",
+  marginTop: "50px"
+};
 
-// ✅ SEO 메타 정보 3
+const titleContainerStyle = {
+  textAlign: "left",
+  marginBottom: "2rem"
+};
+
+const mainTitleStyle = {
+  fontSize: "2rem",
+  fontWeight: 700,
+  color: "#333",
+  marginBottom: "1rem"
+};
+
+const subtitleStyle = {
+  fontSize: "1rem",
+  color: "#666",
+  lineHeight: "1.5",
+  margin: "0.25rem 0"
+};
+
+const sectionStyle = {
+  marginBottom: "2rem",
+  backgroundColor: "#fff",
+  border: "1px solid #eee",
+  borderRadius: "4px",
+  padding: "1rem 0"
+};
+
+const sectionTitleStyle = {
+  fontSize: "1.5rem",
+  fontWeight: 700,
+  color: "#333",
+  paddingLeft: "1rem"
+};
+
+const dividerStyle = {
+  height: "1px",
+  backgroundColor: "#eee",
+  margin: "1rem 0"
+};
+
+const termsContainerStyle = {
+  backgroundColor: "#f9f9f9",
+  padding: "1rem",
+  maxHeight: "250px",
+  overflowY: "auto",
+  margin: "0 1rem",
+  border: "1px solid #eee",
+  borderRadius: "4px"
+};
+
+const termsContentStyle = {
+  padding: "0.5rem"
+};
+
+const termsParagraphStyle = {
+  fontWeight: 700,
+  fontSize: "1rem",
+  color: "#333",
+  marginBottom: "0.5rem"
+};
+
+const termsTextStyle = {
+  fontSize: "0.9rem",
+  color: "#666",
+  lineHeight: "1.6",
+  marginBottom: "0.5rem",
+  paddingLeft: "0.5rem"
+};
+
+const agreementTextStyle = {
+  textAlign: "right",
+  padding: "1rem",
+  fontSize: "0.9rem",
+  fontWeight: 500,
+  color: "#333"
+};
+
+const allAgreeContainerStyle = {
+  backgroundColor: "#f9f9f9",
+  padding: "1rem",
+  marginBottom: "2rem",
+  borderRadius: "4px",
+  border: "1px solid #eee"
+};
+
+const checkboxStyle = {
+  fontSize: "1rem",
+  fontWeight: 700
+};
+
+const buttonContainerStyle = {
+  marginTop: "100px",
+  marginBottom: "100px",
+  display: "flex",
+  justifyContent: "center",
+  gap: "1rem"
+};
+
+const agreeBtnStyle = {
+  backgroundColor: "#e60000",
+  color: "white",
+  padding: "0 2rem",
+  height: "48px",
+  fontSize: "1rem",
+  fontWeight: 700,
+  borderRadius: "4px",
+  textTransform: "none"
+};
+
+const cancelBtnStyle = {
+  backgroundColor: "#fff",
+  color: "#333",
+  border: "1px solid #ddd",
+  padding: "0 2rem",
+  height: "48px",
+  fontSize: "1rem",
+  fontWeight: 500,
+  borderRadius: "4px",
+  textTransform: "none"
+};
+
+// ✅ SEO 메타 정보
 useHead({
   title: "개인정보 수집 및 이용 동의 | 잡스틱(JobStick)",
   meta: [
@@ -129,6 +240,7 @@ const naverAuthentication = useNaverAuthenticationStore();
 
 const loginType = ref(null);
 const router = useRouter();
+const allAgreed = ref(false); // 모든 약관 동의 체크박스 상태
 
 onMounted(() => {
   const user = sessionStorage.getItem("userInfo");
@@ -139,13 +251,16 @@ onMounted(() => {
   if (!tempType || !validTypes.includes(tempType)) {
     loginType.value = null;
     alert("잘못된 접근입니다. 로그인 페이지로 이동합니다.");
-    router.push("/account/login"); // ✅ 로그인 페이지로 리다이렉트
+    router.push("/account/login"); // 로그인 페이지로 리다이렉트
   } else {
     loginType.value = tempType;
   }
 });
 
+// 회원가입 버튼 클릭 시 실행되는 함수
 const agreeAndLogin = async () => {
+
+  
   if (!loginType.value) {
     alert("로그인 방식이 확인되지 않았습니다.");
     return;
@@ -160,7 +275,7 @@ const agreeAndLogin = async () => {
       await naverAuthentication.requestNaverLoginToDjango();
     }
 
-    // ✅ 로그인 완료 후에만 영구 저장
+    // 로그인 완료 후에만 영구 저장
     localStorage.setItem("loginType", loginType.value);
     sessionStorage.removeItem("tempLoginType");
   } catch (err) {
@@ -168,8 +283,13 @@ const agreeAndLogin = async () => {
     alert("로그인 중 문제가 발생했습니다. 다시 시도해주세요.");
   }
 };
+
+// 메인으로 가기 버튼 클릭 시 실행되는 함수
+const goBack = () => {
+  router.push("/account/login");
+};
 </script>
 
-<style scoped>
-/* 필요 시 스타일 추가 */
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
 </style>
