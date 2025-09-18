@@ -364,7 +364,10 @@ const Announcements: React.FC = () => {
                     <TabLink to={`/studies/joined-study/${studyId}/interview`}>모의면접</TabLink>
                     <TabLink to={`/studies/joined-study/${studyId}/members`}>참여인원</TabLink>
                     {userRole === 'LEADER' && (
+                        <>
                         <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청 관리</TabLink>
+                        <TabLink to={`/studies/joined-study/${studyId}/attendance`}>출석 관리</TabLink>
+                        </>
                     )}
                 </TabList>
                 <TabSearchBar
