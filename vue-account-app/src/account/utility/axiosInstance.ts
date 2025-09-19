@@ -1,6 +1,6 @@
 // 서버에 요청을 보내는 도메인
 import axios, { type AxiosInstance } from "axios";
-import { clearAdminSession } from "@/security/adminSession"; // ⬅️ 추가"
+import { clearAdminSession } from "@/security/admin/adminSession.ts"; // ⬅️ 추가"
 
 export let djangoAxiosInstance: AxiosInstance | null = null;
 export let springAxiosInstance: AxiosInstance | null = null;
@@ -73,14 +73,14 @@ export async function verifyAdminOnServer(accessToken:string):Promise<boolean>{
     if(!springAdminAxiosInst)createAxiosInstances();
     try{
         const resp= await springAdminAxiosInst!.post(
-            "/admin-auth/session/validate",
+            "/administrator/social_login",
             null,
             {
                 headers:{Authorization: `Bearer ${accessToken}`},
                 validateStatus:() =>true,
             }
         );
-        return resp.status === 200 && resp.data?.isAdmin === true;
+        return resp.status === 200;
     }catch{
         return false;
     }

@@ -1,5 +1,5 @@
 import * as axiosUtility from "../../account/utility/axiosInstance";
-import { saveAdminSession, clearAdminSession } from "@/security/adminSession";
+import { saveAdminSession, clearAdminSession } from "@/security/admin/adminSession.ts";
 import { verifyAdminOnServer } from "@/account/utility/axiosInstance"; // 아래 4번 참고
 
 // 공용 Axios 인스턴스 생성 유틸을 불러옴. (각 백엔드용 axios 인스턴스를 반환)
