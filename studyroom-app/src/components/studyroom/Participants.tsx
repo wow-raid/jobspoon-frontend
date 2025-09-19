@@ -219,7 +219,7 @@ const Participants: React.FC = () => {
         <Container>
             <Header>
                 <h2>
-                    👥 참여인원 <span>({members.length}명)</span>
+                    👥참여인원<span>({members.length}명)</span>
                 </h2>
             </Header>
 
@@ -231,8 +231,8 @@ const Participants: React.FC = () => {
                 <TabLink to={`/studies/joined-study/${studyId}/members`}>참여인원</TabLink>
                 {userRole === 'LEADER' && (
                     <>
-                        <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청 관리</TabLink>
-                        <TabLink to={`/studies/joined-study/${studyId}/attendance`}>출석 관리</TabLink>
+                        <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청관리</TabLink>
+                        <TabLink to={`/studies/joined-study/${studyId}/attendance`}>출석관리</TabLink>
                     </>
                 )}
             </TabList>

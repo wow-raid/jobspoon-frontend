@@ -150,9 +150,17 @@ const AttendanceManagement: React.FC = () => {
         const fetchSchedules = async () => {
             try {
                 const response = await axiosInstance.get(`/study-rooms/${studyId}/schedules`);
-                setSchedules(response.data);
-                if (response.data.length > 0) {
-                    setSelectedScheduleId(response.data[0].id.toString());
+
+                const formattedSchedules = response.data.map((sch: any) => ({
+                    ...sch,
+                    start: new Date(sch.startTime),
+                    end: new Date(sch.endTime),
+                }));
+
+                setSchedules(formattedSchedules);
+
+                if (formattedSchedules.length > 0) {
+                    setSelectedScheduleId(formattedSchedules[0].id.toString());
                 }
             } catch (error) {
                 console.error("일정 목록 로딩 실패:", error);
@@ -208,7 +216,7 @@ const AttendanceManagement: React.FC = () => {
 
     return (
         <div>
-            <Header>출석 관리</Header>
+            <Header>🔖출석관리</Header>
 
             <NavContainer>
                 <TabList>
@@ -218,8 +226,8 @@ const AttendanceManagement: React.FC = () => {
                     <TabLink to={`/studies/joined-study/${studyId}/members`}>참여인원</TabLink>
                     {userRole === 'LEADER' && (
                         <>
-                            <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청 관리</TabLink>
-                            <TabLink to={`/studies/joined-study/${studyId}/attendance`}>출석 관리</TabLink>
+                            <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청관리</TabLink>
+                            <TabLink to={`/studies/joined-study/${studyId}/attendance`}>출석관리</TabLink>
                         </>
                     )}
                 </TabList>
@@ -233,7 +241,7 @@ const AttendanceManagement: React.FC = () => {
                 <option value="">-- 일정 선택 --</option>
                 {schedules.map(schedule => (
                     <option key={schedule.id} value={schedule.id}>
-                        {schedule.title} ({new Date(schedule.start).toLocaleDateString()})
+                        {new Date(schedule.start).toLocaleDateString()} -- {schedule.title}
                     </option>
                 ))}
             </ScheduleSelector>

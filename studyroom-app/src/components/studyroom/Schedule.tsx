@@ -194,6 +194,7 @@ const MonthlyList = styled.div`
 
 const MonthlyItem = styled.div`
   display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: 16px;
   background-color: ${({ theme }) => theme.surface};
@@ -201,23 +202,39 @@ const MonthlyItem = styled.div`
   padding: 12px 16px;
   border-radius: 6px;
   margin-bottom: 8px;
-  cursor: pointer; /* ✅ 커서 모양 변경 */
-  transition: background-color 0.2s; /* ✅ 부드러운 효과 */
+  cursor: pointer;
+  transition: background-color 0.2s;
 
   &:hover {
-    background-color: ${({ theme }) => theme.surfaceHover}; /* ✅ 마우스 올렸을 때 배경색 변경 */
+    background-color: ${({ theme }) => theme.surfaceHover};
   }
 `;
+
 const MonthlyDate = styled.div`
   font-weight: bold;
   color: ${({ theme }) => theme.subtle};
   width: 80px;
 `;
-const MonthlyTitle = styled.div`
+
+const MonthlyContent = styled.div`
   flex-grow: 1;
+  min-width: 0;
+`;
+
+const MonthlyTitle = styled.div`
   font-weight: 500;
   color: ${({ theme }) => theme.fg};
+  margin-bottom: 4px; /* ✅ [추가] 메타 정보와 간격 */
 `;
+
+const MonthlyMeta = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: ${({ theme }) => theme.subtle};
+`;
+
 const MonthlyTime = styled.div`
   font-size: 13px;
   color: ${({ theme }) => theme.subtle};
@@ -400,7 +417,7 @@ const Schedule: React.FC = () => {
   return (
     <Container>
       <Header>
-        <h2>🗓️ 일정관리 <span>({monthlyEvents.length})</span></h2>
+        <h2>🗓️일정관리<span>({monthlyEvents.length})</span></h2>
         {(userRole === "LEADER" || userRole === "MEMBER") && studyStatus !== 'CLOSED' && (
             <AddEventBtn onClick={openFormModal}>일정 등록</AddEventBtn>
         )}
@@ -414,8 +431,8 @@ const Schedule: React.FC = () => {
         <TabLink to={`/studies/joined-study/${studyId}/members`}>참여인원</TabLink>
         {userRole === 'LEADER' && (
             <>
-              <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청 관리</TabLink>
-              <TabLink to={`/studies/joined-study/${studyId}/attendance`}>출석 관리</TabLink>
+              <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청관리</TabLink>
+              <TabLink to={`/studies/joined-study/${studyId}/attendance`}>출석관리</TabLink>
             </>
         )}
       </TabList>
@@ -444,7 +461,7 @@ const Schedule: React.FC = () => {
       </CalendarWrapper>
 
       <MonthlyList>
-        <h3>{moment(currentDate).format("YYYY년 M월")} 일정 목록 </h3>
+        <h3>{moment(currentDate).format("YYYY년 M월")} 일정 목록</h3>
         {filteredMonthlyEvents.length > 0 ? (
             filteredMonthlyEvents.map(event => (
                 <MonthlyItem
@@ -452,7 +469,14 @@ const Schedule: React.FC = () => {
                     onClick={() => handleSelectEvent(event)}
                 >
                   <MonthlyDate>{moment(event.start).format("D일 (ddd)")}</MonthlyDate>
-                  <MonthlyTitle>{event.title}</MonthlyTitle>
+
+                  <MonthlyContent>
+                    <MonthlyTitle>{event.title}</MonthlyTitle>
+                    <MonthlyMeta>
+                      <span>작성자: {event.authorNickname}</span>
+                    </MonthlyMeta>
+                  </MonthlyContent>
+
                   <MonthlyTime>
                     {moment(event.start).format("HH:mm")} - {moment(event.end).format("HH:mm")}
                   </MonthlyTime>

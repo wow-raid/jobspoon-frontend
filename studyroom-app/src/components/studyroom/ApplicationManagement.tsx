@@ -178,7 +178,7 @@ const ApplicationManagement: React.FC = () => {
     return (
         <Container>
             <Header>
-                <h2>신청 관리 <span>({pendingApplications.length}건 대기중)</span></h2>
+                <h2>📮신청관리<span>({pendingApplications.length}건 대기중)</span></h2>
             </Header>
 
             <NavContainer>
@@ -189,8 +189,8 @@ const ApplicationManagement: React.FC = () => {
                     <TabLink to={`/studies/joined-study/${studyId}/members`}>참여인원</TabLink>
                     {userRole === 'LEADER' && (
                         <>
-                            <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청 관리</TabLink>
-                            <TabLink to={`/studies/joined-study/${studyId}/attendance`}>출석 관리</TabLink>
+                            <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청관리</TabLink>
+                            <TabLink to={`/studies/joined-study/${studyId}/attendance`}>출석관리</TabLink>
                         </>
                     )}
                 </TabList>
