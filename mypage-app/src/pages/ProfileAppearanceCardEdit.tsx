@@ -6,15 +6,14 @@ import { useOutletContext } from "react-router-dom";
 import defaultProfile from "../assets/default_profile.png";
 import ServiceModal from "../components/modals/ServiceModal.tsx";
 import {
-    updateNickname,
     fetchMyRanks,
     fetchMyTitles,
     equipRank,
     equipTitle,
-    CustomNicknameResponse,
     ProfileAppearanceResponse,
-    HistoryItem
+    HistoryItem,
 } from "../api/profileAppearanceApi.ts";
+import { updateNickname, NicknameResponse } from "../api/accountProfileApi.ts";
 
 type OutletContextType = {
     profile: ProfileAppearanceResponse | null;
@@ -62,11 +61,8 @@ export default function ProfileAppearanceCardEdit() {
         try {
             const updated = await equipRank(token, rankId);
             await refreshProfile();
-
-            // 성공 메시지
             alert(`✅ ${updated.displayName} 랭크가 장착되었습니다!`);
         } catch (error: any) {
-            // 실패 메시지
             alert(`❌ ${error.message || "랭크 장착에 실패했습니다."}`);
         }
     };
@@ -90,7 +86,7 @@ export default function ProfileAppearanceCardEdit() {
     /** 닉네임 수정 시작 */
     const handleStartEdit = () => {
         if (profile) {
-            setTempNickname(profile.customNickname);
+            setTempNickname(profile.nickname); // ✅ customNickname → nickname
             setIsEditingNickname(true);
         }
     };
@@ -104,7 +100,7 @@ export default function ProfileAppearanceCardEdit() {
         }
 
         try {
-            const updated: CustomNicknameResponse = await updateNickname(
+            const updated: NicknameResponse = await updateNickname(
                 token,
                 tempNickname
             );
@@ -118,9 +114,9 @@ export default function ProfileAppearanceCardEdit() {
 
     /** 닉네임 수정 취소 */
     const handleCancelEdit = () => {
-        setTempNickname("");        // 입력값 초기화
-        setIsEditingNickname(false); // 수정 모드 종료
-        setError(null);             // 에러 메시지도 초기화
+        setTempNickname("");
+        setIsEditingNickname(false);
+        setError(null);
     };
 
     /** 모달 열기 */
@@ -159,7 +155,7 @@ export default function ProfileAppearanceCardEdit() {
                                         placeholder="닉네임을 입력해주세요"
                                     />
                                 ) : (
-                                    <Nickname>{profile.customNickname}</Nickname>
+                                    <Nickname>{profile.nickname}</Nickname>
                                 )}
                             </NicknameRow>
                             {error && <ErrorText>{error}</ErrorText>}
@@ -178,7 +174,6 @@ export default function ProfileAppearanceCardEdit() {
                             )}
                             <SmallButton onClick={openModal}>사진 변경</SmallButton>
                         </ButtonGroup>
-
                     </TopRow>
                 </InfoCard>
             </Section>
@@ -187,6 +182,7 @@ export default function ProfileAppearanceCardEdit() {
             <Section>
                 <SectionTitle>이력 관리</SectionTitle>
 
+                {/* 랭크 */}
                 <Card>
                     <HistoryHeader>
                         <h3>등급 전체 이력</h3>
@@ -195,7 +191,6 @@ export default function ProfileAppearanceCardEdit() {
                         </ToggleButton>
                     </HistoryHeader>
 
-                    {/* 현재 장착된 랭크 */}
                     {profile.rank && (
                         <EquippedBox>
                             <span>{profile.rank.displayName}</span>
@@ -203,31 +198,37 @@ export default function ProfileAppearanceCardEdit() {
                         </EquippedBox>
                     )}
 
-                    {/* 토글된 경우에만 리스트 표시 */}
                     {showRanks && (
-                        ranks.length > 0 ? (   // ✅ 조건 추가
+                        ranks.length > 0 ? (
                             <ul>
                                 {ranks.map((rank) => (
-                                    <HistoryItemBox key={rank.id} active={profile.rank?.id === rank.id}>
+                                    <HistoryItemBox
+                                        key={rank.id}
+                                        active={profile.rank?.id === rank.id}
+                                    >
                                         <span>
-                                            {rank.displayName} ({new Date(rank.acquiredAt).toLocaleDateString()})
+                                            {rank.displayName} (
+                                            {new Date(rank.acquiredAt).toLocaleDateString()})
                                         </span>
                                         {profile?.rank?.id === rank.id ? (
                                             <EquipButton disabled>장착 중</EquipButton>
                                         ) : (
-                                            <EquipButton onClick={() => handleEquipRank(rank.id)}>장착</EquipButton>
+                                            <EquipButton onClick={() => handleEquipRank(rank.id)}>
+                                                장착
+                                            </EquipButton>
                                         )}
                                     </HistoryItemBox>
                                 ))}
                             </ul>
-                        ) : (   // ✅ 여기서 else 처리
+                        ) : (
                             <p style={{ fontSize: "14px", color: "#9ca3af" }}>
                                 아직 획득한 등급이 없습니다.
-                            </p>  // ✅ 획득 내역 없을 때 안내
+                            </p>
                         )
                     )}
                 </Card>
 
+                {/* 칭호 */}
                 <Card>
                     <HistoryHeader>
                         <h3>칭호 전체 이력</h3>
@@ -244,12 +245,13 @@ export default function ProfileAppearanceCardEdit() {
                     )}
 
                     {showTitles && (
-                        titles.length > 0 ? (   // ✅ 조건 추가
+                        titles.length > 0 ? (
                             <ul>
                                 {titles.map((title) => (
                                     <HistoryItemBox
                                         key={title.id}
-                                        active={profile.title?.id === title.id}>
+                                        active={profile.title?.id === title.id}
+                                    >
                                         <span>
                                             {title.displayName} (
                                             {new Date(title.acquiredAt).toLocaleDateString()})
@@ -309,7 +311,7 @@ const InfoCard = styled.div`
     background: #fff;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
-    padding: 28px 32px;  /* 여유 있는 패딩 */
+    padding: 28px 32px;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -349,7 +351,7 @@ const NicknameRow = styled.div`
 `;
 
 const Nickname = styled.div`
-    font-size: 22px;   /* 기존 20 → 22 */
+    font-size: 22px;
     font-weight: 700;
     color: #111827;
 `;
@@ -373,7 +375,7 @@ const Row = styled.div`
 `;
 
 const SmallButton = styled.button`
-    width: 100px;   /* 기본 단독 사용 시 100px */
+    width: 100px;
     text-align: center;
     padding: 6px 0;
     font-size: 13px;
@@ -387,20 +389,17 @@ const SmallButton = styled.button`
         background: #f3f4f6;
     }
 
-    /* Row 안에서만 flex-grow */
     ${Row} & {
         flex: 1;
-        width: auto;  /* Row 안에서는 자동으로 나눠짐 */
+        width: auto;
     }
 `;
-
 
 const Card = styled.div`
     background: rgb(249, 250, 251);
     border-radius: 12px;
     padding: 20px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -422,7 +421,7 @@ const NicknameInput = styled.input`
     font-weight: 700;
     color: #111827;
     border: none;
-    border-bottom: 2px solid #3b82f6;  /* 밑줄 강조 */
+    border-bottom: 2px solid #3b82f6;
     padding: 4px 0;
     outline: none;
     width: 100%;
@@ -433,76 +432,76 @@ const NicknameInput = styled.input`
     }
 
     &:focus {
-        border-color: #2563eb; /* 포커스 시 진한 파랑 */
+        border-color: #2563eb;
     }
 `;
 
 const ErrorText = styled.div`
-  font-size: 13px;
-  color: #dc2626; /* Tailwind red-600 */
-  margin-top: 4px;
+    font-size: 13px;
+    color: #dc2626;
+    margin-top: 4px;
 `;
 
 const EquipButton = styled.button`
-  margin-left: 8px;
-  font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 6px;
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
-  cursor: pointer;
-  &:hover {
-    background: #e5e7eb;
-  }
+    margin-left: 8px;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    cursor: pointer;
+    &:hover {
+        background: #e5e7eb;
+    }
 `;
 
 const HistoryHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 `;
 
 const ToggleButton = styled.button`
-  font-size: 13px;
-  color: #3b82f6;
-  border: none;
-  background: none;
-  cursor: pointer;
+    font-size: 13px;
+    color: #3b82f6;
+    border: none;
+    background: none;
+    cursor: pointer;
 
-  &:hover {
-    text-decoration: underline;
-  }
+    &:hover {
+        text-decoration: underline;
+    }
 `;
 
 const EquippedBox = styled.div`
-  border: 2px solid rgb(59, 130, 246);
-  background: rgb(239, 246, 255);
-  border-radius: 8px;
-  padding: 8px 12px;
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
+    border: 2px solid rgb(59, 130, 246);
+    background: rgb(239, 246, 255);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
 
-  span {
-    font-weight: 600;
-    font-size: 14px;
-    color: rgb(29, 78, 216);
-  }
+    span {
+        font-weight: 600;
+        font-size: 14px;
+        color: rgb(29, 78, 216);
+    }
 `;
 
 const HistoryItemBox = styled.li<{ active?: boolean }>`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border: 1px solid ${({ active }) => (active ? "rgb(59,130,246)" : "rgb(229,231,235)")};
-  background: ${({ active }) => (active ? "rgb(239,246,255)" : "white")};
-  border-radius: 8px;
-  padding: 8px 12px;
-  margin-top: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid ${({ active }) => (active ? "rgb(59,130,246)" : "rgb(229,231,235)")};
+    background: ${({ active }) => (active ? "rgb(239,246,255)" : "white")};
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-top: 6px;
 
-  span {
-    font-size: 14px;
-    color: ${({ active }) => (active ? "rgb(29,78,216)" : "rgb(31,41,55)")};
-    font-weight: ${({ active }) => (active ? 600 : 400)};
-  }
+    span {
+        font-size: 14px;
+        color: ${({ active }) => (active ? "rgb(29,78,216)" : "rgb(31,41,55)")};
+        font-weight: ${({ active }) => (active ? 600 : 400)};
+    }
 `;

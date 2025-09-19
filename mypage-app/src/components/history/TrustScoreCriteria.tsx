@@ -1,3 +1,5 @@
+{/* 신뢰점수 기준 */}
+
 import React from "react";
 import styled from "styled-components";
 

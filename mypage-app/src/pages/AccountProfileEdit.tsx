@@ -6,7 +6,8 @@ import { FaPhone, FaEnvelope, FaLock } from "react-icons/fa";
 import { useOutletContext } from "react-router-dom";
 import defaultProfile from "../assets/default_profile.png";
 import ServiceModal from "../components/modals/ServiceModal.tsx";
-import {CustomNicknameResponse, ProfileAppearanceResponse, updateNickname} from "../api/profileAppearanceApi.ts";
+import { ProfileAppearanceResponse } from "../api/profileAppearanceApi.ts";
+import { updateNickname, NicknameResponse } from "../api/accountProfileApi.ts";
 
 type OutletContextType = {
     profile: ProfileAppearanceResponse | null;
@@ -41,7 +42,7 @@ export default function AccountProfileEdit() {
     /** 닉네임 수정 시작 */
     const handleStartEdit = () => {
         if (profile) {
-            setTempNickname(profile.customNickname);
+            setTempNickname(profile.nickname); // ✅ customNickname → nickname
             setIsEditingNickname(true);
         }
     };
@@ -55,10 +56,7 @@ export default function AccountProfileEdit() {
         }
 
         try {
-            const updated: CustomNicknameResponse = await updateNickname(
-                token,
-                tempNickname
-            );
+            await updateNickname(token, tempNickname);
             await refreshProfile();
             setIsEditingNickname(false);
             setError(null);
@@ -69,9 +67,9 @@ export default function AccountProfileEdit() {
 
     /** 닉네임 수정 취소 */
     const handleCancelEdit = () => {
-        setTempNickname("");        // 입력값 초기화
-        setIsEditingNickname(false); // 수정 모드 종료
-        setError(null);             // 에러 메시지도 초기화
+        setTempNickname("");
+        setIsEditingNickname(false);
+        setError(null);
     };
 
     /** 모달 열기 */
@@ -82,8 +80,7 @@ export default function AccountProfileEdit() {
     // 토글 핸들러
     const handleToggleProfilePublic = () => {
         setIsProfilePublic((prev) => !prev);
-        setIsModalOpen(true); // 안내 모달도 같이 열림
-        // TODO: 나중에 API 연동
+        setIsModalOpen(true); // 안내 모달 열기
     };
 
     // 정보수신 동의 토글 핸들러
@@ -93,7 +90,6 @@ export default function AccountProfileEdit() {
             [key]: !prev[key],
         }));
         setIsModalOpen(true);
-        // TODO: 나중에 API 연동
     };
 
     if (!profile) {
@@ -127,7 +123,7 @@ export default function AccountProfileEdit() {
                                         placeholder="닉네임을 입력해주세요"
                                     />
                                 ) : (
-                                    <Nickname>{profile.customNickname}</Nickname>
+                                    <Nickname>{profile.nickname}</Nickname> // ✅ customNickname → nickname
                                 )}
                             </NicknameRow>
                             {error && <ErrorText>{error}</ErrorText>}
@@ -187,7 +183,6 @@ export default function AccountProfileEdit() {
                         </ToggleSwitch>
                     </ConsentRow>
 
-                    {/* 하위 공개 옵션 */}
                     {isProfilePublic && (
                         <>
                             <Divider />
@@ -416,10 +411,6 @@ const ConsentRow = styled.div`
     justify-content: space-between;
     align-items: center;
     padding: 12px 0;
-
-    &.sub-consent {
-        margin-left: 12px;   /* ✅ padding-left → margin-left */
-    }
 `;
 
 const Left = styled.div<{ sub?: boolean }>`

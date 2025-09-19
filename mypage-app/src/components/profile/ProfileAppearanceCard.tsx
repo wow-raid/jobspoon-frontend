@@ -51,7 +51,7 @@ export default function ProfileAppearanceCard({profile}: {profile: ProfileAppear
                         <tr>
                             <LabelCell>별명</LabelCell>
                             <Separator>|</Separator>
-                            <ValueCell>{profile.customNickname}</ValueCell>
+                            <ValueCell>{profile.nickname}</ValueCell> {/* ✅ customNickname → nickname */}
                         </tr>
                         {/*<tr>*/}
                         {/*    <LabelCell>계정</LabelCell>*/}

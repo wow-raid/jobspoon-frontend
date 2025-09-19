@@ -6,7 +6,7 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 export interface ProfileAppearanceResponse {
     photoUrl: string | null;
     email: string;
-    customNickname: string;
+    nickname: string;
     rank?: { id: number; code: string; displayName: string; acquiredAt: string };
     title?: { id: number; code: string; displayName: string; acquiredAt: string };
 }
@@ -14,15 +14,6 @@ export interface ProfileAppearanceResponse {
 // PUT /photo 응답
 export interface PhotoResponse {
     photoUrl: string;
-}
-
-export interface accountResponse {
-    token: string;
-}
-
-// PUT /nickname 응답
-export interface CustomNicknameResponse {
-    customNickname: string;
 }
 
 // 공통 Rank/Title 이력 타입
@@ -50,24 +41,6 @@ export async function updateProfilePhoto(token: string, photoUrl: string) {
         { headers: { Authorization: token } }
     );
     return res.data;
-}
-
-// 닉네임 변경
-export async function updateNickname(token: string, customNickname: string) {
-    try{
-        const res = await axios.put<CustomNicknameResponse>(
-            `${API_BASE_URL}/profile-appearance/nickname`,
-            { customNickname },
-            { headers: { Authorization: token } }
-        );
-        return res.data;
-    }catch(error: any){
-        // 백엔드에서 IllegalArgumentException 메시지를 그대로 뽑아서 throw
-        if(error.response?.data) {
-            throw new Error(error.response.data.message || error.response.data);
-        }
-        throw new Error("닉네임 수정 실패");
-    }
 }
 
 // 보유 랭크 조회

@@ -1,3 +1,5 @@
+{/* 회원탈퇴 메뉴 */}
+
 import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
