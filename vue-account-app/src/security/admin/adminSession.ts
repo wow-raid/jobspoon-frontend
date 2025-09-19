@@ -1,10 +1,12 @@
+//security/adminSession.ts
+
 // AdminSession 유틸(최소 규격).
 // - 목적: 관리자 권한 검증 결과를 "같은 브라우저 탭"에서만 짧게 캐시해 라우팅 UX를 빠르게 함.
 // - 저장소: sessionStorage (탭을 닫으면 소멸, 다른 탭과 공유되지 않음).
 // - 보안 주의: 이 값은 신뢰 근거가 아님. 민감 API는 항상 서버에서 UserToken으로 최종 검증.
 
 // NOTE: 번들러에 따라 .ts 확장자 생략 가능. 현재 프로젝트 규칙에 맞춰 사용.
-import { ADMIN_SESSION_TTL_MIN } from "@/security/security-config.ts";
+import { ADMIN_SESSION_TTL_MIN } from "@/security/admin/security-config.ts";
 
 // ───────────────────────────────────────────────────────────────────────────────
 // 1) 키/스키마/기본 상수

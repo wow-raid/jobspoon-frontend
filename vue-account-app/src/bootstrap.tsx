@@ -4,8 +4,8 @@ import type { App as VueApp } from "vue";
 import App from "./App.vue";
 import { loadFonts } from "./plugins/webfontloader";
 import { setupAdminInterceptors } from "@/account/utility/axiosInstance";
-import { listenAdminSessionSync } from "@/security/adminSession"; // (선택) 멀티탭 동기화
-import { loadAdminSession, clearAdminSession } from "@/security/adminSession"; // (선택)
+import { listenAdminSessionSync } from "@/security/admin/adminSession.ts"; // (선택) 멀티탭 동기화
+import { loadAdminSession, clearAdminSession } from "@/security/admin/adminSession.ts"; // (선택)
 import "vuetify/styles";
 // ⚠️ MDI CSS는 Shadow DOM에 주입하므로 전역 import 제거 권장
 // import "@mdi/font/css/materialdesignicons.css";
@@ -281,6 +281,7 @@ export const vueAccountAppUnmount = () => {
         lastEventBus.off("vue-account-routing-event", routingHandler);
     }
     routingHandler = null;
+
     // ⬇️ 추가: 보안 리스너 해제
     if (onUnauthorizedHandler) {
         window.removeEventListener("admin-unauthorized", onUnauthorizedHandler);
@@ -331,10 +332,9 @@ function initAdminSecurityOnce() {
         // onSet: (s) => console.log("[admin-sync] SET", s),
     });
 
-    // 4) (선택) MFE가 처음 붙을 때 세션 상태 점검
+
     const s = loadAdminSession();
     if (!s) {
-        // 관리자 앱에 붙자마자 세션이 없다면, 인증 절차로만 유도하고 싶을 때 사용
         // router.replace({ name: "AdminAuthCode" });
     }
 }
