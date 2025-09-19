@@ -149,11 +149,11 @@ export default function AccountProfileEdit() {
                     <BottomRow>
                         <InfoItem>
                             <FaEnvelope style={{ color: "#6b7280", marginRight: "8px" }} />
-                            <span>{profile.email}</span>
+                            <span>정보 1</span>
                         </InfoItem>
                         <InfoItem>
                             <FaLock style={{ color: "#6b7280", marginRight: "8px" }} />
-                            <span>비밀번호</span>
+                            <span>정보 2</span>
                         </InfoItem>
                     </BottomRow>
                 </InfoCard>
@@ -179,7 +179,7 @@ export default function AccountProfileEdit() {
                             <Divider />
                             <ConsentRow className="sub-consent">
                                 <Left sub>
-                                    <span>이메일 공개</span>
+                                    <span>정보 1</span>
                                 </Left>
                                 <ToggleSwitch
                                     checked={consent.phone}
@@ -192,7 +192,7 @@ export default function AccountProfileEdit() {
 
                             <ConsentRow className="sub-consent">
                                 <Left sub>
-                                    <span>별명 공개</span>
+                                    <span>정보 2</span>
                                 </Left>
                                 <ToggleSwitch
                                     checked={consent.email}
