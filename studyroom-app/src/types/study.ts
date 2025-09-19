@@ -62,4 +62,5 @@ export interface Schedule {
     end: Date;
     startTime: string;
     endTime: string;
+    myAttendanceStatus?: 'PENDING' | 'ATTENDED' | 'ABSENT';
 }

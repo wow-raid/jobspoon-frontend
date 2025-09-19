@@ -272,6 +272,30 @@ const Schedule: React.FC = () => {
     setIsDetailModalOpen(true);
   };
 
+  const handleAttend = async () => {
+    if (!selectedEvent) return;
+
+    try {
+      // 백엔드에 출석 체크 API 호출
+      await axiosInstance.post(`/schedules/${selectedEvent.id}/attendance`);
+
+      // API 성공 시, 화면에 즉시 피드백을 주기 위해 프론트엔드 상태를 업데이트
+      setEvents(prevEvents => prevEvents.map(evt =>
+          evt.id === selectedEvent.id
+              ? { ...evt, myAttendanceStatus: 'PENDING' }
+              : evt
+      ));
+
+      setSelectedEvent(prev => prev ? { ...prev, myAttendanceStatus: 'PENDING' } : null);
+
+      alert("참석 처리가 완료되었습니다. 모임장이 최종 확정할 예정입니다.");
+
+    } catch (error) {
+      console.error("출석 체크에 실패했습니다:", error);
+      alert("출석 체크 중 오류가 발생했습니다.");
+    }
+  };
+
   const handleSelectSlot = (slotInfo: { start: Date; action: "select" | "click" | "doubleClick" }) => {
     if (studyStatus === 'CLOSED') {
       setSelectedDate(slotInfo.start);
@@ -377,7 +401,7 @@ const Schedule: React.FC = () => {
     <Container>
       <Header>
         <h2>🗓️ 일정관리 <span>({monthlyEvents.length})</span></h2>
-        {(userRole === "LEADER" || userRole === "MEMBER") && studyStatus !== 'CLUSED' && (
+        {(userRole === "LEADER" || userRole === "MEMBER") && studyStatus !== 'CLOSED' && (
             <AddEventBtn onClick={openFormModal}>일정 등록</AddEventBtn>
         )}
       </Header>
@@ -389,7 +413,10 @@ const Schedule: React.FC = () => {
         <TabLink to={`/studies/joined-study/${studyId}/interview`}>모의면접</TabLink>
         <TabLink to={`/studies/joined-study/${studyId}/members`}>참여인원</TabLink>
         {userRole === 'LEADER' && (
-            <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청 관리</TabLink>
+            <>
+              <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청 관리</TabLink>
+              <TabLink to={`/studies/joined-study/${studyId}/attendance`}>출석 관리</TabLink>
+            </>
         )}
       </TabList>
         <TabSearchBar
@@ -447,6 +474,7 @@ const Schedule: React.FC = () => {
                 currentUser={{ id: currentUserId, role: userRole }}
                 onEdit={studyStatus !== 'CLOSED' ? handleEditEvent : undefined}
                 onDelete={studyStatus !== 'CLOSED' ? handleDeleteEvent : undefined}
+                onAttend={handleAttend}
             />
         )}
       </Modal>
