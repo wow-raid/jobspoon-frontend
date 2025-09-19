@@ -148,21 +148,12 @@ export default function AccountProfileEdit() {
 
                     <BottomRow>
                         <InfoItem>
-                            <FaPhone style={{ color: "#6b7280", marginRight: "8px" }} />
-                            <span>{accountInfo.phone || "본인확인 번호 없음"}</span>
-                            <ActionLink onClick={openModal}>
-                                {accountInfo.phone ? "수정" : "등록"}
-                            </ActionLink>
-                        </InfoItem>
-                        <InfoItem>
                             <FaEnvelope style={{ color: "#6b7280", marginRight: "8px" }} />
                             <span>{profile.email}</span>
-                            <ActionLink onClick={openModal}>수정</ActionLink>
                         </InfoItem>
                         <InfoItem>
                             <FaLock style={{ color: "#6b7280", marginRight: "8px" }} />
                             <span>비밀번호</span>
-                            <ActionLink onClick={openModal}>변경</ActionLink>
                         </InfoItem>
                     </BottomRow>
                 </InfoCard>
@@ -188,7 +179,7 @@ export default function AccountProfileEdit() {
                             <Divider />
                             <ConsentRow className="sub-consent">
                                 <Left sub>
-                                    <span>휴대전화 공개</span>
+                                    <span>이메일 공개</span>
                                 </Left>
                                 <ToggleSwitch
                                     checked={consent.phone}
@@ -201,7 +192,7 @@ export default function AccountProfileEdit() {
 
                             <ConsentRow className="sub-consent">
                                 <Left sub>
-                                    <span>이메일 공개</span>
+                                    <span>별명 공개</span>
                                 </Left>
                                 <ToggleSwitch
                                     checked={consent.email}
@@ -218,20 +209,6 @@ export default function AccountProfileEdit() {
             <Section>
                 <SectionTitle>프로모션 정보수신 동의</SectionTitle>
                 <ConsentCard>
-                    <ConsentRow>
-                        <Left>
-                            <FaPhone />
-                            <span>휴대전화</span>
-                        </Left>
-                        <ToggleSwitch
-                            checked={consent.phone}
-                            onClick={() => handleToggleConsent("phone")}>
-                            <span>{consent.phone ? "ON" : "OFF"}</span>
-                        </ToggleSwitch>
-                    </ConsentRow>
-
-                    <Divider />
-
                     <ConsentRow>
                         <Left>
                             <FaEnvelope />
@@ -362,18 +339,6 @@ const InfoItem = styled.div`
         flex: 1;
         margin-left: 8px;
         color: #6b7280;
-    }
-`;
-
-const ActionLink = styled.button`
-    font-size: 13px;
-    color: #3b82f6;
-    background: none;
-    border: none;
-    cursor: pointer;
-
-    &:hover {
-        text-decoration: underline;
     }
 `;
 
