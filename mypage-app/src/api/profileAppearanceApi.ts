@@ -7,7 +7,6 @@ export interface ProfileAppearanceResponse {
     photoUrl: string | null;
     email: string;
     nickname: string;
-    rank?: { id: number; code: string; displayName: string; acquiredAt: string };
     title?: { id: number; code: string; displayName: string; acquiredAt: string };
 }
 
@@ -16,7 +15,7 @@ export interface PhotoResponse {
     photoUrl: string;
 }
 
-// 공통 Rank/Title 이력 타입
+// 공통 Title 이력 타입
 export interface HistoryItem{
     id: number;
     code: string;
@@ -43,25 +42,6 @@ export async function updateProfilePhoto(token: string, photoUrl: string) {
     return res.data;
 }
 
-// 보유 랭크 조회
-export async function fetchMyRanks(token: string): Promise<HistoryItem[]> {
-    const res = await axios.get<HistoryItem[]>(
-        `${API_BASE_URL}/profile-appearance/rank/my`,
-        { headers: { Authorization: token } }
-    );
-    return res.data;
-}
-
-// 랭크 장착
-export async function equipRank(token: string, rankId: number): Promise<HistoryItem> {
-    const res = await axios.put<HistoryItem>(
-        `${API_BASE_URL}/profile-appearance/rank/${rankId}/equip`,
-        {},
-        { headers: { Authorization: token } }
-    );
-    return res.data;
-}
-
 // 보유 칭호 조회
 export async function fetchMyTitles(token: string): Promise<HistoryItem[]> {
     const res = await axios.get<HistoryItem[]>(
@@ -81,6 +61,7 @@ export async function equipTitle(token: string, titleId: number): Promise<Histor
     return res.data;
 }
 
+// 회원 탈퇴
 export async function withdrawAccount(token: string){
     const res = await axios.post(`${API_BASE_URL}/api/account/withdraw`,
         {},
