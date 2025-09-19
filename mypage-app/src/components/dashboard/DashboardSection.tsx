@@ -3,22 +3,29 @@
 import React, {useEffect, useState} from "react";
 import {
     getAttendanceRate,
-    getInterviewParticipation,
     getQuizCompletion,
     getWritingCount,
     getTrustScore,
     AttendanceRateResponse,
-    InterviewParticipationResponse,
     QuizCompletionResponse,
     WritingCountResponse,
     TrustScoreResponse
 } from "../../api/dashboardApi.ts";
+import { fetchInterviewList } from "../../api/interviewApi.ts";
 import {PieChart, Pie, Cell, ResponsiveContainer} from "recharts";
 import styled from "styled-components";
 import RankSection from "./RankSection.tsx";
 import TitleSection from "./TitleSection.tsx";
 import TrustScoreModal from "../modals/TrustScoreModal.tsx";
 import WritingModal from "../modals/WritingModal.tsx";
+
+type InterviewItem = {
+    id: number;
+    topic: string;
+    yearsOfExperience: number;
+    created_at: Date;
+    status: "IN_PROGRESS" | "COMPLETED"; // 추가
+};
 
 const COLORS = ["rgb(59,130,246)", "rgb(229,231,235)"]; // 파랑 / 회색
 
@@ -82,7 +89,7 @@ function DonutChart({
 
 export default function DashboardSection() {
     const [attendance, setAttendance] = useState<AttendanceRateResponse | null>(null);
-    const [interview, setInterview] = useState<InterviewParticipationResponse | null>(null);
+    const [interview, setInterview] = useState<{ interviewTotalCount: number; interviewMonthlyCount: number } | null>(null);
     const [quiz, setQuiz] = useState<QuizCompletionResponse | null>(null);
     const [writing, setWriting] = useState<WritingCountResponse | null>(null);
     const [trust, setTrust] = useState<TrustScoreResponse | null>(null);
@@ -96,10 +103,31 @@ export default function DashboardSection() {
             return;
         }
         getAttendanceRate(token).then(setAttendance).catch(console.error);
-        getInterviewParticipation(token).then(setInterview).catch(console.error);
         getQuizCompletion(token).then(setQuiz).catch(console.error);
         getWritingCount(token).then(setWriting).catch(console.error);
         getTrustScore(token).then(setTrust).catch(console.error);
+
+        // ✅ 인터뷰 목록에서 COMPLETED만 필터링
+        fetchInterviewList(token).then((data) => {
+            const completed = (data.interviewList || []).filter(
+                (i: InterviewItem) => i.status === "COMPLETED"
+            );
+
+            const total = completed.length;
+            const monthly = completed.filter((i: InterviewItem) => {
+                const created = new Date(i.created_at);
+                const now = new Date();
+                return (
+                    created.getFullYear() === now.getFullYear() &&
+                    created.getMonth() === now.getMonth()
+                );
+            }).length;
+
+            setInterview({
+                interviewTotalCount: total,
+                interviewMonthlyCount: monthly,
+            });
+        }).catch(console.error);
     }, []);
 
     if (!attendance || !interview || !quiz || !writing || !trust) {
