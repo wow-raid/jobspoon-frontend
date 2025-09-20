@@ -188,7 +188,10 @@ const ApplicationManagement: React.FC = () => {
                     <TabLink to={`/studies/joined-study/${studyId}/interview`}>모의면접</TabLink>
                     <TabLink to={`/studies/joined-study/${studyId}/members`}>참여인원</TabLink>
                     {userRole === 'LEADER' && (
-                        <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청 관리</TabLink>
+                        <>
+                            <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청 관리</TabLink>
+                            <TabLink to={`/studies/joined-study/${studyId}/attendance`}>출석 관리</TabLink>
+                        </>
                     )}
                 </TabList>
                 {/* 신청 관리 페이지에서는 검색창이 필요 없으므로 렌더링하지 않음 */}

@@ -9,6 +9,7 @@ import SpoonNoteModal from "./components/SpoonNoteModal";
 import http, { authHeader } from "./utils/http";
 import { fetchUserFolders, patchReorderFolders } from "./api/userWordbook";
 import WordbookFolderPage from "./pages/WordbookFolderPage";
+import FavoriteTermsPage from "./pages/FavoriteTermsPage.tsx";
 
 const TOKENS = {
     containerMaxWidth: 768,
@@ -144,7 +145,7 @@ function AppLayout() {
 
             try {
                 const { data } = await http.post(
-                    "/api/user-terms/folders",
+                    "/api/me/folders",
                     { folderName: raw },
                     { headers: { ...authHeader() } }
                 );
@@ -171,7 +172,7 @@ function AppLayout() {
 
             try {
                 await http.post(
-                    `/api/user-terms/folders/${notebookId}/terms`,
+                    `/api/me/folders/${notebookId}/terms`,
                     { termId: selectedTermId },
                     { headers: { ...authHeader() } }
                 );
@@ -307,6 +308,7 @@ export default function App() {
                 {/* 폴더 상세: 두 경로 모두 지원 */}
                 <Route path="spoon-word/folders/:folderId" element={<WordbookFolderPage />} />
                 <Route path="folders/:folderId" element={<WordbookFolderPage />} />
+                <Route path="favorites" element={<FavoriteTermsPage />} />
 
                 {/* 캐치올은 맨 마지막 */}
                 <Route path="*" element={<AutoContent />} />

@@ -1,5 +1,6 @@
 // src/router.ts
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
+import { adminBeforeEach } from "@/security/admin/adminGuards";
 
 // account pages
 import AccountLogin from "./account/pages/login/AccountLogin.vue";
@@ -95,5 +96,7 @@ const router = createRouter({
   history: createWebHistory("/vue-account/"),
   routes,
 });
+//전역 가드 등록
+router.beforeEach(adminBeforeEach);
 
 export default router;
