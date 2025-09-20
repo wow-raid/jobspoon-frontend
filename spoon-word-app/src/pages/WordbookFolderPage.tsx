@@ -8,7 +8,7 @@ import TermCard from "../components/TermCard";
 import { setMemorization } from "../api/memorization";
 import { fetchMemorizationStatuses } from "../api/memorization";
 import { moveFolderTerms } from "../api/userWordbookTerms";
-import { renameUserFolder } from "../api/folder";
+import { renameUserFolder, deleteUserFolder, deleteUserFoldersBulk } from "../api/folder";
 
 /** 서버 응답에서 안전하게 뽑아둘 필드들 */
 type TermRow = any;
@@ -878,6 +878,14 @@ export default function WordbookFolderPage() {
                 onRename={async (folderId, newName) => {
                     await renameUserFolder(folderId, newName);
                     setNotebooks(prev => prev.map(n => n.id === folderId ? ({ ...n, name: newName }) : n));
+                }}
+                onRequestDelete={async (fid, name) => {
+                    await deleteUserFolder(fid, "purge");
+                    setNotebooks(await fetchUserFolders());
+                }}
+                onRequestBulkDelete={async (ids) => {
+                    if (!confirm(`선택 ${ids.length}개 폴더 삭제? (안의 용어도 삭제)`)) return;
+                    setNotebooks(await fetchUserFolders());
                 }}
             />
         </div>

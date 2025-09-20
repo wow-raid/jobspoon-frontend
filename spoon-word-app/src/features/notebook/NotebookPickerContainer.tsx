@@ -1,7 +1,7 @@
 import React from "react";
 import SpoonNoteModal from "../../components/SpoonNoteModal";
 import { fetchUserFolders, patchReorderFolders } from "../../api/folders";
-import { renameUserFolder } from "../../api/folder";
+import { renameUserFolder, deleteUserFolder, deleteUserFoldersBulk } from "../../api/folder";
 import http, { authHeader } from "../../utils/http";
 
 type Notebook = { id: string; name: string };
@@ -112,12 +112,42 @@ export default function NotebookPickerContainer({ open, onClose, onSaveToNoteboo
         }
     }, [refreshFolders]);
 
-    const handleRequestDelete = React.useCallback(async () => {
-        alert("폴더 삭제 API가 아직 준비되지 않았어요. 백엔드 구현 후 다시 시도해 주세요.");
-    }, []);
-    const handleRequestBulkDelete = React.useCallback(async () => {
-        alert("폴더 일괄 삭제 API가 아직 준비되지 않았어요. 백엔드 구현 후 다시 시도해 주세요.");
-    }, []);
+    // 실제 삭제 연동(단건)
+    const handleRequestDelete = React.useCallback(async (folderId: string, folderName: string) => {
+        if (!confirm(`'${folderName}' 폴더를 삭제할까요?\n(폴더 안 용어도 함께 삭제됩니다)`)) return;
+        setBusy(true);
+        try {
+            await deleteUserFolder(folderId, "purge");
+            await refreshFolders();
+        } catch (e: any) {
+            const s = e?.response?.status;
+            if (s === 401) alert("로그인이 필요합니다.");
+            else if (s === 403) alert("이 폴더에 대한 권한이 없습니다.");
+            else if (s === 404) alert("폴더를 찾을 수 없습니다.");
+            else alert("삭제에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+        } finally {
+            setBusy(false);
+        }
+    }, [refreshFolders]);
+
+    // 실제 삭제 연동(다건)
+    const handleRequestBulkDelete = React.useCallback(async (folderIds: string[]) => {
+        if (folderIds.length === 0) return;
+        if (!confirm(`선택한 ${folderIds.length}개 폴더를 삭제할까요?\n(각 폴더 안 용어도 함께 삭제됩니다)`)) return;
+        setBusy(true);
+        try {
+            await deleteUserFoldersBulk(folderIds, "purge");
+            await refreshFolders();
+        } catch (e: any) {
+            const s = e?.response?.status;
+            if (s === 401) alert("로그인이 필요합니다.");
+            else if (s === 403) alert("권한이 없습니다.");
+            else if (s === 404) alert("일부 폴더를 찾을 수 없습니다.");
+            else alert("일괄 삭제에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+        } finally {
+            setBusy(false);
+        }
+    }, [refreshFolders]);
 
     return (
         <SpoonNoteModal

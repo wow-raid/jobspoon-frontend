@@ -8,7 +8,7 @@ import TermCardWithTagsLazy from "../components/TermCardWithTagsLazy";
 // 단어장 모달 & 폴더 관련 API
 import SpoonNoteModal from "../components/SpoonNoteModal";
 import { fetchUserFolders, patchReorderFolders } from "../api/userWordbook";
-import { renameUserFolder } from "../api/folder";
+import {deleteUserFolder, deleteUserFoldersBulk, renameUserFolder} from "../api/folder";
 import http, { authHeader } from "../utils/http";
 
 /** 타입 정의 */
@@ -458,6 +458,14 @@ export default function SearchPage() {
                 onRename={async (folderId, newName) => {
                     await renameUserFolder(folderId, newName);
                     setNotebooks(prev => prev.map(n => n.id === folderId ? ({ ...n, name: newName }) : n));
+                }}
+                onRequestDelete={async (fid, name) => {
+                    await deleteUserFolder(fid, "purge");
+                    setNotebooks(await fetchUserFolders());
+                }}
+                onRequestBulkDelete={async (ids) => {
+                    await deleteUserFoldersBulk(ids, "purge");
+                    setNotebooks(await fetchUserFolders());
                 }}
             />
         </Root>

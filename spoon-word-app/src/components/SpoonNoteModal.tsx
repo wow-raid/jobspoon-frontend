@@ -234,7 +234,7 @@ const ConfirmCard = styled.div`
     border: 1px solid ${TOKENS.color.line};
 `;
 const ConfirmHeader = styled.div`
-    padding: 16px 18px; font-weight: 800; color: ${TOKENS.color.textPrimary};
+    padding: 16px 18px; font-weight: 600; color: ${TOKENS.color.textPrimary};
     border-bottom: 1px solid ${TOKENS.color.line};
 `;
 const ConfirmBody = styled.div`
