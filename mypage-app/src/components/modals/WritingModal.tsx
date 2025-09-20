@@ -7,14 +7,16 @@ type Props = {
     isOpen: boolean;
     onClose: () => void;
     writing: {
-        reviewCount: number;
-        studyroomCount: number;
-        commentCount: number;
-        totalCount: number;
-    };
+        posts: number;
+        studyrooms: number;
+        comments: number;
+        total: number;
+    } | null; // null 가능하도록
 };
 
 export default function WritingModal({ isOpen, onClose, writing }: Props) {
+    if (!writing) return null; // 안전 처리
+
     return (
         <Overlay isOpen={isOpen}>
             <Modal isOpen={isOpen}>
@@ -26,10 +28,10 @@ export default function WritingModal({ isOpen, onClose, writing }: Props) {
                 <Content>
                     <h3>내 글 현황</h3>
                     <ul>
-                        <li>✍️ 리뷰 작성: {writing.reviewCount}개</li>
-                        <li>📚 스터디룸 개설: {writing.studyroomCount}개</li>
-                        <li>💬 댓글 작성: {writing.commentCount}개</li>
-                        <li>📝 총 글 작성: {writing.totalCount}개</li>
+                        <li>✍️ 게시글 작성: {writing.posts}개</li>
+                        <li>📚 스터디룸 개설: {writing.studyrooms}개</li>
+                        <li>💬 댓글 작성: {writing.comments}개</li>
+                        <li>📝 총 글 작성: {writing.total}개</li>
                     </ul>
                 </Content>
 
@@ -40,6 +42,7 @@ export default function WritingModal({ isOpen, onClose, writing }: Props) {
         </Overlay>
     );
 }
+
 
 /* ================== styled-components ================== */
 

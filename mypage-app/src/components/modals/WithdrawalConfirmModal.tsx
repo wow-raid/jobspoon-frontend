@@ -1,3 +1,5 @@
+{/* 회원탈퇴 확인 모달 */}
+
 import React, { useState } from "react";
 import styled from "styled-components";
 

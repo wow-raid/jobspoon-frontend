@@ -1,3 +1,5 @@
+{/* 멤버십 메뉴 */}
+
 import React, { useState } from "react";
 import styled from "styled-components";
 import ServiceModal from "../components/modals/ServiceModal.tsx";

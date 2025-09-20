@@ -1,23 +1,24 @@
+{/* 이력 관리 메뉴 */}
+
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import {
-    fetchMyRanks,
+    fetchUserLevel,
     fetchMyTitles,
-    HistoryItem
+    fetchTrustScore,
+    UserLevel,
+    TrustScore,
+    TitleItem
 } from "../api/profileAppearanceApi";
-import {
-    getTrustScore,
-    TrustScoreResponse
-} from "../api/dashboardApi";
 import TrustScoreCriteria from "../components/history/TrustScoreCriteria";
 
 export default function UserHistoryPage() {
-    const [ranks, setRanks] = useState<HistoryItem[]>([]);
-    const [titles, setTitles] = useState<HistoryItem[]>([]);
-    const [trustScore, setTrustScore] = useState<TrustScoreResponse | null>(null);
+    const [userLevel, setUserLevel] = useState<UserLevel | null>(null);
+    const [titles, setTitles] = useState<TitleItem[]>([]);
+    const [trustScore, setTrustScore] = useState<TrustScore | null>(null);
 
-    // ✅ 토글 상태 (기본 닫힘)
-    const [showRanks, setShowRanks] = useState(false);
+    // 토글 상태 (기본 닫힘)
+    const [showLevel, setShowLevel] = useState(false);
     const [showTitles, setShowTitles] = useState(false);
     const [showTrustCriteria, setShowTrustCriteria] = useState(false);
 
@@ -25,14 +26,16 @@ export default function UserHistoryPage() {
         const token = localStorage.getItem("userToken");
         if (!token) return;
 
-        Promise.all([fetchMyRanks(token), fetchMyTitles(token)])
-            .then(([r, t]) => {
-                setRanks(r);
+        // 레벨 + 칭호
+        Promise.all([fetchUserLevel(token), fetchMyTitles(token)])
+            .then(([lvl, t]) => {
+                setUserLevel(lvl);
                 setTitles(t);
             })
             .catch(console.error);
 
-        getTrustScore(token)
+        // 신뢰점수
+        fetchTrustScore(token)
             .then((res) => setTrustScore(res))
             .catch(console.error);
     }, []);
@@ -53,17 +56,15 @@ export default function UserHistoryPage() {
                     {trustScore ? (
                         <>
                             <ul>
-                                <li>총점: {trustScore.trustScore}점</li>
-                                <li>출석 점수: {trustScore.attendanceScore}</li>
-                                <li>인터뷰 점수: {trustScore.interviewScore}</li>
-                                <li>퀴즈 점수: {trustScore.quizScore}</li>
-                                <li>리뷰 점수: {trustScore.reviewScore}</li>
-                                <li>스터디룸 점수: {trustScore.studyroomScore}</li>
-                                <li>댓글 점수: {trustScore.commentScore}</li>
-                                {trustScore.bonusApplied && <li>보너스 +5점 적용됨 ✅</li>}
+                                <li>출석률: {(trustScore.attendanceRate * 100).toFixed(1)}%</li>
+                                <li>이번 달 인터뷰: {trustScore.monthlyInterviews}회</li>
+                                <li>이번 달 문제풀이: {trustScore.monthlyProblems}개</li>
+                                <li>이번 달 글 작성: {trustScore.monthlyPosts}개</li>
+                                <li>이번 달 스터디룸: {trustScore.monthlyStudyrooms}개</li>
+                                <li>이번 달 댓글: {trustScore.monthlyComments}개</li>
                             </ul>
 
-                            {/* ✅ 산정 기준표 토글 */}
+                            {/* 산정 기준표 토글 */}
                             {showTrustCriteria && <TrustScoreCriteria />}
                         </>
                     ) : (
@@ -71,29 +72,26 @@ export default function UserHistoryPage() {
                     )}
                 </Card>
 
-                {/* 등급 이력 */}
+                {/* 레벨 */}
                 <Card>
                     <HistoryHeader>
-                        <h3>등급 이력</h3>
-                        <ToggleButton onClick={() => setShowRanks(!showRanks)}>
-                            {showRanks ? "숨기기" : "보기"}
+                        <h3>레벨</h3>
+                        <ToggleButton onClick={() => setShowLevel(!showLevel)}>
+                            {showLevel ? "숨기기" : "보기"}
                         </ToggleButton>
                     </HistoryHeader>
-                    {showRanks && (
-                        ranks.length > 0 ? (
+                    {showLevel && (
+                        userLevel ? (
                             <ul>
-                                {ranks.map((rank) => (
-                                    <HistoryItemBox key={rank.id}>
-                                        <span>
-                                            {rank.displayName} (
-                                            {new Date(rank.acquiredAt).toLocaleDateString()})
-                                        </span>
-                                    </HistoryItemBox>
-                                ))}
+                                <HistoryItemBox>
+                                    <span>
+                                        현재 Lv.{userLevel.level} (Exp {userLevel.exp}/{userLevel.totalExp})
+                                    </span>
+                                </HistoryItemBox>
                             </ul>
                         ) : (
                             <p style={{ color: "#6b7280" }}>
-                                획득한 등급이 없습니다.
+                                레벨 정보를 불러오는 중...
                             </p>
                         )
                     )}

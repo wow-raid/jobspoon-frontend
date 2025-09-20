@@ -5,7 +5,7 @@ import {
     fetchMyProfile,
     fetchMyTitles,
     ProfileAppearanceResponse,
-    HistoryItem,
+    TitleItem
 } from "../../api/profileAppearanceApi.ts";
 import styled from "styled-components";
 import defaultTitle from "../../assets/default_rank.png"; // 👉 임시 아이콘 (칭호용 이미지 준비되면 교체)
@@ -13,11 +13,11 @@ import TitleGuideModal from "../modals/TitleGuideModal.tsx";
 
 export default function TitleSection() {
     const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
-    const [titles, setTitles] = useState<HistoryItem[]>([]);
+    const [titles, setTitles] = useState<TitleItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [isGuideOpen, setIsGuideOpen] = useState(false);
 
-    // 👉 페이징 상태
+    // 페이징 상태
     const [currentIndex, setCurrentIndex] = useState(0);
     const visibleCount = 4;
 
