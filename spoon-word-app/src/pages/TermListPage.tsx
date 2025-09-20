@@ -2,10 +2,14 @@ import React from "react";
 import styled from "styled-components";
 import { useSearchParams, useNavigationType, useNavigate } from "react-router-dom";
 import TermCardWithTagsLazy from "../components/TermCardWithTagsLazy";
+import SpoonNoteModal from "../components/SpoonNoteModal";
 import { fetchTermsByTag } from "../api/termApi";
+import { fetchUserFolders, patchReorderFolders } from "../api/userWordbook";
+import { renameUserFolder } from "../api/folder";
 
 /* 타입 */
 type Term = { id: number; title: string; description: string; tags?: string[] };
+type Notebook = { id: string; name: string };
 
 /* 세션 캐시 유틸 */
 type CacheData = { tag: string; items: Term[]; total: number; scrollY?: number };
@@ -134,7 +138,13 @@ const TermListPage: React.FC = () => {
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
 
+    // 모달/폴더 상태
+    const [modalOpen, setModalOpen] = React.useState(false);
+    const [selectedTermId, setSelectedTermId] = React.useState<number | null>(null);
+    const [notebooks, setNotebooks] = React.useState<Notebook[]>([]);
+
     const cacheKey = React.useMemo(() => `terms_by_tag:tag${tag}:p${page}:s${size}`, [tag, page, size]);
+    const normalize = React.useCallback((s: string) => s.trim().replace(/\s+/g, " ").toLowerCase(), []);
 
     /* 언마운트 시 스크롤 저장 */
     React.useEffect(() => {
@@ -230,6 +240,72 @@ const TermListPage: React.FC = () => {
         navigate({ pathname: "terms/by-tag", search: `?${sp.toString()}` });
     };
 
+    /* --- 모달 제어 & 폴더 로딩 --- */
+    const openModalFor = (termId: number) => {
+        setSelectedTermId(termId);
+        setModalOpen(true);
+    };
+    const closeModal = () => {
+        setModalOpen(false);
+        setSelectedTermId(null);
+    };
+
+    React.useEffect(() => {
+        let aborted = false;
+        (async () => {
+            if (!modalOpen) return;
+            try {
+                const list = await fetchUserFolders();
+                if (!aborted) setNotebooks(list);
+            } catch {
+                if (!aborted) setNotebooks([]);
+            }
+        })();
+        return () => { aborted = true; };
+    }, [modalOpen]);
+
+    /* --- 모달 핸들러들 --- */
+    // 저장 버튼: 실제 attach API 연동 지점
+    const handleSaveToNotebook = async (notebookId: string) => {
+        if (!selectedTermId) return;
+        // TODO: 백엔드 attach API 붙이면 호출
+        // await attachTermToFolder({ termId: selectedTermId, folderId: notebookId });
+        closeModal();
+    };
+
+    const handleReorder = async (orderedIds: string[]) => {
+        try { await patchReorderFolders(orderedIds); }
+        catch (e) { console.warn("[folders reorder] 실패", e); }
+    };
+
+    const handleRequestRename = React.useCallback(
+        async (folderId: string, currentName: string) => {
+            const next = window.prompt("새 폴더 이름을 입력하세요.", currentName ?? "");
+            if (next == null) return;
+            const raw = next.trim();
+            if (!raw) { alert("폴더 이름은 공백일 수 없습니다."); return; }
+            if (raw.length > 60) { alert("폴더 이름은 최대 60자입니다."); return; }
+
+            const dup = notebooks.some(n => n.id !== folderId && normalize(n.name) === normalize(raw));
+            if (dup) { alert("동일한 이름의 폴더가 이미 존재합니다."); return; }
+
+            try {
+                await renameUserFolder(folderId, raw);
+                // 최신 목록 반영: 재조회 또는 로컬 업데이트 중 택1
+                const list = await fetchUserFolders();
+                setNotebooks(list);
+            } catch (e: any) {
+                const s = e?.response?.status;
+                if (s === 409) alert("동일한 이름의 폴더가 이미 존재합니다.");
+                else if (s === 400) alert("폴더 이름 형식이 올바르지 않습니다.");
+                else if (s === 403) alert("이 폴더에 대한 권한이 없습니다.");
+                else if (s === 404) alert("폴더를 찾을 수 없습니다.");
+                else alert("폴더 이름 변경에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+            }
+        },
+        [notebooks, normalize]
+    );
+
     return (
         <Root>
             {tag ? (
@@ -255,7 +331,10 @@ const TermListPage: React.FC = () => {
                                     description={t.description}
                                     tags={t.tags}
                                     onTagClick={handleTagClick}
-                                    onAdd={(id) => console.log("단어장 추가:", id)}
+                                    onAdd={(id) => {
+                                        console.log("단어장 추가:", id);
+                                        openModalFor(id);
+                                    }}
                                 />
                             </ListItem>
                         ))}
@@ -271,6 +350,24 @@ const TermListPage: React.FC = () => {
             {!loading && !error && !tag && (
                 <EmptyMsg>용어 카드를 열고 해시태그를 눌러보세요.</EmptyMsg>
             )}
+
+            {/* 폴더 선택/관리 모달 */}
+            <SpoonNoteModal
+                open={modalOpen}
+                notebooks={notebooks}
+                onClose={closeModal}
+                onSave={handleSaveToNotebook}
+                onReorder={handleReorder}
+                onRename={async (folderId, newName) => {
+                    await renameUserFolder(folderId, newName);
+                    setNotebooks(prev => prev.map(n => n.id === folderId ? ({ ...n, name: newName }) : n));
+                }}
+                onGoToFolder={(fid, name) => {
+                    // 폴더 상세 페이지로 이동하고 모달 닫기
+                    setModalOpen(false);
+                    navigate(`/spoon-word/folders/${fid}`, { state: { folderName: name } });
+                }}
+            />
         </Root>
     );
 };

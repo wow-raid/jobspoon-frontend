@@ -12,9 +12,12 @@ export type SpoonNoteModalProps = {
     onCreate?: (name: string) => string | Promise<string>;
     onReorder?: (orderedIds: string[]) => void | Promise<void>;
     onGoToFolder?: (folderId: string, name?: string) => void | Promise<void>;
-    onRequestRename?: (folderId: string, currentName: string) => void | Promise<void>;
     onRequestDelete?: (folderId: string, currentName: string) => void | Promise<void>;
     onRequestBulkDelete?: (folderIds: string[]) => void | Promise<void>;
+    /** 새 API: 모달에서 받은 새 이름을 직접 전달 */
+    onRename?: (folderId: string, newName: string) => void | Promise<void>;
+    /** 구 API(하위호환): 기존 prompt 흐름. (submit 시 newName을 두 번째 인자로 넘겨 폴백 호출) */
+    onRequestRename?: (folderId: string, currentName: string) => void | Promise<void>;
 };
 
 const TOKENS = {
@@ -222,33 +225,45 @@ const SavedBadge = styled.div<{ $show: boolean }>`
 
 /** ========= 확인 다이얼로그 ========= */
 const ConfirmBackdrop = styled.div`
-  position: fixed; inset: 0; background: rgba(17,24,39,0.5);
-  display: flex; align-items: center; justify-content: center; z-index: 2147483648;
+    position: fixed; inset: 0; background: rgba(17,24,39,0.5);
+    display: flex; align-items: center; justify-content: center; z-index: 2147483648;
 `;
 const ConfirmCard = styled.div`
-  width: 420px; max-width: calc(100vw - 32px);
-  background: #fff; border-radius: 14px; box-shadow: 0 12px 36px rgba(0,0,0,0.16);
-  border: 1px solid ${TOKENS.color.line};
+    width: 420px; max-width: calc(100vw - 32px);
+    background: #fff; border-radius: 14px; box-shadow: 0 12px 36px rgba(0,0,0,0.16);
+    border: 1px solid ${TOKENS.color.line};
 `;
 const ConfirmHeader = styled.div`
-  padding: 16px 18px; font-weight: 800; color: ${TOKENS.color.textPrimary};
-  border-bottom: 1px solid ${TOKENS.color.line};
+    padding: 16px 18px; font-weight: 800; color: ${TOKENS.color.textPrimary};
+    border-bottom: 1px solid ${TOKENS.color.line};
 `;
 const ConfirmBody = styled.div`
-  padding: 14px 16px; color: ${TOKENS.color.textSecondary}; font-size: 14px;
+    padding: 14px 16px; color: ${TOKENS.color.textSecondary}; font-size: 14px;
 `;
 const ConfirmList = styled.ul`
-  margin: 8px 0 0; padding-left: 18px; max-height: 160px; overflow: auto; font-size: 13px;
+    margin: 8px 0 0; padding-left: 18px; max-height: 160px; overflow: auto; font-size: 13px;
 `;
 const ConfirmFooter = styled.div`
-  display: flex; justify-content: flex-end; gap: 8px;
-  padding: 12px 16px; border-top: 1px solid ${TOKENS.color.line};
+    display: flex; justify-content: flex-end; gap: 8px;
+    padding: 12px 16px; border-top: 1px solid ${TOKENS.color.line};
+`;
+/** ================================= */
+
+/** ========= 안내 배너 ========= */
+const Notice = styled.div<{ $tone?: "info" | "warn" }>`
+    margin: 8px 16px 0;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 12px; font-weight: 700;
+    color: ${({ $tone }) => ($tone === "warn" ? TOKENS.color.danger : TOKENS.color.textSecondary)};
+    background: ${({ $tone }) => ($tone === "warn" ? TOKENS.color.dangerBg : "#f3f4f6")};
+    border: 1px solid ${TOKENS.color.line};
 `;
 /** ================================= */
 
 export default function SpoonNoteModal({
                                            open, notebooks, onClose, onSave, onCreate, onReorder, onGoToFolder,
-                                           onRequestRename, onRequestDelete, onRequestBulkDelete,
+                                           onRequestRename, onRequestDelete, onRequestBulkDelete, onRename,
                                        }: SpoonNoteModalProps) {
     const [selectedId, setSelectedId] = React.useState<string | null>(null);
     const [creating, setCreating] = React.useState(false);
@@ -267,40 +282,123 @@ export default function SpoonNoteModal({
 
     const [menuOpen, setMenuOpen] = React.useState(false);
 
-    /** 추가: 확인 다이얼로그 오픈 여부 */
+    // 확인 다이얼로그
     const [confirmOpen, setConfirmOpen] = React.useState(false);
+
+    // 안내 배너 상태
+    const [hint, setHint] = React.useState<{ text: string; tone?: "info" | "warn" } | null>(null);
+    const hintTimer = React.useRef<number | null>(null);
+    const showHint = React.useCallback((text: string, tone: "info" | "warn" = "info") => {
+        setHint({ text, tone });
+        if (hintTimer.current) window.clearTimeout(hintTimer.current);
+        hintTimer.current = window.setTimeout(() => setHint(null), 1600);
+    }, []);
+    React.useEffect(() => () => { if (hintTimer.current) window.clearTimeout(hintTimer.current); }, []);
+
+    // ===== 이름 바꾸기 미니 모달 상태 =====
+    const [renameOpen, setRenameOpen] = React.useState(false);
+    const [renameTarget, setRenameTarget] = React.useState<{ id: string; current: string } | null>(null);
+    const [renameValue, setRenameValue] = React.useState("");
+    const [renameError, setRenameError] = React.useState<string>("");
+
+    const validateRename = React.useCallback((val: string, selfId?: string) => {
+        const raw = val.trim();
+        if (!raw) return "공백만 입력할 수 없어요.";
+        if (raw.length > 60) return "폴더 이름은 최대 60자입니다.";
+        const normalized = raw.replace(/\s+/g, " ").toLowerCase();
+        const dup = list.some(n => n.id !== selfId && n.name.trim().replace(/\s+/g, " ").toLowerCase() === normalized);
+        if (dup) return "동일한 이름의 폴더가 이미 존재합니다.";
+        return "";
+    }, [list]);
+
+    const openRename = (id: string, currentName: string) => {
+        setRenameTarget({ id, current: currentName });
+        setRenameValue(currentName);
+        setRenameError("");
+        setRenameOpen(true);
+    };
+    const closeRename = () => {
+        setRenameOpen(false);
+        setRenameTarget(null);
+        setRenameValue("");
+        setRenameError("");
+    };
+
+    const submitRename = async () => {
+        if (!renameTarget) return;
+        const err = validateRename(renameValue, renameTarget.id);
+        if (err) { setRenameError(err); return; }
+        const nextName = renameValue.trim();
+        try {
+            if (onRename) {
+                await Promise.resolve(onRename(renameTarget.id, nextName));
+            } else if (onRequestRename) {
+                // 하위호환: 기존 핸들러에 새 이름을 전달(두 번째 인자를 새 이름으로 사용)
+                await Promise.resolve(onRequestRename(renameTarget.id, nextName));
+            } else {
+                showHint("이름 변경 핸들러가 연결되지 않았어요(onRename).", "warn");
+                return;
+            }
+            closeRename();
+        } catch (e) {
+            setRenameError("이름 변경에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+            console.error("[rename modal] failed:", e);
+        }
+    };
+    // =====================================
+
+    // 현재 "이름 바꾸기" 선택 집계
+    const getRenameSelection = React.useCallback(() => {
+        if (bulkMode) {
+            const ids = Array.from(deleteIds);
+            return { count: ids.length, oneId: ids.length === 1 ? ids[0] : null };
+        }
+        return { count: selectedId ? 1 : 0, oneId: selectedId };
+    }, [bulkMode, deleteIds, selectedId]);
 
     React.useEffect(() => {
         if (!open) {
             setSelectedId(null); setCreating(false); setNewName(""); setError("");
             setDraggingId(null); setDragOver(null); setSavingOrder(false); setShowSaved(false);
             setMenuOpen(false); setBulkMode(false); setDeleteIds(new Set()); setConfirmOpen(false);
+            setHint(null);
+            closeRename();
         }
     }, [open]);
 
     React.useEffect(() => {
-        if (open) { setList(notebooks); lastStableRef.current = notebooks; }
-    }, [open, notebooks]);
+        if (!open) return;
+
+        setList(notebooks);
+        lastStableRef.current = notebooks;
+
+        // 초진입 시 자동 선택(UX)
+        if (!selectedId && !bulkMode && !creating && !savingOrder && notebooks.length > 0) {
+            setSelectedId(notebooks[0].id);
+        }
+    }, [open, notebooks, selectedId, bulkMode, creating, savingOrder]);
 
     const normalizeName = React.useCallback((s: string) => s.trim().replace(/\s+/g, " ").toLowerCase(), []);
 
     React.useEffect(() => {
         function onKey(e: KeyboardEvent) {
             if (e.key === "Escape") {
-                if (confirmOpen) setConfirmOpen(false);           // 다이얼로그만 닫고 선택 유지
+                if (renameOpen) { closeRename(); return; }
+                if (confirmOpen) setConfirmOpen(false);
                 else if (menuOpen) setMenuOpen(false);
                 else if (bulkMode) { /* 선택 유지 */ }
                 else onClose();
             }
             if (e.key === "Enter") {
-                if (confirmOpen) { void executeBulkDelete(); }    // 확인 다이얼로그에서 Enter → 삭제
-                else if (bulkMode) { /* Enter 무시(실수 방지) */ }
+                if (renameOpen) { void submitRename(); return; }
+                if (confirmOpen) { void executeBulkDelete(); }
+                else if (bulkMode) { /* Enter 무시 */ }
                 else handlePrimary();
             }
         }
         if (open) window.addEventListener("keydown", onKey);
         return () => window.removeEventListener("keydown", onKey);
-    }, [open, creating, selectedId, newName, error, menuOpen, bulkMode, deleteIds, confirmOpen]); // deps
+    }, [open, creating, selectedId, newName, error, menuOpen, bulkMode, deleteIds, confirmOpen, renameOpen, renameValue]);
 
     const headerRef = React.useRef<HTMLDivElement | null>(null);
     React.useEffect(() => {
@@ -438,12 +536,10 @@ export default function SpoonNoteModal({
                     await Promise.resolve(onRequestDelete(id, name));
                 }
             }
-            // 성공 → 상태 정리
             setConfirmOpen(false);
             setBulkMode(false);
             setDeleteIds(new Set());
         } catch (e) {
-            // 실패해도 선택 유지해서 재시도 가능
             console.error("[bulk delete] failed:", e);
         } finally {
             setMenuOpen(false);
@@ -453,8 +549,6 @@ export default function SpoonNoteModal({
     if (!open) return null;
 
     const isCreateInvalid = creating && (!!error || newName.trim().length === 0);
-    const selected = selectedId ? list.find(n => n.id === selectedId) : null;
-    const canRename = !!onRequestRename && !!selected && !bulkMode;
     const showArrow = !bulkMode;
     const menuDisabled = creating || savingOrder;
 
@@ -462,13 +556,29 @@ export default function SpoonNoteModal({
         <MenuPanel role="menu" aria-label="전역 설정 메뉴">
             <MenuItem
                 role="menuitem"
-                onClick={async () => {
-                    if (!canRename) return;
-                    await Promise.resolve(onRequestRename?.(selected!.id, selected!.name));
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (menuDisabled || list.length === 0) return;
+
+                    const { count, oneId } = getRenameSelection();
+                    if (count === 0) {
+                        showHint("이름을 바꿀 단어장을 먼저 선택해 주세요.", "warn");
+                        setMenuOpen(false);
+                        return;
+                    }
+                    if (count > 1) {
+                        showHint("이름 변경은 한 번에 하나만 가능합니다.", "warn");
+                        setMenuOpen(false);
+                        return;
+                    }
+
+                    // 정확히 1개 선택됨 → 미니 모달 오픈
+                    const current = list.find(n => n.id === oneId)?.name ?? "";
                     setMenuOpen(false);
+                    openRename(oneId!, current);
                 }}
-                disabled={!canRename || menuDisabled}
-                aria-disabled={!canRename || menuDisabled}
+                disabled={menuDisabled || list.length === 0}
+                aria-disabled={menuDisabled || list.length === 0}
             >
                 이름 바꾸기
             </MenuItem>
@@ -485,30 +595,13 @@ export default function SpoonNoteModal({
                 </MenuItem>
             ) : (
                 <>
-                    <MenuItem
-                        role="menuitem"
-                        onClick={() => setDeleteIds(new Set(list.map(n => n.id)))}
-                        disabled={list.length === 0}
-                        aria-disabled={list.length === 0}
-                    >
+                    <MenuItem role="menuitem" onClick={() => setDeleteIds(new Set(list.map(n => n.id)))} disabled={list.length === 0} aria-disabled={list.length === 0}>
                         전체 선택
                     </MenuItem>
-                    <MenuItem
-                        role="menuitem"
-                        onClick={() => setDeleteIds(new Set())}
-                        disabled={deleteIds.size === 0}
-                        aria-disabled={deleteIds.size === 0}
-                    >
+                    <MenuItem role="menuitem" onClick={() => setDeleteIds(new Set())} disabled={deleteIds.size === 0} aria-disabled={deleteIds.size === 0}>
                         전체 해제
                     </MenuItem>
-                    {/* ▼ 기존 즉시 삭제 → 확인 다이얼로그 오픈으로 변경 */}
-                    <MenuItem
-                        role="menuitem"
-                        $danger
-                        onClick={() => { setMenuOpen(false); setConfirmOpen(true); }}
-                        disabled={deleteIds.size === 0}
-                        aria-disabled={deleteIds.size === 0}
-                    >
+                    <MenuItem role="menuitem" $danger onClick={() => { setMenuOpen(false); setConfirmOpen(true); }} disabled={deleteIds.size === 0} aria-disabled={deleteIds.size === 0}>
                         선택 삭제
                     </MenuItem>
                 </>
@@ -524,9 +617,9 @@ export default function SpoonNoteModal({
                 <Header ref={headerRef}>
                     <HeaderTitle>내 SpoonNote에 저장하기</HeaderTitle>
                     <HeaderRight>
-            <span aria-live="polite" style={{ fontSize: 12, color: bulkMode ? TOKENS.color.danger : TOKENS.color.textMuted }}>
-              {bulkMode ? `삭제 모드 · ${deleteIds.size}개 선택됨` : ""}
-            </span>
+                        <span aria-live="polite" style={{ fontSize: 12, color: bulkMode ? TOKENS.color.danger : TOKENS.color.textMuted }}>
+                            {bulkMode ? `삭제 모드 · ${deleteIds.size}개 선택됨` : ""}
+                        </span>
 
                         <MenuRoot>
                             <TipWrap data-tip>
@@ -543,6 +636,9 @@ export default function SpoonNoteModal({
                         </MenuRoot>
                     </HeaderRight>
                 </Header>
+
+                {/* 안내 배너 */}
+                {hint && <Notice $tone={hint.tone}>{hint.text}</Notice>}
 
                 <Body>
                     {!creating ? (
@@ -674,7 +770,7 @@ export default function SpoonNoteModal({
                         </>
                     ) : (
                         <>
-                            <GhostBtn onClick={() => { /* 선택 유지하고 모드만 종료하고 싶다면 여기서 초기화 안함 */ setBulkMode(false); }}>모드 종료</GhostBtn>
+                            <GhostBtn onClick={() => { setBulkMode(false); }}>모드 종료</GhostBtn>
                             <DangerBtn
                                 onClick={() => { setConfirmOpen(true); }}
                                 disabled={deleteIds.size === 0}
@@ -687,14 +783,13 @@ export default function SpoonNoteModal({
                 </Footer>
             </Panel>
 
-            {/* ======== 확인 다이얼로그 렌더 ======== */}
+            {/* ======== 삭제 확인 다이얼로그 ======== */}
             {confirmOpen && (
                 <ConfirmBackdrop role="dialog" aria-modal="true" aria-label="선택 삭제 확인">
                     <ConfirmCard>
                         <ConfirmHeader>정말 삭제하시겠어요?</ConfirmHeader>
                         <ConfirmBody>
                             선택한 단어장 {deleteIds.size}개가 영구 삭제됩니다. 이 작업은 되돌릴 수 없어요.
-                            {/* 선택 미리보기: 최대 6개 표기 */}
                             {deleteIds.size > 0 && (
                                 <ConfirmList>
                                     {Array.from(deleteIds)
@@ -712,6 +807,50 @@ export default function SpoonNoteModal({
                             <DangerBtn onClick={() => { void executeBulkDelete(); }}>
                                 영구 삭제
                             </DangerBtn>
+                        </ConfirmFooter>
+                    </ConfirmCard>
+                </ConfirmBackdrop>
+            )}
+            {/* ==================================== */}
+
+            {/* ======== 이름 바꾸기 미니 모달 ======== */}
+            {renameOpen && renameTarget && (
+                <ConfirmBackdrop role="dialog" aria-modal="true" aria-label="폴더 이름 바꾸기">
+                    <ConfirmCard>
+                        <ConfirmHeader>이름 바꾸기</ConfirmHeader>
+                        <ConfirmBody>
+                            <label style={{ display: "block", fontSize: 13, color: "#6b7280", marginBottom: 8 }}>
+                                새로운 이름
+                            </label>
+                            <input
+                                autoFocus
+                                type="text"
+                                value={renameValue}
+                                onChange={e => { setRenameValue(e.target.value); setRenameError(validateRename(e.target.value, renameTarget.id)); }}
+                                onKeyDown={e => { if (e.key === "Enter") submitRename(); if (e.key === "Escape") closeRename(); }}
+                                style={{
+                                    width: "100%",
+                                    height: 36,
+                                    padding: "0 10px",
+                                    borderRadius: 10,
+                                    border: `1px solid ${renameError ? "#ef4444" : "#e5e7eb"}`,
+                                    outline: "none",
+                                }}
+                                aria-invalid={!!renameError}
+                            />
+                            {!!renameError && (
+                                <p style={{ margin: "8px 2px 0", color: "#ef4444", fontSize: 12 }}>{renameError}</p>
+                            )}
+                        </ConfirmBody>
+                        <ConfirmFooter>
+                            <GhostBtn onClick={closeRename}>취소</GhostBtn>
+                            <PrimaryBtn
+                                onClick={submitRename}
+                                disabled={!!validateRename(renameValue, renameTarget.id)}
+                                aria-disabled={!!validateRename(renameValue, renameTarget.id)}
+                            >
+                                저장
+                            </PrimaryBtn>
                         </ConfirmFooter>
                     </ConfirmCard>
                 </ConfirmBackdrop>

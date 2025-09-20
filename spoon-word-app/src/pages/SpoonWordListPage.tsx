@@ -1,7 +1,8 @@
 import React from "react";
 import TermCard from "../components/TermCard";
 import SpoonNoteModal from "../components/SpoonNoteModal";
-import { patchReorderFolders } from "../api/userWordbook";
+import { patchReorderFolders, fetchUserFolders } from "../api/userWordbook";
+import { renameUserFolder } from "../api/folder";
 
 type Notebook = { id: string; name: string };
 
@@ -27,6 +28,8 @@ export default function SpoonWordListPage() {
     const [selectedTermId, setSelectedTermId] = React.useState<number | null>(null);
     const [notebooks, setNotebooks] = React.useState<Notebook[]>([]);
 
+    const normalize = React.useCallback((s: string) => s.trim().replace(/\s+/g, " ").toLowerCase(), []);
+
     const openModalFor = React.useCallback((termId: number) => {
         setSelectedTermId(termId);
         setModalOpen(true);
@@ -36,6 +39,21 @@ export default function SpoonWordListPage() {
         setModalOpen(false);
         setSelectedTermId(null);
     }, []);
+
+    // 모달 열릴 때 폴더 목록 로드
+    React.useEffect(() => {
+        let aborted = false;
+        (async () => {
+            if (!modalOpen) return;
+            try {
+                const list = await fetchUserFolders();
+                if (!aborted) setNotebooks(list);
+            } catch {
+                if (!aborted) setNotebooks([]);
+            }
+        })();
+        return () => { aborted = true; };
+    }, [modalOpen]);
 
     // 전역 위임 클릭 핸들러: TermCard 내부에서 onAdd를 안 불러도 동작하게 백업 라인
     React.useEffect(() => {
@@ -93,6 +111,35 @@ export default function SpoonWordListPage() {
         [selectedTermId, closeModal]
     );
 
+    // 🔧 이름 바꾸기: 모달에서 호출됨
+    const handleRequestRename = React.useCallback(
+        async (folderId: string, currentName: string) => {
+            const next = window.prompt("새 폴더 이름을 입력하세요.", currentName ?? "");
+            if (next == null) return;
+            const raw = next.trim();
+            if (!raw) { alert("폴더 이름은 공백일 수 없습니다."); return; }
+            if (raw.length > 60) { alert("폴더 이름은 최대 60자입니다."); return; }
+
+            const dup = notebooks.some(n => n.id !== folderId && normalize(n.name) === normalize(raw));
+            if (dup) { alert("동일한 이름의 폴더가 이미 존재합니다."); return; }
+
+            try {
+                await renameUserFolder(folderId, raw);
+                // 로컬 즉시 반영 또는 서버 재조회 중 택1
+                setNotebooks(prev => prev.map(n => n.id === folderId ? { ...n, name: raw } : n));
+                // 또는: setNotebooks(await fetchUserFolders());
+            } catch (e: any) {
+                const s = e?.response?.status;
+                if (s === 409) alert("동일한 이름의 폴더가 이미 존재합니다.");
+                else if (s === 400) alert("폴더 이름 형식이 올바르지 않습니다.");
+                else if (s === 403) alert("이 폴더에 대한 권한이 없습니다.");
+                else if (s === 404) alert("폴더를 찾을 수 없습니다.");
+                else alert("폴더 이름 변경에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+            }
+        },
+        [notebooks, normalize]
+    );
+
     return (
         <>
             <div style={{ display: "grid", gap: 16 }}>
@@ -103,7 +150,6 @@ export default function SpoonWordListPage() {
                         title={t.title}
                         description={t.description}
                         tags={t.tags}
-                        // TermCard가 onAdd를 호출해 주면 이 라인으로 동작
                         onAdd={() => openModalFor(t.id)}
                         onTagClick={(tag: string) => console.log("tag:", tag)}
                     />
@@ -116,6 +162,10 @@ export default function SpoonWordListPage() {
                 onClose={closeModal}
                 onSave={handleSaveToNotebook}
                 onReorder={handleReorder}
+                onRename={async (folderId, newName) => {
+                    await renameUserFolder(folderId, newName);
+                    setNotebooks(prev => prev.map(n => n.id === folderId ? ({ ...n, name: newName }) : n));
+                }}
             />
         </>
     );
