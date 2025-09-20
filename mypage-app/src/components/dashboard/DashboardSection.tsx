@@ -5,16 +5,18 @@ import {
     getAttendanceRate,
     getQuizCompletion,
     getWritingCount,
-    getTrustScore,
     AttendanceRateResponse,
     QuizCompletionResponse,
     WritingCountResponse,
-    TrustScoreResponse
 } from "../../api/dashboardApi.ts";
+import {
+    fetchTrustScore,
+    TrustScore
+} from "../../api/profileAppearanceApi.ts";
 import { fetchInterviewList } from "../../api/interviewApi.ts";
 import {PieChart, Pie, Cell, ResponsiveContainer} from "recharts";
 import styled from "styled-components";
-import RankSection from "./RankSection.tsx";
+import LevelSection from "./LevelSection.tsx";
 import TitleSection from "./TitleSection.tsx";
 import TrustScoreModal from "../modals/TrustScoreModal.tsx";
 import WritingModal from "../modals/WritingModal.tsx";
@@ -92,7 +94,8 @@ export default function DashboardSection() {
     const [interview, setInterview] = useState<{ interviewTotalCount: number; interviewMonthlyCount: number } | null>(null);
     const [quiz, setQuiz] = useState<QuizCompletionResponse | null>(null);
     const [writing, setWriting] = useState<WritingCountResponse | null>(null);
-    const [trust, setTrust] = useState<TrustScoreResponse | null>(null);
+    const [trust, setTrust] = useState<TrustScore | null>(null);
+
     const [trustModalOpen, setTrustModalOpen] = useState(false);
     const [writingModalOpen, setWritingModalOpen] = useState(false);
 
@@ -105,7 +108,7 @@ export default function DashboardSection() {
         getAttendanceRate(token).then(setAttendance).catch(console.error);
         getQuizCompletion(token).then(setQuiz).catch(console.error);
         getWritingCount(token).then(setWriting).catch(console.error);
-        getTrustScore(token).then(setTrust).catch(console.error);
+        fetchTrustScore(token).then(setTrust).catch(console.error);
 
         // ✅ 인터뷰 목록에서 COMPLETED만 필터링
         fetchInterviewList(token).then((data) => {
@@ -152,11 +155,11 @@ export default function DashboardSection() {
                     </TopCard>
                     <TopCard>
                         <p>총 문제풀이</p>
-                        <strong>{quiz.quizTotalCount}개</strong>
+                        <strong>{quiz.totalCount}개</strong>
                     </TopCard>
                     <TopCard>
                         <p>총 글 작성</p>
-                        <strong>{writing.totalCount}개</strong>
+                        <strong>{writing.total}개</strong>
                         <DetailButton onClick={() => setWritingModalOpen(true)}>자세히 보기</DetailButton>
                     </TopCard>
                 </TopCardGrid>
@@ -165,8 +168,8 @@ export default function DashboardSection() {
                 <DonutGrid>
                     <DonutChart value={attendance.attendanceRate} label="이번 달 출석률" unit="%" max={100}/>
                     <DonutChart value={interview.interviewMonthlyCount} label="이번 달 모의면접" unit="회" max={10}/>
-                    <DonutChart value={quiz.quizMonthlyCount} label="이번 달 문제풀이" unit="개" max={20}/>
-                    <DonutChart value={trust.trustScore} label="신뢰 점수" unit="점" max={100}
+                    <DonutChart value={quiz.monthlyCount} label="이번 달 문제풀이" unit="개" max={20}/>
+                    <DonutChart value={trust.score} label="신뢰 점수" unit="점" max={100}
                                 onDetailClick={() => setTrustModalOpen(true)}/>
                 </DonutGrid>
             </Section>
@@ -182,12 +185,12 @@ export default function DashboardSection() {
             <TrustScoreModal
                 isOpen={trustModalOpen}
                 onClose={() => setTrustModalOpen(false)}
-                trust={trust}   // ✅ 여기서 trust 넘겨주기
+                trust={trust}
             />
 
-            {/* 나의 랭크 현황 */}
+            {/* 나의 레벨 현황 */}
             <Section>
-                <RankSection/>
+                <LevelSection/>
             </Section>
 
             {/* 나의 칭호 현황 */}
@@ -217,14 +220,14 @@ const SectionTitle = styled.h2`
   color: rgb(17, 24, 39);
 `;
 
-/* ✅ 상단 카드 레이아웃 */
+/* 상단 카드 레이아웃 */
 const TopCardGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
 `;
 
-/* ✅ 상단 카드 레이아웃 */
+/* 상단 카드 레이아웃 */
 const TopCard = styled.div`
     background: rgb(249, 250, 251);
     border-radius: 12px;

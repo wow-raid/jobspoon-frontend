@@ -39,9 +39,13 @@ export default function ProfileAppearanceCard({profile}: {profile: ProfileAppear
                     <InfoTable>
                         <tbody>
                         <tr>
-                            <LabelCell>등급</LabelCell>
+                            <LabelCell>레벨</LabelCell> {/* 등급 → 레벨 */}
                             <Separator>|</Separator>
-                            <ValueCell>{profile.rank?.displayName ?? "등급 없음"}</ValueCell>
+                            <ValueCell>
+                                {profile.userLevel
+                                    ? `Lv.${profile.userLevel.level} (Exp ${profile.userLevel.exp}/${profile.userLevel.totalExp})`
+                                    : "레벨 정보 없음"}
+                            </ValueCell>
                         </tr>
                         <tr>
                             <LabelCell>칭호</LabelCell>
