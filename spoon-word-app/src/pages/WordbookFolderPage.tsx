@@ -8,6 +8,7 @@ import TermCard from "../components/TermCard";
 import { setMemorization } from "../api/memorization";
 import { fetchMemorizationStatuses } from "../api/memorization";
 import { moveFolderTerms } from "../api/userWordbookTerms";
+import { renameUserFolder } from "../api/folder";
 
 /** 서버 응답에서 안전하게 뽑아둘 필드들 */
 type TermRow = any;
@@ -372,6 +373,8 @@ export default function WordbookFolderPage() {
     const [moveOpen, setMoveOpen] = React.useState(false);
     const [notebooks, setNotebooks] = React.useState<Notebook[]>([]);
 
+    const normalize = React.useCallback((s: string) => s.trim().replace(/\s+/g, " ").toLowerCase(), []);
+
     /* ------ data fetch ------ */
     const mapRow = (row: TermRow): TermItem | null => {
         const uwt =
@@ -469,6 +472,35 @@ export default function WordbookFolderPage() {
         }
     }, [folderId, navigate]);
 
+    const handleRequestRename = React.useCallback(
+        async (folderId: string, currentName: string) => {
+            const next = window.prompt("새 폴더 이름을 입력하세요.", currentName ?? "");
+            if (next == null) return; // 취소
+            const raw = next.trim();
+            if (!raw) return alert("폴더 이름은 공백일 수 없습니다.");
+            if (raw.length > 60) return alert("폴더 이름은 최대 60자입니다.");
+
+            // 중복 체크(현재 모달에 있는 목록 기준)
+            const dup = notebooks.some(n => n.id !== folderId && normalize(n.name) === normalize(raw));
+            if (dup) return alert("동일한 이름의 폴더가 이미 존재합니다.");
+
+            try {
+                await renameUserFolder(folderId, raw);               // PATCH /api/me/folders/{id}
+                // 로컬 반영 또는 서버 재조회 중 하나 선택
+                setNotebooks(prev => prev.map(n => (n.id === folderId ? { ...n, name: raw } : n)));
+                // 필요 시: setNotebooks(await fetchUserFolders());
+            } catch (e: any) {
+                const s = e?.response?.status;
+                if (s === 409) alert("동일한 이름의 폴더가 이미 존재합니다.");
+                else if (s === 400) alert("폴더 이름 형식이 올바르지 않습니다.");
+                else if (s === 403) alert("이 폴더에 대한 권한이 없습니다.");
+                else if (s === 404) alert("폴더를 찾을 수 없습니다.");
+                else alert("폴더 이름 변경에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+            }
+        },
+        [notebooks, normalize]
+    );
+
     React.useEffect(() => {
         setPage(0);
         setChecked({});
@@ -550,7 +582,7 @@ export default function WordbookFolderPage() {
 
         const selected = items.filter(it => selectedIds.includes(it.uwtId));
 
-        // ✅ termId가 진짜 숫자인 것만 전송
+        // termId가 진짜 숫자인 것만 전송
         const termIds = Array.from(
             new Set(
                 selected
@@ -842,6 +874,10 @@ export default function WordbookFolderPage() {
                 onGoToFolder={(fid, name) => {
                     setMoveOpen(false);
                     navigate(`/spoon-word/folders/${fid}`, { state: { folderName: name } });
+                }}
+                onRename={async (folderId, newName) => {
+                    await renameUserFolder(folderId, newName);
+                    setNotebooks(prev => prev.map(n => n.id === folderId ? ({ ...n, name: newName }) : n));
                 }}
             />
         </div>

@@ -5,6 +5,12 @@ import axiosInstance from "../api/axiosInstance";
 import { fetchTermsByTag } from "../api/termApi";   // 태그 전용 API
 import TermCardWithTagsLazy from "../components/TermCardWithTagsLazy";
 
+// 단어장 모달 & 폴더 관련 API
+import SpoonNoteModal from "../components/SpoonNoteModal";
+import { fetchUserFolders, patchReorderFolders } from "../api/userWordbook";
+import { renameUserFolder } from "../api/folder";
+import http, { authHeader } from "../utils/http";
+
 /** 타입 정의 */
 type Term = { id: number; title: string; description: string; tags?: string[] };
 type ApiItem = {
@@ -22,6 +28,9 @@ type ApiResponse = {
     items?: ApiItem[]; content?: ApiItem[]; totalElements?: number;
 };
 type CacheData = { q: string; items: Term[]; total: number; scrollY?: number };
+
+// 모달용 타입
+type Notebook = { id: string; name: string };
 
 /** 세션 캐시 유틸 */
 const readCache = (k: string): CacheData | null => { try { const r = sessionStorage.getItem(k); return r ? JSON.parse(r) : null; } catch { return null; } };
@@ -67,17 +76,17 @@ const InfoStrongNum = styled.span`
 `;
 
 const Chip = styled.span`
-    display: inline-flex;
-    align-items: center;
-    gap: ${TOKENS.space(6)};
-    border-radius: ${TOKENS.radius}px;
-    background: ${TOKENS.color.chipBg};
-    border: 1px solid ${TOKENS.color.chipBorder};
-    padding: ${TOKENS.space(4)} ${TOKENS.space(8)};
-    font-size: ${TOKENS.font.small};
-    color: ${TOKENS.color.textBlue};
-    font-weight: 700;
-    flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: ${TOKENS.space(6)};
+  border-radius: ${TOKENS.radius}px;
+  background: ${TOKENS.color.chipBg};
+  border: 1px solid ${TOKENS.color.chipBorder};
+  padding: ${TOKENS.space(4)} ${TOKENS.space(8)};
+  font-size: ${TOKENS.font.small};
+  color: ${TOKENS.color.textBlue};
+  font-weight: 700;
+  flex: 0 0 auto;
 `;
 
 const Tail = styled.span` flex: 0 0 auto; `;
@@ -85,7 +94,6 @@ const LoadingMsg = styled.div` margin-top: ${TOKENS.space(16)}; color: ${TOKENS.
 const ErrorMsg = styled.div` margin-top: ${TOKENS.space(16)}; color: ${TOKENS.color.red}; `;
 const List = styled.ul` margin-top: ${TOKENS.space(16)}; padding: 0; list-style: none; `;
 const ListItem = styled.li` & + & { margin-top: ${TOKENS.space(16)}; } `;
-const EmptyMsg = styled.div` margin-top: ${TOKENS.space(16)}; color: ${TOKENS.color.textMuted}; `;
 
 /* ---------- Pagination ---------- */
 type PaginationProps = {
@@ -93,23 +101,23 @@ type PaginationProps = {
     onChange: (nextPageZeroBased: number) => void;
 };
 const PaginationNav = styled.nav`
-    margin-top: ${TOKENS.space(16)};
-    display: flex; align-items: center; justify-content: center;
-    gap: ${TOKENS.space(8)}; user-select: none;
+  margin-top: ${TOKENS.space(16)};
+  display: flex; align-items: center; justify-content: center;
+  gap: ${TOKENS.space(8)}; user-select: none;
 `;
 const PageNumBtn = styled.button<{ $active: boolean }>`
-    min-width: 34px; height: 34px; padding: 0 10px; border-radius: 999px;
-    border: 1px solid ${({ $active }) => ($active ? TOKENS.color.textBlue : TOKENS.color.border)};
-    background: ${({ $active }) => ($active ? TOKENS.color.textBlue : "#fff")};
-    color: ${({ $active }) => ($active ? "#fff" : TOKENS.color.text)};
-    font-weight: ${({ $active }) => ($active ? 700 : 600)};
-    cursor: pointer;
+  min-width: 34px; height: 34px; padding: 0 10px; border-radius: 999px;
+  border: 1px solid ${({ $active }) => ($active ? TOKENS.color.textBlue : TOKENS.color.border)};
+  background: ${({ $active }) => ($active ? TOKENS.color.textBlue : "#fff")};
+  color: ${({ $active }) => ($active ? "#fff" : TOKENS.color.text)};
+  font-weight: ${({ $active }) => ($active ? 700 : 600)};
+  cursor: pointer;
 `;
 const NavBtn = styled.button<{ $disabled: boolean }>`
-    width: 34px; height: 34px; border-radius: 999px; border: 1px solid ${TOKENS.color.border};
-    background: #fff; color: ${({ $disabled }) => ($disabled ? "#c7c7c7" : TOKENS.color.text)};
-    cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "pointer")};
-    display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 999px; border: 1px solid ${TOKENS.color.border};
+  background: #fff; color: ${({ $disabled }) => ($disabled ? "#c7c7c7" : TOKENS.color.text)};
+  cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "pointer")};
+  display: inline-flex; align-items: center; justify-content: center;
 `;
 
 const Pagination: React.FC<PaginationProps> = ({ page, size, total, onChange }) => {
@@ -176,6 +184,11 @@ export default function SearchPage() {
     const [total, setTotal] = React.useState(0);
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
+
+    // 단어장 모달 상태
+    const [moveOpen, setMoveOpen] = React.useState(false);
+    const [notebooks, setNotebooks] = React.useState<Notebook[]>([]);
+    const [selectedTermId, setSelectedTermId] = React.useState<number | null>(null);
 
     // 캐시 키
     const cacheKey = React.useMemo(
@@ -324,6 +337,72 @@ export default function SearchPage() {
         navigate({ pathname: "search", search: `?${sp.toString()}` });
     };
 
+    /** ========== SpoonNoteModal 연동 ========== */
+    const normalize = React.useCallback((s: string) => s.trim().replace(/\s+/g, " ").toLowerCase(), []);
+
+    // 폴더 이름 변경
+    const handleRequestRename = React.useCallback(
+        async (folderId: string, currentName: string) => {
+            const next = window.prompt("새 폴더 이름을 입력하세요.", currentName ?? "");
+            if (next == null) return;
+            const raw = next.trim();
+            if (!raw) { alert("폴더 이름은 공백일 수 없습니다."); return; }
+            if (raw.length > 60) { alert("폴더 이름은 최대 60자입니다."); return; }
+
+            const dup = notebooks.some(n => n.id !== folderId && normalize(n.name) === normalize(raw));
+            if (dup) { alert("동일한 이름의 폴더가 이미 존재합니다."); return; }
+
+            try {
+                await renameUserFolder(folderId, raw);
+                // 최신 목록 재조회(또는 로컬 반영)
+                const list = await fetchUserFolders();
+                setNotebooks(list);
+            } catch (e: any) {
+                const s = e?.response?.status;
+                if (s === 409) alert("동일한 이름의 폴더가 이미 존재합니다.");
+                else if (s === 400) alert("폴더 이름 형식이 올바르지 않습니다.");
+                else if (s === 403) alert("이 폴더에 대한 권한이 없습니다.");
+                else if (s === 404) alert("폴더를 찾을 수 없습니다.");
+                else alert("폴더 이름 변경에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+            }
+        },
+        [notebooks, normalize]
+    );
+
+    // 폴더 생성
+    const handleCreateFolder = React.useCallback(async (name: string) => {
+        const { data } = await http.post("/api/me/folders", { folderName: name }, { headers: { ...authHeader() } });
+        const newId = String(data.id);
+        const newName = data.folderName ?? name;
+        setNotebooks(prev => [{ id: newId, name: newName }, ...prev]);
+        return newId;
+    }, []);
+
+    // 폴더 순서 저장
+    const handleReorderFolders = React.useCallback(async (orderedIds: string[]) => {
+        try { await patchReorderFolders(orderedIds); } catch (e) { console.warn("[folders reorder] 실패", e); }
+    }, []);
+
+    // "저장하기" 클릭 시(선택 폴더로 현재 term 저장)
+    const handleSaveToNotebook = React.useCallback(
+        async (notebookId: string) => {
+            if (!selectedTermId) return;
+            // TODO: 실제 attach API 호출로 교체하세요.
+            // await attachTermToFolder({ folderId: notebookId, termId: selectedTermId });
+            console.log("add to wordbook:", selectedTermId, "-> folder:", notebookId);
+            setMoveOpen(false);
+            setSelectedTermId(null);
+        },
+        [selectedTermId]
+    );
+
+    // 카드의 + 버튼
+    const handleAddClick = React.useCallback(async (termId: number) => {
+        setSelectedTermId(termId);
+        try { setNotebooks(await fetchUserFolders()); } catch { setNotebooks([]); }
+        setMoveOpen(true);
+    }, []);
+
     return (
         <Root>
             {(q || tag || initial || alpha || symbol || catId) ? (
@@ -354,7 +433,7 @@ export default function SearchPage() {
                                     description={t.description}
                                     tags={t.tags}
                                     onTagClick={handleTagClick}
-                                    onAdd={(id) => console.log("add to wordbook:", id)}
+                                    onAdd={handleAddClick} // 모달 열기
                                 />
                             </ListItem>
                         ))}
@@ -364,8 +443,23 @@ export default function SearchPage() {
             )}
 
             {!loading && !error && (q || tag || initial || alpha || symbol || catId) && results.length === 0 && (
-                <EmptyMsg>검색 결과가 없습니다.</EmptyMsg>
+                <div style={{ marginTop: TOKENS.space(16), color: TOKENS.color.textMuted }}>검색 결과가 없습니다.</div>
             )}
+
+            {/* 단어장 이동/저장 모달 */}
+            <SpoonNoteModal
+                open={moveOpen}
+                notebooks={notebooks}
+                onClose={() => { setMoveOpen(false); setSelectedTermId(null); }}
+                onSave={handleSaveToNotebook}
+                onCreate={handleCreateFolder}
+                onReorder={handleReorderFolders}
+                onGoToFolder={() => { setMoveOpen(false); }} // 검색 페이지에서는 이동 대신 모달만 닫아도 OK
+                onRename={async (folderId, newName) => {
+                    await renameUserFolder(folderId, newName);
+                    setNotebooks(prev => prev.map(n => n.id === folderId ? ({ ...n, name: newName }) : n));
+                }}
+            />
         </Root>
     );
 }

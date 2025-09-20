@@ -4,6 +4,7 @@ import SpoonNoteModal from "../components/SpoonNoteModal";
 import { fetchUserFolders, patchReorderFolders } from "../api/userWordbook";
 import { moveFavorites, deleteFavoriteTerm, MoveFavoritesResponse } from "../api/favorites";
 import http, { authHeader } from "../utils/http";
+import { renameUserFolder } from "../api/folder";
 // import toast from "react-hot-toast";
 
 type FavoriteItem = {
@@ -179,7 +180,7 @@ export default function FavoriteTermsPage() {
                 return;
             }
 
-            // ✅ 서버 진실과 재동기화 (로컬 제거 대신 다시 로드)
+            // 서버 진실과 재동기화 (로컬 제거 대신 다시 로드)
             await fetchFavorites();
 
             // 선택 상태 초기화 & 모달 닫기
@@ -217,6 +218,35 @@ export default function FavoriteTermsPage() {
 
     if (loading && items.length === 0) return <p style={{ padding: 20 }}>⏳ 불러오는 중...</p>;
     if (items.length === 0) return <Empty>즐겨찾기한 용어가 없어요.</Empty>;
+
+    const normalize = React.useCallback((s: string) => s.trim().replace(/\s+/g, " ").toLowerCase(), []);
+
+    const handleRequestRename = React.useCallback(async (folderId: string, currentName: string) => {
+        const next = window.prompt("새 폴더 이름을 입력하세요.", currentName ?? "");
+        if (next == null) return;
+        const raw = next.trim();
+        if (!raw) { alert("폴더 이름은 공백일 수 없습니다."); return; }
+        if (raw.length > 60) { alert("폴더 이름은 최대 60자입니다."); return; }
+
+        // 로컬 중복 체크(선택 사항)
+        const dup = notebooks.some(n => n.id !== folderId && normalize(n.name) === normalize(raw));
+        if (dup) { alert("동일한 이름의 폴더가 이미 존재합니다."); return; }
+
+        try {
+            await renameUserFolder(folderId, raw);
+            // 최신 목록 갱신
+            const list = await fetchUserFolders();
+            setNotebooks(list);
+        } catch (e: any) {
+            const s = e?.response?.status;
+            if (s === 409) alert("동일한 이름의 폴더가 이미 존재합니다.");
+            else if (s === 400) alert("폴더 이름 형식이 올바르지 않습니다.");
+            else if (s === 403) alert("이 폴더에 대한 권한이 없습니다.");
+            else if (s === 404) alert("폴더를 찾을 수 없습니다.");
+            else alert("폴더 이름 변경에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+        }
+    }, [notebooks, normalize]);
+
 
     return (
         <>
@@ -284,6 +314,10 @@ export default function FavoriteTermsPage() {
                 onGoToFolder={() => {
                     // 즐겨찾기 화면은 라우팅만 해두고 여기서는 모달만 닫음(필요 시 navigate 연결)
                     setMoveOpen(false);
+                }}
+                onRename={async (folderId, newName) => {
+                    await renameUserFolder(folderId, newName);
+                    setNotebooks(prev => prev.map(n => n.id === folderId ? ({ ...n, name: newName }) : n));
                 }}
             />
         </>
