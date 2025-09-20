@@ -104,6 +104,9 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, currentUser, onEdit, o
   return (
     <Container>
       <Title>{event.title}</Title>
+        <Info>
+            <strong>작성자:</strong> {event.authorNickname}
+        </Info>
       <Info>
         <strong>시간:</strong> {new Date(event.start).toLocaleString()} ~ {new Date(event.end).toLocaleString()}
       </Info>

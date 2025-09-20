@@ -199,7 +199,7 @@ const TestInterview: React.FC = () => {
     return (
         <Container>
             <Header>
-                <h2>🎙️ 모의면접 채널</h2>
+                <h2>🎙️모의면접채널</h2>
             </Header>
 
             <NavContainer>
@@ -210,8 +210,8 @@ const TestInterview: React.FC = () => {
                     <TabLink to={`/studies/joined-study/${studyId}/members`}>참여인원</TabLink>
                     {userRole === 'LEADER' && (
                         <>
-                            <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청 관리</TabLink>
-                            <TabLink to={`/studies/joined-study/${studyId}/attendance`}>출석 관리</TabLink>
+                            <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청관리</TabLink>
+                            <TabLink to={`/studies/joined-study/${studyId}/attendance`}>출석관리</TabLink>
                         </>
                     )}
                 </TabList>
