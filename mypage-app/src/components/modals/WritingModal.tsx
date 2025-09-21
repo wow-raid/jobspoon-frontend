@@ -2,16 +2,12 @@
 
 import React from "react";
 import styled from "styled-components";
+import { WritingCountResponse } from "../../api/dashboardApi.ts";
 
 type Props = {
     isOpen: boolean;
     onClose: () => void;
-    writing: {
-        posts: number;
-        studyrooms: number;
-        comments: number;
-        total: number;
-    } | null; // null 가능하도록
+    writing: WritingCountResponse | null;
 };
 
 export default function WritingModal({ isOpen, onClose, writing }: Props) {
@@ -28,10 +24,10 @@ export default function WritingModal({ isOpen, onClose, writing }: Props) {
                 <Content>
                     <h3>내 글 현황</h3>
                     <ul>
-                        <li>✍️ 게시글 작성: {writing.posts}개</li>
-                        <li>📚 스터디룸 개설: {writing.studyrooms}개</li>
-                        <li>💬 댓글 작성: {writing.comments}개</li>
-                        <li>📝 총 글 작성: {writing.total}개</li>
+                        <li>✍️ 게시글 작성: {writing.postCount}개</li>
+                        <li>📚 스터디룸 개설: {writing.studyroomCount}개</li>
+                        <li>💬 댓글 작성: {writing.commentCount}개</li>
+                        <li>📝 총 글 작성: {writing.totalCount}개</li>
                     </ul>
                 </Content>
 

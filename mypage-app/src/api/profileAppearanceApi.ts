@@ -27,7 +27,7 @@ export interface PhotoResponse {
 
 /** 신뢰 점수 */
 export interface TrustScore {
-    score: number;
+    totalScore: number;
     attendanceRate: number;
     monthlyInterviews: number;
     monthlyProblems: number;

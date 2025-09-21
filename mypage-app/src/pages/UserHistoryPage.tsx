@@ -56,7 +56,7 @@ export default function UserHistoryPage() {
                     {trustScore ? (
                         <>
                             <ul>
-                                <li>출석률: {(trustScore.attendanceRate * 100).toFixed(1)}%</li>
+                                <li>출석률: {(trustScore.attendanceRate).toFixed(1)}%</li>
                                 <li>이번 달 인터뷰: {trustScore.monthlyInterviews}회</li>
                                 <li>이번 달 문제풀이: {trustScore.monthlyProblems}개</li>
                                 <li>이번 달 글 작성: {trustScore.monthlyPosts}개</li>
