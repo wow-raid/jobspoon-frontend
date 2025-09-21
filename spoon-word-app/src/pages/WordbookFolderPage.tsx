@@ -9,6 +9,8 @@ import { setMemorization } from "../api/memorization";
 import { fetchMemorizationStatuses } from "../api/memorization";
 import { moveFolderTerms } from "../api/userWordbookTerms";
 import { renameUserFolder, deleteUserFolder, deleteUserFoldersBulk } from "../api/folder";
+import { generatePdfByTermIds } from "../api/ebook";
+import { saveBlob } from "../utils/download";
 
 /** 서버 응답에서 안전하게 뽑아둘 필드들 */
 type TermRow = any;
@@ -109,6 +111,21 @@ const SettingsBtn = styled.button`
     gap: 8px;
 `;
 
+const PrimaryBtn = styled.button`
+    height: 36px;
+    padding: 0 14px;
+    border-radius: ${UI.radius.sm}px;
+    border: 1px solid ${UI.color.primary};
+    background: ${UI.color.primary};
+    color: #fff;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    &:disabled { opacity: .7; cursor: not-allowed; }
+`;
+
 const Gear = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm7.94-3.5c0-.5-.05-1-.15-1.47l2.12-1.65-2-3.46-2.5 1a7.7 7.7 0 0 0-2.54-1.47l-.38-2.67h-4l-.38 2.67A7.7 7.7 0 0 0 8.5 5.95l-2.5-1-2 3.46 2.12 1.65c-.1.48-.15.97-.15 1.47s.05.99.15 1.47L4 16.12l2 3.46 2.5-1c.78.6 1.62 1.08 2.54 1.47l.38 2.67h4l.38-2.67c.92-.39 1.76-.87 2.54-1.47l2.5 1 2-3.46-2.12-1.65c.1-.48.15-.97.15-1.47Z" fill="currentColor"/>
@@ -154,7 +171,6 @@ const HideTermCardAdd = styled.div<{
 }>`
     [aria-label="내 단어장에 추가"] { display: none !important; }
 
-    /* 단어 숨기기: h3 제목 위에 f8fafc 네모 박스 덮기 */
     ${({ $hideTitle }) =>
             $hideTitle &&
             `
@@ -177,7 +193,6 @@ const HideTermCardAdd = styled.div<{
     }
   `}
 
-        /* 뜻 숨기기: 박스(InnerBox)는 유지하고 텍스트만 투명 처리 */
     ${({ $hideDesc }) =>
             $hideDesc &&
             `
@@ -194,19 +209,16 @@ const HideTermCardAdd = styled.div<{
     }
   `}
 
-        /* 연관 키워드 통째로 숨김 */
     article [aria-label="연관 키워드"] {
         display: none !important;
     }
 `;
 
-/** 카드 래퍼 — 선택해도 박스 테두리 없음 */
 const CardWrap = styled.div`
     position: relative;
     border-radius: ${UI.radius.xl}px;
 `;
 
-/** 우측 상단 원형 선택 토글(선택 모드 전용) */
 const SelectToggle = styled.button<{ $on?: boolean }>`
     position: absolute;
     top: 14px;
@@ -242,11 +254,10 @@ const Hollow = styled.span`
     width: 14px; height: 14px; border-radius: 999px; border: 2px solid ${UI.color.indigo}; display: block;
 `;
 
-/** 타이틀 옆 '미암기 ↔ 암기 완료' 토글 버튼 */
 const StatusBtn = styled.button<{ $done?: boolean; $shift?: boolean }>`
     position: absolute;
     top: 20px;
-    right: ${({ $shift }) => ($shift ? "56px" : "20px")}; /* 선택 토글이 있을 땐 살짝 왼쪽으로 이동 */
+    right: ${({ $shift }) => ($shift ? "56px" : "20px")};
     z-index: 2;
     height: 28px;
     padding: 0 10px;
@@ -265,14 +276,12 @@ const StatusBtn = styled.button<{ $done?: boolean; $shift?: boolean }>`
     &:active { transform: scale(0.98); }
     &:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.20); }
 
-    /* 저장 중 시 약간 비활성 느낌 */
     &:disabled {
         opacity: 0.7;
         cursor: not-allowed;
     }
 `;
 
-/* ----- 카드별 보기 제어(학습 모드: 단어/뜻 숨김) ----- */
 const LearnRow = styled.div`
     margin-top: 12px;
     margin-left: 16px;
@@ -306,7 +315,6 @@ const LearnBtn = styled.button<{ $active?: boolean }>`
     &:hover { background: #f9fafb; }
 `;
 
-/* 빈 상태/더보기 */
 const Empty = styled.div`
     border: 1px dashed ${UI.color.line};
     border-radius: ${UI.radius.xl}px;
@@ -356,14 +364,15 @@ export default function WordbookFolderPage() {
     const [titleMode, setTitleMode] = React.useState<ViewMode>("inherit");
     const [descMode, setDescMode] = React.useState<ViewMode>("inherit");
 
-    // 카드별 보기 상태: 'none' | 'hideTitle' | 'hideDesc'
+    // 카드별 보기 상태
     const [cardView, setCardView] = React.useState<Record<string, "none" | "hideTitle" | "hideDesc">>({});
 
-    // 카드별 암기 상태: 'unmemorized' | 'memorized'
+    // 카드별 암기 상태
     const [learn, setLearn] = React.useState<Record<string, "unmemorized" | "memorized">>({});
 
-    // 저장 중 상태 (버튼 디스에이블)
+    // 저장/내보내기 진행 상태
     const [saving, setSaving] = React.useState<Record<string, boolean>>({});
+    const [exporting, setExporting] = React.useState(false);
 
     // 설정 메뉴
     const [menuOpen, setMenuOpen] = React.useState(false);
@@ -385,17 +394,12 @@ export default function WordbookFolderPage() {
             row.user_wordbook_term_id;
         if (uwt == null) return null;
 
-        // 1) 가장 믿을 수 있는 소스: 중첩 객체의 term.id
         let tId: number | null =
             row?.term?.id ?? row?.term_id ?? null;
 
-        // 2) 루트의 termId가 있긴 한데, 이게 uwtId와 같으면 가짜일 확률 높음 → 버림
         if (tId == null) {
             const rootTermId = row.termId ?? row.tid ?? row?.term?.termId;
-            if (
-                rootTermId != null &&
-                String(rootTermId) !== String(uwt) // uwtId와 같으면 쓰지 않음
-            ) {
+            if (rootTermId != null && String(rootTermId) !== String(uwt)) {
                 tId = Number(rootTermId);
                 if (!Number.isFinite(tId)) tId = null;
             }
@@ -420,7 +424,7 @@ export default function WordbookFolderPage() {
 
         return {
             uwtId: String(uwt),
-            termId: tId != null ? String(tId) : null, // ← term.id 없으면 null
+            termId: tId != null ? String(tId) : null,
             title: String(title),
             description: String(description),
             createdAt,
@@ -449,19 +453,6 @@ export default function WordbookFolderPage() {
             setHasMore(p + 1 < totalPages);
 
             if (typeof d.folderName === "string" && d.folderName.trim()) setFolderName(d.folderName);
-
-            // (선택) 서버가 암기 상태를 내려주면 여기서 초기화
-            // const initLearn: Record<string, "unmemorized" | "memorized"> = {};
-            // raw.forEach((row) => {
-            //   const uwtId = row.userTermId ?? row.userWordbookTermId ?? row.id;
-            //   const s = row.memorizationStatus ?? row.status;
-            //   if (uwtId != null && (s === "MEMORIZED" || s === "LEARNING")) {
-            //     initLearn[String(uwtId)] = s === "MEMORIZED" ? "memorized" : "unmemorized";
-            //   }
-            // });
-            // if (Object.keys(initLearn).length) {
-            //   setLearn((prev) => (p === 0 ? { ...prev, ...initLearn } : { ...initLearn, ...prev }));
-            // }
         } catch (err: any) {
             const s = err?.response?.status;
             if (s === 401) navigate("/login", { state: { from: `/spoon-word/folders/${folderId}` } });
@@ -472,35 +463,7 @@ export default function WordbookFolderPage() {
         }
     }, [folderId, navigate]);
 
-    const handleRequestRename = React.useCallback(
-        async (folderId: string, currentName: string) => {
-            const next = window.prompt("새 폴더 이름을 입력하세요.", currentName ?? "");
-            if (next == null) return; // 취소
-            const raw = next.trim();
-            if (!raw) return alert("폴더 이름은 공백일 수 없습니다.");
-            if (raw.length > 60) return alert("폴더 이름은 최대 60자입니다.");
-
-            // 중복 체크(현재 모달에 있는 목록 기준)
-            const dup = notebooks.some(n => n.id !== folderId && normalize(n.name) === normalize(raw));
-            if (dup) return alert("동일한 이름의 폴더가 이미 존재합니다.");
-
-            try {
-                await renameUserFolder(folderId, raw);               // PATCH /api/me/folders/{id}
-                // 로컬 반영 또는 서버 재조회 중 하나 선택
-                setNotebooks(prev => prev.map(n => (n.id === folderId ? { ...n, name: raw } : n)));
-                // 필요 시: setNotebooks(await fetchUserFolders());
-            } catch (e: any) {
-                const s = e?.response?.status;
-                if (s === 409) alert("동일한 이름의 폴더가 이미 존재합니다.");
-                else if (s === 400) alert("폴더 이름 형식이 올바르지 않습니다.");
-                else if (s === 403) alert("이 폴더에 대한 권한이 없습니다.");
-                else if (s === 404) alert("폴더를 찾을 수 없습니다.");
-                else alert("폴더 이름 변경에 실패했습니다. 잠시 후 다시 시도해 주세요.");
-            }
-        },
-        [notebooks, normalize]
-    );
-
+    // 초기 로드
     React.useEffect(() => {
         setPage(0);
         setChecked({});
@@ -508,36 +471,30 @@ export default function WordbookFolderPage() {
         fetchPage(0);
     }, [fetchPage]);
 
+    // 암기 상태 초기 동기화
     React.useEffect(() => {
         if (items.length === 0) return;
-
         let aborted = false;
         const ids = Array.from(new Set(items.map(it => Number(it.termId)).filter(Boolean)));
 
         (async () => {
             try {
-                const map = await fetchMemorizationStatuses(ids); // { "123": "MEMORIZED", "456": "LEARNING", ... }
+                const map = await fetchMemorizationStatuses(ids);
                 if (aborted || !map) return;
-
                 setLearn(prev => {
                     const next = { ...prev };
                     for (const it of items) {
                         const raw = map[String(it.termId)];
                         if (raw === "MEMORIZED") next[it.uwtId] = "memorized";
                         else if (raw === "LEARNING") next[it.uwtId] = "unmemorized";
-                        // 값이 없으면 그대로 두고(기본 미암기), 다음 요청에서 채워짐
                     }
                     return next;
                 });
-            } catch (e) {
-                console.warn("[memo:init] 상태 조회 실패", e);
-            }
+            } catch (e) { console.warn("[memo:init] 상태 조회 실패", e); }
         })();
 
         return () => { aborted = true; };
     }, [items]);
-
-
 
     /* ------ selection / bulk actions ------ */
     const toggleAll = (on: boolean) => {
@@ -560,14 +517,6 @@ export default function WordbookFolderPage() {
 
     const openMove = async () => {
         if (selectedIds.length === 0) return;
-
-        const sel = items.filter(it => selectedIds.includes(it.uwtId));
-        console.table(sel.map(it => ({
-            uwtId: it.uwtId,
-            termId: it.termId, // 반드시 term.id 여야 함
-            title: it.title,
-        })));
-
         try {
             const list = await fetchUserFolders();
             setNotebooks(list);
@@ -575,23 +524,13 @@ export default function WordbookFolderPage() {
         setMoveOpen(true); setMenuOpen(false);
     };
 
-
     const handleConfirmMove = async (destFolderId: string) => {
         if (!folderId || selectedIds.length === 0) return;
         if (String(destFolderId) === String(folderId)) { setMoveOpen(false); return; }
 
         const selected = items.filter(it => selectedIds.includes(it.uwtId));
+        const termIds = Array.from(new Set(selected.map(it => Number(it.termId)).filter(n => Number.isFinite(n) && n > 0)));
 
-        // termId가 진짜 숫자인 것만 전송
-        const termIds = Array.from(
-            new Set(
-                selected
-                    .map(it => Number(it.termId))
-                    .filter(n => Number.isFinite(n) && n > 0)
-            )
-        );
-
-        // termId 없던 카드들 로그
         const missing = selected.filter(it => !(Number(it.termId) > 0));
         if (missing.length) {
             console.warn("[move] term.id를 알 수 없어 제외된 항목:", missing.map(m => ({ uwtId: m.uwtId, termId: m.termId, title: m.title })));
@@ -604,15 +543,6 @@ export default function WordbookFolderPage() {
                 targetFolderId: Number(destFolderId),
                 termIds,
             });
-
-            console.group("[moveFolderTerms] result");
-            console.log("source -> target:", folderId, "->", destFolderId);
-            console.log("requested termIds:", termIds);
-            console.log("movedCount:", res.movedCount);
-            console.log("movedTermIds:", res.movedTermIds);
-            console.log("skippedCount:", res.skippedCount);
-            console.table(res.skipped?.map(s => ({ termId: s.termId, reason: `'${s.reason}'` })) ?? []);
-            console.groupEnd();
 
             const moved = new Set((res.movedTermIds ?? []).map(String));
             if (moved.size > 0) {
@@ -635,19 +565,54 @@ export default function WordbookFolderPage() {
         }
     };
 
-    /* ------ settings menu : outside click/esc ------ */
-    React.useEffect(() => {
-        if (!menuOpen) return;
-        const onDocClick = (e: MouseEvent) => {
-            if (!actionsRef.current) return;
-            const t = e.target as Node;
-            if (!actionsRef.current.contains(t)) setMenuOpen(false);
-        };
-        const onEsc = (e: KeyboardEvent) => { if (e.key === "Escape") setMenuOpen(false); };
-        document.addEventListener("mousedown", onDocClick);
-        document.addEventListener("keydown", onEsc);
-        return () => { document.removeEventListener("mousedown", onDocClick); document.removeEventListener("keydown", onEsc); };
-    }, [menuOpen]);
+    /* ------ PDF 내보내기 ------ */
+    const collectTermIdsForExport = React.useCallback((): number[] => {
+        // 선택 모드에서 선택이 있다면 선택한 것만, 아니면 현재 로드된 전체
+        const source = (selectMode && selectedIds.length > 0)
+            ? items.filter(it => selectedIds.includes(it.uwtId))
+            : items;
+
+        const termIds = Array.from(
+            new Set(
+                source
+                    .map(it => Number(it.termId))
+                    .filter(n => Number.isFinite(n) && n > 0)
+            )
+        );
+        return termIds;
+    }, [items, selectMode, selectedIds]);
+
+    const handleExportPdf = async () => {
+        const termIds = collectTermIdsForExport();
+        if (termIds.length === 0) {
+            alert("내보낼 용어가 없습니다. (term.id가 없는 항목은 제외됩니다)");
+            return;
+        }
+
+        try {
+            setExporting(true);
+            const { blob, meta } = await generatePdfByTermIds({ termIds, title: folderName });
+
+            // 파일명 검증 로그/경고
+            if (meta.mismatch) {
+                console.warn("[PDF Export] filename mismatch", meta);
+                // 필요시 토스트 경고 표시 가능
+            }
+
+            // 저장: CD 파일명 우선, 없으면 Ebook-Filename, 없으면 폴백
+            const finalName = meta.cdFilename || meta.ebookFilename || `jobspoon_terms_${Date.now()}.pdf`;
+            saveBlob(blob, finalName);
+
+            // 성공 로그 (필요시 토스트로)
+            console.info(`[PDF] 다운로드 완료 • Ebook-Id=${meta.ebookId} • ${meta.ebookCount}개 • 파일명='${finalName}'`);
+        } catch (e: any) {
+            console.error("[PDF] export failed", e);
+            alert(e?.message ?? "PDF 생성에 실패했습니다.");
+        } finally {
+            setExporting(false);
+            setMenuOpen(false);
+        }
+    };
 
     /* ------ render ------ */
     if (loading && items.length === 0) return <p style={{ padding: 20 }}>⏳ 불러오는 중...</p>;
@@ -655,7 +620,6 @@ export default function WordbookFolderPage() {
 
     const onLoadMore = () => { const next = page + 1; setPage(next); fetchPage(next); };
 
-    // 상단 버튼: 모드 순환(상속 → 전체숨김 → 전체표시 → 상속)
     const cycleTitleMode = () =>
         setTitleMode((m) => (m === "inherit" ? "allHidden" : m === "allHidden" ? "allShown" : "inherit"));
     const cycleDescMode = () =>
@@ -678,11 +642,16 @@ export default function WordbookFolderPage() {
 
                     <Spacer />
 
-                    {/* 보기 옵션(전체 적용) */}
+                    {/* 보기 옵션 */}
                     <Seg aria-label="보기 옵션">
                         <SegBtn $active={titleMode !== "inherit"} onClick={cycleTitleMode}>일괄 단어 숨기기</SegBtn>
                         <SegBtn $active={descMode !== "inherit"} onClick={cycleDescMode}>일괄 뜻 숨기기</SegBtn>
                     </Seg>
+
+                    {/* PDF 내보내기 버튼 */}
+                    <PrimaryBtn onClick={handleExportPdf} disabled={exporting || items.length === 0}>
+                        {exporting ? "내보내는 중..." : "PDF 내보내기"}
+                    </PrimaryBtn>
 
                     <Actions ref={actionsRef}>
                         <SettingsBtn type="button" onClick={() => setMenuOpen((v) => !v)} aria-haspopup="menu" aria-expanded={menuOpen}>
@@ -691,9 +660,14 @@ export default function WordbookFolderPage() {
                         {menuOpen && (
                             <Menu role="menu" aria-label="폴더 설정">
                                 {!selectMode ? (
-                                    <MenuItem role="menuitem" onClick={() => { setSelectMode(true); }}>
-                                        단어 선택 시작
-                                    </MenuItem>
+                                    <>
+                                        <MenuItem role="menuitem" onClick={() => { setSelectMode(true); }}>
+                                            단어 선택 시작
+                                        </MenuItem>
+                                        <MenuItem role="menuitem" onClick={handleExportPdf} disabled={exporting || items.length === 0}>
+                                            {exporting ? "PDF 내보내는 중..." : "PDF 내보내기"}
+                                        </MenuItem>
+                                    </>
                                 ) : (
                                     <>
                                         <MenuItem role="menuitem" onClick={() => toggleAll(!allOn)}>
@@ -704,6 +678,9 @@ export default function WordbookFolderPage() {
                                         </MenuItem>
                                         <MenuItem role="menuitem" disabled={selectedIds.length === 0} onClick={handleBulkDelete}>
                                             선택 항목 삭제
+                                        </MenuItem>
+                                        <MenuItem role="menuitem" onClick={handleExportPdf} disabled={exporting || (selectedIds.length === 0 && items.length === 0)}>
+                                            {exporting ? "PDF 내보내는 중..." : "선택 항목 PDF 내보내기"}
                                         </MenuItem>
                                         <MenuItem role="menuitem" onClick={() => { setSelectMode(false); setChecked({}); }}>
                                             선택 종료
@@ -736,7 +713,6 @@ export default function WordbookFolderPage() {
                                     descMode === "allShown" ? false :
                                         perCard === "hideDesc";
 
-                            // 암기 상태(타이틀 옆 버튼)
                             const status = learn[it.uwtId] ?? "unmemorized";
                             const done = status === "memorized";
 
@@ -744,7 +720,6 @@ export default function WordbookFolderPage() {
 
                             return (
                                 <CardWrap key={it.uwtId}>
-                                    {/* 선택 모드일 때만 우측 상단 선택 토글 */}
                                     {selectMode && (
                                         <SelectToggle
                                             $on={isChecked}
@@ -759,7 +734,6 @@ export default function WordbookFolderPage() {
                                         </SelectToggle>
                                     )}
 
-                                    {/* 타이틀 옆 상태 토글(미암기 ↔ 암기 완료) */}
                                     <StatusBtn
                                         $done={done}
                                         $shift={selectMode}
@@ -774,7 +748,6 @@ export default function WordbookFolderPage() {
                                             const prev = learn[it.uwtId] ?? "unmemorized";
                                             const nextLocal = prev === "memorized" ? "unmemorized" : "memorized";
 
-                                            // 낙관적 업데이트
                                             setLearn((m) => ({ ...m, [it.uwtId]: nextLocal }));
                                             setSaving((m) => ({ ...m, [it.uwtId]: true }));
 
@@ -784,9 +757,7 @@ export default function WordbookFolderPage() {
                                                     userTermId: it.uwtId,
                                                     done: nextLocal === "memorized",
                                                 });
-                                                // 성공 시 유지
                                             } catch (err: any) {
-                                                // 실패 → 롤백
                                                 setLearn((m) => ({ ...m, [it.uwtId]: prev }));
                                                 const s = err?.response?.status;
                                                 if (s === 401) {
@@ -806,7 +777,6 @@ export default function WordbookFolderPage() {
                                         {done ? "암기 완료" : "미암기"}
                                     </StatusBtn>
 
-                                    {/* TermCard 내부 + 버튼 숨김 + 보기 옵션 적용 + 연관 키워드 숨김 */}
                                     <HideTermCardAdd $hideTitle={hideTitleForCard} $hideDesc={hideDescForCard}>
                                         <TermCard
                                             id={Number(it.termId || it.uwtId)}
@@ -816,7 +786,6 @@ export default function WordbookFolderPage() {
                                         />
                                     </HideTermCardAdd>
 
-                                    {/* 카드별 보기 제어(학습 모드: 단어/뜻 숨김) */}
                                     <LearnRow aria-label="학습 모드">
                                         <LearnLabel>학습 모드</LearnLabel>
                                         <LearnSeg role="group" aria-label="학습 모드 선택">
@@ -855,7 +824,7 @@ export default function WordbookFolderPage() {
                 </>
             )}
 
-            {/* 이동 모달: 기존 SpoonNoteModal 재사용 */}
+            {/* 이동 모달 */}
             <SpoonNoteModal
                 open={moveOpen}
                 notebooks={notebooks}
