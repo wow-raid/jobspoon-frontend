@@ -87,18 +87,29 @@ const App: React.FC = () => {
 
         console.log(result);
 
-        if(result){
-          localStorage.setItem("isLoggedIn", "dsds-ww-sdx-s>W??");
-        } else {
+        if (result === false) {
+          // result가 false일 때 처리
           localStorage.removeItem("isLoggedIn");
+
+        } else if (result === undefined || result === null) {
+          localStorage.setItem("isLoggedIn", "dsds-ww-sdx-s>W??");
+        } else if (result === true) {
+          // result가 true일 때 처리
+          localStorage.setItem("isLoggedIn", "dsds-ww-sdx-s>W??");
         }
+
 
         const token = localStorage.getItem("isLoggedIn");
         setIsLoggedIn(!!token); // 값이 있으면 true, 없으면 false
-      } catch (err) {
-        console.error(err);
-        setIsLoggedIn(false);
-        localStorage.removeItem("isLoggedIn");
+      } catch (err: any) {
+        if (err.response) {
+          if(err.response.status === 429) {
+            setIsLoggedIn(true);
+          }
+          else{
+          setIsLoggedIn(false);}
+        }
+
       }
     };
 
