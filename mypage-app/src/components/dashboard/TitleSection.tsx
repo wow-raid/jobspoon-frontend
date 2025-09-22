@@ -5,10 +5,10 @@ import {
     fetchMyProfile,
     fetchMyTitles,
     ProfileAppearanceResponse,
-    TitleItem
+    TitleItem,
 } from "../../api/profileAppearanceApi.ts";
 import styled from "styled-components";
-import defaultTitle from "../../assets/default_rank.png"; // 👉 임시 아이콘 (칭호용 이미지 준비되면 교체)
+import defaultTitle from "../../assets/default_rank.png"; // 👉 임시 아이콘
 import TitleGuideModal from "../modals/TitleGuideModal.tsx";
 
 export default function TitleSection() {
@@ -53,11 +53,13 @@ export default function TitleSection() {
 
             <ContentGrid>
                 {/* 대표 칭호 */}
-                <Box>
+                <TitleBox>
                     {profile?.title ? (
                         <>
                             <TitleIconLarge src={defaultTitle} alt={profile.title.displayName} />
-                            <p><strong>{profile.title.displayName}</strong></p>
+                            <p>
+                                <strong>{profile.title.displayName}</strong>
+                            </p>
                             <span>현재 장착 중</span>
                         </>
                     ) : (
@@ -66,16 +68,24 @@ export default function TitleSection() {
                             <p>대표 칭호가 없습니다.</p>
                         </>
                     )}
-                </Box>
+                </TitleBox>
 
                 {/* 보유 칭호 */}
-                <Box>
-                    <p><strong>획득 개수 {titles.length}개</strong></p>
+                <ListBox>
+                    <p>
+                        <strong>획득 개수 {titles.length}개</strong>
+                    </p>
                     {titles.length === 0 ? (
-                        <Empty>아직 획득한 칭호가 없습니다.</Empty>
+                        <EmptyWrapper>
+                            <Empty>아직 획득한 칭호가 없습니다.</Empty>
+                        </EmptyWrapper>
                     ) : (
                         <PreviewWrapper>
-                            <NavButton position="left" onClick={handlePrev} disabled={currentIndex === 0}>
+                            <NavButton
+                                position="left"
+                                onClick={handlePrev}
+                                disabled={currentIndex === 0}
+                            >
                                 {"<"}
                             </NavButton>
 
@@ -84,7 +94,10 @@ export default function TitleSection() {
                                     .slice(currentIndex, currentIndex + visibleCount)
                                     .map((title) => (
                                         <PreviewItem key={title.id}>
-                                            <TitleIconSmall src={defaultTitle} alt={title.displayName} />
+                                            <TitleIconSmall
+                                                src={defaultTitle}
+                                                alt={title.displayName}
+                                            />
                                             <span>{title.displayName}</span>
                                             <DateText>
                                                 {new Date(title.acquiredAt).toLocaleDateString()}
@@ -102,10 +115,13 @@ export default function TitleSection() {
                             </NavButton>
                         </PreviewWrapper>
                     )}
-                </Box>
+                </ListBox>
             </ContentGrid>
 
-            <TitleGuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
+            <TitleGuideModal
+                isOpen={isGuideOpen}
+                onClose={() => setIsGuideOpen(false)}
+            />
         </>
     );
 }
@@ -145,18 +161,32 @@ const ContentGrid = styled.div`
     }
 `;
 
-const Box = styled.div`
+// 대표 칭호 박스
+const TitleBox = styled.div`
     padding: 16px;
     border: 1px solid #eee;
     border-radius: 12px;
-    text-align: center;
     background: #fafafa;
+    text-align: center;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 `;
 
-const Empty = styled.p`
-    margin-top: 8px;
-    color: #888;
-    font-size: 14px;
+// 보유 칭호 박스
+const ListBox = styled.div`
+    padding: 16px;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    background: #fafafa;
+    text-align: center;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 `;
 
 const TitleIconLarge = styled.img`
@@ -177,7 +207,7 @@ const PreviewWrapper = styled.div`
 
 const PreviewList = styled.div`
     display: flex;
-    gap: 32px;   /* 👉 16px → 32px */
+    gap: 32px;
     justify-content: center;
 `;
 
@@ -190,41 +220,55 @@ const PreviewItem = styled.div`
 `;
 
 const DateText = styled.span`
-  font-size: 11px;
-  color: rgb(107, 114, 128);
+    font-size: 11px;
+    color: rgb(107, 114, 128);
 `;
 
 const TitleIconSmall = styled.img`
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  object-fit: contain;
-  background: #f5f5f5;
-  display: block;
-  margin: 0 auto 6px auto;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: contain;
+    background: #f5f5f5;
+    display: block;
+    margin: 0 auto 6px auto;
 `;
 
 const NavButton = styled.button<{ position: "left" | "right" }>`
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  ${({ position }) => (position === "left" ? "left: 12px;" : "right: 12px;")}
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    ${({ position }) => (position === "left" ? "left: 12px;" : "right: 12px;")}
 
-  font-size: 24px;
-  font-weight: bold;
-  color: rgb(75, 85, 99);
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  transition: all 0.2s ease;
+    font-size: 24px;
+    font-weight: bold;
+    color: rgb(75, 85, 99);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
 
-  &:hover:not(:disabled) {
-    color: rgb(59, 130, 246);
-    transform: translateY(-50%) scale(1.2);
-  }
+    &:hover:not(:disabled) {
+        color: rgb(59, 130, 246);
+        transform: translateY(-50%) scale(1.2);
+    }
 
-  &:disabled {
-    opacity: 0.3;
-    cursor: default;
-  }
+    &:disabled {
+        opacity: 0.3;
+        cursor: default;
+    }
+`;
+
+const EmptyWrapper = styled.div`
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 120px;
+`;
+
+const Empty = styled.p`
+  margin: 0;
+  color: #888;
+  font-size: 14px;
 `;
