@@ -20,11 +20,6 @@ export interface ProfileAppearanceResponse {
     userLevel?: UserLevel;   // null 가능하니 optional
 }
 
-/** 프로필 사진 응답 */
-export interface PhotoResponse {
-    photoUrl: string;
-}
-
 /** 신뢰 점수 */
 export interface TrustScore {
     totalScore: number;
@@ -34,6 +29,7 @@ export interface TrustScore {
     monthlyPosts: number;
     monthlyStudyrooms: number;
     monthlyComments: number;
+    calculatedAt: string; // ISO datetime
 }
 
 /** 레벨 */
@@ -59,14 +55,37 @@ export async function fetchMyProfile(token: string) {
     return res.data;
 }
 
-// 프로필 사진 교체
-export async function updateProfilePhoto(token: string, photoUrl: string) {
-    const res = await axios.put<PhotoResponse>(
-        `${API_BASE_URL}/profile-appearance/photo`,
-        { photoUrl },
-        { headers: { Authorization: token } }
-    );
-    return res.data;
+// 프로필 사진 업로드 (Presigned URL 방식)
+export async function uploadProfilePhoto(token: string, file: File) {
+    try {
+        // 1. Presigned URL 요청
+        const res = await axios.post<string>(
+            `${API_BASE_URL}/profile-appearance/profile/photo/upload-url`,
+            null,
+            {
+                params: {
+                    filename: file.name,
+                    contentType: file.type,
+                },
+                headers: { Authorization: token },
+            }
+        );
+
+        const presignedUrl = res.data;
+        console.log("Presigned URL 발급 성공:", presignedUrl);
+
+        // 2. S3에 직접 업로드
+        await axios.put(presignedUrl, file, {
+            headers: { "Content-Type": file.type },
+        });
+        console.log("S3 업로드 성공");
+
+        // 3. 완료되면 URL 반환
+        return presignedUrl;
+    } catch (err) {
+        console.error("프로필 사진 업로드 실패:", err);
+        throw err;
+    }
 }
 
 // 보유 칭호 조회
