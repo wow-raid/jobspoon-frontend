@@ -9,9 +9,18 @@ export const logoutRequest = async () => {
     return await springAxiosInst.post('/api/authentication/logout',
             {},
             {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-                },
+                withCredentials: true
             }
+    );
+}
+
+
+export const tokenVerification = async () => {
+    const uri = springAxiosInst.getUri();
+
+    return await springAxiosInst.get('/api/authentication/token/verification',
+        {
+            withCredentials: true
+        }
     );
 }

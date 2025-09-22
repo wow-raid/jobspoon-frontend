@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import springAxiosInst from "./utility/AxiosInst.ts";
-import { logoutRequest } from "./utility/AccountApi.ts";
+import {logoutRequest, tokenVerification} from "./utility/AccountApi.ts";
 
 // 로고 이미지
 import logoBlack from "./assets/jobspoonLOGO_black.png";
@@ -81,22 +81,56 @@ const App: React.FC = () => {
   const location = useLocation();
 
   useEffect(() => {
-    const token = localStorage.getItem("isLoggedIn");
-    if (!token) {
-      // 값이 없거나 비어있으면 false
-      setIsLoggedIn(false);
-    } else {
-      // 값이 있으면 true
-      setIsLoggedIn(true);
-    }
+    const checkLogin = async () => {
+      try {
+        const result = await tokenVerificationRequest(); // await 필수
+
+        console.log(result);
+
+        if (result === false) {
+          // result가 false일 때 처리
+          localStorage.removeItem("nickname");
+          localStorage.removeItem("isLoggedIn");
+
+        } else if (result === true) {
+          // result가 true일 때 처리
+          localStorage.setItem("isLoggedIn", "dsds-ww-sdx-s>W??");
+        }
+
+
+        const token = localStorage.getItem("isLoggedIn");
+        setIsLoggedIn(!!token); // 값이 있으면 true, 없으면 false
+      } catch (err: any) {
+        if (err.response) {
+          if(err.response.status === 429) {
+            setIsLoggedIn(true);
+          }
+          else{
+            localStorage.removeItem("nickname");
+            setIsLoggedIn(false);}
+        }
+
+      }
+    };
+
+    checkLogin();
   }, [location]);
+
+  const tokenVerificationRequest = async () => {
+
+    const axiosResponse = await tokenVerification();
+    return axiosResponse.data.status;
+
+
+  }
 
   const handleLogout = async () => {
     try {
       const axiosResponse = await logoutRequest();
-      if (axiosResponse.status === 200 && axiosResponse.data === "success") {
+      if (axiosResponse.status === 200 ) {
         setIsLoggedIn(false);
-        localStorage.removeItem("userToken");
+        localStorage.removeItem("nickname");
+        localStorage.removeItem("isLoggedIn");
         navigate("/");
       } else {
         alert("로그아웃에 실패 하였습니다.");
