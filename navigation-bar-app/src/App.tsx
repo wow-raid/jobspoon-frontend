@@ -91,8 +91,6 @@ const App: React.FC = () => {
           // result가 false일 때 처리
           localStorage.removeItem("isLoggedIn");
 
-        } else if (result === undefined || result === null) {
-          localStorage.setItem("isLoggedIn", "dsds-ww-sdx-s>W??");
         } else if (result === true) {
           // result가 true일 때 처리
           localStorage.setItem("isLoggedIn", "dsds-ww-sdx-s>W??");
