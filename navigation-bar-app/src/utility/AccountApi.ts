@@ -15,3 +15,14 @@ export const logoutRequest = async () => {
             }
     );
 }
+
+
+export const tokenVerification = async () => {
+    const uri = springAxiosInst.getUri();
+
+    return await springAxiosInst.get('/api/authentication/token/verification',
+        {
+            withCredentials: true
+        }
+    );
+}

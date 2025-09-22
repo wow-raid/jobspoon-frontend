@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import springAxiosInst from "./utility/AxiosInst.ts";
-import { logoutRequest } from "./utility/AccountApi.ts";
+import {logoutRequest, tokenVerification} from "./utility/AccountApi.ts";
 
 // 로고 이미지
 import logoBlack from "./assets/jobspoonLOGO_black.png";
@@ -81,15 +81,37 @@ const App: React.FC = () => {
   const location = useLocation();
 
   useEffect(() => {
-    const token = localStorage.getItem("isLoggedIn");
-    if (!token) {
-      // 값이 없거나 비어있으면 false
-      setIsLoggedIn(false);
-    } else {
-      // 값이 있으면 true
-      setIsLoggedIn(true);
-    }
+    const checkLogin = async () => {
+      try {
+        const result = await tokenVerificationRequest(); // await 필수
+
+        console.log(result);
+
+        if(result){
+          localStorage.setItem("isLoggedIn", "dsds-ww-sdx-s>W??");
+        } else {
+          localStorage.removeItem("isLoggedIn");
+        }
+
+        const token = localStorage.getItem("isLoggedIn");
+        setIsLoggedIn(!!token); // 값이 있으면 true, 없으면 false
+      } catch (err) {
+        console.error(err);
+        setIsLoggedIn(false);
+        localStorage.removeItem("isLoggedIn");
+      }
+    };
+
+    checkLogin();
   }, [location]);
+
+  const tokenVerificationRequest = async () => {
+
+    const axiosResponse = await tokenVerification();
+    return axiosResponse.data.status;
+
+
+  }
 
   const handleLogout = async () => {
     try {
