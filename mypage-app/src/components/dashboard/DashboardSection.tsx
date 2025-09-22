@@ -51,7 +51,7 @@ function DonutChart({
     max?: number;
     onDetailClick?: () => void;
 }) {
-    const percent = Math.min(100, (value / max) * 100); // % 변환
+    const percent = Math.min(100, value); // % 변환
 
     return (
         <DonutCard>
@@ -155,11 +155,11 @@ export default function DashboardSection() {
                     </TopCard>
                     <TopCard>
                         <p>총 문제풀이</p>
-                        <strong>{quiz.totalCount}개</strong>
+                        <strong>{quiz.quizTotalCount}개</strong>
                     </TopCard>
                     <TopCard>
                         <p>총 글 작성</p>
-                        <strong>{writing.total}개</strong>
+                        <strong>{writing.totalCount}개</strong>
                         <DetailButton onClick={() => setWritingModalOpen(true)}>자세히 보기</DetailButton>
                     </TopCard>
                 </TopCardGrid>
@@ -168,8 +168,8 @@ export default function DashboardSection() {
                 <DonutGrid>
                     <DonutChart value={attendance.attendanceRate} label="이번 달 출석률" unit="%" max={100}/>
                     <DonutChart value={interview.interviewMonthlyCount} label="이번 달 모의면접" unit="회" max={10}/>
-                    <DonutChart value={quiz.monthlyCount} label="이번 달 문제풀이" unit="개" max={20}/>
-                    <DonutChart value={trust.score} label="신뢰 점수" unit="점" max={100}
+                    <DonutChart value={quiz.quizMonthlyCount} label="이번 달 문제풀이" unit="개" max={20}/>
+                    <DonutChart value={trust.totalScore} label="신뢰 점수" unit="점" max={100}
                                 onDetailClick={() => setTrustModalOpen(true)}/>
                 </DonutGrid>
             </Section>

@@ -44,7 +44,7 @@ export default function TrustScoreModal({ isOpen, onClose, trust }: Props) {
                         <li>👥 스터디룸 개설: {Math.round(studyroomScore)} / 10점</li>
                         <li>💬 댓글 작성: {Math.round(commentScore)} / 15점</li>
                     </ul>
-                    <p><b>총점: {Math.round(trust.score)} / 100점</b></p>
+                    <p><b>총점: {Math.round(trust.totalScore)} / 100점</b></p>
                 </Content>
 
                 <Footer>

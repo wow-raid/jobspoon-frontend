@@ -11,16 +11,16 @@ export interface AttendanceRateResponse {
 
 /** 퀴즈 완료 현황 */
 export interface QuizCompletionResponse {
-    totalCount: number;    // 누적 완료 수
-    monthlyCount: number;  // 이번 달 완료 수
+    quizTotalCount: number;    // 누적 완료 수
+    quizMonthlyCount: number;  // 이번 달 완료 수
 }
 
 /** 글쓰기 활동 통계 */
 export interface WritingCountResponse {
-    posts: number;
-    studyrooms: number;
-    comments: number;
-    total: number;
+    postCount: number;
+    studyroomCount: number;
+    commentCount: number;
+    totalCount: number;
 }
 
 // 출석률 조회
