@@ -1,13 +1,13 @@
 {/* 회원정보 수정 메뉴 탭 */}
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import styled from "styled-components";
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import { useOutletContext } from "react-router-dom";
 import defaultProfile from "../assets/default_profile.png";
 import ServiceModal from "../components/modals/ServiceModal.tsx";
-import { ProfileAppearanceResponse } from "../api/profileAppearanceApi.ts";
-import { updateNickname, NicknameResponse } from "../api/accountProfileApi.ts";
+import { ProfileAppearanceResponse, uploadProfilePhoto } from "../api/profileAppearanceApi.ts";
+import { updateNickname } from "../api/accountProfileApi.ts";
 
 type OutletContextType = {
     profile: ProfileAppearanceResponse | null;
@@ -28,21 +28,20 @@ export default function AccountProfileEdit() {
     // 프로필 공개 여부 상태
     const [isProfilePublic, setIsProfilePublic] = useState(true);
 
-    // TODO: AccountProfile API 나오면 교체
-    const [accountInfo] = useState({
-        phone: "",
-    });
-
-    // TODO: AccountProfile API 나오면 교체
+    // 정보수신 동의 TODO: AccountProfile API 나오면 교체
     const [consent, setConsent] = useState({
         phone: true,
         email: false,
     });
 
+    // 파일 업로드 관련
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+
     /** 닉네임 수정 시작 */
     const handleStartEdit = () => {
         if (profile) {
-            setTempNickname(profile.nickname); // ✅ customNickname → nickname
+            setTempNickname(profile.nickname); //
             setIsEditingNickname(true);
         }
     };
@@ -70,6 +69,34 @@ export default function AccountProfileEdit() {
         setTempNickname("");
         setIsEditingNickname(false);
         setError(null);
+    };
+
+    /** 사진 변경 버튼 클릭 */
+    const handleFileClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    /** 파일 선택 후 업로드 */
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const token = localStorage.getItem("userToken");
+        if (!token) {
+            setError("로그인이 필요합니다.");
+            return;
+        }
+
+        try {
+            setIsUploading(true);
+            await uploadProfilePhoto(token, file);
+            await refreshProfile();
+            setError(null);
+        } catch (err: any) {
+            setError(err.message || "사진 업로드 실패");
+        } finally {
+            setIsUploading(false);
+        }
     };
 
     /** 모달 열기 */
@@ -104,13 +131,17 @@ export default function AccountProfileEdit() {
                 <InfoCard>
                     <TopRow>
                         <PhotoWrapper>
-                            <Photo
-                                src={profile.photoUrl || defaultProfile}
-                                alt="프로필"
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).src = defaultProfile;
-                                }}
-                            />
+                            {isUploading ? (
+                                <Spinner />
+                            ) : (
+                                <Photo
+                                    src={profile.photoUrl || defaultProfile}
+                                    alt="프로필"
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).src = defaultProfile;
+                                    }}
+                                />
+                            )}
                         </PhotoWrapper>
 
                         <InfoText>
@@ -140,7 +171,16 @@ export default function AccountProfileEdit() {
                             ) : (
                                 <SmallButton onClick={handleStartEdit}>별명 수정</SmallButton>
                             )}
-                            <SmallButton onClick={openModal}>사진 변경</SmallButton>
+                            <SmallButton onClick={handleFileClick} disabled={isUploading}>
+                                {isUploading ? "업로드 중..." : "사진 변경"}
+                            </SmallButton>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                style={{ display: "none" }}
+                                accept="image/*"
+                                onChange={handleFileChange}
+                            />
                         </ButtonGroup>
                     </TopRow>
 
@@ -290,6 +330,9 @@ const PhotoWrapper = styled.div`
     border-radius: 50%;
     background: #e5e7eb;
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 `;
 
 const Photo = styled.img`
@@ -298,6 +341,21 @@ const Photo = styled.img`
     object-fit: cover;
     display: block;
 `;
+
+const Spinner = styled.div`
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3b82f6;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+`;
+
 
 const InfoText = styled.div`
     flex: 1;
