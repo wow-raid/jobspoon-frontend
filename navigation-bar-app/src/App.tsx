@@ -81,8 +81,14 @@ const App: React.FC = () => {
   const location = useLocation();
 
   useEffect(() => {
-    const token = localStorage.getItem("userToken");
-    setIsLoggedIn(!!token);
+    const token = localStorage.getItem("isLoggedIn");
+    if (!token) {
+      // 값이 없거나 비어있으면 false
+      setIsLoggedIn(false);
+    } else {
+      // 값이 있으면 true
+      setIsLoggedIn(true);
+    }
   }, [location]);
 
   const handleLogout = async () => {
