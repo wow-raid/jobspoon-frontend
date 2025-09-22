@@ -1,0 +1,140 @@
+import React from "react";
+import SpoonNoteModal from "../../components/SpoonNoteModal";
+import { fetchUserFolders, patchReorderFolders } from "../../api/folders";
+import { renameUserFolder } from "../../api/folder";
+import http, { authHeader } from "../../utils/http";
+
+type Notebook = { id: string; name: string };
+
+type Props = {
+    open: boolean;
+    onClose: () => void;
+    onSaveToNotebook?: (folderId: string) => Promise<void> | void;
+    onGoToFolder?: (folderId: string, name?: string) => void | Promise<void>;
+};
+
+async function createFolder(folderName: string) {
+    const { data } = await http.post(`/api/me/folders`, { folderName }, { headers: { ...authHeader() } });
+    return data as { id: number; folderName: string; sortOrder: number };
+}
+
+export default function NotebookPickerContainer({ open, onClose, onSaveToNotebook, onGoToFolder }: Props) {
+    const [notebooks, setNotebooks] = React.useState<Notebook[]>([]);
+    const [busy, setBusy] = React.useState(false);
+
+    React.useEffect(() => {
+        let mounted = true;
+        (async () => {
+            if (!open) return;
+            try {
+                const list = await fetchUserFolders();
+                if (mounted) setNotebooks(list);
+            } catch (e) {
+                console.error("[NotebookPickerContainer] fetchUserFolders failed:", e);
+                if (mounted) setNotebooks([]);
+            }
+        })();
+        return () => { mounted = false; };
+    }, [open]);
+
+    const normalize = React.useCallback((s: string) => s.trim().replace(/\s+/g, " ").toLowerCase(), []);
+
+    const refreshFolders = React.useCallback(async () => {
+        const list = await fetchUserFolders();
+        setNotebooks(list);
+    }, []);
+
+    const handleSave = React.useCallback(async (folderId: string) => {
+        if (!onSaveToNotebook) return;
+        setBusy(true);
+        try {
+            await Promise.resolve(onSaveToNotebook(folderId));
+        } finally {
+            setBusy(false);
+        }
+    }, [onSaveToNotebook]);
+
+    const handleReorder = React.useCallback(async (orderedIds: string[]) => {
+        setBusy(true);
+        try {
+            await patchReorderFolders(orderedIds);
+            await refreshFolders();
+        } catch (e) {
+            console.error("[NotebookPickerContainer] reorder failed:", e);
+            await refreshFolders();
+        } finally {
+            setBusy(false);
+        }
+    }, [refreshFolders]);
+
+    // "이름 바꾸기" 실제 백엔드 호출 부분
+    const handleRequestRename = React.useCallback(async (folderId: string, currentName: string) => {
+        const next = window.prompt("새 폴더 이름을 입력하세요.", currentName ?? "");
+        if (next == null) return; // 사용자가 취소
+        const raw = next.trim();
+        if (!raw) return alert("폴더 이름은 공백일 수 없습니다.");
+        if (raw.length > 60) return alert("폴더 이름은 최대 60자입니다.");
+        const normalized = normalize(raw);
+        if (!normalized) return alert("폴더 이름은 공백만 입력할 수 없습니다.");
+
+        const dup = notebooks.some(n => n.id !== folderId && normalize(n.name) === normalized);
+        if (dup) return alert("동일한 이름의 폴더가 이미 존재합니다.");
+
+        setBusy(true);
+        try {
+            await renameUserFolder(folderId, raw); // ← PATCH /api/me/folders/{id}
+            await refreshFolders();               // UI 최신화
+        } catch (e: any) {
+            const s = e?.response?.status;
+            if (s === 409) alert("동일한 이름의 폴더가 이미 존재합니다.");
+            else if (s === 400) alert("폴더 이름 형식이 올바르지 않습니다.");
+            else if (s === 403) alert("이 폴더에 대한 권한이 없습니다.");
+            else if (s === 404) alert("폴더를 찾을 수 없습니다.");
+            else alert("폴더 이름 변경에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+        } finally {
+            setBusy(false);
+        }
+    }, [notebooks, normalize, refreshFolders]);
+
+    const handleCreate = React.useCallback(async (name: string) => {
+        setBusy(true);
+        try {
+            const created = await createFolder(name);
+            await refreshFolders();
+            return String(created.id);
+        } catch (e: any) {
+            const s = e?.response?.status;
+            if (s === 409) throw new Error("DUPLICATE_LOCAL");
+            if (s === 400) throw new Error("EMPTY_NAME");
+            throw e;
+        } finally {
+            setBusy(false);
+        }
+    }, [refreshFolders]);
+
+    const handleRequestDelete = React.useCallback(async () => {
+        alert("폴더 삭제 API가 아직 준비되지 않았어요. 백엔드 구현 후 다시 시도해 주세요.");
+    }, []);
+    const handleRequestBulkDelete = React.useCallback(async () => {
+        alert("폴더 일괄 삭제 API가 아직 준비되지 않았어요. 백엔드 구현 후 다시 시도해 주세요.");
+    }, []);
+
+    return (
+        <SpoonNoteModal
+            open={open}
+            notebooks={notebooks}
+            onClose={onClose}
+            onSave={handleSave}
+            onCreate={handleCreate}
+            onReorder={handleReorder}
+            onGoToFolder={onGoToFolder}
+            onRename={async (folderId, newName) => {
+                await renameUserFolder(folderId, newName);
+                // 로컬 반영 or 재조회
+                setNotebooks(prev => prev.map(n => n.id === folderId ? ({ ...n, name: newName }) : n));
+            }}
+            onRequestDelete={handleRequestDelete}
+            onRequestBulkDelete={handleRequestBulkDelete}
+        />
+    );
+}
