@@ -57,35 +57,38 @@ export async function fetchMyProfile(token: string) {
 
 // 프로필 사진 업로드 (Presigned URL 방식)
 export async function uploadProfilePhoto(token: string, file: File) {
+    // 1. Presigned URL 요청
+    const res = await axios.post<string>(
+        `${API_BASE_URL}/profile-appearance/profile/photo/upload-url`,
+        null,
+        {
+            params: {
+                filename: file.name,
+                contentType: file.type,
+            },
+            headers: { Authorization: token },
+        }
+    );
+
+    const presignedUrl = res.data;
+    console.log("📌 발급된 Presigned URL:", presignedUrl);
+
+    // 2. S3에 직접 업로드
     try {
-        // 1. Presigned URL 요청
-        const res = await axios.post<string>(
-            `${API_BASE_URL}/profile-appearance/profile/photo/upload-url`,
-            null,
-            {
-                params: {
-                    filename: file.name,
-                    contentType: file.type,
-                },
-                headers: { Authorization: token },
-            }
-        );
-
-        const presignedUrl = res.data;
-        console.log("Presigned URL 발급 성공:", presignedUrl);
-
-        // 2. S3에 직접 업로드
-        await axios.put(presignedUrl, file, {
-            headers: { "Content-Type": file.type },
+        const uploadRes = await axios.put(presignedUrl, file, {
+            headers: {
+                "Content-Type": file.type || "application/octet-stream",
+            },
+            withCredentials: false, // CORS 쿠키 차단
         });
-        console.log("S3 업로드 성공");
-
-        // 3. 완료되면 URL 반환
-        return presignedUrl;
+        console.log("✅ S3 업로드 성공:", uploadRes.status);
     } catch (err) {
-        console.error("프로필 사진 업로드 실패:", err);
+        console.error("❌ S3 업로드 실패:", err);
         throw err;
     }
+
+    // 3. 완료되면 URL 반환
+    return presignedUrl;
 }
 
 // 보유 칭호 조회
