@@ -1,6 +1,7 @@
 import * as axiosUtility from "../../account/utility/axiosInstance";
 import env from "navigation-bar-app/src/env.ts";
 
+
 export const kakaoAuthenticationAction = {
     async requestKakaoLoginToSpring(router: any): Promise<void> {
         const { djangoAxiosInstance,springAxiosInstance} = axiosUtility.createAxiosInstances();
@@ -49,15 +50,18 @@ export const kakaoAuthenticationAction = {
 
 
 
+
                 if(isNewUser) {
                     console.log("신규 유저 진입");
                     sessionStorage.setItem("tempToken", accessToken);
                     sessionStorage.setItem("userInfo", JSON.stringify(user));
                     router.push("/account/privacy");
                 } else if(!isNewUser) {
-                    localStorage.setItem("userToken", accessToken);
+                    localStorage.setItem("isLoggedIn", "wxx-sdwsx-ds=!>,?")
                     localStorage.removeItem("tempLoginType");
                     localStorage.setItem("nickname", user.nickname);
+
+
                     window.location.href = MAIN_CONTAINER_URL;
 
                 } else{
