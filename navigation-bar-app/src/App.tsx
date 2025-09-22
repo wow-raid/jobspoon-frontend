@@ -89,6 +89,7 @@ const App: React.FC = () => {
 
         if (result === false) {
           // result가 false일 때 처리
+          localStorage.removeItem("nickname");
           localStorage.removeItem("isLoggedIn");
 
         } else if (result === true) {
@@ -105,7 +106,8 @@ const App: React.FC = () => {
             setIsLoggedIn(true);
           }
           else{
-          setIsLoggedIn(false);}
+            localStorage.removeItem("nickname");
+            setIsLoggedIn(false);}
         }
 
       }
@@ -127,6 +129,7 @@ const App: React.FC = () => {
       const axiosResponse = await logoutRequest();
       if (axiosResponse.status === 200 ) {
         setIsLoggedIn(false);
+        localStorage.removeItem("nickname");
         localStorage.removeItem("isLoggedIn");
         navigate("/");
       } else {
