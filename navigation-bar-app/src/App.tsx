@@ -125,9 +125,9 @@ const App: React.FC = () => {
   const handleLogout = async () => {
     try {
       const axiosResponse = await logoutRequest();
-      if (axiosResponse.status === 200 && axiosResponse.data === "success") {
+      if (axiosResponse.status === 200 ) {
         setIsLoggedIn(false);
-        localStorage.removeItem("userToken");
+        localStorage.removeItem("isLoggedIn");
         navigate("/");
       } else {
         alert("로그아웃에 실패 하였습니다.");
