@@ -61,11 +61,11 @@
 	];
 
 	const DEFAULT_LEGACY: Member[] = [
-		{ name: '잡스틱A', photo: '/images/legacy/1.jpg' },
-		{ name: '잡스틱B', photo: '/images/legacy/2.jpg' },
-		{ name: '잡스틱C', photo: '/images/legacy/3.jpg' },
-		{ name: '잡스틱D', photo: '/images/legacy/4.jpg' },
-		{ name: '잡스틱E', photo: '/images/legacy/5.jpg' }
+		{ name: '최병준', photo: '/images/legacy/1.jpg' },
+		{ name: '김현우', photo: '/images/legacy/2.jpg' },
+		{ name: '오민수', photo: '/images/legacy/3.jpg' },
+		{ name: '왕환민', photo: '/images/legacy/4.jpg' },
+		{ name: '양의정', photo: '/images/legacy/5.jpg' }
 	];
 
 	export let team: Member[] = DEFAULT_TEAM;
@@ -204,13 +204,15 @@
 								<!-- 뒷면 내용 -->
 								<div class="back">
 									<strong>{m.name}</strong>
-									{#if m.github}<a class="link" href={m.github} target="_blank" rel="noreferrer"
-											>GitHub</a
-										>{/if}
-									{#if m.linkedin}<a class="link" href={m.linkedin} target="_blank" rel="noreferrer"
-											>LinkedIn</a
-										>{/if}
-									{#if m.email}<a class="link" href={mailto(m.email)}>이메일</a>{/if}
+									{#if m.github}
+										<a class="link" href={m.github} target="_blank" rel="noreferrer">GitHub</a>
+									{/if}
+									{#if m.linkedin}
+										<a class="link" href={m.linkedin} target="_blank" rel="noreferrer">LinkedIn</a>
+									{/if}
+									{#if m.email}
+										<a class="link" href={mailto(m.email)}>이메일</a>
+									{/if}
 								</div>
 							{:else}
 								<!-- 앞면 내용 -->
@@ -237,7 +239,9 @@
 		<div class="legacy">
 			{#each legacy as m}
 				<figure class="legacycard">
-					<img src={m.photo} alt={`${m.name} 사진`} loading="lazy" draggable="false" />
+					<div class="legacycard__media">
+						<img src={m.photo} alt={`${m.name} 사진`} loading="lazy" draggable="false" />
+					</div>
 					<figcaption>{m.name}</figcaption>
 				</figure>
 			{/each}
@@ -410,7 +414,6 @@
 		grid-template-columns: repeat(7, minmax(0, 1fr));
 		gap: 12px;
 	}
-
 	.flipcard {
 		border: 0;
 		padding: 0;
@@ -430,8 +433,6 @@
 	.flipcard:focus-visible {
 		outline: none;
 	}
-
-	/* 프레임만 회전(애니메이션), 내용은 카운터 회전으로 정방향 유지 */
 	.flipcard__inner {
 		position: relative;
 		width: 100%;
@@ -449,7 +450,6 @@
 	}
 	.flipcard.is-flipped .flipcard__inner {
 		transform: rotateY(180deg);
-		/* 뒷면 때 강조 */
 		box-shadow:
 			inset 0 0 0 1px var(--line),
 			0 10px 24px rgba(0, 0, 0, 0.24),
@@ -463,8 +463,6 @@
 				0 0 0 2px rgba(91, 140, 255, 0.45);
 		}
 	}
-
-	/* 내용 컨테이너: 부모 회전을 상쇄해 글자/이미지 정방향 유지 */
 	.flipcard__content {
 		position: absolute;
 		inset: 0;
@@ -473,11 +471,9 @@
 		justify-content: center;
 		transform-style: preserve-3d;
 		-webkit-transform-style: preserve-3d;
-		/* 부모가 180deg 돌면 이 컨테이너는 -180deg로 상쇄 */
 		transform: rotateY(var(--counter, 0deg));
 		transition: transform 0.6s ease;
 	}
-
 	.front {
 		position: absolute;
 		inset: 0;
@@ -505,7 +501,6 @@
 		color: var(--ink-dim);
 		font-size: 12px;
 	}
-
 	.back {
 		position: absolute;
 		inset: 0;
@@ -522,7 +517,6 @@
 			background: var(--panel);
 		}
 	}
-
 	.link {
 		color: var(--brand);
 		text-decoration: none;
@@ -545,16 +539,26 @@
 		background: var(--panel);
 		box-shadow: inset 0 0 0 1px var(--line);
 	}
-	.legacycard img {
+	/* 새로 추가: 모든 이미지를 동일한 3:4 비율 박스에 맞춤 */
+	.legacycard__media {
+		position: relative;
 		width: 100%;
-		height: 160px;
+		aspect-ratio: 3 / 4; /* 정사각형보다 세로로 길쭉 */
+		overflow: hidden;
+		background: var(--panel);
+	}
+	.legacycard__media > img {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
 		object-fit: cover;
 		display: block;
 		-webkit-user-drag: none;
 		user-drag: none;
 	}
 	.legacycard figcaption {
-		padding: 8px;
+		padding: 10px 8px;
 		text-align: center;
 		color: var(--ink-dim);
 	}
@@ -589,9 +593,6 @@
 		}
 		.legacy {
 			grid-template-columns: repeat(2, 1fr);
-		}
-		.legacycard img {
-			height: 140px;
 		}
 	}
 </style>
