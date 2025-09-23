@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import springAxiosInst from "./utility/AxiosInst.ts";
-import { logoutRequest } from "./utility/AccountApi.ts";
+import {logoutRequest, tokenVerification} from "./utility/AccountApi.ts";
 
 // 로고 이미지
 import logoBlack from "./assets/jobspoonLOGO_black.png";
@@ -81,16 +81,56 @@ const App: React.FC = () => {
   const location = useLocation();
 
   useEffect(() => {
-    const token = localStorage.getItem("userToken");
-    setIsLoggedIn(!!token);
+    const checkLogin = async () => {
+      try {
+        const result = await tokenVerificationRequest(); // await 필수
+
+        console.log(result);
+
+        if (result === false) {
+          // result가 false일 때 처리
+          localStorage.removeItem("nickname");
+          localStorage.removeItem("isLoggedIn");
+
+        } else if (result === true) {
+          // result가 true일 때 처리
+          localStorage.setItem("isLoggedIn", "dsds-ww-sdx-s>W??");
+        }
+
+
+        const token = localStorage.getItem("isLoggedIn");
+        setIsLoggedIn(!!token); // 값이 있으면 true, 없으면 false
+      } catch (err: any) {
+        if (err.response) {
+          if(err.response.status === 429) {
+            setIsLoggedIn(true);
+          }
+          else{
+            localStorage.removeItem("nickname");
+            setIsLoggedIn(false);}
+        }
+
+      }
+    };
+
+    checkLogin();
   }, [location]);
+
+  const tokenVerificationRequest = async () => {
+
+    const axiosResponse = await tokenVerification();
+    return axiosResponse.data.status;
+
+
+  }
 
   const handleLogout = async () => {
     try {
       const axiosResponse = await logoutRequest();
-      if (axiosResponse.status === 200 && axiosResponse.data === "success") {
+      if (axiosResponse.status === 200 ) {
         setIsLoggedIn(false);
-        localStorage.removeItem("userToken");
+        localStorage.removeItem("nickname");
+        localStorage.removeItem("isLoggedIn");
         navigate("/");
       } else {
         alert("로그아웃에 실패 하였습니다.");
@@ -113,13 +153,12 @@ const App: React.FC = () => {
 
         <Nav>
           <NavLink to="/" $active={isActive("/")}>홈</NavLink>
+          <NavLink to="/sveltekit-review/review" $active={isActive("/sveltekit-review")}>About Us</NavLink>
           <NavLink to="/studies" $active={isActive("/studies")}>스터디모임</NavLink>
           <NavLink to="/vue-ai-interview/ai-interview/landing" $active={isActive("/vue-ai-interview")}>
             AI 인터뷰
           </NavLink>
           <NavLink to="/mypage" $active={isActive("/mypage")}>MyPage</NavLink>
-          <NavLink to="/sveltekit-review/review" $active={isActive("/sveltekit-review")}>리뷰</NavLink>
-
           {!isLoggedIn ? (
             <NavLink to="/vue-account/account/login" $active={isActive("/vue-account")}>
               로그인

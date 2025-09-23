@@ -352,7 +352,7 @@ const Announcements: React.FC = () => {
     return (
         <Container>
             <Header>
-                <h2>📢 공지사항 <span>({announcements.length})</span></h2>
+                <h2>📢공지사항<span>({announcements.length})</span></h2>
                 {currentUserRole === 'LEADER' && studyStatus !== 'CLOSED' &&
                     <WriteBtn onClick={openWriteModal}>글쓰기</WriteBtn>}
             </Header>
@@ -364,7 +364,10 @@ const Announcements: React.FC = () => {
                     <TabLink to={`/studies/joined-study/${studyId}/interview`}>모의면접</TabLink>
                     <TabLink to={`/studies/joined-study/${studyId}/members`}>참여인원</TabLink>
                     {userRole === 'LEADER' && (
-                        <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청 관리</TabLink>
+                        <>
+                        <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청관리</TabLink>
+                        <TabLink to={`/studies/joined-study/${studyId}/attendance`}>출석관리</TabLink>
+                        </>
                     )}
                 </TabList>
                 <TabSearchBar

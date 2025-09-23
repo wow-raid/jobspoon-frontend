@@ -8,28 +8,22 @@ interface UserProfile {
 }
 
 export const useAuth = () => {
-    const [userId, setUserId] = useState<number | null>(null);
-    const [userNickname, setUserNickname] = useState<string | null>(null);
-    const [userRole, setUserRole] = useState<'LEADER' | 'MEMBER' | null>(null);
-    const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+    // ✅ [수정] isLoggedIn을 직접적인 상태로 관리
+    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+    // ✅ [수정] 닉네임 상태 추가
+    const [nickname, setNickname] = useState<string | null>(null);
 
+    // ✅ [수정] 앱이 로드될 때 localStorage를 확인하는 로직 변경
     useEffect(() => {
-        const userProfileString = localStorage.getItem("userProfile");
-        if (userProfileString) {
-            try {
-                const userProfile: UserProfile = JSON.parse(userProfileString);
-                setUserId(userProfile.id);
-                setUserNickname(userProfile.nickname);
-                setUserRole(userProfile.role);
-                setCurrentUserId(userProfile.id);
-            } catch (error) {
-                console.error("사용자 프로필 정보를 파싱하는데 실패했습니다:", error);
-                setCurrentUserId(null);
-            }
+        const loggedInFlag = localStorage.getItem("isLoggedIn");
+        const userNickname = localStorage.getItem("nickname");
+
+        if (loggedInFlag) {
+            setIsLoggedIn(true);
+            setNickname(userNickname);
         }
     }, []);
 
-    const isLoggedIn = userId !== null;
-
-    return { userId, userNickname, userRole, currentUserId, isLoggedIn };
+    // ✅ [수정] 더 이상 userId, userRole 등은 이 훅에서 직접 관리할 필요가 없음
+    return { isLoggedIn, nickname };
 };

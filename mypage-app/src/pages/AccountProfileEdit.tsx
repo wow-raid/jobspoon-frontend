@@ -1,12 +1,13 @@
 {/* 회원정보 수정 메뉴 탭 */}
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import styled from "styled-components";
-import { FaPhone, FaEnvelope, FaLock } from "react-icons/fa";
+import { FaEnvelope, FaLock } from "react-icons/fa";
 import { useOutletContext } from "react-router-dom";
 import defaultProfile from "../assets/default_profile.png";
 import ServiceModal from "../components/modals/ServiceModal.tsx";
-import {CustomNicknameResponse, ProfileAppearanceResponse, updateNickname} from "../api/profileAppearanceApi.ts";
+import { ProfileAppearanceResponse, uploadProfilePhoto } from "../api/profileAppearanceApi.ts";
+import { updateNickname } from "../api/accountProfileApi.ts";
 
 type OutletContextType = {
     profile: ProfileAppearanceResponse | null;
@@ -27,21 +28,20 @@ export default function AccountProfileEdit() {
     // 프로필 공개 여부 상태
     const [isProfilePublic, setIsProfilePublic] = useState(true);
 
-    // TODO: AccountProfile API 나오면 교체
-    const [accountInfo] = useState({
-        phone: "",
-    });
-
-    // TODO: AccountProfile API 나오면 교체
+    // 정보수신 동의 TODO: AccountProfile API 나오면 교체
     const [consent, setConsent] = useState({
         phone: true,
         email: false,
     });
 
+    // 파일 업로드 관련
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+
     /** 닉네임 수정 시작 */
     const handleStartEdit = () => {
         if (profile) {
-            setTempNickname(profile.customNickname);
+            setTempNickname(profile.nickname); //
             setIsEditingNickname(true);
         }
     };
@@ -55,10 +55,7 @@ export default function AccountProfileEdit() {
         }
 
         try {
-            const updated: CustomNicknameResponse = await updateNickname(
-                token,
-                tempNickname
-            );
+            await updateNickname(token, tempNickname);
             await refreshProfile();
             setIsEditingNickname(false);
             setError(null);
@@ -69,9 +66,37 @@ export default function AccountProfileEdit() {
 
     /** 닉네임 수정 취소 */
     const handleCancelEdit = () => {
-        setTempNickname("");        // 입력값 초기화
-        setIsEditingNickname(false); // 수정 모드 종료
-        setError(null);             // 에러 메시지도 초기화
+        setTempNickname("");
+        setIsEditingNickname(false);
+        setError(null);
+    };
+
+    /** 사진 변경 버튼 클릭 */
+    const handleFileClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    /** 파일 선택 후 업로드 */
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const token = localStorage.getItem("userToken");
+        if (!token) {
+            setError("로그인이 필요합니다.");
+            return;
+        }
+
+        try {
+            setIsUploading(true);
+            await uploadProfilePhoto(token, file);
+            await refreshProfile();
+            setError(null);
+        } catch (err: any) {
+            setError(err.message || "사진 업로드 실패");
+        } finally {
+            setIsUploading(false);
+        }
     };
 
     /** 모달 열기 */
@@ -82,8 +107,7 @@ export default function AccountProfileEdit() {
     // 토글 핸들러
     const handleToggleProfilePublic = () => {
         setIsProfilePublic((prev) => !prev);
-        setIsModalOpen(true); // 안내 모달도 같이 열림
-        // TODO: 나중에 API 연동
+        setIsModalOpen(true); // 안내 모달 열기
     };
 
     // 정보수신 동의 토글 핸들러
@@ -93,7 +117,6 @@ export default function AccountProfileEdit() {
             [key]: !prev[key],
         }));
         setIsModalOpen(true);
-        // TODO: 나중에 API 연동
     };
 
     if (!profile) {
@@ -108,13 +131,17 @@ export default function AccountProfileEdit() {
                 <InfoCard>
                     <TopRow>
                         <PhotoWrapper>
-                            <Photo
-                                src={profile.photoUrl || defaultProfile}
-                                alt="프로필"
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).src = defaultProfile;
-                                }}
-                            />
+                            {isUploading ? (
+                                <Spinner />
+                            ) : (
+                                <Photo
+                                    src={profile.photoUrl || defaultProfile}
+                                    alt="프로필"
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).src = defaultProfile;
+                                    }}
+                                />
+                            )}
                         </PhotoWrapper>
 
                         <InfoText>
@@ -127,7 +154,7 @@ export default function AccountProfileEdit() {
                                         placeholder="닉네임을 입력해주세요"
                                     />
                                 ) : (
-                                    <Nickname>{profile.customNickname}</Nickname>
+                                    <Nickname>{profile.nickname}</Nickname> // ✅ customNickname → nickname
                                 )}
                             </NicknameRow>
                             {error && <ErrorText>{error}</ErrorText>}
@@ -144,7 +171,16 @@ export default function AccountProfileEdit() {
                             ) : (
                                 <SmallButton onClick={handleStartEdit}>별명 수정</SmallButton>
                             )}
-                            <SmallButton onClick={openModal}>사진 변경</SmallButton>
+                            <SmallButton onClick={handleFileClick} disabled={isUploading}>
+                                {isUploading ? "업로드 중..." : "사진 변경"}
+                            </SmallButton>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                style={{ display: "none" }}
+                                accept="image/*"
+                                onChange={handleFileChange}
+                            />
                         </ButtonGroup>
                     </TopRow>
 
@@ -152,21 +188,12 @@ export default function AccountProfileEdit() {
 
                     <BottomRow>
                         <InfoItem>
-                            <FaPhone style={{ color: "#6b7280", marginRight: "8px" }} />
-                            <span>{accountInfo.phone || "본인확인 번호 없음"}</span>
-                            <ActionLink onClick={openModal}>
-                                {accountInfo.phone ? "수정" : "등록"}
-                            </ActionLink>
-                        </InfoItem>
-                        <InfoItem>
                             <FaEnvelope style={{ color: "#6b7280", marginRight: "8px" }} />
-                            <span>{profile.email}</span>
-                            <ActionLink onClick={openModal}>수정</ActionLink>
+                            <span>정보 1</span>
                         </InfoItem>
                         <InfoItem>
                             <FaLock style={{ color: "#6b7280", marginRight: "8px" }} />
-                            <span>비밀번호</span>
-                            <ActionLink onClick={openModal}>변경</ActionLink>
+                            <span>정보 2</span>
                         </InfoItem>
                     </BottomRow>
                 </InfoCard>
@@ -187,13 +214,12 @@ export default function AccountProfileEdit() {
                         </ToggleSwitch>
                     </ConsentRow>
 
-                    {/* 하위 공개 옵션 */}
                     {isProfilePublic && (
                         <>
                             <Divider />
                             <ConsentRow className="sub-consent">
                                 <Left sub>
-                                    <span>휴대전화 공개</span>
+                                    <span>정보 1</span>
                                 </Left>
                                 <ToggleSwitch
                                     checked={consent.phone}
@@ -206,7 +232,7 @@ export default function AccountProfileEdit() {
 
                             <ConsentRow className="sub-consent">
                                 <Left sub>
-                                    <span>이메일 공개</span>
+                                    <span>정보 2</span>
                                 </Left>
                                 <ToggleSwitch
                                     checked={consent.email}
@@ -223,20 +249,6 @@ export default function AccountProfileEdit() {
             <Section>
                 <SectionTitle>프로모션 정보수신 동의</SectionTitle>
                 <ConsentCard>
-                    <ConsentRow>
-                        <Left>
-                            <FaPhone />
-                            <span>휴대전화</span>
-                        </Left>
-                        <ToggleSwitch
-                            checked={consent.phone}
-                            onClick={() => handleToggleConsent("phone")}>
-                            <span>{consent.phone ? "ON" : "OFF"}</span>
-                        </ToggleSwitch>
-                    </ConsentRow>
-
-                    <Divider />
-
                     <ConsentRow>
                         <Left>
                             <FaEnvelope />
@@ -318,6 +330,9 @@ const PhotoWrapper = styled.div`
     border-radius: 50%;
     background: #e5e7eb;
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 `;
 
 const Photo = styled.img`
@@ -326,6 +341,21 @@ const Photo = styled.img`
     object-fit: cover;
     display: block;
 `;
+
+const Spinner = styled.div`
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3b82f6;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+`;
+
 
 const InfoText = styled.div`
     flex: 1;
@@ -370,18 +400,6 @@ const InfoItem = styled.div`
     }
 `;
 
-const ActionLink = styled.button`
-    font-size: 13px;
-    color: #3b82f6;
-    background: none;
-    border: none;
-    cursor: pointer;
-
-    &:hover {
-        text-decoration: underline;
-    }
-`;
-
 const Card = styled.div`
     background: rgb(249, 250, 251);
     border-radius: 12px;
@@ -416,10 +434,6 @@ const ConsentRow = styled.div`
     justify-content: space-between;
     align-items: center;
     padding: 12px 0;
-
-    &.sub-consent {
-        margin-left: 12px;   /* ✅ padding-left → margin-left */
-    }
 `;
 
 const Left = styled.div<{ sub?: boolean }>`

@@ -1,5 +1,3 @@
-{/* 랭크 안내 모달 */}
-
 import React from "react";
 import styled from "styled-components";
 
@@ -8,23 +6,27 @@ type Props = {
     onClose: () => void;
 };
 
-export default function RankGuideModal({ isOpen, onClose }: Props) {
+export default function LevelGuideModal({ isOpen, onClose }: Props) {
+    if (!isOpen) return null;
+
     return (
-        <Overlay isOpen={isOpen}>
-            <Modal isOpen={isOpen}>
+        <Overlay>
+            <Modal>
                 <Header>
-                    <h2>랭크 가이드</h2>
+                    <h2>레벨 가이드</h2>
                     <CloseButton onClick={onClose}>×</CloseButton>
                 </Header>
                 <Content>
-                    <p>🏅 랭크는 활동에 따라 자동으로 상승합니다.</p>
+                    <p>📌 레벨은 활동 경험치(Exp)를 통해 올라갑니다.</p>
                     <ul>
-                        <li>브론즈 → 기본 시작 랭크</li>
-                        <li>실버 → 출석률, 문제풀이, 인터뷰 등 일정 기준 달성 시</li>
-                        <li>골드 → 높은 활동 점수 유지</li>
-                        <li>플래티넘 이상 → 특별 활동/누적 기준</li>
+                        <li>레벨업에 필요한 경험치 = <strong>현재 레벨 × 100</strong></li>
+                        <li>예: Lv.1 → 100 Exp, Lv.2 → 200 Exp</li>
+                        <li>경험치는 출석, 문제풀이, 글쓰기, 면접 참여 등으로 획득합니다.</li>
+                        <li>레벨이 올라갈수록 경험치 바 색상이 변화합니다.</li>
                     </ul>
-                    <p>획득한 랭크는 <b>대표 랭크</b>로 장착할 수 있습니다.</p>
+                    <Note>
+                        레벨업을 통해 더 많은 기능과 보상을 이용할 수 있습니다.
+                    </Note>
                 </Content>
                 <Footer>
                     <ConfirmButton onClick={onClose}>확인</ConfirmButton>
@@ -34,32 +36,28 @@ export default function RankGuideModal({ isOpen, onClose }: Props) {
     );
 }
 
-/* ================= styled-components ================= */
-const Overlay = styled.div<{ isOpen: boolean }>`
+/* styled-components */
+const Overlay = styled.div`
     position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    display: flex; align-items: center; justify-content: center;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     z-index: 1000;
-
-    background: ${({ isOpen }) => (isOpen ? "rgba(0,0,0,0.4)" : "transparent")};
-    opacity: ${({ isOpen }) => (isOpen ? 1 : 0)};
-    visibility: ${({ isOpen }) => (isOpen ? "visible" : "hidden")};
-    transition: all 0.3s ease-in-out;
 `;
 
-const Modal = styled.div<{ isOpen: boolean }>`
+const Modal = styled.div`
     background: white;
     padding: 20px;
     border-radius: 12px;
-    width: 400px;
+    width: 420px;
     max-width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 16px;
-
-    transform: ${({ isOpen }) => (isOpen ? "scale(1)" : "scale(0.95)")};
-    transition: all 0.3s ease-in-out;
 `;
 
 const Header = styled.div`
@@ -84,6 +82,7 @@ const CloseButton = styled.button`
 const Content = styled.div`
     font-size: 14px;
     line-height: 1.6;
+    text-align: left;   /* 👉 좌측 정렬 */
 
     ul {
         margin: 8px 0;
@@ -91,8 +90,14 @@ const Content = styled.div`
     }
 
     li {
-        margin-bottom: 4px;
+        margin-bottom: 6px;
     }
+`;
+
+const Note = styled.p`
+  margin-top: 10px;
+  font-size: 13px;
+  color: #555;
 `;
 
 const Footer = styled.div`
