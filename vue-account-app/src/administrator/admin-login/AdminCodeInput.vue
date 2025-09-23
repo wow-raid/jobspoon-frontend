@@ -87,7 +87,7 @@ import githubIconSrc from "@/assets/images/fixed/icon-github.svg";
  *  - 반드시 axiosInstances.ts에 adminAxiosInstance 생성 로직과
  *    VUE_APP_ADMIN_API_BASE_URL(.env)이 준비되어 있어야 합니다.
  */
-import {createAxiosInstances, springAxiosInstance} from "@/account/utility/axiosInstance";
+import {createAxiosInstances, springAxiosInstance} from "@/account/utility/axiosInstance.ts";
 
 /**
  * [C] 라우터 준비
