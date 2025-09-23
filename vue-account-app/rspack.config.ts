@@ -129,6 +129,7 @@ export default defineConfig({
       "process.env.VUE_APP_AI_API_BASE_URL": JSON.stringify(process.env.VUE_APP_AI_API_BASE_URL),
       // "process.env.MFE_CORS_ORIGIN": JSON.stringify(process.env.MFE_CORS_ORIGIN),
       "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
+      "process.env.ADMIN_SESSION_TTL_MINUTES": JSON.stringify(process.env.ADMIN_SESSION_TTL_MINUTES || "60"),
     }),
     new ModuleFederationPlugin(mfConfig),
   ].filter(Boolean),

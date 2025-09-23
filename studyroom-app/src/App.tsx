@@ -15,6 +15,7 @@ import Schedule from "./components/studyroom/Schedule";
 import TestInterview from "./components/studyroom/TestInterview";
 import Participants from "./components/studyroom/Participants";
 import ApplicationManagement from "./components/studyroom/ApplicationManagement.tsx";
+import AttendanceManagement from "./components/studyroom/AttendanceManagement.tsx";
 
 /** ===== Theme tokens ===== */
 const lightTheme = {
@@ -149,6 +150,7 @@ const App: React.FC = () => {
               <Route path="interview" element={<TestInterview />} />
               <Route path="members" element={<Participants />} />
               <Route path="applications" element={<ApplicationManagement />} />
+              <Route path="attendance" element={<AttendanceManagement />} />
             </Route>
           </Routes>
         </Container>

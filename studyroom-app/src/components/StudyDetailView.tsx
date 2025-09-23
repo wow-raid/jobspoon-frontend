@@ -114,6 +114,12 @@ const EditBtn = styled(BaseButton)`
   }
 `;
 
+const STATUS_TEXT = {
+    RECRUITING: "모집중",
+    COMPLETED: "모집완료",
+    CLOSED: "폐쇄됨",
+};
+
 /* ─ Component ─ */
 const StudyDetailView: React.FC<StudyDetailViewProps> = ({
     room,
@@ -130,7 +136,7 @@ const StudyDetailView: React.FC<StudyDetailViewProps> = ({
                     </span>
                     <span>
                         <strong>상태:</strong>{" "}
-                        {room.status === "RECRUITING" ? "모집 중" : "모집 완료"}
+                        {STATUS_TEXT[room.status]}
                     </span>
                 </Meta>
             </Header>

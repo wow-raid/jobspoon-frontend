@@ -9,7 +9,6 @@ const api = axios.create({
     },
 });
 
-
 // ================== 타입 정의 ==================
 export interface InterviewItem {
     id: number;

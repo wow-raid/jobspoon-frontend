@@ -2,14 +2,11 @@
 
 import React, { useState } from "react";
 import { ProfileAppearanceResponse } from "../../api/profileAppearanceApi.ts";
-import { FaEdit } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import defaultProfile from "../../assets/default_profile.png";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 export default function ProfileAppearanceCard({profile}: {profile: ProfileAppearanceResponse}) {
-    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(true);
 
     if (!profile) {
@@ -42,9 +39,13 @@ export default function ProfileAppearanceCard({profile}: {profile: ProfileAppear
                     <InfoTable>
                         <tbody>
                         <tr>
-                            <LabelCell>등급</LabelCell>
+                            <LabelCell>레벨</LabelCell> {/* 등급 → 레벨 */}
                             <Separator>|</Separator>
-                            <ValueCell>{profile.rank?.displayName ?? "등급 없음"}</ValueCell>
+                            <ValueCell>
+                                {profile.userLevel
+                                    ? `Lv.${profile.userLevel.level} (Exp ${profile.userLevel.exp}/${profile.userLevel.totalExp})`
+                                    : "레벨 정보 없음"}
+                            </ValueCell>
                         </tr>
                         <tr>
                             <LabelCell>칭호</LabelCell>
@@ -54,22 +55,15 @@ export default function ProfileAppearanceCard({profile}: {profile: ProfileAppear
                         <tr>
                             <LabelCell>별명</LabelCell>
                             <Separator>|</Separator>
-                            <ValueCell>{profile.customNickname}</ValueCell>
+                            <ValueCell>{profile.nickname}</ValueCell> {/* ✅ customNickname → nickname */}
                         </tr>
-                        <tr>
-                            <LabelCell>계정</LabelCell>
-                            <Separator>|</Separator>
-                            <ValueCell>{profile.email}</ValueCell>
-                        </tr>
+                        {/*<tr>*/}
+                        {/*    <LabelCell>계정</LabelCell>*/}
+                        {/*    <Separator>|</Separator>*/}
+                        {/*    <ValueCell>{profile.email}</ValueCell>*/}
+                        {/*</tr>*/}
                         </tbody>
                     </InfoTable>
-
-                    <ButtonWrapper>
-                        <EditButton onClick={() => navigate("/mypage/profile/edit")}>
-                            <FaEdit />
-                            수정하기
-                        </EditButton>
-                    </ButtonWrapper>
                 </Content>
             )}
         </Card>
@@ -113,6 +107,7 @@ const ArrowIcon = styled.span`
 const Content = styled.div`
     overflow: hidden;
     transition: all 0.3s ease-in-out;
+    padding-bottom: 24px;   /* 하단 공간 확보 */
 `;
 
 const ImageWrapper = styled.div`

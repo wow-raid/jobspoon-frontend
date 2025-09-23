@@ -3,7 +3,9 @@ import { createApp, h } from "vue";
 import type { App as VueApp } from "vue";
 import App from "./App.vue";
 import { loadFonts } from "./plugins/webfontloader";
-
+import { setupAdminInterceptors } from "@/account/utility/axiosInstance";
+import { listenAdminSessionSync } from "@/security/admin/adminSession.ts"; // (선택) 멀티탭 동기화
+import { loadAdminSession, clearAdminSession } from "@/security/admin/adminSession.ts"; // (선택)
 import "vuetify/styles";
 // ⚠️ MDI CSS는 Shadow DOM에 주입하므로 전역 import 제거 권장
 // import "@mdi/font/css/materialdesignicons.css";
@@ -16,6 +18,9 @@ import { createVuetify } from "vuetify/lib/framework.mjs";
 import { createPinia } from "pinia";
 import router from "./router";
 
+let adminSecurityInitialized =false;
+let offAdminSessionSync:null | (()=> void)=null;
+let onUnauthorizedHandler: ((e:Event)=> void)| null =null;
 let app: VueApp<Element> | null = null;
 let shadowRootRef: ShadowRoot | null = null;
 let routingHandler: ((path: string) => void) | null = null;
@@ -24,7 +29,7 @@ let lastEventBus: any | null = null;
 export const vueAccountAppMount = async (el: string | Element, eventBus: any) => {
     const container = typeof el === "string" ? document.querySelector(el) : el;
     if (!container) return;
-
+    initAdminSecurityOnce();
     // 쉐도우 DOM 사용 코드 (주석 처리)
     /*
     // ShadowRoot 재사용(이미 있으면 attachShadow 금지)
@@ -276,7 +281,16 @@ export const vueAccountAppUnmount = () => {
         lastEventBus.off("vue-account-routing-event", routingHandler);
     }
     routingHandler = null;
-    
+
+    // ⬇️ 추가: 보안 리스너 해제
+    if (onUnauthorizedHandler) {
+        window.removeEventListener("admin-unauthorized", onUnauthorizedHandler);
+        onUnauthorizedHandler = null;
+    }
+    if (offAdminSessionSync) {
+        offAdminSessionSync();
+        offAdminSessionSync = null;
+    }
     // 쉐도우 DOM 사용 코드 (주석 처리)
     /*
     // ShadowRoot 비우기 (스타일/DOM 정리)
@@ -291,7 +305,39 @@ export const vueAccountAppUnmount = () => {
     
     lastEventBus = null;
 };
+function initAdminSecurityOnce() {
+    if (adminSecurityInitialized) return;
+    adminSecurityInitialized = true;
 
+    // 1) Axios 인터셉터 1회 등록 (401/403 → 이벤트 발생)
+    setupAdminInterceptors();
+
+    // 2) 401/403 통지 수신 → 관리자 인증 절차로 회송
+    onUnauthorizedHandler = () => {
+        const inAdmin = router.currentRoute.value.matched.some(
+            (r) => r.meta?.section === "ADMIN_APP"
+        );
+        if (inAdmin) router.replace({ name: "AdminAuthCode" });
+    };
+    window.addEventListener("admin-unauthorized", onUnauthorizedHandler);
+
+    // 3) (선택) AdminSession 멀티탭 동기화 수신
+    offAdminSessionSync = listenAdminSessionSync({
+        onClear: () => {
+            const inAdmin = router.currentRoute.value.matched.some(
+                (r) => r.meta?.section === "ADMIN_APP"
+            );
+            if (inAdmin) router.replace({ name: "AdminAuthCode" });
+        },
+        // onSet: (s) => console.log("[admin-sync] SET", s),
+    });
+
+
+    const s = loadAdminSession();
+    if (!s) {
+        // router.replace({ name: "AdminAuthCode" });
+    }
+}
 interface EventBus {
     listeners: { [eventName: string]: Function[] };
     on(eventName: string, callback: Function): void;

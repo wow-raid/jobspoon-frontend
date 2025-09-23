@@ -13,6 +13,7 @@ import TabSearchBar from "./TabSearchBar";
 interface StudyRoomContext {
     studyId: string;
     userRole: 'LEADER' | 'MEMBER' | null;
+    studyStatus: 'RECRUITING' | 'COMPLETED' | 'CLOSED';
     handleLeaveOrClose: () => void;
 }
 
@@ -201,7 +202,7 @@ const Announcements: React.FC = () => {
     const { userId } = useAuth();
     const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
     const [isLoadingDetail, setIsLoadingDetail] = useState(false)
-    const { studyId, userRole, handleLeaveOrClose } = useOutletContext<StudyRoomContext>();
+    const { studyId, userRole, studyStatus, handleLeaveOrClose } = useOutletContext<StudyRoomContext>();
 
     const fetchAnnouncements = useCallback(async () => {
         if (!studyRoomId) return;
@@ -351,8 +352,9 @@ const Announcements: React.FC = () => {
     return (
         <Container>
             <Header>
-                <h2>📢 공지사항 <span>({announcements.length})</span></h2>
-                {currentUserRole === 'LEADER' && <WriteBtn onClick={openWriteModal}>글쓰기</WriteBtn>}
+                <h2>📢공지사항<span>({announcements.length})</span></h2>
+                {currentUserRole === 'LEADER' && studyStatus !== 'CLOSED' &&
+                    <WriteBtn onClick={openWriteModal}>글쓰기</WriteBtn>}
             </Header>
 
             <NavContainer>
@@ -362,7 +364,10 @@ const Announcements: React.FC = () => {
                     <TabLink to={`/studies/joined-study/${studyId}/interview`}>모의면접</TabLink>
                     <TabLink to={`/studies/joined-study/${studyId}/members`}>참여인원</TabLink>
                     {userRole === 'LEADER' && (
-                        <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청 관리</TabLink>
+                        <>
+                        <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청관리</TabLink>
+                        <TabLink to={`/studies/joined-study/${studyId}/attendance`}>출석관리</TabLink>
+                        </>
                     )}
                 </TabList>
                 <TabSearchBar
@@ -383,7 +388,7 @@ const Announcements: React.FC = () => {
                             </ItemHeader>
                         </ItemMainContent>
 
-                        {currentUserRole === 'LEADER' && (
+                        {currentUserRole === 'LEADER' && studyStatus !== 'CLOSED' && (
                             <PinButton
                                 $pinned={item.isPinned}
                                 onClick={(e) => {
@@ -415,9 +420,10 @@ const Announcements: React.FC = () => {
                     selectedAnnouncement && (
                         <AnnouncementDetail
                             announcement={selectedAnnouncement}
-                            onEdit={handleEditClick}
-                            onDelete={handleDelete}
-                            currentUser={{ role: currentUserRole, id: userId }}
+
+                            onEdit={studyStatus !== 'CLOSED' ? handleEditClick : undefined}
+                            onDelete={studyStatus !== 'CLOSED' ? handleDelete : undefined}
+                            currentUser={{ role: userRole, id: userId }}
                             onMarkAsRead={() => handleMarkAsRead(selectedAnnouncement.id)}
                         />
                     )

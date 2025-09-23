@@ -5,12 +5,16 @@ import http, { authHeader } from "../utils/http";
 import SpoonNoteModal from "../components/SpoonNoteModal";
 import { fetchUserFolders, patchReorderFolders } from "../api/userWordbook";
 import TermCard from "../components/TermCard";
+import { setMemorization } from "../api/memorization";
+import { fetchMemorizationStatuses } from "../api/memorization";
+import { moveFolderTerms } from "../api/userWordbookTerms";
+import { renameUserFolder } from "../api/folder";
 
 /** 서버 응답에서 안전하게 뽑아둘 필드들 */
 type TermRow = any;
 type TermItem = {
-    uwtId: string;   // user_wordbook_term.id
-    termId: string;  // 사전 term.id
+    uwtId: string;
+    termId: string | null;
     title: string;
     description: string;
     createdAt?: string;
@@ -177,16 +181,14 @@ const HideTermCardAdd = styled.div<{
     ${({ $hideDesc }) =>
             $hideDesc &&
             `
-    /* InnerBox 자체는 그대로 두되, 안의 설명 글자만 숨김 */
     article > div:nth-of-type(2) {
-      position: relative; /* 높이 유지 + 선택 방지용 */
+      position: relative;
     }
     article > div:nth-of-type(2) p {
       color: transparent !important;
       text-shadow: none !important;
       user-select: none;
     }
-    /* 드래그 시 선택 하이라이트도 보이지 않게 */
     article > div:nth-of-type(2) p::selection {
       background: transparent;
     }
@@ -262,6 +264,12 @@ const StatusBtn = styled.button<{ $done?: boolean; $shift?: boolean }>`
     &:hover { background: #f9fafb; }
     &:active { transform: scale(0.98); }
     &:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.20); }
+
+    /* 저장 중 시 약간 비활성 느낌 */
+    &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
 `;
 
 /* ----- 카드별 보기 제어(학습 모드: 단어/뜻 숨김) ----- */
@@ -354,6 +362,9 @@ export default function WordbookFolderPage() {
     // 카드별 암기 상태: 'unmemorized' | 'memorized'
     const [learn, setLearn] = React.useState<Record<string, "unmemorized" | "memorized">>({});
 
+    // 저장 중 상태 (버튼 디스에이블)
+    const [saving, setSaving] = React.useState<Record<string, boolean>>({});
+
     // 설정 메뉴
     const [menuOpen, setMenuOpen] = React.useState(false);
     const actionsRef = React.useRef<HTMLDivElement | null>(null);
@@ -362,18 +373,59 @@ export default function WordbookFolderPage() {
     const [moveOpen, setMoveOpen] = React.useState(false);
     const [notebooks, setNotebooks] = React.useState<Notebook[]>([]);
 
+    const normalize = React.useCallback((s: string) => s.trim().replace(/\s+/g, " ").toLowerCase(), []);
+
     /* ------ data fetch ------ */
     const mapRow = (row: TermRow): TermItem | null => {
-        const uwtId = row.userTermId ?? row.userWordbookTermId ?? row.id;
-        const description = row.description ?? row.term?.description ?? row.explain ?? "";
-        const termId = row.termId ?? row.term?.id ?? row.id;
-        if (uwtId == null || termId == null) return null;
+        const uwt =
+            row.userWordbookTermId ??
+            row.userTermId ??
+            row.uwtId ??
+            row.id ??
+            row.user_wordbook_term_id;
+        if (uwt == null) return null;
 
-        const title = row.word ?? row.title ?? row.term?.title ?? "(제목 없음)";
+        // 1) 가장 믿을 수 있는 소스: 중첩 객체의 term.id
+        let tId: number | null =
+            row?.term?.id ?? row?.term_id ?? null;
+
+        // 2) 루트의 termId가 있긴 한데, 이게 uwtId와 같으면 가짜일 확률 높음 → 버림
+        if (tId == null) {
+            const rootTermId = row.termId ?? row.tid ?? row?.term?.termId;
+            if (
+                rootTermId != null &&
+                String(rootTermId) !== String(uwt) // uwtId와 같으면 쓰지 않음
+            ) {
+                tId = Number(rootTermId);
+                if (!Number.isFinite(tId)) tId = null;
+            }
+        }
+
+        const title =
+            row.word ??
+            row.title ??
+            row.term?.title ??
+            row.term?.word ??
+            "(제목 없음)";
+
+        const description =
+            row.description ??
+            row.term?.description ??
+            row.explain ??
+            row.meaning ??
+            "";
+
         const createdAt = row.createdAt ?? row.created_at;
         const tags: string[] = row.tags ?? row.term?.tags ?? [];
 
-        return { uwtId: String(uwtId), termId: String(termId), title: String(title), description: String(description), createdAt, tags };
+        return {
+            uwtId: String(uwt),
+            termId: tId != null ? String(tId) : null, // ← term.id 없으면 null
+            title: String(title),
+            description: String(description),
+            createdAt,
+            tags,
+        };
     };
 
     const fetchPage = React.useCallback(async (p: number) => {
@@ -381,7 +433,7 @@ export default function WordbookFolderPage() {
         setLoading(true); setError(null);
         try {
             const res = await http.get(`/api/folders/${folderId}/terms`, {
-                params: { page: p, perPage: 20, sort: "createdAt,DESC" },
+                params: { page: p+1, perPage: 20, sort: "createdAt,DESC" },
                 headers: { ...authHeader() },
             });
             const d = res.data ?? {};
@@ -397,6 +449,19 @@ export default function WordbookFolderPage() {
             setHasMore(p + 1 < totalPages);
 
             if (typeof d.folderName === "string" && d.folderName.trim()) setFolderName(d.folderName);
+
+            // (선택) 서버가 암기 상태를 내려주면 여기서 초기화
+            // const initLearn: Record<string, "unmemorized" | "memorized"> = {};
+            // raw.forEach((row) => {
+            //   const uwtId = row.userTermId ?? row.userWordbookTermId ?? row.id;
+            //   const s = row.memorizationStatus ?? row.status;
+            //   if (uwtId != null && (s === "MEMORIZED" || s === "LEARNING")) {
+            //     initLearn[String(uwtId)] = s === "MEMORIZED" ? "memorized" : "unmemorized";
+            //   }
+            // });
+            // if (Object.keys(initLearn).length) {
+            //   setLearn((prev) => (p === 0 ? { ...prev, ...initLearn } : { ...initLearn, ...prev }));
+            // }
         } catch (err: any) {
             const s = err?.response?.status;
             if (s === 401) navigate("/login", { state: { from: `/spoon-word/folders/${folderId}` } });
@@ -407,12 +472,72 @@ export default function WordbookFolderPage() {
         }
     }, [folderId, navigate]);
 
+    const handleRequestRename = React.useCallback(
+        async (folderId: string, currentName: string) => {
+            const next = window.prompt("새 폴더 이름을 입력하세요.", currentName ?? "");
+            if (next == null) return; // 취소
+            const raw = next.trim();
+            if (!raw) return alert("폴더 이름은 공백일 수 없습니다.");
+            if (raw.length > 60) return alert("폴더 이름은 최대 60자입니다.");
+
+            // 중복 체크(현재 모달에 있는 목록 기준)
+            const dup = notebooks.some(n => n.id !== folderId && normalize(n.name) === normalize(raw));
+            if (dup) return alert("동일한 이름의 폴더가 이미 존재합니다.");
+
+            try {
+                await renameUserFolder(folderId, raw);               // PATCH /api/me/folders/{id}
+                // 로컬 반영 또는 서버 재조회 중 하나 선택
+                setNotebooks(prev => prev.map(n => (n.id === folderId ? { ...n, name: raw } : n)));
+                // 필요 시: setNotebooks(await fetchUserFolders());
+            } catch (e: any) {
+                const s = e?.response?.status;
+                if (s === 409) alert("동일한 이름의 폴더가 이미 존재합니다.");
+                else if (s === 400) alert("폴더 이름 형식이 올바르지 않습니다.");
+                else if (s === 403) alert("이 폴더에 대한 권한이 없습니다.");
+                else if (s === 404) alert("폴더를 찾을 수 없습니다.");
+                else alert("폴더 이름 변경에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+            }
+        },
+        [notebooks, normalize]
+    );
+
     React.useEffect(() => {
         setPage(0);
         setChecked({});
         setSelectMode(false);
         fetchPage(0);
     }, [fetchPage]);
+
+    React.useEffect(() => {
+        if (items.length === 0) return;
+
+        let aborted = false;
+        const ids = Array.from(new Set(items.map(it => Number(it.termId)).filter(Boolean)));
+
+        (async () => {
+            try {
+                const map = await fetchMemorizationStatuses(ids); // { "123": "MEMORIZED", "456": "LEARNING", ... }
+                if (aborted || !map) return;
+
+                setLearn(prev => {
+                    const next = { ...prev };
+                    for (const it of items) {
+                        const raw = map[String(it.termId)];
+                        if (raw === "MEMORIZED") next[it.uwtId] = "memorized";
+                        else if (raw === "LEARNING") next[it.uwtId] = "unmemorized";
+                        // 값이 없으면 그대로 두고(기본 미암기), 다음 요청에서 채워짐
+                    }
+                    return next;
+                });
+            } catch (e) {
+                console.warn("[memo:init] 상태 조회 실패", e);
+            }
+        })();
+
+        return () => { aborted = true; };
+    }, [items]);
+
+
 
     /* ------ selection / bulk actions ------ */
     const toggleAll = (on: boolean) => {
@@ -435,15 +560,79 @@ export default function WordbookFolderPage() {
 
     const openMove = async () => {
         if (selectedIds.length === 0) return;
-        try { setNotebooks(await fetchUserFolders()); } catch { setNotebooks([]); }
+
+        const sel = items.filter(it => selectedIds.includes(it.uwtId));
+        console.table(sel.map(it => ({
+            uwtId: it.uwtId,
+            termId: it.termId, // 반드시 term.id 여야 함
+            title: it.title,
+        })));
+
+        try {
+            const list = await fetchUserFolders();
+            setNotebooks(list);
+        } catch { setNotebooks([]); }
         setMoveOpen(true); setMenuOpen(false);
     };
 
+
     const handleConfirmMove = async (destFolderId: string) => {
-        if (selectedIds.length === 0) return;
-        // TODO: API 연결
-        setItems((prev) => prev.filter((it) => !selectedIds.includes(it.uwtId)));
-        setChecked({}); setSelectMode(false); setMoveOpen(false);
+        if (!folderId || selectedIds.length === 0) return;
+        if (String(destFolderId) === String(folderId)) { setMoveOpen(false); return; }
+
+        const selected = items.filter(it => selectedIds.includes(it.uwtId));
+
+        // termId가 진짜 숫자인 것만 전송
+        const termIds = Array.from(
+            new Set(
+                selected
+                    .map(it => Number(it.termId))
+                    .filter(n => Number.isFinite(n) && n > 0)
+            )
+        );
+
+        // termId 없던 카드들 로그
+        const missing = selected.filter(it => !(Number(it.termId) > 0));
+        if (missing.length) {
+            console.warn("[move] term.id를 알 수 없어 제외된 항목:", missing.map(m => ({ uwtId: m.uwtId, termId: m.termId, title: m.title })));
+        }
+
+        if (termIds.length === 0) { setMoveOpen(false); return; }
+
+        try {
+            const res = await moveFolderTerms(Number(folderId), {
+                targetFolderId: Number(destFolderId),
+                termIds,
+            });
+
+            console.group("[moveFolderTerms] result");
+            console.log("source -> target:", folderId, "->", destFolderId);
+            console.log("requested termIds:", termIds);
+            console.log("movedCount:", res.movedCount);
+            console.log("movedTermIds:", res.movedTermIds);
+            console.log("skippedCount:", res.skippedCount);
+            console.table(res.skipped?.map(s => ({ termId: s.termId, reason: `'${s.reason}'` })) ?? []);
+            console.groupEnd();
+
+            const moved = new Set((res.movedTermIds ?? []).map(String));
+            if (moved.size > 0) {
+                setItems(prev => prev.filter(it => !moved.has(String(it.termId))));
+            }
+            setPage(0);
+            await fetchPage(0);
+
+            setChecked({});
+            setSelectMode(false);
+        } catch (err: any) {
+            const s = err?.response?.status;
+            if (s === 401) alert("로그인이 필요합니다.");
+            else if (s === 403) alert("해당 폴더 접근 권한이 없습니다.");
+            else if (s === 404) alert("대상/소스 폴더를 찾을 수 없습니다.");
+            else alert("이동 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.");
+            console.error("[moveFolderTerms] failed:", err);
+        } finally {
+            setMoveOpen(false);
+        }
     };
 
     /* ------ settings menu : outside click/esc ------ */
@@ -551,6 +740,8 @@ export default function WordbookFolderPage() {
                             const status = learn[it.uwtId] ?? "unmemorized";
                             const done = status === "memorized";
 
+                            const isSaving = !!saving[it.uwtId];
+
                             return (
                                 <CardWrap key={it.uwtId}>
                                     {/* 선택 모드일 때만 우측 상단 선택 토글 */}
@@ -572,16 +763,44 @@ export default function WordbookFolderPage() {
                                     <StatusBtn
                                         $done={done}
                                         $shift={selectMode}
+                                        disabled={isSaving}
+                                        aria-busy={isSaving}
                                         aria-pressed={done}
                                         aria-label={done ? "암기 완료로 표시됨, 클릭하면 미암기로 전환" : "미암기로 표시됨, 클릭하면 암기 완료로 전환"}
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                             e.stopPropagation();
-                                            setLearn((prev) => ({
-                                                ...prev,
-                                                [it.uwtId]: prev[it.uwtId] === "memorized" ? "unmemorized" : "memorized",
-                                            }));
-                                            // TODO: 서버 동기화 예시
-                                            // await http.post(`/api/user-terms/${it.uwtId}/learn`, { status: newStatus }, { headers: { ...authHeader() } });
+                                            if (isSaving) return;
+
+                                            const prev = learn[it.uwtId] ?? "unmemorized";
+                                            const nextLocal = prev === "memorized" ? "unmemorized" : "memorized";
+
+                                            // 낙관적 업데이트
+                                            setLearn((m) => ({ ...m, [it.uwtId]: nextLocal }));
+                                            setSaving((m) => ({ ...m, [it.uwtId]: true }));
+
+                                            try {
+                                                await setMemorization({
+                                                    termId: it.termId ?? undefined,
+                                                    userTermId: it.uwtId,
+                                                    done: nextLocal === "memorized",
+                                                });
+                                                // 성공 시 유지
+                                            } catch (err: any) {
+                                                // 실패 → 롤백
+                                                setLearn((m) => ({ ...m, [it.uwtId]: prev }));
+                                                const s = err?.response?.status;
+                                                if (s === 401) {
+                                                    alert("로그인이 필요합니다.");
+                                                    navigate("/login", { state: { from: location.pathname } });
+                                                } else if (s === 404) {
+                                                    alert("용어를 찾을 수 없습니다.");
+                                                } else {
+                                                    alert("저장에 실패했어요. 잠시 후 다시 시도해 주세요.");
+                                                    console.error("[memorization:toggle] failed:", err);
+                                                }
+                                            } finally {
+                                                setSaving((m) => ({ ...m, [it.uwtId]: false }));
+                                            }
                                         }}
                                     >
                                         {done ? "암기 완료" : "미암기"}
@@ -642,7 +861,7 @@ export default function WordbookFolderPage() {
                 notebooks={notebooks}
                 onClose={() => setMoveOpen(false)}
                 onCreate={async (name) => {
-                    const { data } = await http.post("/api/user-terms/folders", { folderName: name }, { headers: { ...authHeader() } });
+                    const { data } = await http.post("/api/me/folders", { folderName: name }, { headers: { ...authHeader() } });
                     const newId = String(data.id);
                     const newName = data.folderName ?? name;
                     setNotebooks((prev) => [{ id: newId, name: newName }, ...prev]);
@@ -655,6 +874,10 @@ export default function WordbookFolderPage() {
                 onGoToFolder={(fid, name) => {
                     setMoveOpen(false);
                     navigate(`/spoon-word/folders/${fid}`, { state: { folderName: name } });
+                }}
+                onRename={async (folderId, newName) => {
+                    await renameUserFolder(folderId, newName);
+                    setNotebooks(prev => prev.map(n => n.id === folderId ? ({ ...n, name: newName }) : n));
                 }}
             />
         </div>

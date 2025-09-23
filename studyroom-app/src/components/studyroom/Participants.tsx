@@ -14,6 +14,7 @@ interface Member {
 interface StudyRoomContext {
     studyId: string;
     userRole: 'LEADER' | 'MEMBER' | null;
+    studyStatus: 'RECRUITING' | 'COMPLETED' | 'CLOSED';
     onLeaveOrClose: () => void;
 }
 
@@ -180,7 +181,7 @@ const KickButton = styled.button`
 `;
 
 const Participants: React.FC = () => {
-    const { studyId, userRole, onLeaveOrClose } = useOutletContext<StudyRoomContext>();
+    const { studyId, userRole, studyStatus, onLeaveOrClose } = useOutletContext<StudyRoomContext>();
     const { currentUserId } = useAuth();
     const [members, setMembers] = useState<Member[]>([]);
 
@@ -218,7 +219,7 @@ const Participants: React.FC = () => {
         <Container>
             <Header>
                 <h2>
-                    👥 참여인원 <span>({members.length}명)</span>
+                    👥참여인원<span>({members.length}명)</span>
                 </h2>
             </Header>
 
@@ -229,7 +230,10 @@ const Participants: React.FC = () => {
                 <TabLink to={`/studies/joined-study/${studyId}/interview`}>모의면접</TabLink>
                 <TabLink to={`/studies/joined-study/${studyId}/members`}>참여인원</TabLink>
                 {userRole === 'LEADER' && (
-                    <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청 관리</TabLink>
+                    <>
+                        <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청관리</TabLink>
+                        <TabLink to={`/studies/joined-study/${studyId}/attendance`}>출석관리</TabLink>
+                    </>
                 )}
             </TabList>
             </NavContainer>
@@ -258,7 +262,7 @@ const Participants: React.FC = () => {
                                 </MemberInfo>
                                 <MemberActions>
                                     <RoleBadge $type="member">참가자</RoleBadge>
-                                    {userRole === 'LEADER' && p.id !== currentUserId && (
+                                    {userRole === 'LEADER' && p.id !== currentUserId && studyStatus !== 'CLOSED' && (
                                         <KickButton onClick={() => handleKickMember(p.id, p.nickname)}>강퇴하기</KickButton>
                                     )}
                                 </MemberActions>
@@ -271,7 +275,7 @@ const Participants: React.FC = () => {
             </Section>
             </ContentWrapper>
             <Footer>
-                <LeaveButton onClick={onLeaveOrClose}>
+                <LeaveButton onClick={onLeaveOrClose} disabled={studyStatus === 'CLOSED'}>
                     {userRole === 'LEADER' ? '스터디 폐쇄하기' : '탈퇴하기'}
                 </LeaveButton>
             </Footer>

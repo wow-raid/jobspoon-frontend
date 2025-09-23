@@ -153,7 +153,7 @@ const verifyAdminCode = async () => {
         console.warn("Authorization header(Bearer ...) not found in response.");
       }
       console.log("auth", res.headers?.authorization ?? res.headers?.Authorization);
-      router.push({ name: "GithubAdminLogin" });
+      router.push({name:"AdminAuthSocialLogin"});
     } else if (res.status === 401) {
       errorMessage.value = "아이디 또는 비밀번호가 올바르지 않습니다.";
     } else {

@@ -2,15 +2,30 @@
 
 import React from "react";
 import styled from "styled-components";
-import { TrustScoreResponse } from "../../api/dashboardApi.ts";
+import { TrustScore } from "../../api/profileAppearanceApi.ts";
 
 type Props = {
     isOpen: boolean;
     onClose: () => void;
-    trust: TrustScoreResponse;
+    trust: TrustScore;
 };
 
+// 환산 점수 계산 함수
+const calcAttendanceScore = (rate: number) => Math.min(rate * 0.25, 25); // 100% → 25점
+const calcInterviewScore = (count: number) => Math.min(count, 20) * 1;   // 예시: 1회 = 1점 (최대 20)
+const calcProblemScore = (count: number) => Math.min(count, 20) * 1;     // 1회 = 1점 (최대 20)
+const calcPostScore = (count: number) => Math.min(count, 10) * 1.5;      // 1회 = 1.5점 (최대 15)
+const calcStudyroomScore = (count: number) => Math.min(count, 5) * 2;    // 1회 = 2점 (최대 10)
+const calcCommentScore = (count: number) => Math.min(count, 30) * 0.5;   // 1개 = 0.5점 (최대 15)
+
 export default function TrustScoreModal({ isOpen, onClose, trust }: Props) {
+    const attendanceScore = calcAttendanceScore(trust.attendanceRate);
+    const interviewScore = calcInterviewScore(trust.monthlyInterviews);
+    const problemScore = calcProblemScore(trust.monthlyProblems);
+    const postScore = calcPostScore(trust.monthlyPosts);
+    const studyroomScore = calcStudyroomScore(trust.monthlyStudyrooms);
+    const commentScore = calcCommentScore(trust.monthlyComments);
+
     return (
         <Overlay isOpen={isOpen}>
             <Modal isOpen={isOpen}>
@@ -22,63 +37,14 @@ export default function TrustScoreModal({ isOpen, onClose, trust }: Props) {
                 <Content>
                     <h3>내 점수 현황</h3>
                     <ul>
-                        <li>🗓️ 출석률: {trust.attendanceScore.toFixed(1)} / 25점</li>
-                        <li>🎤 모의면접: {Math.round(trust.interviewScore)} / 20점</li>
-                        <li>🧩 문제풀이: {Math.round(trust.quizScore)} / 20점</li>
-                        <li>✍️ 리뷰 작성: {Math.round(trust.reviewScore)} / 10점</li>
-                        <li>👥 스터디룸 개설: {Math.round(trust.studyroomScore)} / 10점</li>
-                        <li>💬 댓글 작성: {Math.round(trust.commentScore)} / 10점</li>
-                        <li>⚡ 활성 보너스: {trust.bonusApplied ? "+5점" : "0점"}</li>
+                        <li>🗓️ 출석률: {attendanceScore.toFixed(1)} / 25점</li>
+                        <li>🎤 모의면접: {Math.round(interviewScore)} / 20점</li>
+                        <li>🧩 문제풀이: {Math.round(problemScore)} / 20점</li>
+                        <li>✍️ 리뷰 작성: {Math.round(postScore)} / 15점</li>
+                        <li>👥 스터디룸 개설: {Math.round(studyroomScore)} / 10점</li>
+                        <li>💬 댓글 작성: {Math.round(commentScore)} / 15점</li>
                     </ul>
-                    <p><b>총점: {Math.round(trust.trustScore)} / 100점</b></p>
-
-                    <Divider />
-
-                    <h3>산정 기준표</h3>
-                    <CardList>
-                        <Card>
-                            <Title>🗓️ 출석률</Title>
-                            <Point>최대 25점</Point>
-                            <Desc>출석률이 높을수록 점수 상승 (100% = 25점)</Desc>
-                            <Note>성실성 지표</Note>
-                        </Card>
-                        <Card>
-                            <Title>🎤 모의면접</Title>
-                            <Point>최대 20점</Point>
-                            <Desc>누적 참여 횟수 + 최근 한 달 활동 반영</Desc>
-                            <Note>꾸준한 실전 연습</Note>
-                        </Card>
-                        <Card>
-                            <Title>🧩 문제풀이</Title>
-                            <Point>최대 20점</Point>
-                            <Desc>누적 풀이 수 + 최근 한 달 풀이 반영</Desc>
-                            <Note>학습 꾸준함</Note>
-                        </Card>
-                        <Card>
-                            <Title>✍️ 리뷰 작성</Title>
-                            <Point>최대 10점</Point>
-                            <Desc>작성한 리뷰 개수에 따라 점수 상승</Desc>
-                            <Note>피드백 기여</Note>
-                        </Card>
-                        <Card>
-                            <Title>👥 스터디룸 개설</Title>
-                            <Point>최대 10점</Point>
-                            <Desc>스터디룸 개설 시 높은 점수 반영</Desc>
-                            <Note>커뮤니티 리더십</Note>
-                        </Card>
-                        <Card>
-                            <Title>💬 댓글 작성</Title>
-                            <Point>최대 10점</Point>
-                            <Desc>작성한 댓글 개수에 따라 점수 상승</Desc>
-                            <Note>커뮤니티 참여</Note>
-                        </Card>
-                        <Card>
-                            <Title>⚡ 활성 보너스</Title>
-                            <Point>+5점</Point>
-                            <Desc>최근 한 달 내 활동이 있으면 +5점</Desc>
-                            <Note>총점은 최대 100점</Note>
-                        </Card>
-                    </CardList>
+                    <p><b>총점: {Math.round(trust.totalScore)} / 100점</b></p>
                 </Content>
 
                 <Footer>
@@ -176,43 +142,4 @@ const Divider = styled.hr`
     border: none;
     border-top: 1px solid #e5e7eb;
     margin: 16px 0;
-`;
-
-const CardList = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 12px;
-`;
-
-const Card = styled.div`
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 12px;
-    background: #fff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-`;
-
-const Title = styled.h4`
-    font-size: 15px;
-    font-weight: 600;
-    margin: 0 0 4px;
-`;
-
-const Point = styled.p`
-    font-size: 13px;
-    font-weight: 500;
-    color: #2563eb;
-    margin: 0 0 4px;
-`;
-
-const Desc = styled.p`
-    font-size: 13px;
-    margin: 0 0 2px;
-`;
-
-const Note = styled.p`
-    font-size: 12px;
-    color: #6b7280;
-    margin: 0;
 `;

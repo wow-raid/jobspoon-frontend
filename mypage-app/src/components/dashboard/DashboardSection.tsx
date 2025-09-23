@@ -1,31 +1,40 @@
 {/* 마이페이지 대쉬보드 */}
 
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import {
     getAttendanceRate,
-    getInterviewCompletion,
     getQuizCompletion,
     getWritingCount,
-    getTrustScore,
     AttendanceRateResponse,
-    InterviewCompletionResponse,
     QuizCompletionResponse,
     WritingCountResponse,
-    TrustScoreResponse
 } from "../../api/dashboardApi.ts";
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import {
+    fetchTrustScore,
+    TrustScore
+} from "../../api/profileAppearanceApi.ts";
+import { fetchInterviewList } from "../../api/interviewApi.ts";
+import {PieChart, Pie, Cell, ResponsiveContainer} from "recharts";
 import styled from "styled-components";
-import RankSection from "./RankSection.tsx";
+import LevelSection from "./LevelSection.tsx";
 import TitleSection from "./TitleSection.tsx";
 import TrustScoreModal from "../modals/TrustScoreModal.tsx";
 import WritingModal from "../modals/WritingModal.tsx";
+
+type InterviewItem = {
+    id: number;
+    topic: string;
+    yearsOfExperience: number;
+    created_at: Date;
+    status: "IN_PROGRESS" | "COMPLETED"; // 추가
+};
 
 const COLORS = ["rgb(59,130,246)", "rgb(229,231,235)"]; // 파랑 / 회색
 
 // 공통 도넛 데이터 생성
 const makeDonutData = (percent: number) => [
-    { name: "progress", value: percent },
-    { name: "remain", value: 100 - percent },
+    {name: "progress", value: percent},
+    {name: "remain", value: 100 - percent},
 ];
 
 // 공통 도넛 차트 컴포넌트
@@ -42,7 +51,7 @@ function DonutChart({
     max?: number;
     onDetailClick?: () => void;
 }) {
-    const percent = Math.min(100, (value / max) * 100); // % 변환
+    const percent = Math.min(100, value); // % 변환
 
     return (
         <DonutCard>
@@ -57,8 +66,8 @@ function DonutChart({
                             endAngle={-270}
                             dataKey="value"
                         >
-                            <Cell fill={COLORS[0]} />
-                            <Cell fill={COLORS[1]} />
+                            <Cell fill={COLORS[0]}/>
+                            <Cell fill={COLORS[1]}/>
                         </Pie>
                     </PieChart>
                 </ResponsiveContainer>
@@ -82,24 +91,46 @@ function DonutChart({
 
 export default function DashboardSection() {
     const [attendance, setAttendance] = useState<AttendanceRateResponse | null>(null);
-    const [interview, setInterview] = useState<InterviewCompletionResponse | null>(null);
+    const [interview, setInterview] = useState<{ interviewTotalCount: number; interviewMonthlyCount: number } | null>(null);
     const [quiz, setQuiz] = useState<QuizCompletionResponse | null>(null);
     const [writing, setWriting] = useState<WritingCountResponse | null>(null);
-    const [trust, setTrust] = useState<TrustScoreResponse | null>(null);
+    const [trust, setTrust] = useState<TrustScore | null>(null);
+
     const [trustModalOpen, setTrustModalOpen] = useState(false);
     const [writingModalOpen, setWritingModalOpen] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem("userToken");
-        if(!token){
+        if (!token) {
             console.error("로그인 토큰 없음");
             return;
         }
         getAttendanceRate(token).then(setAttendance).catch(console.error);
-        getInterviewCompletion(token).then(setInterview).catch(console.error);
         getQuizCompletion(token).then(setQuiz).catch(console.error);
         getWritingCount(token).then(setWriting).catch(console.error);
-        getTrustScore(token).then(setTrust).catch(console.error);
+        fetchTrustScore(token).then(setTrust).catch(console.error);
+
+        // ✅ 인터뷰 목록에서 COMPLETED만 필터링
+        fetchInterviewList(token).then((data) => {
+            const completed = (data.interviewList || []).filter(
+                (i: InterviewItem) => i.status === "COMPLETED"
+            );
+
+            const total = completed.length;
+            const monthly = completed.filter((i: InterviewItem) => {
+                const created = new Date(i.created_at);
+                const now = new Date();
+                return (
+                    created.getFullYear() === now.getFullYear() &&
+                    created.getMonth() === now.getMonth()
+                );
+            }).length;
+
+            setInterview({
+                interviewTotalCount: total,
+                interviewMonthlyCount: monthly,
+            });
+        }).catch(console.error);
     }, []);
 
     if (!attendance || !interview || !quiz || !writing || !trust) {
@@ -135,10 +166,11 @@ export default function DashboardSection() {
 
                 {/* 도넛 차트 */}
                 <DonutGrid>
-                    <DonutChart value={attendance.attendanceRate} label="이번 달 출석률" unit="%" max={100} />
-                    <DonutChart value={interview.interviewMonthlyCount} label="이번 달 모의면접" unit="회" max={10} />
-                    <DonutChart value={quiz.quizMonthlyCount} label="이번 달 문제풀이" unit="개" max={20} />
-                    <DonutChart value={trust.trustScore} label="신뢰 점수" unit="점" max={100} onDetailClick={() => setTrustModalOpen(true)} />
+                    <DonutChart value={attendance.attendanceRate} label="이번 달 출석률" unit="%" max={100}/>
+                    <DonutChart value={interview.interviewMonthlyCount} label="이번 달 모의면접" unit="회" max={10}/>
+                    <DonutChart value={quiz.quizMonthlyCount} label="이번 달 문제풀이" unit="개" max={20}/>
+                    <DonutChart value={trust.totalScore} label="신뢰 점수" unit="점" max={100}
+                                onDetailClick={() => setTrustModalOpen(true)}/>
                 </DonutGrid>
             </Section>
 
@@ -153,17 +185,17 @@ export default function DashboardSection() {
             <TrustScoreModal
                 isOpen={trustModalOpen}
                 onClose={() => setTrustModalOpen(false)}
-                trust={trust}   // ✅ 여기서 trust 넘겨주기
+                trust={trust}
             />
 
-            {/* 나의 랭크 현황 */}
+            {/* 나의 레벨 현황 */}
             <Section>
-                <RankSection />
+                <LevelSection/>
             </Section>
 
             {/* 나의 칭호 현황 */}
             <Section>
-                <TitleSection />
+                <TitleSection/>
             </Section>
         </>
     );
@@ -188,14 +220,14 @@ const SectionTitle = styled.h2`
   color: rgb(17, 24, 39);
 `;
 
-/* ✅ 상단 카드 레이아웃 */
+/* 상단 카드 레이아웃 */
 const TopCardGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
 `;
 
-/* ✅ 상단 카드 레이아웃 */
+/* 상단 카드 레이아웃 */
 const TopCard = styled.div`
     background: rgb(249, 250, 251);
     border-radius: 12px;

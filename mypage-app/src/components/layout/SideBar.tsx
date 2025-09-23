@@ -4,12 +4,11 @@ import React, { useState } from "react";
 import ServiceModal from "../modals/ServiceModal.tsx";
 import {
     FaUser,
-    FaRegCommentDots,
     FaCalendarAlt,
     FaFolderOpen,
     FaCrown,
-    FaCog,
     FaSignOutAlt,
+    FaChartLine
 } from "react-icons/fa";
 import { MdArticle } from "react-icons/md";
 import styled from "styled-components";
@@ -30,6 +29,14 @@ export default function SideBar() {
                         <StyledNavLink to="account/edit">
                             <FaUser className="icon" />
                             회원정보 수정
+                        </StyledNavLink>
+                    </li>
+
+                    <li>
+                        <StyledNavLink to="user/history">
+                            <FaChartLine className="icon" />
+                            이력 관리
+                            {/* 하위에 신뢰점수, 랭크, 칭호 이력 나오도록 페이지 구성 */}
                         </StyledNavLink>
                     </li>
 

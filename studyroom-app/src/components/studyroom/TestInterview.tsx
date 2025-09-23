@@ -16,6 +16,13 @@ type Channel = {
     icon: string;
 };
 
+interface StudyRoomContext {
+    studyId: string;
+    userRole: 'LEADER' | 'MEMBER' | null;
+    studyStatus: 'RECRUITING' | 'COMPLETED' | 'CLOSED';
+    onLeaveOrClose: () => void;
+}
+
 const INITIAL_LINKS: Channel[] = [
     { name: 'Kakao', url: 'https://open.kakao.com/o/', icon: kakaoLogo },
     { name: 'Google', url: 'https://meet.google.com/', icon: googleLogo },
@@ -166,7 +173,7 @@ const EditButton = styled.button`
 
 const TestInterview: React.FC = () => {
     const { id: studyRoomId } = useParams<{ id: string }>();
-    const { studyId, userRole, onLeaveOrClose } = useOutletContext<StudyRoomContext>();
+    const { studyId, userRole, studyStatus, onLeaveOrClose } = useOutletContext<StudyRoomContext>();
     const [channels, setChannels] = useState<Channel[]>(INITIAL_LINKS);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingChannel, setEditingChannel] = useState<Channel | null>(null);
@@ -192,7 +199,7 @@ const TestInterview: React.FC = () => {
     return (
         <Container>
             <Header>
-                <h2>🎙️ 모의면접 채널</h2>
+                <h2>🎙️모의면접채널</h2>
             </Header>
 
             <NavContainer>
@@ -202,7 +209,10 @@ const TestInterview: React.FC = () => {
                     <TabLink to={`/studies/joined-study/${studyId}/interview`}>모의면접</TabLink>
                     <TabLink to={`/studies/joined-study/${studyId}/members`}>참여인원</TabLink>
                     {userRole === 'LEADER' && (
-                        <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청 관리</TabLink>
+                        <>
+                            <TabLink to={`/studies/joined-study/${studyId}/applications`}>신청관리</TabLink>
+                            <TabLink to={`/studies/joined-study/${studyId}/attendance`}>출석관리</TabLink>
+                        </>
                     )}
                 </TabList>
             </NavContainer>
@@ -231,10 +241,11 @@ const TestInterview: React.FC = () => {
                                     <Name>{channel.name}</Name>
                                 </LinkBtn>
                             )}
-
+                            {studyStatus !== 'CLOSED' && userRole === 'LEADER' && (
                             <EditButton onClick={() => handleOpenModal(channel)}>
                                 {disabled ? '링크 등록' : '링크 수정'}
                             </EditButton>
+                            )}
                         </Item>
                     );
                 })}

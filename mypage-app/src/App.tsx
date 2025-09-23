@@ -2,12 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import MyPageLayout from "./components/layout/MyPageLayout.tsx";
 import DashboardSection from "./components/dashboard/DashboardSection.tsx";
-import ProfileAppearanceCardEdit from "./pages/ProfileAppearanceCardEdit.tsx";
 import AccountProfileEdit from "./pages/AccountProfileEdit.tsx";
 import InterviewResultList from "./pages/InterviewResultList.tsx";
 import InterviewResultDetail from "./pages/InterviewResultDetail.tsx";
-import {AccountWithdrawal} from "./pages/AccountWithdrawal.tsx";
+import AccountWithdrawal from "./pages/AccountWithdrawal.tsx";
 import MembershipPage from "./pages/MemebershipPage.tsx";
+import UserHistoryPage from "./pages/UserHistoryPage.tsx";
 
 import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
 import { getTheme, onThemeChange, type Theme as BridgeTheme } from '@jobspoon/theme-bridge';
@@ -76,8 +76,6 @@ export default function App() {
                     <Route path="/" element={<MyPageLayout />}>
                         {/* 기본: 대시보드 (우측 영역) */}
                         <Route index element={<DashboardSection />} />
-                        {/* 프로필 외형 수정 (우측 영역만 바뀜) */}
-                        <Route path="profile/edit" element={<ProfileAppearanceCardEdit />} />
                         {/* 회원정보 수정 */}
                         <Route path="account/edit" element={<AccountProfileEdit />} />
                         {/* 인터뷰 결과 보관함 */}
@@ -87,6 +85,8 @@ export default function App() {
                         <Route path="withdrawal" element={<AccountWithdrawal />} />
                         {/* 멤버십 */}
                         <Route path="membership" element={<MembershipPage />} />
+                        {/* 이력 관리 */}
+                        <Route path="user/history" element={<UserHistoryPage />} />
                     </Route>
                 </Routes>
             </AppShell>
