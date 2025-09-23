@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { fetchInterviewList } from "../api/interviewApi";
 import ServiceModal from "../components/modals/ServiceModal";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -11,25 +10,46 @@ type InterviewItem = {
     topic: string;
     yearsOfExperience: number;
     created_at: Date;
-    status: "IN_PROGRESS" | "COMPLETED"; // ✅ 추가
+    status: "IN_PROGRESS" | "COMPLETED";
 };
 
 export default function InterviewResultList() {
     const [interviews, setInterviews] = useState<InterviewItem[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    // ✅ 목데이터 적용
     useEffect(() => {
-        const userToken = localStorage.getItem("userToken");
-        if (!userToken) return;
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
+        if (!isLoggedIn) {
+            console.error("로그인이 필요합니다.");
+            return;
+        }
 
-        fetchInterviewList(userToken).then((data) => {
-            const normalized: InterviewItem[] = (data.interviewList || []).map((item: any) => ({
-                ...item,
-                created_at: new Date(item.created_at),
-                status: item.status, // ✅ 추가
-            }));
-            setInterviews(normalized);
-        });
+        const mockInterviews: InterviewItem[] = [
+            {
+                id: 1,
+                topic: "Spring Boot 기술 면접",
+                yearsOfExperience: 2,
+                created_at: new Date("2025-09-01"),
+                status: "COMPLETED",
+            },
+            {
+                id: 2,
+                topic: "React 프로젝트 경험",
+                yearsOfExperience: 1,
+                created_at: new Date("2025-09-05"),
+                status: "IN_PROGRESS",
+            },
+            {
+                id: 3,
+                topic: "MySQL 성능 최적화",
+                yearsOfExperience: 3,
+                created_at: new Date("2025-09-10"),
+                status: "COMPLETED",
+            },
+        ];
+
+        setInterviews(mockInterviews);
     }, []);
 
     // 도넛 차트용 데이터 계산

@@ -52,7 +52,6 @@ export default function SideBar() {
                         <StyledNavLink to="interview/history">
                             <FaFolderOpen className="icon" />
                             면접 기록 보관함
-                            <Badge>4</Badge>
                         </StyledNavLink>
                     </li>
 

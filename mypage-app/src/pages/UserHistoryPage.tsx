@@ -23,11 +23,11 @@ export default function UserHistoryPage() {
     const [isTitleGuideOpen, setIsTitleGuideOpen] = useState(false);
 
     useEffect(() => {
-        const token = localStorage.getItem("userToken");
-        if (!token) return;
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
+        if (!isLoggedIn) return;
 
         // 레벨 + 칭호
-        Promise.all([fetchUserLevel(token), fetchMyTitles(token)])
+        Promise.all([fetchUserLevel(), fetchMyTitles()])
             .then(([lvl, t]) => {
                 setUserLevel(lvl);
                 setTitles(t);
@@ -35,7 +35,7 @@ export default function UserHistoryPage() {
             .catch(console.error);
 
         // 신뢰점수
-        fetchTrustScore(token).then(setTrustScore).catch(console.error);
+        fetchTrustScore().then(setTrustScore).catch(console.error);
     }, []);
 
     return (

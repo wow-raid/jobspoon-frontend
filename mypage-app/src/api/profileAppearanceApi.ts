@@ -47,16 +47,16 @@ export interface AddExpRequest {
 /** ---------------------- API 함수 ---------------------- **/
 
 // 내 프로필 조회
-export async function fetchMyProfile(token: string) {
+export async function fetchMyProfile() { // token 매개변수 제거
     const res = await axios.get<ProfileAppearanceResponse>(
         `${API_BASE_URL}/profile-appearance/my`,
-        { headers: { Authorization: token } }
+        { withCredentials: true } // Authorization 헤더 제거, 쿠키 자동 전송 옵션 추가
     );
     return res.data;
 }
 
 // 프로필 사진 업로드 (Presigned URL 방식)
-export async function uploadProfilePhoto(token: string, file: File) {
+export async function uploadProfilePhoto(file: File) { // token 매개변수 제거
     // 1. Presigned URL 요청
     const res = await axios.post<string>(
         `${API_BASE_URL}/profile-appearance/profile/photo/upload-url`,
@@ -66,7 +66,7 @@ export async function uploadProfilePhoto(token: string, file: File) {
                 filename: file.name,
                 contentType: file.type,
             },
-            headers: { Authorization: token },
+            withCredentials: true // Authorization 헤더 제거, 쿠키 자동 전송 옵션 추가
         }
     );
 
@@ -92,58 +92,58 @@ export async function uploadProfilePhoto(token: string, file: File) {
 }
 
 // 보유 칭호 조회
-export async function fetchMyTitles(token: string): Promise<TitleItem[]> {
+export async function fetchMyTitles(): Promise<TitleItem[]> { // token 매개변수 제거
     const res = await axios.get<TitleItem[]>(
         `${API_BASE_URL}/profile-appearance/title/my`,
-        { headers: { Authorization: token } }
+        { withCredentials: true } // Authorization 헤더 제거, 쿠키 자동 전송 옵션 추가
     );
     return res.data;
 }
 
 // 칭호 장착
-export async function equipTitle(token: string, titleId: number): Promise<TitleItem> {
+export async function equipTitle(titleId: number): Promise<TitleItem> { // token 매개변수 제거
     const res = await axios.put<TitleItem>(
         `${API_BASE_URL}/profile-appearance/title/${titleId}/equip`,
         {},
-        { headers: { Authorization: token } }
+        { withCredentials: true } // Authorization 헤더 제거, 쿠키 자동 전송 옵션 추가
     );
     return res.data;
 }
 
 // 신뢰 점수 조회
-export async function fetchTrustScore(token: string) {
+export async function fetchTrustScore() { // token 매개변수 제거
     const res = await axios.get<TrustScore>(
         `${API_BASE_URL}/profile-appearance/trust-score`,
-        { headers: { Authorization: token } }
+        { withCredentials: true } // Authorization 헤더 제거, 쿠키 자동 전송 옵션 추가
     );
     return res.data;
 }
 
 // 레벨 조회
-export async function fetchUserLevel(token: string) {
+export async function fetchUserLevel() { // token 매개변수 제거
     const res = await axios.get<UserLevel>(
         `${API_BASE_URL}/profile-appearance/user-level`,
-        { headers: { Authorization: token } }
+        { withCredentials: true } // Authorization 헤더 제거, 쿠키 자동 전송 옵션 추가
     );
     return res.data;
 }
 
 // 경험치 추가
-export async function addExperience(token: string, amount: number) {
+export async function addExperience(amount: number) { // token 매개변수 제거
     const res = await axios.post<UserLevel>(
         `${API_BASE_URL}/profile-appearance/user-level/experience`,
         { amount },
-        { headers: { Authorization: token } }
+        { withCredentials: true } // Authorization 헤더 제거, 쿠키 자동 전송 옵션 추가
     );
     return res.data;
 }
 
 // 회원 탈퇴 (Account API, 경로 다름)
-export async function withdrawAccount(token: string) {
+export async function withdrawAccount() { // token 매개변수 제거
     const res = await axios.post(
         `${API_BASE_URL}/api/account/withdraw`,
         {},
-        { headers: { Authorization: token } }
+        { withCredentials: true } // Authorization 헤더 제거, 쿠키 자동 전송 옵션 추가
     );
     return res.data;
 }

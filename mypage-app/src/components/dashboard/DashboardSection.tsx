@@ -13,7 +13,6 @@ import {
     fetchTrustScore,
     TrustScore
 } from "../../api/profileAppearanceApi.ts";
-import { fetchInterviewList } from "../../api/interviewApi.ts";
 import {PieChart, Pie, Cell, ResponsiveContainer} from "recharts";
 import styled from "styled-components";
 import LevelSection from "./LevelSection.tsx";
@@ -100,37 +99,22 @@ export default function DashboardSection() {
     const [writingModalOpen, setWritingModalOpen] = useState(false);
 
     useEffect(() => {
-        const token = localStorage.getItem("userToken");
-        if (!token) {
-            console.error("로그인 토큰 없음");
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
+        if (!isLoggedIn) {
+            console.error("로그인이 필요합니다.");
             return;
         }
-        getAttendanceRate(token).then(setAttendance).catch(console.error);
-        getQuizCompletion(token).then(setQuiz).catch(console.error);
-        getWritingCount(token).then(setWriting).catch(console.error);
-        fetchTrustScore(token).then(setTrust).catch(console.error);
 
-        // ✅ 인터뷰 목록에서 COMPLETED만 필터링
-        fetchInterviewList(token).then((data) => {
-            const completed = (data.interviewList || []).filter(
-                (i: InterviewItem) => i.status === "COMPLETED"
-            );
+        getAttendanceRate().then(setAttendance).catch(console.error);
+        getQuizCompletion().then(setQuiz).catch(console.error);
+        getWritingCount().then(setWriting).catch(console.error);
+        fetchTrustScore().then(setTrust).catch(console.error);
 
-            const total = completed.length;
-            const monthly = completed.filter((i: InterviewItem) => {
-                const created = new Date(i.created_at);
-                const now = new Date();
-                return (
-                    created.getFullYear() === now.getFullYear() &&
-                    created.getMonth() === now.getMonth()
-                );
-            }).length;
-
-            setInterview({
-                interviewTotalCount: total,
-                interviewMonthlyCount: monthly,
-            });
-        }).catch(console.error);
+        // ✅ 임시 목데이터 (API 삭제됨)
+        setInterview({
+            interviewTotalCount: 12,   // 총 인터뷰 횟수
+            interviewMonthlyCount: 3,  // 이번 달 인터뷰 횟수
+        });
     }, []);
 
     if (!attendance || !interview || !quiz || !writing || !trust) {

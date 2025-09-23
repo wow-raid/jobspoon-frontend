@@ -91,14 +91,14 @@ export default function AccountProfileEdit() {
 
     /** 닉네임 저장 */
     const handleSaveNickname = async () => {
-        const token = localStorage.getItem("userToken");
-        if (!token) {
+        const isLoggedIn = localStorage.getItem("isLoggedIn"); // ✅ 로그인 여부만 확인
+        if (!isLoggedIn) {
             setNicknameError("로그인이 필요합니다.");
             return;
         }
 
         try {
-            await updateNickname(token, tempNickname);
+            await updateNickname(tempNickname); // ✅ token 인자 제거
             await refreshProfile();
             setIsEditingNickname(false);
             setNicknameError(null);
@@ -126,15 +126,15 @@ export default function AccountProfileEdit() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const token = localStorage.getItem("userToken");
-        if (!token) {
+        const isLoggedIn = localStorage.getItem("isLoggedIn"); // ✅ 로그인 여부만 확인
+        if (!isLoggedIn) {
             setPhotoError("로그인이 필요합니다.");
             return;
         }
 
         try {
             setIsUploading(true);
-            await uploadProfilePhoto(token, file);
+            await uploadProfilePhoto(file); // ✅ token 인자 제거
             await refreshProfile();
             setPhotoError(null);
             setPhotoSuccess("사진 업로드 성공");
