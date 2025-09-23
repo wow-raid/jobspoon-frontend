@@ -48,7 +48,20 @@ const NavLink = styled(Link)`
   text-decoration: none;
   font-weight: 500;
   cursor: pointer;
-  &:hover { opacity: 0.85; }
+  &:hover {
+    opacity: 0.85;
+  }
+`;
+
+// 이메일 링크는 a 태그 스타일로 별도 정의
+const EmailLink = styled.a`
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+  &:hover {
+    opacity: 0.85;
+  }
 `;
 
 const SocialRow = styled.div`
@@ -72,13 +85,13 @@ const SocialBadge = styled.button`
 
 const Line = styled.hr`
   border: 0;
-  border-top: 1px solid #76AEFF;  /* 기존 디자인 유지 */
+  border-top: 1px solid #76aeff; /* 기존 디자인 유지 */
   margin: 28px 0;
 `;
 
 const CompanyBlock = styled.div`
   color: #ffffff;
-  paddingrgba(3, 3, 3, 1)px 12px 6px;
+  padding: 6px 12px;
   border-radius: 6px;
   display: inline-block;
   text-align: center;
@@ -92,9 +105,15 @@ const CompanyText = styled.p`
 
 export default function SiteFooter() {
   const navigate = useNavigate();
+
   const goHome: React.MouseEventHandler = (e) => {
     e.preventDefault();
     navigate("/");
+  };
+
+  const handleSocialClick: React.MouseEventHandler<HTMLButtonElement> = (e) => {
+    e.preventDefault();
+    alert("죄송합니다. 아직 개발중입니다.");
   };
 
   return (
@@ -105,24 +124,31 @@ export default function SiteFooter() {
           <LogoImg src={eddiLogo} alt="EDDI" />
         </BrandButton>
 
-        {/* 네비게이션 링크(현재 디자인 유지) */}
+        {/* 네비게이션 링크 */}
         <Nav>
-          <NavLink to="/" onClick={goHome}>Home</NavLink>
-          <NavLink to="/" onClick={goHome}>About</NavLink>
-          <NavLink to="/" onClick={goHome}>Service</NavLink>
-          <NavLink to="/" onClick={goHome}>Contact Us</NavLink>
+          <NavLink to="/">Home</NavLink>
+          <NavLink to="/sveltekit-review">About</NavLink>
+          <NavLink to="/vue-ai-interview">Service</NavLink>
+          <EmailLink href="mailto:puppy1012@naver.com">Contact Us</EmailLink>
         </Nav>
 
-        {/* 소셜 아이콘 (더미) */}
+        {/* 소셜 아이콘 (알럿 처리) */}
         <SocialRow>
           {["Dr", "Be", "Ig", "Tw"].map((k) => (
-            <SocialBadge key={k} onClick={goHome}>{k}</SocialBadge>
+            <SocialBadge
+              key={k}
+              onClick={handleSocialClick}
+              aria-label={`${k} (준비 중)`}
+              title="준비 중"
+            >
+              {k}
+            </SocialBadge>
           ))}
         </SocialRow>
 
         <Line />
 
-        {/* 기존 푸터(주소/저작권) 문구 이식 */}
+        {/* 주소/저작권 */}
         <CompanyBlock>
           <CompanyText>서울특별시 송파구 새말로8길 26, 3층(문정동)</CompanyText>
           <CompanyText>Copyright © 2025 에디(EDDI). All rights reserved.</CompanyText>
