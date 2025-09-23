@@ -17,14 +17,14 @@ import GuestRedirection from "./guest/redirection/GuestRedirection.vue";
 import NaverRedirection from "./naver/redirection/NaverRedirection.vue";
 
 //관리자 인증 플로우 컴포넌트.(코드 입력 및 Github 로그인 화면)
-const AdminAuthLayout=() => import("./account/pages/admin-login/AdminAuthLayout.vue");
-const AdminCodeInput =() => import("./account/pages/admin-login/AdminCodeInput.vue");
-const GithubAdminLogin = () => import("./account/pages/admin-login/GithubAdminLogin.vue");
+const AdminAuthLayout=() => import("@/administrator/admin-login/AdminAuthLayout.vue");
+const AdminCodeInput =() => import("@/administrator/admin-login/AdminCodeInput.vue");
+const GithubAdminLogin = () => import("@/administrator/admin-login/GithubAdminLogin.vue");
 
 //관리자 앱 레이아웃과 화면 요소
-const AdminOverview = () => import("./account/pages/adminPage/AdminOverview.vue");
-const AdminLayout = () => import("./account/pages/adminPage/AdminLayout.vue");
-const AdminUsers = () => import("./account/pages/adminPage/AdminUsers.vue");
+const AdminOverview = () => import("@/administrator/adminPage/AdminOverview.vue");
+const AdminLayout = () => import("@/administrator/adminPage/AdminLayout.vue");
+const AdminUsers = () => import("@/administrator/adminPage/AdminUsers.vue");
 
 const routes: Array<RouteRecordRaw> = [
   { path: "/account/login", name: "VueAccountLogin", component: AccountLogin },
