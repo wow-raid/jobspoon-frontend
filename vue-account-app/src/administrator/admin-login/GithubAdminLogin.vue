@@ -49,8 +49,8 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 // 별칭(@)이 없다면 아래를 ../../../assets/... 으로 바꿔주세요.
 // import githubIconSrc from "@/assets/images/fixed/icon-github.svg";
-import githubIconSrc from "../../../assets/images/fixed/icon-github.svg";
-import { useGithubAuthenticationStore } from "../../../github/stores/githubAuthenticationStore";
+import githubIconSrc from "../../assets/images/fixed/icon-github.svg";
+import { useGithubAuthenticationStore } from "../../github/stores/githubAuthenticationStore.ts";
 import { getTempToken} from "@/account/utility/tempoaryAdminToken.ts";
 import { createAxiosInstances, validateTempTokenOnServer} from "@/account/utility/axiosInstance.ts";
 
