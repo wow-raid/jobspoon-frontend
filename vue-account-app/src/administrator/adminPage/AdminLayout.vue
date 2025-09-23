@@ -1,3 +1,4 @@
+<!--AdminLayout.vue -->
 <template>
   <!-- 레이아웃: 상단 App Bar + 좌측 Drawer + 본문 -->
   <v-app-bar flat color="primary" density="comfortable">
