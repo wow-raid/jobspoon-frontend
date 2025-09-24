@@ -15,8 +15,8 @@ export default function WithdrawalConfirmModal({
                                                    onConfirm,
                                                }: WithdrawalConfirmModalProps) {
     const [inputValue, setInputValue] = useState("");
-    const nickname = localStorage.getItem("nickname");
-    const requiredPhrase = nickname + " 회원 탈퇴 합니다";
+    const nickname = localStorage.getItem("nickname") ?? "사용자";
+    const requiredPhrase = nickname + " 회원 탈퇴";
     const isMatch = inputValue.trim() === requiredPhrase;
 
     return (

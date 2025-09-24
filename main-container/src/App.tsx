@@ -23,6 +23,7 @@ import ThemeToggleButton from "./ThemeToggleButton";
 import { themeAtom } from "@jobspoon/app-state";
 import SuccessPage from "studyroom-app/src/pages/SuccessPage.tsx";
 import Logo from "./assets/img.png";
+import RequireLogin from "./RequireLogin.tsx";
 
 const eventBus = mitt();
 
@@ -147,14 +148,10 @@ function InnerApp() {
               </RequireToken>
             }
           />
-          <Route
-            path="/mypage/*"
-            element={
-              <RequireToken loginPath="/vue-account/account/login">
+          <Route path="/mypage/*" element={
+              <RequireLogin loginPath="/vue-account/account/login">
                 <MyPageApp />
-              </RequireToken>
-            }
-          />
+              </RequireLogin>}/>
           <Route
             path="/sveltekit-review/*"
             element={<SvelteKitReviewAppWrapper />}

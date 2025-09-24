@@ -20,6 +20,8 @@ export default function InterviewResultDetail() {
 
     return (
         <Section>
+            <NoticeBanner>🚧 서비스 준비 중입니다</NoticeBanner>
+
             <Header>
                 <Title>면접 결과 상세</Title>
                 <BackLink to="/mypage/interview/history">목록으로 돌아가기</BackLink>
@@ -173,4 +175,15 @@ const Feedback = styled.p`
   font-size: 14px;
   color: rgb(37, 99, 235);
   font-style: italic;
+`;
+
+const NoticeBanner = styled.div`
+  background: #fef3c7; /* 연한 노랑 */
+  color: #92400e;      /* 진한 주황/갈색 */
+  font-size: 18px;     /* 글자 크게 */
+  font-weight: 700;
+  text-align: center;
+  padding: 20px 12px;  /* 상하 넓게 */
+  border-radius: 8px;
+  margin: 24px 0;      /* 위아래 간격 */
 `;
