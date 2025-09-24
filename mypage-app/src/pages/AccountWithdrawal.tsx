@@ -29,15 +29,14 @@ export default function AccountWithdrawal() {
     const handleConfirm = async () => {
 
         try {
-            const token = localStorage.getItem("userToken") ?? "";
-            const reuslt = await withdrawAccount(token);
-            console.log(reuslt);
+            const result = await withdrawAccount(); // ✅ token 전달 제거
+            console.log(result);
         } catch (error) {
             console.log(error);
         }
 
         setShowConfirm(false);
-        localStorage.removeItem("userToken");
+        localStorage.removeItem("isLoggedIn"); // ✅ 로그인 flag 제거
         alert("회원 탈퇴 되었습니다.");
         window.location.href = "/";
 

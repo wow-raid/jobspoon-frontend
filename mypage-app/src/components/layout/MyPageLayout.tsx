@@ -20,15 +20,15 @@ export default function MyPageLayout() {
 
     //최신 프로필 불러오기
     const refreshProfile = async () => {
-        const token = localStorage.getItem("userToken");
-        if(!token) {
-            console.error("로그인 토큰 없음");
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
+        if (!isLoggedIn) {
+            console.error("로그인이 필요합니다.");
             return;
         }
-        try{
-            const data = await fetchMyProfile(token);
+        try {
+            const data = await fetchMyProfile(); // ✅ token 제거
             setProfile(data);
-        }catch(error){
+        } catch (error) {
             console.error(error);
         }
     };

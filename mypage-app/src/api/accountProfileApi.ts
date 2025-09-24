@@ -13,16 +13,15 @@ export interface NicknameResponse {
 }
 
 // 닉네임 변경
-export async function updateNickname(token: string, nickname: string) {
+export async function updateNickname(nickname: string) {
     try {
         const res = await axios.put<NicknameResponse>(
             `${API_BASE_URL}/account-profile/update-nickname`,
-            { nickname }, // 요청 DTO에 맞게 키 이름 맞춤
-            { headers: { Authorization: token } }
+            { nickname }, // 요청 DTO
+            { withCredentials: true } //쿠키 전송 옵션
         );
         return res.data;
     } catch (error: any) {
-        // 백엔드에서 에러 메시지를 내려줄 경우 추출
         if (error.response?.data) {
             throw new Error(error.response.data.message || error.response.data);
         }

@@ -24,28 +24,28 @@ export interface WritingCountResponse {
 }
 
 // 출석률 조회
-export async function getAttendanceRate(token: string) {
+export async function getAttendanceRate() { // token 파라미터 제거
     const res = await axios.get<AttendanceRateResponse>(
         `${API_BASE_URL}/user-dashboard/attendance/rate`,
-        { headers: { Authorization: token } }
+        { withCredentials: true } // Authorization 헤더 제거, 쿠키 자동 전송 옵션 추가
     );
     return res.data;
 }
 
 // 퀴즈 완료 현황 조회
-export async function getQuizCompletion(token: string) {
+export async function getQuizCompletion() { // token 파라미터 제거
     const res = await axios.get<QuizCompletionResponse>(
         `${API_BASE_URL}/user-dashboard/quiz/completion`,
-        { headers: { Authorization: token } }
+        { withCredentials: true } // Authorization 헤더 제거, 쿠키 자동 전송 옵션 추가
     );
     return res.data;
 }
 
 // 글쓰기 활동 통계 조회
-export async function getWritingCount(token: string) {
+export async function getWritingCount() { // token 파라미터 제거
     const res = await axios.get<WritingCountResponse>(
         `${API_BASE_URL}/user-dashboard/writing/count`,
-        { headers: { Authorization: token } }
+        { withCredentials: true } // Authorization 헤더 제거, 쿠키 자동 전송 옵션 추가
     );
     return res.data;
 }

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 function hasToken() {
-    try { return !!localStorage.getItem("userToken"); } catch { return false; }
+    try { return !!localStorage.getItem("isLoggedIn"); } catch { return false; }
 }
 
 export default function RequireToken({

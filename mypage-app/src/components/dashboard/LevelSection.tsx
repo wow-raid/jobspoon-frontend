@@ -17,8 +17,14 @@ export default function LevelSection() {
     const [isGuideOpen, setIsGuideOpen] = useState(false);
 
     useEffect(() => {
-        const token = localStorage.getItem("userToken") || "";
-        Promise.all([fetchMyProfile(token), fetchUserLevel(token)])
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
+        if (!isLoggedIn) {
+            console.error("로그인이 필요합니다.");
+            setLoading(false);
+            return;
+        }
+
+        Promise.all([fetchMyProfile(), fetchUserLevel()])
             .then(([profileData, levelData]) => {
                 setProfile(profileData);
                 setUserLevel(levelData);
@@ -26,6 +32,7 @@ export default function LevelSection() {
             .catch(console.error)
             .finally(() => setLoading(false));
     }, []);
+
 
     if (loading) return <p>불러오는 중...</p>;
 

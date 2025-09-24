@@ -32,6 +32,8 @@ export default function MembershipPage() {
 
     return (
         <>
+            <NoticeBanner>🚧 서비스 준비 중입니다</NoticeBanner>
+
             {/* 운영 중인 크레딧 상품 */}
             <Section>
                 <SectionHeader>
@@ -242,4 +244,15 @@ const InfoButton = styled.button`
   &:hover {
     background: rgb(229, 231, 235);
   }
+`;
+
+const NoticeBanner = styled.div`
+    background: #fef3c7; /* 연한 노랑 */
+    color: #92400e;      /* 진한 주황/갈색 */
+    font-size: 18px;     /* ✅ 글자 크기 키움 */
+    font-weight: 700;    /* ✅ 글자 두께 강조 */
+    text-align: center;
+    padding: 20px 12px;  /* ✅ 상하 여백 넓힘 */
+    border-radius: 8px;
+    margin: 24px 0;      /* ✅ 위아래 간격 넉넉히 */
 `;

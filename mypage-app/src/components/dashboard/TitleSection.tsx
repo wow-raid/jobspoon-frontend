@@ -32,8 +32,14 @@ export default function TitleSection() {
     };
 
     useEffect(() => {
-        const token = localStorage.getItem("userToken") || "";
-        Promise.all([fetchMyProfile(token), fetchMyTitles(token)])
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
+        if (!isLoggedIn) {
+            console.error("로그인이 필요합니다.");
+            setLoading(false);
+            return;
+        }
+
+        Promise.all([fetchMyProfile(), fetchMyTitles()])
             .then(([profileData, titlesData]) => {
                 setProfile(profileData);
                 setTitles(titlesData);
@@ -41,6 +47,7 @@ export default function TitleSection() {
             .catch(console.error)
             .finally(() => setLoading(false));
     }, []);
+
 
     if (loading) return <p>불러오는 중...</p>;
 
