@@ -6,7 +6,6 @@ import {
     fetchUserLevel,
     fetchMyTitles,
     fetchTrustScore,
-    fetchMyProfile,
     fetchUserLevelHistory,
     equipTitle,
     unequipTitle,
@@ -19,6 +18,7 @@ import {
 import TrustScoreCriteria from "../components/history/TrustScoreCriteria";
 import TitleGuideModal from "../components/modals/TitleGuideModal";
 import { useOutletContext } from "react-router-dom";
+import { FaChevronUp, FaChevronDown } from "react-icons/fa";
 
 type Status = "loading" | "empty" | "loaded"; // (status 타입)
 
@@ -28,8 +28,11 @@ type OutletContext = {
 };
 
 export default function UserHistoryPage() {
-    // 데이터 상태
+
+    // context
     const { profile, refreshProfile } = useOutletContext<OutletContext>();
+
+    // 로컬 상태
     const [userLevel, setUserLevel] = useState<UserLevel | null>(null);
     const [trustScore, setTrustScore] = useState<TrustScore | null>(null);
     const [titles, setTitles] = useState<TitleItem[]>([]);
@@ -40,22 +43,22 @@ export default function UserHistoryPage() {
     const [levelStatus, setLevelStatus] = useState<Status>("loading");
     const [titleStatus, setTitleStatus] = useState<Status>("loading");
     const [trustStatus, setTrustStatus] = useState<Status>("loading");
-    const [historyStatus, setHistoryStatus] = useState<Status>("loading");
 
     // 토글 상태
     const [showTrustCriteria, setShowTrustCriteria] = useState(false);
     const [isTitleGuideOpen, setIsTitleGuideOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
 
-    // 칭호 장착/해제 핸들러
+    // 칭호 장착/해제
     const handleEquip = async (titleId: number) => {
         try {
             if (profile?.title?.id === titleId) {
                 await unequipTitle();
-                await refreshProfile(); // ← 프로필 즉시 새로고침
+                await refreshProfile();
                 alert("칭호가 해제되었습니다.");
             } else {
                 const updated = await equipTitle(titleId);
-                await refreshProfile(); // ← 프로필 즉시 새로고침
+                await refreshProfile();
                 alert(`${updated.displayName} 칭호가 장착되었습니다.`);
             }
         } catch (error: any) {
@@ -63,11 +66,9 @@ export default function UserHistoryPage() {
         }
     };
 
-
     useEffect(() => {
-        Promise.all([fetchMyProfile(), fetchUserLevel(), fetchMyTitles(), fetchTrustScore(), fetchUserLevelHistory()])
-            .then(([profileData, lvl, t, trust, history]) => {
-
+        Promise.all([fetchUserLevel(), fetchMyTitles(), fetchTrustScore(), fetchUserLevelHistory()])
+            .then(([lvl, t, trust, history]) => {
                 // 레벨
                 if (lvl) {
                     setUserLevel(lvl);
@@ -93,19 +94,13 @@ export default function UserHistoryPage() {
                 }
 
                 // 레벨 이력
-                if (history && history.length > 0) {
-                    setLevelHistory(history);
-                    setHistoryStatus("loaded");
-                } else {
-                    setHistoryStatus("empty");
-                }
+                setLevelHistory(history || []);
             })
             .catch((err) => {
                 console.error(err);
                 setLevelStatus("empty");
                 setTitleStatus("empty");
                 setTrustStatus("empty");
-                setHistoryStatus("empty");
             });
     }, []);
 
@@ -121,9 +116,7 @@ export default function UserHistoryPage() {
                             <Icon>🛡️</Icon>
                             <h3>신뢰점수</h3>
                         </HeaderLeft>
-                        <ToggleButton
-                            onClick={() => setShowTrustCriteria(!showTrustCriteria)}
-                        >
+                        <ToggleButton onClick={() => setShowTrustCriteria(!showTrustCriteria)}>
                             {showTrustCriteria ? "숨기기" : "산정 기준"}
                         </ToggleButton>
                     </HistoryHeader>
@@ -170,7 +163,14 @@ export default function UserHistoryPage() {
                             <Icon>🏅</Icon>
                             <h3>레벨</h3>
                         </HeaderLeft>
+                        <ToggleButton onClick={() => setIsOpen(!isOpen)}>
+                            {isOpen
+                                ? <><FaChevronUp size={10}/> 닫기</>
+                                : <><FaChevronDown size={10}/> 히스토리</>
+                            }
+                        </ToggleButton>
                     </HistoryHeader>
+
                     {levelStatus === "loading" ? (
                         <Empty>불러오는 중...</Empty>
                     ) : levelStatus === "empty" ? (
@@ -178,37 +178,27 @@ export default function UserHistoryPage() {
                     ) : (
                         <LevelBox>
                             <p>
-                                현재 Lv.{userLevel!.level} (Exp {userLevel!.exp}/
-                                {userLevel!.totalExp})
+                                현재 Lv.{userLevel!.level} (Exp {userLevel!.exp}/{userLevel!.totalExp})
                             </p>
-                            <ProgressBar
-                                percent={(userLevel!.exp / userLevel!.totalExp) * 100}
-                            />
+                            <ProgressBar percent={(userLevel!.exp / userLevel!.totalExp) * 100} />
                         </LevelBox>
                     )}
-                </Card>
 
-                {/* 레벨 업 이력 */}
-                <Card>
-                    <HistoryHeader>
-                        <HeaderLeft>
-                            <Icon>📜</Icon>
-                            <h3>레벨 업 기록</h3>
-                        </HeaderLeft>
-                    </HistoryHeader>
-
-                    {historyStatus === "loading" ? (
-                        <Empty>불러오는 중...</Empty>
-                    ) : historyStatus === "empty" ? (
-                        <Empty>레벨 업 이력이 없습니다.</Empty>
-                    ) : (
-                        <ul>
-                            {levelHistory.map((h) => (
-                                <li key={h.level}>
-                                    Lv.{h.level} 달성일: {new Date(h.achievedAt).toLocaleDateString()}
-                                </li>
-                            ))}
-                        </ul>
+                    {isOpen && (
+                        <Timeline>
+                            {levelHistory.length === 0 ? (
+                                <Empty>레벨 업 기록이 없습니다.</Empty>
+                            ) : (
+                                levelHistory.map((item) => (
+                                    <TimelineItem key={item.achievedAt}>
+                                        <TimelineDate>
+                                            {new Date(item.achievedAt).toLocaleDateString()}
+                                        </TimelineDate>
+                                        <TimelineEvent>Lv.{item.level} 달성</TimelineEvent>
+                                    </TimelineItem>
+                                ))
+                            )}
+                        </Timeline>
                     )}
                 </Card>
 
@@ -231,14 +221,9 @@ export default function UserHistoryPage() {
                     ) : (
                         <TitleGrid>
                             {titles.map((title) => (
-                                <TitleCard
-                                    key={title.id}
-                                    equipped={profile?.title?.id === title.id} // ✅ 장착 여부
-                                >
+                                <TitleCard key={title.id} equipped={profile?.title?.id === title.id}>
                                     <TitleName>{title.displayName}</TitleName>
-                                    <AcquiredDate>
-                                        {new Date(title.acquiredAt).toLocaleDateString()}
-                                    </AcquiredDate>
+                                    <AcquiredDate>{new Date(title.acquiredAt).toLocaleDateString()}</AcquiredDate>
                                     <ToggleButton onClick={() => handleEquip(title.id)}>
                                         {profile?.title?.id === title.id ? "해제" : "장착"}
                                     </ToggleButton>
@@ -248,15 +233,11 @@ export default function UserHistoryPage() {
                     )}
                 </Card>
 
-                <TitleGuideModal
-                    isOpen={isTitleGuideOpen}
-                    onClose={() => setIsTitleGuideOpen(false)}
-                />
+                <TitleGuideModal isOpen={isTitleGuideOpen} onClose={() => setIsTitleGuideOpen(false)} />
             </Section>
         </Wrapper>
     );
 }
-
 
 /* ================= styled-components ================= */
 const Wrapper = styled.div`
@@ -271,7 +252,6 @@ const Section = styled.section`
     display: flex;
     flex-direction: column;
     gap: 20px;
-
     background: #fff;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 `;
@@ -287,7 +267,6 @@ const Card = styled.div`
     border-radius: 12px;
     padding: 20px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -327,7 +306,6 @@ const ToggleButton = styled.button`
     border: none;
     background: none;
     cursor: pointer;
-
     &:hover {
         text-decoration: underline;
     }
@@ -374,7 +352,6 @@ const LevelBox = styled.div`
     display: flex;
     flex-direction: column;
     gap: 8px;
-
     p {
         font-size: 14px;
         color: #374151;
@@ -387,30 +364,67 @@ const Empty = styled.p`
 `;
 
 const TitleGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
 `;
 
 const TitleCard = styled.div<{ equipped: boolean }>`
-  border: 1px solid ${({ equipped }) => (equipped ? "#3b82f6" : "rgb(229,231,235)")};
-  border-radius: 8px;
-  padding: 12px;
-  background: ${({ equipped }) => (equipped ? "rgba(59,130,246,0.05)" : "white")};
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s ease;
+    border: 1px solid ${({ equipped }) => (equipped ? "#3b82f6" : "rgb(229,231,235)")};
+    border-radius: 8px;
+    padding: 12px;
+    background: ${({ equipped }) => (equipped ? "rgba(59,130,246,0.05)" : "white")};
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
 `;
 
 const TitleName = styled.span`
-  font-size: 14px;
-  font-weight: 600;
-  color: rgb(31,41,55);
+    font-size: 14px;
+    font-weight: 600;
+    color: rgb(31,41,55);
 `;
 
 const AcquiredDate = styled.span`
-  font-size: 12px;
-  color: rgb(107,114,128);
+    font-size: 12px;
+    color: rgb(107,114,128);
+`;
+
+const Timeline = styled.ul`
+    margin: 1rem 0;
+    padding-left: 0;
+    list-style: none;
+`;
+
+const TimelineItem = styled.li`
+    position: relative;
+    margin-bottom: 1.5rem;
+    padding-left: 24px; // 점 공간 확보
+
+    &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8B5CF6, #EC4899); // 퍼플→핑크
+        box-shadow: -3px 3px 0 rgba(156, 163, 175, 0.4); // 은은한 그림자
+    }
+`;
+
+const TimelineDate = styled.span`
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-right: 8px;
+`;
+
+const TimelineEvent = styled.span`
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #111827;
 `;
