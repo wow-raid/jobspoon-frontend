@@ -16,13 +16,18 @@ import {
 } from "../api/profileAppearanceApi";
 import TrustScoreCriteria from "../components/history/TrustScoreCriteria";
 import TitleGuideModal from "../components/modals/TitleGuideModal";
+import { useOutletContext } from "react-router-dom";
 
 type Status = "loading" | "empty" | "loaded"; // (status 타입)
 
-export default function UserHistoryPage() {
-    const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
+type OutletContext = {
+    profile: ProfileAppearanceResponse | null;
+    refreshProfile: () => Promise<void>;
+};
 
+export default function UserHistoryPage() {
     // 데이터 상태
+    const { profile, refreshProfile } = useOutletContext<OutletContext>();
     const [userLevel, setUserLevel] = useState<UserLevel | null>(null);
     const [titles, setTitles] = useState<TitleItem[]>([]);
     const [trustScore, setTrustScore] = useState<TrustScore | null>(null);
@@ -40,13 +45,13 @@ export default function UserHistoryPage() {
     const handleEquip = async (titleId: number) => {
         try {
             if (profile?.title?.id === titleId) {
-                // 이미 장착 → 해제
                 await unequipTitle();
-                setProfile((prev) => prev ? { ...prev, title: undefined } : prev);
+                await refreshProfile(); // ← 프로필 즉시 새로고침
+                alert("칭호가 해제되었습니다.");
             } else {
-                // 장착
                 const updated = await equipTitle(titleId);
-                setProfile((prev) => prev ? { ...prev, title: updated } : prev);
+                await refreshProfile(); // ← 프로필 즉시 새로고침
+                alert(`${updated.displayName} 칭호가 장착되었습니다.`);
             }
         } catch (error: any) {
             alert(error.message || "칭호 장착/해제 실패");
@@ -57,7 +62,6 @@ export default function UserHistoryPage() {
     useEffect(() => {
         Promise.all([fetchMyProfile(), fetchUserLevel(), fetchMyTitles(), fetchTrustScore()])
             .then(([profileData, lvl, t, trust]) => {
-                setProfile(profileData);
 
                 // 레벨
                 if (lvl) {
