@@ -110,6 +110,15 @@ export async function equipTitle(titleId: number): Promise<TitleItem> { // token
     return res.data;
 }
 
+// 칭호 해제
+export async function unequipTitle(): Promise<void> {
+    await axios.put(
+        `${API_BASE_URL}/profile-appearance/title/unequip`,
+        {},
+        { withCredentials: true }
+    );
+}
+
 // 신뢰 점수 조회
 export async function fetchTrustScore() { // token 매개변수 제거
     const res = await axios.get<TrustScore>(

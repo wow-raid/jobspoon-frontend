@@ -6,36 +6,89 @@ import {
     fetchUserLevel,
     fetchMyTitles,
     fetchTrustScore,
+    fetchMyProfile,
+    equipTitle,
+    unequipTitle,
     UserLevel,
     TrustScore,
     TitleItem,
+    ProfileAppearanceResponse
 } from "../api/profileAppearanceApi";
 import TrustScoreCriteria from "../components/history/TrustScoreCriteria";
 import TitleGuideModal from "../components/modals/TitleGuideModal";
 
+type Status = "loading" | "empty" | "loaded"; // (status 타입)
+
 export default function UserHistoryPage() {
+    const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
+
+    // 데이터 상태
     const [userLevel, setUserLevel] = useState<UserLevel | null>(null);
     const [titles, setTitles] = useState<TitleItem[]>([]);
     const [trustScore, setTrustScore] = useState<TrustScore | null>(null);
+
+    // 섹션별 status 관리
+    const [levelStatus, setLevelStatus] = useState<Status>("loading");
+    const [titleStatus, setTitleStatus] = useState<Status>("loading");
+    const [trustStatus, setTrustStatus] = useState<Status>("loading");
 
     // 토글 상태
     const [showTrustCriteria, setShowTrustCriteria] = useState(false);
     const [isTitleGuideOpen, setIsTitleGuideOpen] = useState(false);
 
+    // 칭호 장착/해제 핸들러
+    const handleEquip = async (titleId: number) => {
+        try {
+            if (profile?.title?.id === titleId) {
+                // 이미 장착 → 해제
+                await unequipTitle();
+                setProfile((prev) => prev ? { ...prev, title: undefined } : prev);
+            } else {
+                // 장착
+                const updated = await equipTitle(titleId);
+                setProfile((prev) => prev ? { ...prev, title: updated } : prev);
+            }
+        } catch (error: any) {
+            alert(error.message || "칭호 장착/해제 실패");
+        }
+    };
+
+
     useEffect(() => {
-        const isLoggedIn = localStorage.getItem("isLoggedIn");
-        if (!isLoggedIn) return;
+        Promise.all([fetchMyProfile(), fetchUserLevel(), fetchMyTitles(), fetchTrustScore()])
+            .then(([profileData, lvl, t, trust]) => {
+                setProfile(profileData);
 
-        // 레벨 + 칭호
-        Promise.all([fetchUserLevel(), fetchMyTitles()])
-            .then(([lvl, t]) => {
-                setUserLevel(lvl);
-                setTitles(t);
+                // 레벨
+                if (lvl) {
+                    setUserLevel(lvl);
+                    setLevelStatus("loaded");
+                } else {
+                    setLevelStatus("empty");
+                }
+
+                // 칭호
+                if (t && t.length > 0) {
+                    setTitles(t);
+                    setTitleStatus("loaded");
+                } else {
+                    setTitleStatus("empty");
+                }
+
+                // 신뢰점수
+                if (trust) {
+                    setTrustScore(trust);
+                    setTrustStatus("loaded");
+                } else {
+                    setTrustStatus("empty");
+                }
             })
-            .catch(console.error);
-
-        // 신뢰점수
-        fetchTrustScore().then(setTrustScore).catch(console.error);
+            .catch((err) => {
+                console.error(err);
+                setLevelStatus("empty");
+                setTitleStatus("empty");
+                setTrustStatus("empty");
+            });
     }, []);
 
     return (
@@ -56,36 +109,38 @@ export default function UserHistoryPage() {
                             {showTrustCriteria ? "숨기기" : "산정 기준"}
                         </ToggleButton>
                     </HistoryHeader>
-                    {trustScore ? (
+                    {trustStatus === "loading" ? (
+                        <Empty>불러오는 중...</Empty>
+                    ) : trustStatus === "empty" ? (
+                        <Empty>아직 신뢰점수가 없습니다.</Empty>
+                    ) : (
                         <TrustGrid>
                             <TrustItem>
                                 <span>출석률</span>
-                                <ProgressBar percent={trustScore.attendanceRate} />
-                                <Count>{trustScore.attendanceRate.toFixed(1)}%</Count>
+                                <ProgressBar percent={trustScore!.attendanceRate} />
+                                <Count>{trustScore!.attendanceRate.toFixed(1)}%</Count>
                             </TrustItem>
                             <TrustItem>
                                 <span>인터뷰</span>
-                                <Count>{trustScore.monthlyInterviews}회</Count>
+                                <Count>{trustScore!.monthlyInterviews}회</Count>
                             </TrustItem>
                             <TrustItem>
                                 <span>문제풀이</span>
-                                <Count>{trustScore.monthlyProblems}개</Count>
+                                <Count>{trustScore!.monthlyProblems}개</Count>
                             </TrustItem>
                             <TrustItem>
                                 <span>글 작성</span>
-                                <Count>{trustScore.monthlyPosts}개</Count>
+                                <Count>{trustScore!.monthlyPosts}개</Count>
                             </TrustItem>
                             <TrustItem>
                                 <span>스터디룸</span>
-                                <Count>{trustScore.monthlyStudyrooms}개</Count>
+                                <Count>{trustScore!.monthlyStudyrooms}개</Count>
                             </TrustItem>
                             <TrustItem>
                                 <span>댓글</span>
-                                <Count>{trustScore.monthlyComments}개</Count>
+                                <Count>{trustScore!.monthlyComments}개</Count>
                             </TrustItem>
                         </TrustGrid>
-                    ) : (
-                        <Empty>신뢰점수를 불러오는 중...</Empty>
                     )}
                     {showTrustCriteria && <TrustScoreCriteria />}
                 </Card>
@@ -98,18 +153,20 @@ export default function UserHistoryPage() {
                             <h3>레벨</h3>
                         </HeaderLeft>
                     </HistoryHeader>
-                    {userLevel ? (
+                    {levelStatus === "loading" ? (
+                        <Empty>불러오는 중...</Empty>
+                    ) : levelStatus === "empty" ? (
+                        <Empty>레벨 정보가 없습니다.</Empty>
+                    ) : (
                         <LevelBox>
                             <p>
-                                현재 Lv.{userLevel.level} (Exp {userLevel.exp}/
-                                {userLevel.level * 100})
+                                현재 Lv.{userLevel!.level} (Exp {userLevel!.exp}/
+                                {userLevel!.totalExp})
                             </p>
                             <ProgressBar
-                                percent={(userLevel.exp / (userLevel.level * 100)) * 100}
+                                percent={(userLevel!.exp / userLevel!.totalExp) * 100}
                             />
                         </LevelBox>
-                    ) : (
-                        <Empty>레벨 정보를 불러오는 중...</Empty>
                     )}
                 </Card>
 
@@ -124,19 +181,24 @@ export default function UserHistoryPage() {
                             칭호 가이드
                         </ToggleButton>
                     </HistoryHeader>
-                    {titles.length > 0 ? (
+                    {titleStatus === "loading" ? (
+                        <Empty>불러오는 중...</Empty>
+                    ) : titleStatus === "empty" ? (
+                        <Empty>획득한 칭호가 없습니다.</Empty>
+                    ) : (
                         <ul>
                             {titles.map((title) => (
                                 <HistoryItemBox key={title.id}>
-                  <span>
-                    {title.displayName} (
-                      {new Date(title.acquiredAt).toLocaleDateString()})
-                  </span>
+                                    <span>
+                                        {title.displayName} (
+                                        {new Date(title.acquiredAt).toLocaleDateString()})
+                                    </span>
+                                    <ToggleButton onClick={() => handleEquip(title.id)}>
+                                        {profile?.title?.id === title.id ? "해제" : "장착"}
+                                    </ToggleButton>
                                 </HistoryItemBox>
                             ))}
                         </ul>
-                    ) : (
-                        <Empty>획득한 칭호가 없습니다.</Empty>
                     )}
                 </Card>
 
@@ -148,6 +210,7 @@ export default function UserHistoryPage() {
         </Wrapper>
     );
 }
+
 
 /* ================= styled-components ================= */
 const Wrapper = styled.div`
@@ -209,83 +272,83 @@ const HeaderLeft = styled.div`
 `;
 
 const Icon = styled.span`
-  font-size: 18px;
+    font-size: 18px;
 `;
 
 const ToggleButton = styled.button`
-  font-size: 13px;
-  color: #3b82f6;
-  border: none;
-  background: none;
-  cursor: pointer;
+    font-size: 13px;
+    color: #3b82f6;
+    border: none;
+    background: none;
+    cursor: pointer;
 
-  &:hover {
-    text-decoration: underline;
-  }
+    &:hover {
+        text-decoration: underline;
+    }
 `;
 
 const TrustGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
 `;
 
 const TrustItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
 `;
 
 const ProgressBar = styled.div<{ percent: number }>`
-  width: 100%;
-  height: 10px;
-  background: #e5e7eb;
-  border-radius: 6px;
-  overflow: hidden;
-  position: relative;
+    width: 100%;
+    height: 10px;
+    background: #e5e7eb;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
 
-  &::after {
-    content: "";
-    display: block;
-    height: 100%;
-    width: ${({ percent }) => percent}%;
-    background: linear-gradient(90deg, #3b82f6, #10b981);
-    transition: width 0.3s ease;
-  }
+    &::after {
+        content: "";
+        display: block;
+        height: 100%;
+        width: ${({ percent }) => percent}%;
+        background: linear-gradient(90deg, #3b82f6, #10b981);
+        transition: width 0.3s ease;
+    }
 `;
 
 const Count = styled.span`
-  font-size: 13px;
-  font-weight: 600;
-  color: rgb(31, 41, 55);
+    font-size: 13px;
+    font-weight: 600;
+    color: rgb(31, 41, 55);
 `;
 
 const LevelBox = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 
-  p {
-    font-size: 14px;
-    color: #374151;
-  }
+    p {
+        font-size: 14px;
+        color: #374151;
+    }
 `;
 
 const HistoryItemBox = styled.li`
-  border: 1px solid rgb(229, 231, 235);
-  border-radius: 8px;
-  padding: 8px 12px;
-  margin-top: 6px;
-  background: white;
+    border: 1px solid rgb(229, 231, 235);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-top: 6px;
+    background: white;
 
-  span {
-    font-size: 14px;
-    color: rgb(31, 41, 55);
-  }
+    span {
+        font-size: 14px;
+        color: rgb(31, 41, 55);
+    }
 `;
 
 const Empty = styled.p`
-  font-size: 14px;
-  color: #888;
+    font-size: 14px;
+    color: #888;
 `;
