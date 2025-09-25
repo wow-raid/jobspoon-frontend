@@ -39,6 +39,12 @@ export interface UserLevel {
     totalExp: number;
 }
 
+/** 레벨 업 이력 */
+export interface UserLevelHistory {
+    level: number;
+    achievedAt: string; // ISO datetime
+}
+
 /** 경험치 추가 요청 */
 export interface AddExpRequest {
     amount: number;
@@ -133,6 +139,15 @@ export async function fetchUserLevel() { // token 매개변수 제거
     const res = await axios.get<UserLevel>(
         `${API_BASE_URL}/profile-appearance/user-level`,
         { withCredentials: true } // Authorization 헤더 제거, 쿠키 자동 전송 옵션 추가
+    );
+    return res.data;
+}
+
+// 레벨 업 이력 조회
+export async function fetchUserLevelHistory(): Promise<UserLevelHistory[]> {
+    const res = await axios.get<UserLevelHistory[]>(
+        `${API_BASE_URL}/profile-appearance/user-level/history`,
+        { withCredentials: true }
     );
     return res.data;
 }

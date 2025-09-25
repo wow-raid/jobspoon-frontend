@@ -7,9 +7,11 @@ import {
     fetchMyTitles,
     fetchTrustScore,
     fetchMyProfile,
+    fetchUserLevelHistory,
     equipTitle,
     unequipTitle,
     UserLevel,
+    UserLevelHistory,
     TrustScore,
     TitleItem,
     ProfileAppearanceResponse
@@ -29,13 +31,16 @@ export default function UserHistoryPage() {
     // 데이터 상태
     const { profile, refreshProfile } = useOutletContext<OutletContext>();
     const [userLevel, setUserLevel] = useState<UserLevel | null>(null);
-    const [titles, setTitles] = useState<TitleItem[]>([]);
     const [trustScore, setTrustScore] = useState<TrustScore | null>(null);
+    const [titles, setTitles] = useState<TitleItem[]>([]);
+    const [levelHistory, setLevelHistory] = useState<UserLevelHistory[]>([]);
+
 
     // 섹션별 status 관리
     const [levelStatus, setLevelStatus] = useState<Status>("loading");
     const [titleStatus, setTitleStatus] = useState<Status>("loading");
     const [trustStatus, setTrustStatus] = useState<Status>("loading");
+    const [historyStatus, setHistoryStatus] = useState<Status>("loading");
 
     // 토글 상태
     const [showTrustCriteria, setShowTrustCriteria] = useState(false);
@@ -60,8 +65,8 @@ export default function UserHistoryPage() {
 
 
     useEffect(() => {
-        Promise.all([fetchMyProfile(), fetchUserLevel(), fetchMyTitles(), fetchTrustScore()])
-            .then(([profileData, lvl, t, trust]) => {
+        Promise.all([fetchMyProfile(), fetchUserLevel(), fetchMyTitles(), fetchTrustScore(), fetchUserLevelHistory()])
+            .then(([profileData, lvl, t, trust, history]) => {
 
                 // 레벨
                 if (lvl) {
@@ -86,12 +91,21 @@ export default function UserHistoryPage() {
                 } else {
                     setTrustStatus("empty");
                 }
+
+                // 레벨 이력
+                if (history && history.length > 0) {
+                    setLevelHistory(history);
+                    setHistoryStatus("loaded");
+                } else {
+                    setHistoryStatus("empty");
+                }
             })
             .catch((err) => {
                 console.error(err);
                 setLevelStatus("empty");
                 setTitleStatus("empty");
                 setTrustStatus("empty");
+                setHistoryStatus("empty");
             });
     }, []);
 
@@ -174,6 +188,30 @@ export default function UserHistoryPage() {
                     )}
                 </Card>
 
+                {/* 레벨 업 이력 */}
+                <Card>
+                    <HistoryHeader>
+                        <HeaderLeft>
+                            <Icon>📜</Icon>
+                            <h3>레벨 업 기록</h3>
+                        </HeaderLeft>
+                    </HistoryHeader>
+
+                    {historyStatus === "loading" ? (
+                        <Empty>불러오는 중...</Empty>
+                    ) : historyStatus === "empty" ? (
+                        <Empty>레벨 업 이력이 없습니다.</Empty>
+                    ) : (
+                        <ul>
+                            {levelHistory.map((h) => (
+                                <li key={h.level}>
+                                    Lv.{h.level} 달성일: {new Date(h.achievedAt).toLocaleDateString()}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </Card>
+
                 {/* 칭호 이력 */}
                 <Card>
                     <HistoryHeader>
@@ -185,24 +223,28 @@ export default function UserHistoryPage() {
                             칭호 가이드
                         </ToggleButton>
                     </HistoryHeader>
+
                     {titleStatus === "loading" ? (
                         <Empty>불러오는 중...</Empty>
                     ) : titleStatus === "empty" ? (
                         <Empty>획득한 칭호가 없습니다.</Empty>
                     ) : (
-                        <ul>
+                        <TitleGrid>
                             {titles.map((title) => (
-                                <HistoryItemBox key={title.id}>
-                                    <span>
-                                        {title.displayName} (
-                                        {new Date(title.acquiredAt).toLocaleDateString()})
-                                    </span>
+                                <TitleCard
+                                    key={title.id}
+                                    equipped={profile?.title?.id === title.id} // ✅ 장착 여부
+                                >
+                                    <TitleName>{title.displayName}</TitleName>
+                                    <AcquiredDate>
+                                        {new Date(title.acquiredAt).toLocaleDateString()}
+                                    </AcquiredDate>
                                     <ToggleButton onClick={() => handleEquip(title.id)}>
                                         {profile?.title?.id === title.id ? "해제" : "장착"}
                                     </ToggleButton>
-                                </HistoryItemBox>
+                                </TitleCard>
                             ))}
-                        </ul>
+                        </TitleGrid>
                     )}
                 </Card>
 
@@ -339,20 +381,36 @@ const LevelBox = styled.div`
     }
 `;
 
-const HistoryItemBox = styled.li`
-    border: 1px solid rgb(229, 231, 235);
-    border-radius: 8px;
-    padding: 8px 12px;
-    margin-top: 6px;
-    background: white;
-
-    span {
-        font-size: 14px;
-        color: rgb(31, 41, 55);
-    }
-`;
-
 const Empty = styled.p`
     font-size: 14px;
     color: #888;
+`;
+
+const TitleGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+`;
+
+const TitleCard = styled.div<{ equipped: boolean }>`
+  border: 1px solid ${({ equipped }) => (equipped ? "#3b82f6" : "rgb(229,231,235)")};
+  border-radius: 8px;
+  padding: 12px;
+  background: ${({ equipped }) => (equipped ? "rgba(59,130,246,0.05)" : "white")};
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+`;
+
+const TitleName = styled.span`
+  font-size: 14px;
+  font-weight: 600;
+  color: rgb(31,41,55);
+`;
+
+const AcquiredDate = styled.span`
+  font-size: 12px;
+  color: rgb(107,114,128);
 `;
