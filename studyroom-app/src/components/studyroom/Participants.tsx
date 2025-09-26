@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { NavLink, useOutletContext, useParams } from 'react-router-dom';
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../hooks/useAuth";
+import ParticipantsReportModal from "./ParticipantsReportModal";
 
 interface Member {
     id: number;
@@ -180,10 +181,18 @@ const KickButton = styled.button`
   }
 `;
 
+const ReportButton = styled(KickButton)`
+    color: $f59e0b;
+    border-color: $f59e0b;
+    &:hover { background-color: $f59e0b; color: white; }
+`;
+
+
 const Participants: React.FC = () => {
     const { studyId, userRole, studyStatus, onLeaveOrClose } = useOutletContext<StudyRoomContext>();
-    const { currentUserId } = useAuth();
+    const { nickname: currentUserNickname } = useAuth();
     const [members, setMembers] = useState<Member[]>([]);
+    const [reportingMember, setReportingMember] = useState<Member | null>(null);
 
     const fetchMembers = useCallback(async () => {
         if (!studyId) return;
@@ -211,6 +220,9 @@ const Participants: React.FC = () => {
             }
         }
     };
+
+    const currentUser = members.find(member => member.nickname === currentUserNickname);
+    const currentUserId = currentUser?.id;
 
     const leader = members.find(m => m.role === 'LEADER');
     const participants = members.filter(m => m.role === 'MEMBER');
@@ -246,7 +258,12 @@ const Participants: React.FC = () => {
                         <MemberInfo>
                             <MemberName>{leader.nickname}</MemberName>
                         </MemberInfo>
-                        <RoleBadge $type="leader">모임장</RoleBadge>
+                        <MemberActions>
+                            <RoleBadge $type="leader">모임장</RoleBadge>
+                            {leader.id !== currentUserId && studyStatus !== 'CLOSED' && (
+                                <ReportButton onClick={() => setReportingMember(leader)}>신고하기</ReportButton>
+                            )}
+                        </MemberActions>
                     </MemberItem>
                 )}
             </Section>
@@ -257,13 +274,16 @@ const Participants: React.FC = () => {
                     {participants.length > 0 ? (
                         participants.map(p => (
                             <MemberItem key={p.id}>
-                                <MemberInfo>
-                                    <MemberName>{p.nickname}</MemberName>
-                                </MemberInfo>
+                                <MemberInfo><MemberName>{p.nickname}</MemberName></MemberInfo>
                                 <MemberActions>
                                     <RoleBadge $type="member">참가자</RoleBadge>
-                                    {userRole === 'LEADER' && p.id !== currentUserId && studyStatus !== 'CLOSED' && (
-                                        <KickButton onClick={() => handleKickMember(p.id, p.nickname)}>강퇴하기</KickButton>
+                                    {p.id !== currentUserId && studyStatus !== 'CLOSED' && (
+                                        <>
+                                            {userRole === 'LEADER' && (
+                                                <KickButton onClick={() => handleKickMember(p.id, p.nickname)}>강퇴하기</KickButton>
+                                                )}
+                                            <ReportButton onClick={() => setReportingMember(p)}>신고하기</ReportButton>
+                                        </>
                                     )}
                                 </MemberActions>
                             </MemberItem>
@@ -279,6 +299,11 @@ const Participants: React.FC = () => {
                     {userRole === 'LEADER' ? '스터디 폐쇄하기' : '탈퇴하기'}
                 </LeaveButton>
             </Footer>
+            <ParticipantsReportModal
+                studyId={studyId}
+                reportedMember={reportingMember}
+                onClose={() => setReportingMember(null)}
+            />
         </Container>
     );
 };

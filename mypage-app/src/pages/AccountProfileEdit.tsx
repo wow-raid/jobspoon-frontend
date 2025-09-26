@@ -1,6 +1,6 @@
 {/* 회원정보 수정 메뉴 탭 */}
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import { useOutletContext } from "react-router-dom";
@@ -23,7 +23,6 @@ export default function AccountProfileEdit() {
     // 닉네임 수정 상태
     const [isEditingNickname, setIsEditingNickname] = useState(false);
     const [tempNickname, setTempNickname] = useState("");
-    const [error, setError] = useState<string | null>(null);
 
     // 프로필 공개 여부 상태
     const [isProfilePublic, setIsProfilePublic] = useState(true);
@@ -34,9 +33,53 @@ export default function AccountProfileEdit() {
         email: false,
     });
 
-    // 파일 업로드 관련
+    // 사진 업로드 관련
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+
+    // 닉네임 관련 에러
+    const [nicknameError, setNicknameError] = useState<string | null>(null);
+    const [nicknameSuccess, setNicknameSuccess] = useState<string | null>(null);
+
+    // 사진 업로드 관련 에러
+    const [photoError, setPhotoError] = useState<string | null>(null);
+    const [photoSuccess, setPhotoSuccess] = useState<string | null>(null);
+    const [fadeOut, setFadeOut] = useState(false);
+
+    /** 메시지 자동 사라짐 처리 */
+    useEffect(() => {
+        if (nicknameError || nicknameSuccess) {
+            setFadeOut(false);
+            const fadeTimer = setTimeout(() => setFadeOut(true), 2500);
+            const removeTimer = setTimeout(() => {
+                setNicknameError(null);
+                setNicknameSuccess(null);
+                setFadeOut(false);
+            }, 4000);
+
+            return () => {
+                clearTimeout(fadeTimer);
+                clearTimeout(removeTimer);
+            };
+        }
+    }, [nicknameError, nicknameSuccess]);
+
+    useEffect(() => {
+        if (photoError || photoSuccess) {
+            setFadeOut(false); // 처음에는 보이게
+            const fadeTimer = setTimeout(() => setFadeOut(true), 2500); // 2.5초 후 fade 시작
+            const removeTimer = setTimeout(() => {
+                setPhotoError(null);
+                setPhotoSuccess(null);
+                setFadeOut(false);
+            }, 4000); // 4초 후 state 제거
+
+            return () => {
+                clearTimeout(fadeTimer);
+                clearTimeout(removeTimer);
+            };
+        }
+    }, [photoError, photoSuccess]);
 
     /** 닉네임 수정 시작 */
     const handleStartEdit = () => {
@@ -48,19 +91,21 @@ export default function AccountProfileEdit() {
 
     /** 닉네임 저장 */
     const handleSaveNickname = async () => {
-        const token = localStorage.getItem("userToken");
-        if (!token) {
-            setError("로그인이 필요합니다.");
+        const isLoggedIn = localStorage.getItem("isLoggedIn"); // ✅ 로그인 여부만 확인
+        if (!isLoggedIn) {
+            setNicknameError("로그인이 필요합니다.");
             return;
         }
 
         try {
-            await updateNickname(token, tempNickname);
+            await updateNickname(tempNickname); // ✅ token 인자 제거
             await refreshProfile();
             setIsEditingNickname(false);
-            setError(null);
+            setNicknameError(null);
+            setNicknameSuccess("닉네임이 성공적으로 변경되었습니다.");
         } catch (err: any) {
-            setError(err.message || "닉네임 수정 실패");
+            setNicknameError(err.message || "닉네임 수정 실패");
+            setNicknameSuccess(null);
         }
     };
 
@@ -68,7 +113,7 @@ export default function AccountProfileEdit() {
     const handleCancelEdit = () => {
         setTempNickname("");
         setIsEditingNickname(false);
-        setError(null);
+        setNicknameError(null);
     };
 
     /** 사진 변경 버튼 클릭 */
@@ -81,27 +126,24 @@ export default function AccountProfileEdit() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const token = localStorage.getItem("userToken");
-        if (!token) {
-            setError("로그인이 필요합니다.");
+        const isLoggedIn = localStorage.getItem("isLoggedIn"); // ✅ 로그인 여부만 확인
+        if (!isLoggedIn) {
+            setPhotoError("로그인이 필요합니다.");
             return;
         }
 
         try {
             setIsUploading(true);
-            await uploadProfilePhoto(token, file);
+            await uploadProfilePhoto(file); // ✅ token 인자 제거
             await refreshProfile();
-            setError(null);
+            setPhotoError(null);
+            setPhotoSuccess("사진 업로드 성공");
         } catch (err: any) {
-            setError(err.message || "사진 업로드 실패");
+            setPhotoError(err.message || "사진 업로드 실패");
+            setPhotoSuccess(null);
         } finally {
             setIsUploading(false);
         }
-    };
-
-    /** 모달 열기 */
-    const openModal = () => {
-        setIsModalOpen(true);
     };
 
     // 토글 핸들러
@@ -130,19 +172,32 @@ export default function AccountProfileEdit() {
                 <SectionTitle>회원정보</SectionTitle>
                 <InfoCard>
                     <TopRow>
-                        <PhotoWrapper>
-                            {isUploading ? (
-                                <Spinner />
-                            ) : (
-                                <Photo
-                                    src={profile.photoUrl || defaultProfile}
-                                    alt="프로필"
-                                    onError={(e) => {
-                                        (e.target as HTMLImageElement).src = defaultProfile;
-                                    }}
-                                />
+                        <PhotoSection>
+                            <PhotoWrapper>
+                                {isUploading ? (
+                                    <Spinner />
+                                ) : (
+                                    <Photo
+                                        src={profile.photoUrl || defaultProfile}
+                                        alt="프로필"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).src = defaultProfile;
+                                        }}
+                                    />
+                                )}
+                            </PhotoWrapper>
+
+                            {photoError && (
+                                <MessageBase fadeOut={fadeOut} type="error">
+                                    {photoError}
+                                </MessageBase>
                             )}
-                        </PhotoWrapper>
+                            {photoSuccess && (
+                                <MessageBase fadeOut={fadeOut} type="success">
+                                    {photoSuccess}
+                                </MessageBase>
+                            )}
+                        </PhotoSection>
 
                         <InfoText>
                             <NicknameRow>
@@ -157,7 +212,16 @@ export default function AccountProfileEdit() {
                                     <Nickname>{profile.nickname}</Nickname> // ✅ customNickname → nickname
                                 )}
                             </NicknameRow>
-                            {error && <ErrorText>{error}</ErrorText>}
+                            {nicknameError && (
+                                <NicknameMessage fadeOut={fadeOut} type="error">
+                                    {nicknameError}
+                                </NicknameMessage>
+                            )}
+                            {nicknameSuccess && (
+                                <NicknameMessage fadeOut={fadeOut} type="success">
+                                    {nicknameSuccess}
+                                </NicknameMessage>
+                            )}
 
                             <Email>{profile.email}</Email>
                         </InfoText>
@@ -503,12 +567,6 @@ const NicknameInput = styled.input`
     width: 100%;
 `;
 
-const ErrorText = styled.div`
-  font-size: 13px;
-  color: #dc2626;
-  margin-top: 4px;
-`;
-
 const ButtonGroup = styled.div`
     display: flex;
     flex-direction: column;
@@ -543,3 +601,26 @@ const SmallButton = styled.button`
     }
 `;
 
+const PhotoSection = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+`;
+
+const MessageBase = styled.div<{ fadeOut: boolean; type: "error" | "success" }>`
+  font-size: 12px;
+  text-align: center;
+  color: ${({ type }) => (type === "error" ? "#dc2626" : "#16a34a")};
+  opacity: ${({ fadeOut }) => (fadeOut ? 0 : 1)};
+  transition: opacity 1.5s ease; // fade-out
+`;
+
+const NicknameMessage = styled.div<{ fadeOut: boolean; type: "error" | "success" }>`
+  font-size: 13px;
+  margin-top: 4px;
+  text-align: left;  // 왼쪽 정렬
+  color: ${({ type }) => (type === "error" ? "#dc2626" : "#16a34a")};
+  opacity: ${({ fadeOut }) => (fadeOut ? 0 : 1)};
+  transition: opacity 1.5s ease;
+`;

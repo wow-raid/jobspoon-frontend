@@ -191,7 +191,7 @@ async function fetchFirstPage() {
     };
 
     const { data } = await springAdminAxiosInst.post<AdministratorUserListResponse>(
-        "/administrator/userinfo", // 컨트롤러 @PostMapping("/administrator/userinfo")
+        "/administrator/management/userinfo", // 컨트롤러 @PostMapping("/administrator/userinfo")
         body,                      // ✅ @RequestBody 매핑
         {
           headers: {
@@ -231,7 +231,7 @@ async function fetchNextPage() {
     };
 
     const { data } = await springAdminAxiosInst.post<AdministratorUserListResponse>(
-        "/administrator/userinfo",
+        "/administrator/management/userinfo",
         body,
         {
           headers: {

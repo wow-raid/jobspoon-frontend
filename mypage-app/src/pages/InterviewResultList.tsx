@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { fetchInterviewList } from "../api/interviewApi";
 import ServiceModal from "../components/modals/ServiceModal";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -11,25 +10,46 @@ type InterviewItem = {
     topic: string;
     yearsOfExperience: number;
     created_at: Date;
-    status: "IN_PROGRESS" | "COMPLETED"; // ✅ 추가
+    status: "IN_PROGRESS" | "COMPLETED";
 };
 
 export default function InterviewResultList() {
     const [interviews, setInterviews] = useState<InterviewItem[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    // ✅ 목데이터 적용
     useEffect(() => {
-        const userToken = localStorage.getItem("userToken");
-        if (!userToken) return;
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
+        if (!isLoggedIn) {
+            console.error("로그인이 필요합니다.");
+            return;
+        }
 
-        fetchInterviewList(userToken).then((data) => {
-            const normalized: InterviewItem[] = (data.interviewList || []).map((item: any) => ({
-                ...item,
-                created_at: new Date(item.created_at),
-                status: item.status, // ✅ 추가
-            }));
-            setInterviews(normalized);
-        });
+        const mockInterviews: InterviewItem[] = [
+            {
+                id: 1,
+                topic: "Spring Boot 기술 면접",
+                yearsOfExperience: 2,
+                created_at: new Date("2025-09-01"),
+                status: "COMPLETED",
+            },
+            {
+                id: 2,
+                topic: "React 프로젝트 경험",
+                yearsOfExperience: 1,
+                created_at: new Date("2025-09-05"),
+                status: "IN_PROGRESS",
+            },
+            {
+                id: 3,
+                topic: "MySQL 성능 최적화",
+                yearsOfExperience: 3,
+                created_at: new Date("2025-09-10"),
+                status: "COMPLETED",
+            },
+        ];
+
+        setInterviews(mockInterviews);
     }, []);
 
     // 도넛 차트용 데이터 계산
@@ -64,6 +84,8 @@ export default function InterviewResultList() {
 
     return (
         <Section>
+            <NoticeBanner>🚧 서비스 준비 중입니다</NoticeBanner>
+
             <Title>면접 기록 보관함</Title>
 
             {/* 도넛 차트 */}
@@ -407,4 +429,15 @@ const Select = styled.select`
         box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
         background-color: #fff;
     }
+`;
+
+const NoticeBanner = styled.div`
+  background: #fef3c7; /* 연한 노랑 */
+  color: #92400e;      /* 진한 주황/갈색 */
+  font-size: 18px;     /* 글자 크게 */
+  font-weight: 700;
+  text-align: center;
+  padding: 20px 12px;  /* 상하 넓게 */
+  border-radius: 8px;
+  margin: 24px 0;      /* 위아래 간격 */
 `;
