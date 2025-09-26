@@ -40,7 +40,7 @@ export default function TrustScoreModal({ isOpen, onClose, trust }: Props) {
                         <li>🗓️ 출석률: {attendanceScore.toFixed(1)} / 25점</li>
                         <li>🎤 모의면접: {Math.round(interviewScore)} / 20점</li>
                         <li>🧩 문제풀이: {Math.round(problemScore)} / 20점</li>
-                        <li>✍️ 리뷰 작성: {Math.round(postScore)} / 15점</li>
+                        <li>✍️ 글 작성: {Math.round(postScore)} / 15점</li>
                         <li>👥 스터디룸 개설: {Math.round(studyroomScore)} / 10점</li>
                         <li>💬 댓글 작성: {Math.round(commentScore)} / 15점</li>
                     </ul>

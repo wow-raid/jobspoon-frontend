@@ -15,6 +15,15 @@ import {
     TitleItem,
     ProfileAppearanceResponse
 } from "../api/profileAppearanceApi";
+import {
+    calcAttendanceScore,
+    calcInterviewScore,
+    calcProblemScore,
+    calcPostScore,
+    calcStudyroomScore,
+    calcCommentScore,
+    calcTotalScore
+} from "../utils/trustScoreUtils";
 import TrustScoreCriteria from "../components/history/TrustScoreCriteria";
 import TitleGuideModal from "../components/modals/TitleGuideModal";
 import { useOutletContext } from "react-router-dom";
@@ -37,7 +46,6 @@ export default function UserHistoryPage() {
     const [trustScore, setTrustScore] = useState<TrustScore | null>(null);
     const [titles, setTitles] = useState<TitleItem[]>([]);
     const [levelHistory, setLevelHistory] = useState<UserLevelHistory[]>([]);
-
 
     // 섹션별 status 관리
     const [levelStatus, setLevelStatus] = useState<Status>("loading");
@@ -125,33 +133,66 @@ export default function UserHistoryPage() {
                     ) : trustStatus === "empty" ? (
                         <Empty>아직 신뢰점수가 없습니다.</Empty>
                     ) : (
-                        <TrustGrid>
-                            <TrustItem>
-                                <span>출석률</span>
-                                <ProgressBar percent={trustScore!.attendanceRate} />
-                                <Count>{trustScore!.attendanceRate.toFixed(1)}%</Count>
-                            </TrustItem>
-                            <TrustItem>
-                                <span>인터뷰</span>
-                                <Count>{trustScore!.monthlyInterviews}회</Count>
-                            </TrustItem>
-                            <TrustItem>
-                                <span>문제풀이</span>
-                                <Count>{trustScore!.monthlyProblems}개</Count>
-                            </TrustItem>
-                            <TrustItem>
-                                <span>글 작성</span>
-                                <Count>{trustScore!.monthlyPosts}개</Count>
-                            </TrustItem>
-                            <TrustItem>
-                                <span>스터디룸</span>
-                                <Count>{trustScore!.monthlyStudyrooms}개</Count>
-                            </TrustItem>
-                            <TrustItem>
-                                <span>댓글</span>
-                                <Count>{trustScore!.monthlyComments}개</Count>
-                            </TrustItem>
-                        </TrustGrid>
+                        <>
+                            <TrustContent> {/* ✅ 새로운 컨테이너 */}
+                                <TrustGrid>
+                                    <TrustItem>
+                                        <span>출석률</span>
+                                        <ProgressBar
+                                            percent={(calcAttendanceScore(trustScore!.attendanceRate) / 25) * 100}
+                                        />
+                                        <Count>{calcAttendanceScore(trustScore!.attendanceRate).toFixed(1)} / 25점</Count>
+                                    </TrustItem>
+
+                                    <TrustItem>
+                                        <span>모의면접</span>
+                                        <ProgressBar
+                                            percent={(calcInterviewScore(trustScore!.monthlyInterviews) / 20) * 100}
+                                        />
+                                        <Count>{calcInterviewScore(trustScore!.monthlyInterviews)} / 20점</Count>
+                                    </TrustItem>
+
+                                    <TrustItem>
+                                        <span>문제풀이</span>
+                                        <ProgressBar
+                                            percent={(calcProblemScore(trustScore!.monthlyProblems) / 20) * 100}
+                                        />
+                                        <Count>{calcProblemScore(trustScore!.monthlyProblems)} / 20점</Count>
+                                    </TrustItem>
+
+                                    <TrustItem>
+                                        <span>글 작성</span>
+                                        <ProgressBar
+                                            percent={(calcPostScore(trustScore!.monthlyPosts) / 15) * 100}
+                                        />
+                                        <Count>{calcPostScore(trustScore!.monthlyPosts)} / 15점</Count>
+                                    </TrustItem>
+
+                                    <TrustItem>
+                                        <span>스터디룸</span>
+                                        <ProgressBar
+                                            percent={(calcStudyroomScore(trustScore!.monthlyStudyrooms) / 10) * 100}
+                                        />
+                                        <Count>{calcStudyroomScore(trustScore!.monthlyStudyrooms)} / 10점</Count>
+                                    </TrustItem>
+
+                                    <TrustItem>
+                                        <span>댓글</span>
+                                        <ProgressBar
+                                            percent={(calcCommentScore(trustScore!.monthlyComments) / 15) * 100}
+                                        />
+                                        <Count>{calcCommentScore(trustScore!.monthlyComments)} / 15점</Count>
+                                    </TrustItem>
+                                </TrustGrid>
+
+                                <Divider />
+
+                                {/* 총점 왼쪽 아래 */}
+                                <TotalScore>
+                                    총점: {calcTotalScore(trustScore!).toFixed(1)} / 100점
+                                </TotalScore>
+                            </TrustContent>
+                        </>
                     )}
                     {showTrustCriteria && <TrustScoreCriteria />}
                 </Card>
@@ -427,4 +468,28 @@ const TimelineEvent = styled.span`
     font-size: 0.95rem;
     font-weight: 500;
     color: #111827;
+`;
+
+// 신뢰점수 전체 영역 묶는 컨테이너
+const TrustContent = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+`;
+
+const TotalScore = styled.div`
+    margin-top: 0px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(37, 99, 235, 0.08);
+    font-size: 15px;
+    font-weight: 700;
+    color: #2563eb;
+    align-self: flex-start;
+`;
+
+const Divider = styled.hr`
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 16px 0;
 `;
