@@ -8,6 +8,8 @@ import InterviewResultDetail from "./pages/InterviewResultDetail.tsx";
 import AccountWithdrawal from "./pages/AccountWithdrawal.tsx";
 import MembershipPage from "./pages/MemebershipPage.tsx";
 import UserHistoryPage from "./pages/UserHistoryPage.tsx";
+import SchedulePage from "./pages/SchedulePage.tsx";
+import MyPostsPage from "./pages/MyPostsPage.tsx";
 
 import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
 import { getTheme, onThemeChange, type Theme as BridgeTheme } from '@jobspoon/theme-bridge';
@@ -87,6 +89,10 @@ export default function App() {
                         <Route path="membership" element={<MembershipPage />} />
                         {/* 이력 관리 */}
                         <Route path="user/history" element={<UserHistoryPage />} />
+                        {/* 작성한 글 */}
+                        <Route path="my-posts" element={<MyPostsPage />} />
+                        {/* 일정 */}
+                        <Route path="schedule" element={<SchedulePage />} />
                     </Route>
                 </Routes>
             </AppShell>
