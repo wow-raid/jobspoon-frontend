@@ -5,7 +5,7 @@ import TermCardWithTagsLazy from "../components/TermCardWithTagsLazy";
 import SpoonNoteModal from "../components/SpoonNoteModal";
 import { fetchTermsByTag } from "../api/termApi";
 import { fetchUserFolders, patchReorderFolders } from "../api/userWordbook";
-import { renameUserFolder } from "../api/folder";
+import {deleteUserFolder, renameUserFolder} from "../api/folder";
 
 /* 타입 */
 type Term = { id: number; title: string; description: string; tags?: string[] };
@@ -366,6 +366,14 @@ const TermListPage: React.FC = () => {
                     // 폴더 상세 페이지로 이동하고 모달 닫기
                     setModalOpen(false);
                     navigate(`/spoon-word/folders/${fid}`, { state: { folderName: name } });
+                }}
+                onRequestDelete={async (fid, name) => {
+                    await deleteUserFolder(fid, "purge");
+                    setNotebooks(await fetchUserFolders());
+                }}
+                onRequestBulkDelete={async (ids) => {
+                    if (!confirm(`선택 ${ids.length}개 폴더 삭제? (안의 용어도 삭제)`)) return;
+                    setNotebooks(await fetchUserFolders());
                 }}
             />
         </Root>

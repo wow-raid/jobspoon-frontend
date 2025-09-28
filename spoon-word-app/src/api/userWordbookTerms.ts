@@ -11,16 +11,30 @@ export type MoveFolderTermsResponse = {
     movedCount: number;
     skippedCount?: number;
     movedTermIds?: number[];
-    skipped?: { termId: number; reason: "DUPLICATE_IN_TARGET" | "NOT_IN_SOURCE" | "TERM_NOT_FOUND" | "SAME_FOLDER" }[];
+    skipped?: {
+        termId: number;
+        reason:
+            | "DUPLICATE_IN_TARGET"
+            | "NOT_IN_SOURCE"
+            | "TERM_NOT_FOUND"
+            | "SAME_FOLDER";
+    }[];
 };
 
-export async function moveFolderTerms(sourceFolderId: string | number, payload: MoveFolderTermsPayload) {
+/** 단어장 간 용어 이동 */
+export async function moveFolderTerms(
+    sourceFolderId: string | number,
+    payload: MoveFolderTermsPayload
+) {
     const sanitized: MoveFolderTermsPayload = {
         targetFolderId: Number(payload.targetFolderId),
-        termIds: Array.from(new Set(payload.termIds.map(Number).filter(Number.isFinite))),
+        termIds: Array.from(
+            new Set(payload.termIds.map(Number).filter(Number.isFinite))
+        ),
     };
+
     const { data } = await http.patch<MoveFolderTermsResponse>(
-        `/api/me/folders/${sourceFolderId}/terms:move`,
+        `/me/folders/${Number(sourceFolderId)}/terms:move`,
         sanitized,
         { headers: { ...authHeader() } }
     );

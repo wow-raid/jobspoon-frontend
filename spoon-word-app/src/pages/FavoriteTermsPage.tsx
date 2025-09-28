@@ -4,7 +4,7 @@ import SpoonNoteModal from "../components/SpoonNoteModal";
 import { fetchUserFolders, patchReorderFolders } from "../api/userWordbook";
 import { moveFavorites, deleteFavoriteTerm, MoveFavoritesResponse } from "../api/favorites";
 import http, { authHeader } from "../utils/http";
-import { renameUserFolder } from "../api/folder";
+import { renameUserFolder, deleteUserFolder, deleteUserFoldersBulk } from "../api/folder";
 // import toast from "react-hot-toast";
 
 type FavoriteItem = {
@@ -318,6 +318,14 @@ export default function FavoriteTermsPage() {
                 onRename={async (folderId, newName) => {
                     await renameUserFolder(folderId, newName);
                     setNotebooks(prev => prev.map(n => n.id === folderId ? ({ ...n, name: newName }) : n));
+                }}
+                onRequestDelete={async (fid, name) => {
+                    await deleteUserFolder(fid, "purge");
+                    setNotebooks(await fetchUserFolders());
+                }}
+                onRequestBulkDelete={async (ids) => {
+                    if (!confirm(`선택 ${ids.length}개 폴더 삭제? (안의 용어도 삭제)`)) return;
+                    setNotebooks(await fetchUserFolders());
                 }}
             />
         </>

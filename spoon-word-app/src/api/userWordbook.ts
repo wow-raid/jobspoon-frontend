@@ -9,7 +9,7 @@ type FolderDTO = {
 };
 
 export async function fetchUserFolders(): Promise<Array<{ id: string; name: string }>> {
-    const res = await http.get("/api/me/folders", { headers: { ...authHeader() } });
+    const res = await http.get("/me/folders", { headers: { ...authHeader() } });
     const data = res?.data;
 
     const toArray = (d: any): FolderDTO[] => {
@@ -24,23 +24,30 @@ export async function fetchUserFolders(): Promise<Array<{ id: string; name: stri
     };
 
     const items = toArray(data);
-
-    if (!items.length) {
-        console.warn("[fetchUserFolders] Unexpected response shape:", data);
-        return [];
-    }
-
     return items.map((it) => ({
         id: String(it.id),
         name: it.folderName ?? it.name ?? it.title ?? "",
     }));
 }
 
+/** 폴더 순서 저장: 서버는 RPC 스타일(:reorder)만 OK */
 export async function patchReorderFolders(orderedIds: Array<string | number>) {
-    const ids = orderedIds.map((v) => Number(v)).filter((n) => Number.isFinite(n));
-    await http.patch(
-        "/api/me/folders:reorder",
-        { ids },
-        { headers: { ...authHeader() } }
-    );
+    const ids = Array.from(new Set(orderedIds.map(Number).filter(Number.isFinite)));
+
+    const headers = { ...authHeader() };
+
+    // 1) 권장/정상: RPC 스타일
+    try {
+        await http.patch("/me/folders:reorder", { ids }, { headers });
+        return;
+    } catch (e1) {
+        // 2) 폴백들 (혹시 다른 환경 대응)
+        try {
+            await http.post("/me/folders:reorder", { ids }, { headers });
+            return;
+        } catch (e2) {
+            // 3) 마지막 폴백: REST 스타일 (여긴 현재 서버에서 500이니 거의 안 타게 됨)
+            await http.patch("/me/folders/reorder", { ids }, { headers });
+        }
+    }
 }

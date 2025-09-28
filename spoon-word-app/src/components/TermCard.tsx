@@ -43,11 +43,11 @@ const TOKENS = {
 const CONTENT_INSET = 16;
 
 const Article = styled.article`
-  border-radius: ${TOKENS.radius.card}px;
-  border: ${TOKENS.border.card};
-  background: ${TOKENS.color.bgWhite};
-  padding: ${TOKENS.space(20)};
-  box-shadow: ${TOKENS.shadow.card};
+    border-radius: ${TOKENS.radius.card}px;
+    border: ${TOKENS.border.card};
+    background: ${TOKENS.color.bgWhite};
+    padding: ${TOKENS.space(20)};
+    box-shadow: ${TOKENS.shadow.card};
 `;
 
 const Header = styled.div`
@@ -81,14 +81,18 @@ const AddBtn = styled.button`
     box-shadow: none;
     transition: background-color 120ms ease, transform 40ms ease;
 
-    &:hover { background: ${TOKENS.color.indigo50}; }
-    &:active { transform: scale(0.98); }
+    &:hover {
+        background: ${TOKENS.color.indigo50};
+    }
+    &:active {
+        transform: scale(0.98);
+    }
 `;
 
 const AddIcon = styled.svg`
-  width: 16px;
-  height: 16px;
-  display: inline-block;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
 `;
 
 const InnerBox = styled.div`
@@ -140,55 +144,67 @@ const TagEmptyInline = styled.span`
 `;
 
 const TagChipBtn = styled.button`
-  flex: 0 0 auto;
-  border-radius: ${TOKENS.radius.chip}px;
-  border: ${TOKENS.border.chip};
-  background: ${TOKENS.color.bgWhite};
-  padding: ${TOKENS.space(4)} ${TOKENS.space(12)};
-  font-size: ${TOKENS.font.chip};
-  color: ${TOKENS.color.textSecondary};
-  box-shadow: ${TOKENS.shadow.chip};
-  cursor: pointer;
-  outline: none;
-  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, transform 40ms ease;
+    flex: 0 0 auto;
+    border-radius: ${TOKENS.radius.chip}px;
+    border: ${TOKENS.border.chip};
+    background: ${TOKENS.color.bgWhite};
+    padding: ${TOKENS.space(4)} ${TOKENS.space(12)};
+    font-size: ${TOKENS.font.chip};
+    color: ${TOKENS.color.textSecondary};
+    box-shadow: ${TOKENS.shadow.chip};
+    cursor: pointer;
+    outline: none;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease,
+    transform 40ms ease;
 
-  &:hover {
-    border: ${TOKENS.border.chipHover};
-    background: ${TOKENS.color.chipBg};
-    color: ${TOKENS.color.textBlue};
-  }
-  &:active {
-    background: ${TOKENS.color.chipActiveBg};
-    transform: scale(0.98);
-  }
+    &:hover {
+        border: ${TOKENS.border.chipHover};
+        background: ${TOKENS.color.chipBg};
+        color: ${TOKENS.color.textBlue};
+    }
+    &:active {
+        background: ${TOKENS.color.chipActiveBg};
+        transform: scale(0.98);
+    }
 `;
 
-const TermCard: React.FC<TermCardProps> = ({ id, title, description, tags = [], onAdd, onTagClick }) => {
+const TermCard: React.FC<TermCardProps> = ({
+                                               id,
+                                               title,
+                                               description,
+                                               tags = [],
+                                               onAdd,
+                                               onTagClick,
+                                           }) => {
     const navigate = useNavigate();
 
-    // 실제 로그인 여부를 localStorage에서 계산
-    const isLoggedIn = React.useMemo(() => {
-        const t = localStorage.getItem("userToken") || localStorage.getItem("accessToken");
-        return !!t;
-    }, []);
+    const handleAddClick = React.useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            // 모달 오픈으로 이어지는 상위 클릭 핸들러 차단
+            e.preventDefault();
+            e.stopPropagation();
 
-    const handleAddClick = React.useCallback(() => {
-        if (!isLoggedIn) {
-            // 비로그인: 확인 시 로그인 이동, 취소 시 아무 것도 안 함
-            ensureAuthOrAlertRedirect(AUTH_ALERT_MSG, "/vue-account/account/login", {
-                isLoggedIn,
-                navigate,
-                promptType: "confirm",
-                tokenKeys: ["userToken", "accessToken"],
-            });
-            return;
-        }
-        // 로그인: 바로 콜백 실행
-        onAdd?.(id);
-    }, [id, isLoggedIn, navigate, onAdd]);
+            // 최신 로그인 플래그 확인
+            const loggedIn = !!localStorage.getItem("isLoggedIn");
+            if (!loggedIn) {
+                const ok = ensureAuthOrAlertRedirect(AUTH_ALERT_MSG, "/vue-account/account/login", {
+                    isLoggedIn: loggedIn,
+                    navigate,
+                    promptType: "confirm", // 확인=이동, 취소=중단
+                    flagKey: "isLoggedIn",
+                });
+                // 비로그인 흐름에서는 항상 false를 반환 → 여기서 즉시 종료 (모달 열기 금지)
+                if (!ok) return;
+            }
+
+            // 로그인 상태에서만 실행
+            onAdd?.(id);
+        },
+        [id, navigate, onAdd]
+    );
 
     return (
-        <Article aria-labelledby={`term-${id}`}>
+        <Article aria-labelledby={`term-${id}`} data-term-id={id}>
             <Header>
                 <Title id={`term-${id}`}>{title}</Title>
                 <AddBtn
@@ -212,7 +228,14 @@ const TermCard: React.FC<TermCardProps> = ({ id, title, description, tags = [], 
                 {tags.length > 0 ? (
                     <TagListInline role="list" aria-label="해시태그 목록">
                         {tags.map((t, idx) => (
-                            <TagChipBtn key={`${t}-${idx}`} type="button" role="listitem" title={`#${t}`} aria-label={`해시태그 ${t}`} onClick={() => onTagClick?.(t)}>
+                            <TagChipBtn
+                                key={`${t}-${idx}`}
+                                type="button"
+                                role="listitem"
+                                title={`#${t}`}
+                                aria-label={`해시태그 ${t}`}
+                                onClick={() => onTagClick?.(t)}
+                            >
                                 #{t}
                             </TagChipBtn>
                         ))}
