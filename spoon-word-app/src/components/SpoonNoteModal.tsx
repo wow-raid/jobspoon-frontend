@@ -1,6 +1,6 @@
 import React from "react";
 import { createPortal } from "react-dom";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 
 type Notebook = { id: string; name: string };
 
@@ -18,6 +18,8 @@ export type SpoonNoteModalProps = {
     onRename?: (folderId: string, newName: string) => void | Promise<void>;
     /** 구 API(하위호환): 기존 prompt 흐름. (submit 시 newName을 두 번째 인자로 넘겨 폴백 호출) */
     onRequestRename?: (folderId: string, currentName: string) => void | Promise<void>;
+    /** 새로고침: 서버에서 최신 폴더 목록을 받아와 동기화 */
+    onRefresh?: () => Promise<Notebook[]>;
 };
 
 const TOKENS = {
@@ -65,6 +67,9 @@ const Panel = styled.div`
     border-radius: ${TOKENS.radius.panel}px;
     box-shadow: ${TOKENS.shadow.panel};
     overflow: visible;
+
+    /* 3D 원근 추가 */
+    perspective: 1000px;
 `;
 
 const Header = styled.div`
@@ -93,6 +98,7 @@ const Body = styled.div`
 
 const List = styled.div<{ $disabled?: boolean }>`
     opacity: ${({ $disabled }) => ($disabled ? 0.6 : 1)};
+    pointer-events: ${({ $disabled }) => ($disabled ? "none" : "auto")};
 `;
 
 const Row = styled.div<{
@@ -162,6 +168,16 @@ const Name = styled.span`
     font-size: ${TOKENS.font.body};
 `;
 
+const hexToRgb = (hex: string) => {
+    const m = hex.replace("#", "");
+    const bigint = parseInt(m.length === 3 ? m.split("").map((c) => c + c).join("") : m, 16);
+    return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
+};
+const alpha = (hex: string, a: number) => {
+    const { r, g, b } = hexToRgb(hex);
+    return `rgba(${r}, ${g}, ${b}, ${a})`;
+};
+
 const ChevronIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
         <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -176,6 +192,14 @@ const GearIcon = (props: React.SVGProps<SVGSVGElement>) => (
             stroke="currentColor"
             strokeWidth="1.4"
         />
+    </svg>
+);
+
+/** ⟳ 새로고침 아이콘 */
+const RefreshIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+        <path d="M20 12a8 8 0 1 1-2.34-5.66" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        <path d="M20 5v4h-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
 );
 
@@ -213,6 +237,9 @@ const ArrowBtn = styled.button`
 const SettingsBtn = styled(ArrowBtn)`
     margin-left: 0;
 `;
+
+/** 새로고침 버튼은 ArrowBtn 스타일 재사용 */
+const RefreshBtn = styled(ArrowBtn)``;
 
 const TipWrap = styled.span`
     position: relative;
@@ -400,6 +427,8 @@ const Divider = styled.div`
     background: ${TOKENS.color.line};
     margin: ${TOKENS.space(12)} 0;
 `;
+
+/** 기존 배지(미사용) */
 const SavedBadge = styled.div<{ $show: boolean }>`
     position: absolute;
     top: 8px;
@@ -434,7 +463,7 @@ const ConfirmCard = styled.div`
     max-width: calc(100vw - 32px);
     background: #fff;
     border-radius: 14px;
-    box-shadow: 0 12px 36px rgba(0,0,0,0.16);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16);
     border: 1px solid ${TOKENS.color.line};
 `;
 const ConfirmHeader = styled.div`
@@ -477,6 +506,158 @@ const Notice = styled.div<{ $tone?: "info" | "warn" }>`
 `;
 /** ================================= */
 
+/** ====== Saved Toast Animation (3D) ====== */
+const pop3d = keyframes`
+    0%   { transform: translate3d(-50%, -46%, -60px) rotateX(10deg) scale(0.92); opacity: 0; }
+    60%  { transform: translate3d(-50%, -50%,  10px) rotateX(-6deg) scale(1.03); opacity: 1; }
+    100% { transform: translate3d(-50%, -50%,   0px) rotateX(0deg)  scale(1);   opacity: 1; }
+`;
+const ring3d = keyframes`
+    0%   { transform: translateZ(-6px) scale(0.7);  opacity: 0.35; }
+    80%  { transform: translateZ(-6px) scale(1.35); opacity: 0; }
+    100% { transform: translateZ(-6px) scale(1.55); opacity: 0; }
+`;
+const draw = keyframes` to { stroke-dashoffset: 0; } `;
+const pulse = keyframes`
+    0%, 100% { box-shadow: 0 0 0 rgba(0,0,0,0); }
+    50% { box-shadow: 0 0 0 10px var(--pulse-color); }
+`;
+
+const SavedToast = styled.div<{ $show: boolean }>`
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 5;
+
+    --toast: 112px;
+
+    width: var(--toast);
+    height: var(--toast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* 3D 컨텍스트 유지 */
+    transform-style: preserve-3d;
+
+    transform: ${({ $show }) =>
+            $show ? "translate3d(-50%, -50%, 0) scale(1)" : "translate3d(-50%, -48%, -10px) scale(0.9)"};
+    opacity: ${({ $show }) => ($show ? 1 : 0)};
+    transition: opacity 200ms ease, transform 260ms ease;
+    animation: ${({ $show }) => ($show ? pop3d : "none")} 420ms cubic-bezier(.2,.8,.2,1) both;
+    pointer-events: none;
+
+    background: ${(p) => alpha(TOKENS.color.primary, 0.1)};
+    border-radius: 999px;
+    border: 1px solid ${(p) => alpha(TOKENS.color.primary, 0.18)};
+    box-shadow:
+            0 12px 28px rgba(0,0,0,0.18),
+            inset 0 -8px 14px rgba(0,0,0,0.06);
+
+    /* 뒤쪽 확산 링(약간 뒤로) */
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 999px;
+        border: 2px solid ${(p) => alpha(TOKENS.color.primary, 0.26)};
+        opacity: 0;
+        transform: translateZ(-6px);
+        animation: ${({ $show }) => ($show ? ring3d : "none")} 560ms ease-out 80ms;
+        pointer-events: none;
+    }
+
+    /* 바닥 그림자(더 깊이감) */
+    &::before {
+        content: "";
+        position: absolute;
+        width: 70%;
+        height: 18%;
+        bottom: -14px;
+        left: 50%;
+        transform: translateX(-50%) translateZ(-20px);
+        filter: blur(12px);
+        background: radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,0.22), rgba(0,0,0,0) 70%);
+        opacity: ${({ $show }) => ($show ? 1 : 0)};
+        transition: opacity 240ms ease;
+        border-radius: 999px;
+        pointer-events: none;
+    }
+`;
+
+const CheckWrap = styled.span`
+    position: relative;
+    --check: calc(var(--toast) - 20px);
+    width: var(--check);
+    height: var(--check);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: ${TOKENS.color.primary};
+    color: #fff;
+    border-radius: 999px;
+    box-shadow: 0 10px 22px ${(p) => alpha(TOKENS.color.primary, 0.35)};
+    --pulse-color: ${(p) => alpha(TOKENS.color.primary, 0.18)};
+    animation: ${pulse} 720ms ease-out 60ms 1;
+
+    /* 체크 원판을 살짝 앞으로 */
+    transform: translateZ(12px);
+    transform-style: preserve-3d;
+
+    svg { display: block; }
+    .check {
+        fill: none;
+        stroke: #fff;
+        stroke-width: 4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-dasharray: 40;
+        stroke-dashoffset: 40;
+        animation: ${draw} 460ms ease forwards 140ms;
+    }
+`;
+
+const SavedToastView: React.FC<{ show: boolean; tick: number }> = ({ show, tick }) => (
+    <SavedToast key={tick} $show={show} role="status" aria-label="완료">
+        <CheckWrap aria-hidden="true">
+            <svg width="44" height="44" viewBox="0 0 24 24">
+                <path className="check" d="M20 6L9 17l-5-5" />
+            </svg>
+        </CheckWrap>
+    </SavedToast>
+);
+/** ==================================== */
+
+/** 폴더 링크 a태그(컴포넌트 밖에 정의) */
+const ArrowLink = styled.a`
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    border-radius: 999px;
+    border: 1px solid ${TOKENS.color.line};
+    background: #f9fafb;
+    color: ${TOKENS.color.textSecondary};
+    text-decoration: none;
+    &:hover { background: #f3f4f6; }
+    &:active { transform: translateY(0.5px); }
+    &:focus-visible { outline: 2px solid ${TOKENS.color.primary}; outline-offset: 2px; }
+    @media (pointer: coarse) {
+        width: 44px;
+        height: 44px;
+        flex-basis: 44px;
+    }
+`;
+
+/** 컴포넌트 내부 헬퍼 */
+const getFolderHref = (folderId: string) => {
+    const inSpoon = window.location.pathname.startsWith("/spoon-word");
+    return inSpoon ? `/spoon-word/folders/${folderId}` : `/folders/${folderId}`;
+};
+
 export default function SpoonNoteModal({
                                            open,
                                            notebooks,
@@ -489,10 +670,13 @@ export default function SpoonNoteModal({
                                            onRequestDelete,
                                            onRequestBulkDelete,
                                            onRename,
+                                           onRefresh,
                                        }: SpoonNoteModalProps) {
     // 내부 가시성 상태로 즉시 닫히게 처리
     const [internalOpen, setInternalOpen] = React.useState(open);
-    React.useEffect(() => { setInternalOpen(open); }, [open]);
+    React.useEffect(() => {
+        setInternalOpen(open);
+    }, [open]);
 
     const [selectedId, setSelectedId] = React.useState<string | null>(null);
     const [creating, setCreating] = React.useState(false);
@@ -503,7 +687,16 @@ export default function SpoonNoteModal({
     const [draggingId, setDraggingId] = React.useState<string | null>(null);
     const [dragOver, setDragOver] = React.useState<{ id: string; edge: "top" | "bottom" } | null>(null);
     const [savingOrder, setSavingOrder] = React.useState(false);
+
+    // 저장 토스트 상태
     const [showSaved, setShowSaved] = React.useState(false);
+    const [savedTick, setSavedTick] = React.useState(0);
+    const triggerSaved = React.useCallback(() => {
+        setShowSaved(true);
+        setSavedTick((t) => t + 1);
+        window.setTimeout(() => setShowSaved(false), 1200);
+    }, []);
+
     const lastStableRef = React.useRef<Notebook[]>([]);
 
     const [bulkMode, setBulkMode] = React.useState(false);
@@ -522,7 +715,12 @@ export default function SpoonNoteModal({
         if (hintTimer.current) window.clearTimeout(hintTimer.current);
         hintTimer.current = window.setTimeout(() => setHint(null), 1600);
     }, []);
-    React.useEffect(() => () => { if (hintTimer.current) window.clearTimeout(hintTimer.current); }, []);
+    React.useEffect(
+        () => () => {
+            if (hintTimer.current) window.clearTimeout(hintTimer.current);
+        },
+        []
+    );
 
     // ===== 이름 바꾸기 미니 모달 상태 =====
     const [renameOpen, setRenameOpen] = React.useState(false);
@@ -578,6 +776,7 @@ export default function SpoonNoteModal({
             // 낙관적 반영
             setList((prev) => prev.map((n) => (n.id === renameTarget.id ? { ...n, name: nextName } : n)));
             closeRename();
+            triggerSaved();
         } catch (e) {
             setRenameError("이름 변경에 실패했습니다. 잠시 후 다시 시도해 주세요.");
             console.error("[rename modal] failed:", e);
@@ -639,18 +838,35 @@ export default function SpoonNoteModal({
     React.useEffect(() => {
         function onKey(e: KeyboardEvent) {
             if (e.key === "Escape") {
-                if (renameOpen) { closeRename(); return; }
-                if (confirmOpen) { setConfirmOpen(false); return; }
-                if (menuOpen) { setMenuOpen(false); return; }
-                if (bulkMode) { /* 선택 유지 */ return; }
+                if (renameOpen) {
+                    closeRename();
+                    return;
+                }
+                if (confirmOpen) {
+                    setConfirmOpen(false);
+                    return;
+                }
+                if (menuOpen) {
+                    setMenuOpen(false);
+                    return;
+                }
+                if (bulkMode) {
+                    /* 선택 유지 */
+                    return;
+                }
                 setInternalOpen(false); // 즉시 사라짐
                 onClose();
             }
             if (e.key === "Enter") {
-                if (renameOpen) { void submitRename(); return; }
-                if (confirmOpen) { void executeBulkDelete(); }
-                else if (bulkMode) { /* Enter 무시 */ }
-                else handlePrimary();
+                if (renameOpen) {
+                    void submitRename();
+                    return;
+                }
+                if (confirmOpen) {
+                    void executeBulkDelete();
+                } else if (bulkMode) {
+                    /* Enter 무시 */
+                } else handlePrimary();
             }
         }
         if (internalOpen) window.addEventListener("keydown", onKey);
@@ -681,8 +897,10 @@ export default function SpoonNoteModal({
         return () => document.removeEventListener("mousedown", handleDocMouseDown);
     }, [menuOpen]);
 
+    const [refreshing, setRefreshing] = React.useState(false);
+
     const handleToggle = (id: string) => {
-        if (draggingId) return;
+        if (draggingId || refreshing) return;
         if (bulkMode) {
             setDeleteIds((prev) => {
                 const next = new Set(prev);
@@ -696,6 +914,7 @@ export default function SpoonNoteModal({
     };
 
     const handleCreateToggle = () => {
+        if (refreshing) return;
         setMenuOpen(false);
         setBulkMode(false);
         setDeleteIds(new Set());
@@ -730,6 +949,7 @@ export default function SpoonNoteModal({
             setCreating(false);
             setNewName("");
             setError("");
+            triggerSaved();
         } catch (e: any) {
             const status = e?.response?.status;
             if (e?.message === "DUPLICATE_LOCAL" || status === 409) setError("중복되는 이름입니다.");
@@ -741,6 +961,7 @@ export default function SpoonNoteModal({
     const handleSave = async () => {
         if (!selectedId) return;
         await Promise.resolve(onSave(selectedId));
+        triggerSaved();
     };
     const handlePrimary = () => {
         if (creating) handleCreate();
@@ -755,7 +976,7 @@ export default function SpoonNoteModal({
     };
 
     const onDragStart = (id: string, e: React.DragEvent) => {
-        if (bulkMode) {
+        if (bulkMode || refreshing) {
             e.preventDefault();
             return;
         }
@@ -784,7 +1005,7 @@ export default function SpoonNoteModal({
     };
 
     const onDragOverRow = (overId: string, e: React.DragEvent<HTMLDivElement>) => {
-        if (bulkMode) return;
+        if (bulkMode || refreshing) return;
         if (!draggingId || draggingId === overId) return;
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";
@@ -794,7 +1015,7 @@ export default function SpoonNoteModal({
     };
 
     const onDropRow = async (overId: string, e: React.DragEvent<HTMLDivElement>) => {
-        if (bulkMode) return;
+        if (bulkMode || refreshing) return;
         e.preventDefault();
         if (!draggingId || draggingId === overId) {
             setDraggingId(null);
@@ -827,8 +1048,7 @@ export default function SpoonNoteModal({
         try {
             lastStableRef.current = prev;
             if (onReorder) await Promise.resolve(onReorder(next.map((n) => n.id)));
-            setShowSaved(true);
-            setTimeout(() => setShowSaved(false), 1200);
+            triggerSaved();
             lastStableRef.current = next;
         } catch (err) {
             console.error("[folders reorder] PATCH failed:", err);
@@ -862,6 +1082,7 @@ export default function SpoonNoteModal({
             setConfirmOpen(false);
             setBulkMode(false);
             setDeleteIds(new Set());
+            triggerSaved();
         } catch (e) {
             console.error("[bulk delete] failed:", e);
         } finally {
@@ -869,51 +1090,37 @@ export default function SpoonNoteModal({
         }
     };
 
-    // 내부 가시성 기준으로 렌더링
+    /** ===== 새로고침 상태/핸들러 (조기 return 위쪽) ===== */
+    const doRefresh = async () => {
+        if (refreshing) return;
+        setRefreshing(true);
+        try {
+            if (!onRefresh) {
+                showHint("새로고침 핸들러가 연결되지 않았어요(onRefresh).", "warn");
+                return;
+            }
+            const next = await onRefresh();
+            if (Array.isArray(next)) {
+                setList(next);
+                lastStableRef.current = next;
+                setSelectedId((prev) => (prev && next.some((n) => n.id === prev) ? prev : next[0]?.id ?? null));
+                triggerSaved(); // 3D 체크 모션
+            }
+        } catch (e) {
+            console.error("[folders refresh] failed:", e);
+            showHint("동기화 실패. 잠시 후 다시 시도해 주세요.", "warn");
+        } finally {
+            setRefreshing(false);
+        }
+    };
+    /** =================================================== */
+
+    // 내부 가시성 기준으로 렌더링 (※ 이 아래에는 훅 선언 금지)
     if (!internalOpen) return null;
 
     const isCreateInvalid = creating && (!!error || newName.trim().length === 0);
     const showArrow = !bulkMode;
-    const menuDisabled = creating || savingOrder;
-
-    const fallbackNavigateToFolder = (folderId: string) => {
-        // 라우터 핸들러(onGoToFolder)가 없을 때를 대비한 폴백
-        const inSpoon = location.pathname.startsWith("/spoon-word");
-        const to = inSpoon ? `/spoon-word/folders/${folderId}` : `/folders/${folderId}`;
-        // SPA 라우터가 못 받는 상황 대비: 하드 내비게이션
-        window.location.assign(to);
-    };
-
-    // 추가
-    const ArrowLink = styled.a`
-      margin-left: auto;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 30px;
-      height: 30px;
-      flex: 0 0 30px;
-      border-radius: 999px;
-      border: 1px solid ${TOKENS.color.line};
-      background: #f9fafb;
-      color: ${TOKENS.color.textSecondary};
-      text-decoration: none;
-      &:hover { background: #f3f4f6; }
-      &:active { transform: translateY(0.5px); }
-      &:focus-visible { outline: 2px solid ${TOKENS.color.primary}; outline-offset: 2px; }
-      @media (pointer: coarse) {
-        width: 44px;
-        height: 44px;
-        flex-basis: 44px;
-      }
-    `;
-
-    // 컴포넌트 내부 헬퍼
-    const getFolderHref = (folderId: string) => {
-        const inSpoon = window.location.pathname.startsWith("/spoon-word");
-        return inSpoon ? `/spoon-word/folders/${folderId}` : `/folders/${folderId}`;
-    };
-
+    const menuDisabled = creating || savingOrder || refreshing;
 
     const menu = (
         <MenuPanel role="menu" aria-label="전역 설정 메뉴">
@@ -997,19 +1204,37 @@ export default function SpoonNoteModal({
     const modal = (
         <Overlay role="dialog" aria-modal="true" aria-label="내 SpoonNote에 저장하기">
             <Panel>
-                <SavedBadge $show={showSaved} aria-live="polite">
-                    <span aria-hidden="true">✓</span> 저장됨
-                </SavedBadge>
+                {/* 저장 체크 토스트 (3D) */}
+                <SavedToastView show={showSaved} tick={savedTick} />
 
                 <Header ref={headerRef}>
                     <HeaderTitle>내 SpoonNote에 저장하기</HeaderTitle>
                     <HeaderRight>
-                        <span
-                            aria-live="polite"
-                            style={{ fontSize: 12, color: bulkMode ? TOKENS.color.danger : TOKENS.color.textMuted }}
-                        >
-                            {bulkMode ? `삭제 모드 · ${deleteIds.size}개 선택됨` : ""}
-                        </span>
+            <span
+                aria-live="polite"
+                style={{ fontSize: 12, color: bulkMode ? TOKENS.color.danger : TOKENS.color.textMuted }}
+            >
+              {bulkMode ? `삭제 모드 · ${deleteIds.size}개 선택됨` : ""}
+            </span>
+
+                        {/* 새로고침 버튼 */}
+                        <TipWrap data-tip>
+                            <RefreshBtn
+                                type="button"
+                                aria-label="새로고침"
+                                onClick={() => {
+                                    setMenuOpen(false);
+                                    void doRefresh();
+                                }}
+                                disabled={savingOrder || refreshing}
+                                aria-disabled={savingOrder || refreshing}
+                                title="서버와 동기화"
+                                style={{ transition: "transform 200ms", transform: refreshing ? "rotate(90deg)" : "none" }}
+                            >
+                                <RefreshIcon />
+                            </RefreshBtn>
+                            <TipBubble>{refreshing ? "동기화 중..." : "서버와 동기화"}</TipBubble>
+                        </TipWrap>
 
                         <MenuRoot>
                             <TipWrap data-tip>
@@ -1078,7 +1303,9 @@ export default function SpoonNoteModal({
 
                     <Divider />
 
-                    <List $disabled={savingOrder}>
+                    {list.length === 0 && <Notice>아직 단어장이 없어요. 상단에서 새로 만들 수 있어요.</Notice>}
+
+                    <List $disabled={savingOrder || refreshing}>
                         {list.map((nb) => {
                             const isDragging = draggingId === nb.id;
                             const isOverTop = dragOver?.id === nb.id && dragOver.edge === "top";
@@ -1098,9 +1325,7 @@ export default function SpoonNoteModal({
                                     onDrop={(e) => onDropRow(nb.id, e)}
                                     onDragEnd={onDragEnd}
                                     onClick={(e) => {
-                                        // ▶ (>) 버튼에서 preventDefault 했다면 행 클릭 무시
                                         if ((e as any).defaultPrevented) return;
-
                                         const el = e.target as HTMLElement;
                                         if (el.closest('input,button,[role="checkbox"],[role="switch"]')) return;
                                         setMenuOpen(false);
@@ -1108,7 +1333,6 @@ export default function SpoonNoteModal({
                                     }}
                                     onKeyDown={(e) => {
                                         if ((e as any).defaultPrevented) return;
-
                                         const el = e.target as HTMLElement;
                                         if (el.closest('input, button, [role="checkbox"], [role="switch"]')) return;
                                         if (e.key === "Enter" || e.key === " ") {
@@ -1130,6 +1354,7 @@ export default function SpoonNoteModal({
                                                 checked={checked}
                                                 onChange={() => handleToggle(nb.id)}
                                                 aria-label={bulkMode ? `${nb.name} 삭제 대상으로 선택` : `${nb.name} 선택`}
+                                                disabled={refreshing}
                                             />
                                             <TipBubble>{bulkMode ? "삭제 대상으로 선택" : "저장할 단어장 선택하기"}</TipBubble>
                                         </TipWrap>
@@ -1146,9 +1371,10 @@ export default function SpoonNoteModal({
                                                     e.stopPropagation();
                                                     setMenuOpen(false);
                                                     if (onGoToFolder) {
-                                                        try { void Promise.resolve(onGoToFolder(nb.id, nb.name)); } catch {}
+                                                        try {
+                                                            void Promise.resolve(onGoToFolder(nb.id, nb.name));
+                                                        } catch {}
                                                     }
-                                                    // preventDefault 안 함 → a[href] 기본 네비 작동
                                                     setInternalOpen(false);
                                                     onClose();
                                                 }}
@@ -1171,7 +1397,6 @@ export default function SpoonNoteModal({
                             <GhostBtn
                                 onClick={() => {
                                     setMenuOpen(false);
-                                    // 한 번만 눌러도 즉시 사라짐
                                     setInternalOpen(false);
                                     onClose();
                                 }}
@@ -1183,8 +1408,8 @@ export default function SpoonNoteModal({
                                     setMenuOpen(false);
                                     handlePrimary();
                                 }}
-                                aria-disabled={creating ? isCreateInvalid : !selectedId}
-                                disabled={creating ? isCreateInvalid : !selectedId}
+                                aria-disabled={(creating ? isCreateInvalid : !selectedId) || refreshing}
+                                disabled={(creating ? isCreateInvalid : !selectedId) || refreshing}
                             >
                                 {creating ? "생성하기" : "저장하기"}
                             </PrimaryBtn>
@@ -1202,8 +1427,8 @@ export default function SpoonNoteModal({
                                 onClick={() => {
                                     setConfirmOpen(true);
                                 }}
-                                disabled={deleteIds.size === 0}
-                                aria-disabled={deleteIds.size === 0}
+                                disabled={deleteIds.size === 0 || refreshing}
+                                aria-disabled={deleteIds.size === 0 || refreshing}
                             >
                                 선택 {deleteIds.size}개 삭제
                             </DangerBtn>
@@ -1275,16 +1500,14 @@ export default function SpoonNoteModal({
                                 }}
                                 aria-invalid={!!renameError}
                             />
-                            {!!renameError && (
-                                <p style={{ margin: "8px 2px 0", color: "#ef4444", fontSize: 12 }}>{renameError}</p>
-                            )}
+                            {!!renameError && <p style={{ margin: "8px 2px 0", color: "#ef4444", fontSize: 12 }}>{renameError}</p>}
                         </ConfirmBody>
                         <ConfirmFooter>
                             <GhostBtn onClick={closeRename}>닫기</GhostBtn>
                             <PrimaryBtn
                                 onClick={submitRename}
-                                disabled={!!validateRename(renameValue, renameTarget.id)}
-                                aria-disabled={!!validateRename(renameValue, renameTarget.id)}
+                                disabled={!!validateRename(renameValue, renameTarget.id) || refreshing}
+                                aria-disabled={!!validateRename(renameValue, renameTarget.id) || refreshing}
                             >
                                 저장
                             </PrimaryBtn>

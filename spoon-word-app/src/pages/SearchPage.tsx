@@ -486,6 +486,7 @@ export default function SearchPage() {
                     await deleteUserFoldersBulk(ids, "purge");
                     setNotebooks(await fetchUserFolders());
                 }}
+                onRefresh={async () => await fetchUserFolders()}
             />
         </Root>
     );
