@@ -429,10 +429,9 @@ export default function WordbookFolderPage() {
     const [titleMode, setTitleMode] = React.useState<ViewMode>("inherit");
     const [descMode, setDescMode] = React.useState<ViewMode>("inherit");
 
-    // 카드별 보기 상태
-    const [cardView, setCardView] = React.useState<
-        Record<string, "none" | "hideTitle" | "hideDesc" | "showTitle" | "showDesc">
-    >({});
+    // 카드별 보기 상태 : 카드별로 '제목(t)'과 '뜻(d)'을 각각 show/hide/undefined로 보관
+    type CardOverrides = { t?: "hide" | "show"; d?: "hide" | "show" };
+    const [cardView, setCardView] = React.useState<Record<string, CardOverrides>>({});
 
     // 카드별 암기 상태
     const [learn, setLearn] = React.useState<Record<string, "unmemorized" | "memorized">>({});
@@ -826,9 +825,10 @@ export default function WordbookFolderPage() {
     };
 
     const cycleTitleMode = () =>
-        setTitleMode((m) => (m === "inherit" ? "allHidden" : m === "allHidden" ? "allShown" : "inherit"));
+        setTitleMode((m) => (m === "allHidden" ? "inherit" : "allHidden"));
+
     const cycleDescMode = () =>
-        setDescMode((m) => (m === "inherit" ? "allHidden" : m === "allHidden" ? "allShown" : "inherit"));
+        setDescMode((m) => (m === "allHidden" ? "inherit" : "allHidden"));
 
     const handleDeleteSelected = () => {
         if (selectedTermIds.size === 0) {
@@ -876,11 +876,20 @@ export default function WordbookFolderPage() {
 
                     {/* 보기 옵션 */}
                     <Seg aria-label="보기 옵션">
-                        <SegBtn $active={titleMode !== "inherit"} onClick={cycleTitleMode}>
-                            일괄 단어 숨기기
+                        <SegBtn
+                            $active={titleMode === "allHidden"}
+                            aria-pressed={titleMode === "allHidden"}
+                            onClick={cycleTitleMode}
+                        >
+                            {titleMode === "allHidden" ? "일괄 단어 보이기" : "일괄 단어 숨기기"}
                         </SegBtn>
-                        <SegBtn $active={descMode !== "inherit"} onClick={cycleDescMode}>
-                            일괄 뜻 숨기기
+
+                        <SegBtn
+                            $active={descMode === "allHidden"}
+                            aria-pressed={descMode === "allHidden"}
+                            onClick={cycleDescMode}
+                        >
+                            {descMode === "allHidden" ? "일괄 뜻 보이기" : "일괄 뜻 숨기기"}
                         </SegBtn>
                     </Seg>
 
@@ -926,33 +935,31 @@ export default function WordbookFolderPage() {
                 <>
                     <Grid>
                         {items.map((it) => {
+                            const ov = cardView[it.uwtId] || {}; // per-card 오버라이드
+
+                            // 숨김 여부 계산(서로 간섭 없음)
+                            const titleHidden =
+                                ov.t === "hide" ? true :
+                                    ov.t === "show" ? false :
+                                        titleMode === "allHidden" ? true :
+                                            titleMode === "allShown" ? false :
+                                                false;
+                            
+                            const descHidden =
+                                ov.d === "hide" ? true :
+                                    ov.d === "show" ? false :
+                                        descMode === "allHidden" ? true :
+                                            descMode === "allShown" ? false :
+                                                false;
+
                             const isChecked = !!checked[it.uwtId];
-
-                            const perCard = cardView[it.uwtId] ?? "none";
-                            const hideTitleForCard =
-                                titleMode === "allHidden"
-                                    ? perCard !== "showTitle"
-                                    : titleMode === "allShown"
-                                        ? perCard === "hideTitle"
-                                        : perCard === "hideTitle";
-
-                            const hideDescForCard =
-                                descMode === "allHidden"
-                                    ? perCard !== "showDesc"
-                                    : descMode === "allShown"
-                                        ? perCard === "hideDesc"
-                                        : perCard === "hideDesc";
-
-                            const titleHidden = hideTitleForCard;
-                            const descHidden = hideDescForCard;
-
                             const status = learn[it.uwtId] ?? "unmemorized";
                             const done = status === "memorized";
                             const isSaving = !!saving[it.uwtId];
 
                             return (
                                 <CardWrap key={it.uwtId}>
-                                    {/* 항상 노출되는 좌측 체크(선택 토글) */}
+                                    {/* 좌측 선택 토글 */}
                                     <SelectToggle
                                         $on={isChecked}
                                         aria-label={isChecked ? "선택 해제" : "선택"}
@@ -971,7 +978,11 @@ export default function WordbookFolderPage() {
                                         disabled={isSaving}
                                         aria-busy={isSaving}
                                         aria-pressed={done}
-                                        aria-label={done ? "암기 완료로 표시됨, 클릭하면 미암기로 전환" : "미암기로 표시됨, 클릭하면 암기 완료로 전환"}
+                                        aria-label={
+                                            done
+                                                ? "암기 완료로 표시됨, 클릭하면 미암기로 전환"
+                                                : "미암기로 표시됨, 클릭하면 암기 완료로 전환"
+                                        }
                                         onClick={async (e) => {
                                             e.stopPropagation();
                                             if (isSaving) return;
@@ -1025,20 +1036,19 @@ export default function WordbookFolderPage() {
                                             <LearnBtn
                                                 $active={titleHidden}
                                                 aria-pressed={titleHidden}
-                                                aria-label={titleHidden ? "단어가 숨겨져 있음, 클릭하면 보이기" : "단어가 보이는 중, 클릭하면 숨기기"}
                                                 onClick={() => {
-                                                    setCardView((prev) => {
-                                                        const cur = prev[it.uwtId] ?? "none";
+                                                    setCardView(prev => {
+                                                        const cur = prev[it.uwtId] || {};
                                                         if (titleMode === "allHidden") {
-                                                            // 전체 숨김 중 → 이 카드만 보이게(예외)
-                                                            return { ...prev, [it.uwtId]: cur === "showTitle" ? "none" : "showTitle" };
-                                                        } else if (titleMode === "allShown") {
-                                                            // 전체 보임 중 → 이 카드만 숨기기
-                                                            return { ...prev, [it.uwtId]: cur === "hideTitle" ? "none" : "hideTitle" };
-                                                        } else {
-                                                            // 개별 모드 → 토글
-                                                            return { ...prev, [it.uwtId]: cur === "hideTitle" ? "none" : "hideTitle" };
+                                                            const nextT = cur.t === "show" ? undefined : "show";
+                                                            return { ...prev, [it.uwtId]: { ...cur, t: nextT } };
                                                         }
+                                                        if (titleMode === "allShown") {
+                                                            const nextT = cur.t === "hide" ? undefined : "hide";
+                                                            return { ...prev, [it.uwtId]: { ...cur, t: nextT } };
+                                                        }
+                                                        const nextT = cur.t === "hide" ? undefined : "hide";
+                                                        return { ...prev, [it.uwtId]: { ...cur, t: nextT } };
                                                     });
                                                 }}
                                             >
@@ -1049,20 +1059,19 @@ export default function WordbookFolderPage() {
                                             <LearnBtn
                                                 $active={descHidden}
                                                 aria-pressed={descHidden}
-                                                aria-label={descHidden ? "뜻이 숨겨져 있음, 클릭하면 보이기" : "뜻이 보이는 중, 클릭하면 숨기기"}
                                                 onClick={() => {
-                                                    setCardView((prev) => {
-                                                        const cur = prev[it.uwtId] ?? "none";
+                                                    setCardView(prev => {
+                                                        const cur = prev[it.uwtId] || {};
                                                         if (descMode === "allHidden") {
-                                                            // 전체 숨김 중 → 이 카드만 뜻 보이기(예외)
-                                                            return { ...prev, [it.uwtId]: cur === "showDesc" ? "none" : "showDesc" };
-                                                        } else if (descMode === "allShown") {
-                                                            // 전체 보임 중 → 이 카드만 뜻 숨기기
-                                                            return { ...prev, [it.uwtId]: cur === "hideDesc" ? "none" : "hideDesc" };
-                                                        } else {
-                                                            // 개별 모드 → 토글
-                                                            return { ...prev, [it.uwtId]: cur === "hideDesc" ? "none" : "hideDesc" };
+                                                            const nextD = cur.d === "show" ? undefined : "show";
+                                                            return { ...prev, [it.uwtId]: { ...cur, d: nextD } };
                                                         }
+                                                        if (descMode === "allShown") {
+                                                            const nextD = cur.d === "hide" ? undefined : "hide";
+                                                            return { ...prev, [it.uwtId]: { ...cur, d: nextD } };
+                                                        }
+                                                        const nextD = cur.d === "hide" ? undefined : "hide";
+                                                        return { ...prev, [it.uwtId]: { ...cur, d: nextD } };
                                                     });
                                                 }}
                                             >
