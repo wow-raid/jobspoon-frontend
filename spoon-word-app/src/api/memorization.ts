@@ -8,7 +8,7 @@ export async function patchTermMemorization(
     status: MemorizationStatus
 ) {
     return http.patch(
-        `/api/me/terms/${termId}/memorization`,
+        `/me/terms/${termId}/memorization`,
         { status },
         { headers: { ...authHeader() } }
     );
@@ -19,7 +19,7 @@ export async function patchUserTermMemorization(
     status: MemorizationStatus
 ) {
     return http.patch(
-        `/api/me/terms/${userTermId}/memorization`,
+        `/me/terms/${userTermId}/memorization`,
         { status },
         { headers: { ...authHeader() } }
     );
@@ -41,7 +41,7 @@ export async function setMemorization(opts: {
 export async function fetchMemorizationStatuses(termIds: Array<number | string>) {
     const ids = termIds.join(",");
     const { data } = await http.get<Record<string, MemorizationStatus>>(
-        "/api/me/terms/memorization",
+        "/me/terms/memorization",
         {
             params: { ids },
             headers: { ...authHeader() },

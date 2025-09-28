@@ -9,7 +9,7 @@ export type RenameFolderResponse = {
 
 export async function renameUserFolder(folderId: string | number, folderName: string): Promise<RenameFolderResponse> {
     const { data } = await http.patch<RenameFolderResponse>(
-        `/api/me/folders/${Number(folderId)}`,
+        `/me/folders/${Number(folderId)}`,
         { folderName },
         { headers: { ...authHeader() } }
     );
@@ -46,7 +46,7 @@ export async function deleteUserFoldersBulk(
     // axios는 DELETE + body 지원 (http.request 사용)
     const { data } = await http.request({
         method: "DELETE",
-        url: "/api/me/folders:bulk",
+        url: "/me/folders:bulk",
         headers: { ...authHeader() },
         data: body,
     });

@@ -11,6 +11,7 @@ import { moveFolderTerms } from "../api/userWordbookTerms";
 import { renameUserFolder, deleteUserFolder, deleteUserFoldersBulk } from "../api/folder";
 import { generatePdfByTermIds } from "../api/ebook";
 import { saveBlob } from "../utils/download";
+import {sanitizeFilename} from "../utils/cdFilename";
 
 /** 서버 응답에서 안전하게 뽑아둘 필드들 */
 type TermRow = any;
@@ -172,8 +173,8 @@ const HideTermCardAdd = styled.div<{
     [aria-label="내 단어장에 추가"] { display: none !important; }
 
     ${({ $hideTitle }) =>
-            $hideTitle &&
-            `
+    $hideTitle &&
+    `
     article h3[id^="term-"]{
       position: relative;
       color: transparent !important;
@@ -194,8 +195,8 @@ const HideTermCardAdd = styled.div<{
   `}
 
     ${({ $hideDesc }) =>
-            $hideDesc &&
-            `
+    $hideDesc &&
+    `
     article > div:nth-of-type(2) {
       position: relative;
     }
@@ -436,7 +437,7 @@ export default function WordbookFolderPage() {
         if (!folderId) return;
         setLoading(true); setError(null);
         try {
-            const res = await http.get(`/api/folders/${folderId}/terms`, {
+            const res = await http.get(`/folders/${folderId}/terms`, {
                 params: { page: p+1, perPage: 20, sort: "createdAt,DESC" },
                 headers: { ...authHeader() },
             });
@@ -462,6 +463,9 @@ export default function WordbookFolderPage() {
             setLoading(false);
         }
     }, [folderId, navigate]);
+
+    const itemsRef = React.useRef<TermItem[]>([]);
+    React.useEffect(() => { itemsRef.current = items; }, [items]);
 
     // 초기 로드
     React.useEffect(() => {
@@ -538,6 +542,8 @@ export default function WordbookFolderPage() {
 
         if (termIds.length === 0) { setMoveOpen(false); return; }
 
+        const movedTargets = new Set(termIds.map(String));
+
         try {
             const res = await moveFolderTerms(Number(folderId), {
                 targetFolderId: Number(destFolderId),
@@ -555,11 +561,26 @@ export default function WordbookFolderPage() {
             setSelectMode(false);
         } catch (err: any) {
             const s = err?.response?.status;
-            if (s === 401) alert("로그인이 필요합니다.");
-            else if (s === 403) alert("해당 폴더 접근 권한이 없습니다.");
-            else if (s === 404) alert("대상/소스 폴더를 찾을 수 없습니다.");
-            else alert("이동 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.");
-            console.error("[moveFolderTerms] failed:", err);
+
+            // 500이어도 실제 이동이 반영됐는지 확인
+            console.warn("[moveFolderTerms] error, will verify by refetch:", err);
+            await fetchPage(0);
+
+            // 최신 상태는 itemsRef.current 로 판단
+            const stillExists = (it: typeof items[number]) => movedTargets.has(String(it.termId));
+            const movedActually = itemsRef.current.every(it => !stillExists(it));
+
+            if (!movedActually) {
+                const s = err?.response?.status;
+                if (s === 401) alert("로그인이 필요합니다.");
+                else if (s === 403) alert("해당 폴더 접근이 없습니다.");
+                else if (s === 404) alert("대상/소스 폴더를 찾을 수 없습니다.");
+                else alert("이동 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.");
+            } else {
+                setChecked({});
+                setSelectMode(false);
+            }
+
         } finally {
             setMoveOpen(false);
         }
@@ -599,8 +620,9 @@ export default function WordbookFolderPage() {
                 // 필요시 토스트 경고 표시 가능
             }
 
+            const preferred = meta.cdFilename || meta.ebookFilename || `jobspoon_terms_${Date.now()}.pdf`;
             // 저장: CD 파일명 우선, 없으면 Ebook-Filename, 없으면 폴백
-            const finalName = meta.cdFilename || meta.ebookFilename || `jobspoon_terms_${Date.now()}.pdf`;
+            const finalName = sanitizeFilename(preferred, `jobspoon_terms_${Date.now()}.pdf`);
             saveBlob(blob, finalName);
 
             // 성공 로그 (필요시 토스트로)
@@ -830,14 +852,20 @@ export default function WordbookFolderPage() {
                 notebooks={notebooks}
                 onClose={() => setMoveOpen(false)}
                 onCreate={async (name) => {
-                    const { data } = await http.post("/api/me/folders", { folderName: name }, { headers: { ...authHeader() } });
+                    const { data } = await http.post("/me/folders", { folderName: name }, { headers: { ...authHeader() } });
                     const newId = String(data.id);
                     const newName = data.folderName ?? name;
                     setNotebooks((prev) => [{ id: newId, name: newName }, ...prev]);
                     return newId;
                 }}
                 onReorder={async (orderedIds) => {
-                    try { await patchReorderFolders(orderedIds); } catch (e) { console.warn("[folders reorder] 실패", e); }
+                    try {
+                        await patchReorderFolders(orderedIds);
+                        const refreshed = await fetchUserFolders();
+                        setNotebooks(refreshed);
+                    } catch (e) {
+                        console.warn("[folders reorder] 실패", e);
+                    }
                 }}
                 onSave={handleConfirmMove}
                 onGoToFolder={(fid, name) => {

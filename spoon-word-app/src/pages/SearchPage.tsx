@@ -1,15 +1,14 @@
 import React from "react";
 import styled from "styled-components";
 import { useSearchParams, useNavigationType, useNavigate } from "react-router-dom";
-import axiosInstance from "../api/axiosInstance";
+import http from "../utils/http";
 import { fetchTermsByTag } from "../api/termApi";   // 태그 전용 API
 import TermCardWithTagsLazy from "../components/TermCardWithTagsLazy";
 
 // 단어장 모달 & 폴더 관련 API
 import SpoonNoteModal from "../components/SpoonNoteModal";
 import { fetchUserFolders, patchReorderFolders } from "../api/userWordbook";
-import {deleteUserFolder, deleteUserFoldersBulk, renameUserFolder} from "../api/folder";
-import http, { authHeader } from "../utils/http";
+import { deleteUserFolder, deleteUserFoldersBulk, renameUserFolder} from "../api/folder";
 
 /** 타입 정의 */
 type Term = { id: number; title: string; description: string; tags?: string[] };
@@ -76,17 +75,17 @@ const InfoStrongNum = styled.span`
 `;
 
 const Chip = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: ${TOKENS.space(6)};
-  border-radius: ${TOKENS.radius}px;
-  background: ${TOKENS.color.chipBg};
-  border: 1px solid ${TOKENS.color.chipBorder};
-  padding: ${TOKENS.space(4)} ${TOKENS.space(8)};
-  font-size: ${TOKENS.font.small};
-  color: ${TOKENS.color.textBlue};
-  font-weight: 700;
-  flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: ${TOKENS.space(6)};
+    border-radius: ${TOKENS.radius}px;
+    background: ${TOKENS.color.chipBg};
+    border: 1px solid ${TOKENS.color.chipBorder};
+    padding: ${TOKENS.space(4)} ${TOKENS.space(8)};
+    font-size: ${TOKENS.font.small};
+    color: ${TOKENS.color.textBlue};
+    font-weight: 700;
+    flex: 0 0 auto;
 `;
 
 const Tail = styled.span` flex: 0 0 auto; `;
@@ -101,23 +100,23 @@ type PaginationProps = {
     onChange: (nextPageZeroBased: number) => void;
 };
 const PaginationNav = styled.nav`
-  margin-top: ${TOKENS.space(16)};
-  display: flex; align-items: center; justify-content: center;
-  gap: ${TOKENS.space(8)}; user-select: none;
+    margin-top: ${TOKENS.space(16)};
+    display: flex; align-items: center; justify-content: center;
+    gap: ${TOKENS.space(8)}; user-select: none;
 `;
 const PageNumBtn = styled.button<{ $active: boolean }>`
-  min-width: 34px; height: 34px; padding: 0 10px; border-radius: 999px;
-  border: 1px solid ${({ $active }) => ($active ? TOKENS.color.textBlue : TOKENS.color.border)};
-  background: ${({ $active }) => ($active ? TOKENS.color.textBlue : "#fff")};
-  color: ${({ $active }) => ($active ? "#fff" : TOKENS.color.text)};
-  font-weight: ${({ $active }) => ($active ? 700 : 600)};
-  cursor: pointer;
+    min-width: 34px; height: 34px; padding: 0 10px; border-radius: 999px;
+    border: 1px solid ${({ $active }) => ($active ? TOKENS.color.textBlue : TOKENS.color.border)};
+    background: ${({ $active }) => ($active ? TOKENS.color.textBlue : "#fff")};
+    color: ${({ $active }) => ($active ? "#fff" : TOKENS.color.text)};
+    font-weight: ${({ $active }) => ($active ? 700 : 600)};
+    cursor: pointer;
 `;
 const NavBtn = styled.button<{ $disabled: boolean }>`
-  width: 34px; height: 34px; border-radius: 999px; border: 1px solid ${TOKENS.color.border};
-  background: #fff; color: ${({ $disabled }) => ($disabled ? "#c7c7c7" : TOKENS.color.text)};
-  cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "pointer")};
-  display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: 999px; border: 1px solid ${TOKENS.color.border};
+    background: #fff; color: ${({ $disabled }) => ($disabled ? "#c7c7c7" : TOKENS.color.text)};
+    cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "pointer")};
+    display: inline-flex; align-items: center; justify-content: center;
 `;
 
 const Pagination: React.FC<PaginationProps> = ({ page, size, total, onChange }) => {
@@ -232,7 +231,7 @@ export default function SearchPage() {
         (async () => {
             try {
                 let items: Term[] = [];
-                let totalNum = 0;
+                let nextTotalNum = total;     // 기본은 기존 total 유지(응답이 total을 안 줄 수도 있으니)
 
                 if (tag) {
                     // 태그 검색
@@ -244,11 +243,12 @@ export default function SearchPage() {
                         description: it.description ?? "",
                         tags: uniqTags(it.tags ?? []),
                     }));
-                    totalNum = (res as any).totalItems ?? items.length;
+                    const t = (res as any).totalItems;
+                    if (typeof t === "number") nextTotalNum = t;
                 } else {
                     // 일반/카테고리/접두 검색
-                    const res = await axiosInstance.get<ApiResponse>("/terms/search", {
-                        params: { q, page, size, initial, alpha, symbol, catPath }, // <= catPath 전달
+                    const res = await http.get<ApiResponse>("/terms/search", {
+                        params: { q, page, size, initial, alpha, symbol, catPath }, // <= http 인터셉터가 빈 값 제거
                         signal: ac.signal,
                     });
                     const rawItems = res.data.items ?? res.data.content ?? [];
@@ -258,20 +258,27 @@ export default function SearchPage() {
                         description: it.description ?? "",
                         tags: extractTags(it),
                     }));
-                    totalNum = res.data.total ?? res.data.totalElements ?? items.length;
+
+                    const hasTotalField =
+                        typeof (res.data as any).total === "number" ||
+                        typeof (res.data as any).totalElements === "number";
+
+                    if (hasTotalField) {
+                        nextTotalNum = (res.data as any).total ?? (res.data as any).totalElements ?? nextTotalNum;
+                    }
                 }
 
                 // 태그 검색 결과 0 → not-found 라우팅
-                if (tag && totalNum === 0) {
+                if (tag && nextTotalNum === 0) {
                     const spNF = new URLSearchParams();
                     spNF.set("tag", tag);
                     navigate({ pathname: "../terms/not-found", search: `?${spNF.toString()}` }, { replace: true });
                     return;
                 }
 
-                // 페이지 범위 자동 보정
-                const totalPages = Math.max(1, Math.ceil((totalNum || 0) / (size || 1)));
-                if (page > totalPages - 1 && totalNum > 0) {
+                // 페이지 범위 자동 보정 (총합이 확인될 때만)
+                const totalPages = Math.max(1, Math.ceil((nextTotalNum || 0) / (size || 1)));
+                if (page > totalPages - 1 && nextTotalNum > 0) {
                     const sp = new URLSearchParams();
                     if (q) sp.set("q", q);
                     if (tag) sp.set("tag", tag);
@@ -281,16 +288,23 @@ export default function SearchPage() {
                     if (catPath) sp.set("catPath", catPath);       // <= 보존
                     sp.set("page", String(totalPages - 1));
                     sp.set("size", String(size || 20));
-                    navigate({ pathname: "search", search: `?${sp.toString()}` }, { replace: true });
+                    navigate({ search: `?${sp.toString()}` }, { replace: true });
                     return;
                 }
 
                 setResults(items);
-                setTotal(totalNum);
-                writeCache(cacheKey, { q, items, total: totalNum, scrollY: 0 });
+                setTotal(nextTotalNum);
+                writeCache(cacheKey, { q, items, total: nextTotalNum, scrollY: 0 });
             } catch (e: any) {
                 if (e?.name === "CanceledError") return;
-                setError(e?.message || "검색 중 오류가 발생했습니다.");
+                const status = e?.response?.status;
+                const ebookErr = e?.response?.headers?.["ebook-error"];
+                const serverMsg = e?.response?.data?.message || e?.message;
+                setError(
+                    status
+                        ? `오류(${status}) ${serverMsg || ""}${ebookErr ? ` [${ebookErr}]` : ""}`
+                        : (serverMsg || "검색 중 오류가 발생했습니다.")
+                );
             } finally {
                 setLoading(false);
             }
@@ -298,7 +312,7 @@ export default function SearchPage() {
 
         return () => ac.abort();
         // 중요한 의존성: catId/catPath까지 포함
-    }, [q, tag, page, size, initial, alpha, symbol, catId, catPath, navType, cacheKey, navigate]);
+    }, [q, tag, page, size, initial, alpha, symbol, catId, catPath, navType, cacheKey, navigate, total]);
 
     /** 태그 배열 추출 유틸 (응답 스키마 방어) */
     const extractTags = (it: ApiItem): string[] | undefined => {
@@ -325,7 +339,8 @@ export default function SearchPage() {
         if (catPath) sp.set("catPath", catPath);     // <= 보존
         sp.set("page", String(nextZeroBased));
         sp.set("size", String(size || 20));
-        navigate({ pathname: "search", search: `?${sp.toString()}` });
+        // 현재 경로 유지 + 쿼리만 변경 (상대 경로 이슈 회피)
+        navigate({ search: `?${sp.toString()}` });
     };
 
     /** 카드 내 태그 클릭 → 태그 검색으로 전환 (기존 조건은 리셋) */
@@ -334,7 +349,7 @@ export default function SearchPage() {
         sp.set("tag", t);
         sp.set("page", "0");
         sp.set("size", String(size || 20));
-        navigate({ pathname: "search", search: `?${sp.toString()}` });
+        navigate({ search: `?${sp.toString()}`});
     };
 
     /** ========== SpoonNoteModal 연동 ========== */
@@ -371,7 +386,7 @@ export default function SearchPage() {
 
     // 폴더 생성
     const handleCreateFolder = React.useCallback(async (name: string) => {
-        const { data } = await http.post("/api/me/folders", { folderName: name }, { headers: { ...authHeader() } });
+        const { data } = await http.post("/me/folders", { folderName: name });
         const newId = String(data.id);
         const newName = data.folderName ?? name;
         setNotebooks(prev => [{ id: newId, name: newName }, ...prev]);
@@ -387,7 +402,7 @@ export default function SearchPage() {
     const handleSaveToNotebook = React.useCallback(
         async (notebookId: string) => {
             if (!selectedTermId) return;
-            // TODO: 실제 attach API 호출로 교체하세요.
+            // TODO: 실제 attach API 호출로 교체
             // await attachTermToFolder({ folderId: notebookId, termId: selectedTermId });
             console.log("add to wordbook:", selectedTermId, "-> folder:", notebookId);
             setMoveOpen(false);
@@ -438,8 +453,12 @@ export default function SearchPage() {
                             </ListItem>
                         ))}
                     </List>
-                    <Pagination page={page} size={size} total={total} onChange={handlePageChange} />
                 </>
+            )}
+
+            {/* total이 살아있으면, 빈 페이지라도 네비게이션 유지 */}
+            {!loading && !error && (q || tag || initial || alpha || symbol || catId) && total > 0 && (
+                <Pagination page={page} size={size} total={total} onChange={handlePageChange} />
             )}
 
             {!loading && !error && (q || tag || initial || alpha || symbol || catId) && results.length === 0 && (
@@ -459,7 +478,7 @@ export default function SearchPage() {
                     await renameUserFolder(folderId, newName);
                     setNotebooks(prev => prev.map(n => n.id === folderId ? ({ ...n, name: newName }) : n));
                 }}
-                onRequestDelete={async (fid, name) => {
+                onRequestDelete={async (fid) => {
                     await deleteUserFolder(fid, "purge");
                     setNotebooks(await fetchUserFolders());
                 }}

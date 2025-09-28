@@ -3,7 +3,7 @@ import http, { authHeader } from "../utils/http";
 type FolderDTO = { id: number | string; folderName?: string; name?: string; title?: string; sortOrder?: number };
 
 export async function fetchUserFolders(): Promise<Array<{ id: string; name: string }>> {
-    const res = await http.get("/api/me/folders", { headers: { ...authHeader() } });
+    const res = await http.get("/me/folders", { headers: { ...authHeader() } });
     const data = res?.data;
 
     const toArray = (d: any): FolderDTO[] => {
@@ -23,5 +23,5 @@ export async function fetchUserFolders(): Promise<Array<{ id: string; name: stri
 
 export async function patchReorderFolders(orderedIds: Array<string | number>) {
     const ids = orderedIds.map(Number).filter(Number.isFinite);
-    await http.patch("/api/me/folders:reorder", { ids }, { headers: { ...authHeader() } });
+    await http.patch("/me/folders:reorder", { ids }, { headers: { ...authHeader() } });
 }

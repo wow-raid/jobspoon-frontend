@@ -1,17 +1,28 @@
-import axios from 'axios';
+import axios from "axios";
 
 const axiosInstance = axios.create({
-    // 백엔드 서버 주소
-    baseURL: 'http://localhost:8080',
+    baseURL: "http://localhost:8080",
+    withCredentials: true,
 });
 
+function pruneParams(obj: Record<string, any>) {
+    const out: Record<string, any> = {};
+    Object.entries(obj).forEach(([k, v]) => {
+        if (v === undefined || v === null) return;
+        if (typeof v === "string" && v.trim() === "") return; // 빈 문자열 제거
+        out[k] = v;
+    });
+    return out;
+}
+
 axiosInstance.interceptors.request.use((config) => {
-    const token = localStorage.getItem("userToken");
-    console.log("userToken:" + token)
-    if(token) {
-        config.headers.Authorization = `Bearer ${token}`;
+    if (config.headers && "Authorization" in config.headers) {
+        delete (config.headers as any).Authorization;
     }
-    return config
+    if (config.params) {
+        config.params = pruneParams(config.params);
+    }
+    return config;
 });
 
 export default axiosInstance;
