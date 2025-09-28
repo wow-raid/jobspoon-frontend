@@ -10,8 +10,9 @@ type Props = {
     onSearch: (term: string) => void;
 };
 
+/** 탐색 캡슐 톤(#4F76F1 → #3E63E0)에 맞춘 토큰 */
 const TOKENS = {
-    radius: 10,
+    radius: 12,
     padX: 20,
     padY: 16,
     btnPadX: 16,
@@ -21,17 +22,24 @@ const TOKENS = {
         text: "#111827",
         placeholder: "#9CA3AF",
         bg: "#ffffff",
-        ring: "#e5e7eb",
-        ringFocus: "#3b82f6",
-        btnBg: "#2563eb",
-        btnBgHover: "#1d4ed8",
-        btnText: "#ffffff",
         border: "#e5e7eb",
+        ring: "#e5e7eb",
+        /** 포커스/브랜드 컬러 */
+        primary: "#4F76F1",
+        primaryStrong: "#3E63E0",
+        ringFocus: "#4F76F1",
+        /** 버튼 톤: 캡슐과 동일 그라데이션 */
+        btnGradient: "linear-gradient(135deg, #4F76F1 0%, #3E63E0 100%)",
+        btnGradientHover: "linear-gradient(135deg, #557CF3 0%, #4068E3 100%)",
+        btnText: "#ffffff",
     },
     z: { popup: 20 },
     shadow: {
         sm: "0 1px 2px rgba(0,0,0,0.06)",
-        xl: "0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)",
+        xl: "0 10px 15px -3px rgba(0,0,0,0.10), 0 4px 6px -2px rgba(0,0,0,0.05)",
+        /** 캡슐 하이라이트 느낌 */
+        innerHighlight: "inset 0 1px 0 rgba(255,255,255,0.25)",
+        focusRing: "0 0 0 3px rgba(79,118,241,0.35)",
     },
 };
 
@@ -80,21 +88,28 @@ const SearchBtn = styled.button`
     align-items: center;
     justify-content: center;
     border: none;
-    border-radius: 10px;
+    border-radius: 999px;
     padding: ${TOKENS.btnPadY}px ${TOKENS.btnPadX}px;
     font-size: 14px;
-    font-weight: 600;
-    background: ${TOKENS.colors.btnBg};
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    background: ${TOKENS.colors.btnGradient};
     color: ${TOKENS.colors.btnText};
     cursor: pointer;
-    transition: background-color 120ms ease, transform 40ms ease;
+    transition: filter 120ms ease, transform 40ms ease;
     -webkit-tap-highlight-color: transparent;
+    box-shadow: ${TOKENS.shadow.innerHighlight};
 
     &:hover {
-        background: ${TOKENS.colors.btnBgHover};
+        background: ${TOKENS.colors.btnGradientHover};
+        filter: brightness(0.99);
     }
     &:active {
         transform: translateY(-50%) scale(0.98);
+    }
+    &:focus-visible {
+        outline: none;
+        box-shadow: ${TOKENS.shadow.innerHighlight}, ${TOKENS.shadow.focusRing};
     }
 `;
 
@@ -163,7 +178,7 @@ const SearchBar: React.FC<Props> = ({ value, onChange, onSearch }) => {
     const filtered = useMemo(() => recent, [recent]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (isComposing || e.nativeEvent?.isComposing) return; // IME 이중 가드
+        if (isComposing || (e.nativeEvent as any)?.isComposing) return; // IME 이중 가드
 
         if (e.key === "Enter") {
             e.preventDefault();
