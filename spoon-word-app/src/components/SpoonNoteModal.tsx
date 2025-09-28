@@ -92,7 +92,6 @@ const Body = styled.div`
 `;
 
 const List = styled.div<{ $disabled?: boolean }>`
-    pointer-events: ${({ $disabled }) => ($disabled ? "none" : "auto")};
     opacity: ${({ $disabled }) => ($disabled ? 0.6 : 1)};
 `;
 
@@ -777,7 +776,7 @@ export default function SpoonNoteModal({
 
     const onRowDragStart = (id: string, e: React.DragEvent<HTMLDivElement>) => {
         const target = e.target as HTMLElement;
-        if (target.closest('input[type="checkbox"]')) {
+        if (target.closest('button, a, input, [role="checkbox"], [role="switch"], [data-testid="go-to-folder"]')) {
             e.preventDefault();
             return;
         }
@@ -876,6 +875,45 @@ export default function SpoonNoteModal({
     const isCreateInvalid = creating && (!!error || newName.trim().length === 0);
     const showArrow = !bulkMode;
     const menuDisabled = creating || savingOrder;
+
+    const fallbackNavigateToFolder = (folderId: string) => {
+        // 라우터 핸들러(onGoToFolder)가 없을 때를 대비한 폴백
+        const inSpoon = location.pathname.startsWith("/spoon-word");
+        const to = inSpoon ? `/spoon-word/folders/${folderId}` : `/folders/${folderId}`;
+        // SPA 라우터가 못 받는 상황 대비: 하드 내비게이션
+        window.location.assign(to);
+    };
+
+    // 추가
+    const ArrowLink = styled.a`
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      flex: 0 0 30px;
+      border-radius: 999px;
+      border: 1px solid ${TOKENS.color.line};
+      background: #f9fafb;
+      color: ${TOKENS.color.textSecondary};
+      text-decoration: none;
+      &:hover { background: #f3f4f6; }
+      &:active { transform: translateY(0.5px); }
+      &:focus-visible { outline: 2px solid ${TOKENS.color.primary}; outline-offset: 2px; }
+      @media (pointer: coarse) {
+        width: 44px;
+        height: 44px;
+        flex-basis: 44px;
+      }
+    `;
+
+    // 컴포넌트 내부 헬퍼
+    const getFolderHref = (folderId: string) => {
+        const inSpoon = window.location.pathname.startsWith("/spoon-word");
+        return inSpoon ? `/spoon-word/folders/${folderId}` : `/folders/${folderId}`;
+    };
+
 
     const menu = (
         <MenuPanel role="menu" aria-label="전역 설정 메뉴">
@@ -993,7 +1031,7 @@ export default function SpoonNoteModal({
                         <Row
                             role="button"
                             tabIndex={0}
-                            draggable={!savingOrder && !bulkMode}
+                            draggable={false}
                             data-block-tips={savingOrder || menuOpen || bulkMode}
                             onClick={() => {
                                 setMenuOpen(false);
@@ -1053,19 +1091,24 @@ export default function SpoonNoteModal({
                                     key={nb.id}
                                     role="button"
                                     tabIndex={0}
-                                    draggable={!savingOrder && !bulkMode}
+                                    draggable={false}
                                     data-block-tips={isDragging || savingOrder || menuOpen || bulkMode}
                                     onDragStart={(e) => onRowDragStart(nb.id, e)}
                                     onDragOver={(e) => onDragOverRow(nb.id, e)}
                                     onDrop={(e) => onDropRow(nb.id, e)}
                                     onDragEnd={onDragEnd}
                                     onClick={(e) => {
+                                        // ▶ (>) 버튼에서 preventDefault 했다면 행 클릭 무시
+                                        if ((e as any).defaultPrevented) return;
+
                                         const el = e.target as HTMLElement;
                                         if (el.closest('input,button,[role="checkbox"],[role="switch"]')) return;
                                         setMenuOpen(false);
                                         handleToggle(nb.id);
                                     }}
                                     onKeyDown={(e) => {
+                                        if ((e as any).defaultPrevented) return;
+
                                         const el = e.target as HTMLElement;
                                         if (el.closest('input, button, [role="checkbox"], [role="switch"]')) return;
                                         if (e.key === "Enter" || e.key === " ") {
@@ -1096,20 +1139,23 @@ export default function SpoonNoteModal({
 
                                     {showArrow && (
                                         <TipWrap data-tip>
-                                            <ArrowBtn
-                                                type="button"
+                                            <ArrowLink
+                                                href={getFolderHref(nb.id)}
                                                 aria-label={`${nb.name} 폴더로 이동`}
-                                                draggable={false}
-                                                onMouseDown={(e) => e.stopPropagation()}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     setMenuOpen(false);
-                                                    onGoToFolder?.(nb.id, nb.name);
+                                                    if (onGoToFolder) {
+                                                        try { void Promise.resolve(onGoToFolder(nb.id, nb.name)); } catch {}
+                                                    }
+                                                    // preventDefault 안 함 → a[href] 기본 네비 작동
+                                                    setInternalOpen(false);
+                                                    onClose();
                                                 }}
                                                 data-testid="go-to-folder"
                                             >
                                                 <ChevronIcon />
-                                            </ArrowBtn>
+                                            </ArrowLink>
                                             <TipBubble>해당 단어장으로 이동하기</TipBubble>
                                         </TipWrap>
                                     )}
