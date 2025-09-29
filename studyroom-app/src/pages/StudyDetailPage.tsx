@@ -31,6 +31,20 @@ const ActionButton = styled.button`
   }
 `;
 
+const ApplyButton = styled(ActionButton)`
+  background-color: ${({ theme }) => theme.accent ?? theme.primary};
+  color: #fff;
+  &:hover:not(:disabled) { 
+    background-color: ${({ theme }) => theme.accentHover ?? theme.primaryHover};
+  }
+`;
+
+const EditButton = styled(ActionButton)`
+  background-color: #4B5563; /* 중립적인 회색 계열 */
+  color: #fff;
+  &:hover:not(:disabled) { background-color: #6B7280; }
+`;
+
 const PendingButton = styled(ActionButton)`
   background-color: #f59e0b; /* 주황색 계열 */
   color: #fff;
@@ -62,8 +76,11 @@ const CancelButton = styled(ActionButton)`
 `;
 
 const ButtonWrapper = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
 `;
-
 
 const StudyDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -149,7 +166,14 @@ const StudyDetailPage: React.FC = () => {
     // ✅ 5. 상태에 따라 다른 버튼을 보여주는 렌더링 함수
     const renderActionButton = () => {
         if (isOwner) {
-            return <ApplyBtn onClick={() => setIsEditModalOpen(true)}>정보 수정하기</ApplyBtn>;
+            return (
+                <ButtonWrapper>
+                    <ApprovedButton onClick={() => navigate(`/studies/joined-study/${study.id}`)}>
+                        모임으로 이동
+                    </ApprovedButton>
+                    <EditButton onClick={() => setIsEditModalOpen(true)}>정보 수정하기</EditButton>
+                </ButtonWrapper>
+            );
         }
 
         if (study.status === 'COMPLETED') {
@@ -182,7 +206,7 @@ const StudyDetailPage: React.FC = () => {
 
             case 'NOT_APPLIED':
             default:
-                return <ApplyBtn onClick={() => setIsApplyModalOpen(true)}>참가 신청하기</ApplyBtn>;
+                return <ApplyButton onClick={() => setIsApplyModalOpen(true)}>참가 신청하기</ApplyButton>;
         }
     };
 

@@ -24,10 +24,10 @@ interface StudyRoomContext {
 }
 
 const INITIAL_LINKS: Channel[] = [
-    { name: 'Kakao', url: 'https://open.kakao.com/o/', icon: kakaoLogo },
-    { name: 'Google', url: 'https://meet.google.com/', icon: googleLogo },
+    { name: 'Kakao', url: '', icon: kakaoLogo },
+    { name: 'Google', url: '', icon: googleLogo },
     { name: 'Zoom', url: '', icon: zoomLogo },
-    { name: 'Discord', url: 'https://discord.gg/', icon: discordLogo },
+    { name: 'Discord', url: '', icon: discordLogo },
     { name: 'Naver', url: '', icon: naverLogo },
 ];
 
@@ -135,15 +135,7 @@ const LinkBtn = styled.a`
   ${channelButtonBase}
 `;
 
-const DisabledBtn = styled.div`
-    ${channelButtonBase}
-    opacity 0.4;
-    cursor: not-allowed;
 
-    &:hover {
-        background-color: ${({ theme }) => theme.surfaceHover};
-    }
-`;
 
 const Icon = styled.img`
   width: 40px;
@@ -153,6 +145,26 @@ const Icon = styled.img`
 
 const Name = styled.span`
   font-size: 14px;
+`;
+
+const DisabledBtn = styled.div`
+    ${channelButtonBase}
+    cursor not-allowed;
+
+    /* ✅ [수정] 자식 Icon 컴포넌트에 흑백 필터를 적용합니다. */
+    & ${Icon} {
+        filter: grayscale(100%);
+        opacity: 0.6;
+    }
+
+    /* ✅ [수정] 전체 버튼을 흐리게 하는 대신, 이름만 흐리게 처리 */
+    & ${Name} {
+        opacity: 0.5;
+    }
+
+    &:hover {
+        background-color: ${({ theme }) => theme.surfaceHover};
+    }
 `;
 
 const EditButton = styled.button`
