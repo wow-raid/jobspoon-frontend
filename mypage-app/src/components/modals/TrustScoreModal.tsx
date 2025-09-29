@@ -2,7 +2,7 @@
 
 import React from "react";
 import styled from "styled-components";
-import { TrustScore } from "../../api/profileAppearanceApi.ts";
+import { TrustScoreResponse } from "../../api/userTrustScoreApi.ts";
 import {
     calcAttendanceScore,
     calcInterviewScore,
@@ -11,12 +11,12 @@ import {
     calcStudyroomScore,
     calcCommentScore,
     calcTotalScore
-} from "../../utils/trustScoreUtils.ts"; //
+} from "../../utils/trustScoreUtils.ts";
 
 type Props = {
     isOpen: boolean;
     onClose: () => void;
-    trust: TrustScore;
+    trust: TrustScoreResponse;
 };
 
 export default function TrustScoreModal({ isOpen, onClose, trust }: Props) {

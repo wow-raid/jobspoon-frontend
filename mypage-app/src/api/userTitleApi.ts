@@ -9,7 +9,7 @@ export interface UserTitleResponse {
     code: string;
     displayName: string;
     description: string;
-    isEquipped: boolean;
+    equipped: boolean;
     acquiredAt: string; // ISO datetime
 }
 
