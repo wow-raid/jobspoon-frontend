@@ -48,11 +48,12 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 // 별칭(@)이 없다면 아래를 ../../../assets/... 으로 바꿔주세요.
-// import githubIconSrc from "@/assets/images/fixed/icon-github.svg";
-import githubIconSrc from "../../assets/images/fixed/icon-github.svg";
+import githubIconSrc from "@/assets/images/fixed/icon-github.svg";
+// import githubIconSrc from "../../assets/images/fixed/icon-github.svg";
 import { useGithubAuthenticationStore } from "../../github/stores/githubAuthenticationStore.ts";
-import { getTempToken} from "@/account/utility/tempoaryAdminToken.ts";
-import { createAxiosInstances, validateTempTokenOnServer} from "@/account/utility/axiosInstance.ts";
+// import { getTempToken} from "@/account/utility/tempoaryAdminToken.ts";
+import { createAxiosInstances} from "@/account/utility/axiosInstance.ts";
+import {validateTempTokenOnServer} from "@/account/utility/adminApi.ts";
 
 const router = useRouter();
 const githubAuthentication = useGithubAuthenticationStore();
@@ -107,13 +108,13 @@ function setMeta(
 //토큰 검증을 함수로 분리 → onMounted에서 호출
 async function runTempTokenValidation() {
   createAxiosInstances();
-  const token = getTempToken();
-  if (!token) {
-    tokenValid.value = false;
-    console.warn("[GithubAdminLogin] 임시토큰 없음");
-    return;
-  }
-  const ok = await validateTempTokenOnServer(token);
+  // const token = getTempToken();
+  // if (!token) {
+  //   tokenValid.value = false;
+  //   console.warn("[GithubAdminLogin] 임시토큰 없음");
+  //   return;
+  // }
+  const ok = await validateTempTokenOnServer();
   tokenValid.value = ok;
   console.log("[GithubAdminLogin] 임시토큰 유효성:", ok ? "유효" : "무효");
 }

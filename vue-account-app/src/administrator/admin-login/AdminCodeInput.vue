@@ -115,22 +115,22 @@ const canSubmit = computed(
  *  - adminAxiosInstance.post("/code_login") 사용
  *  - axios가 4xx/5xx에서 예외를 던지지 않도록 validateStatus로 직접 분기
  */
-const { springAxiosInstance } = createAxiosInstances();
+const { springAdminAxiosInst } = createAxiosInstances();
 
 const verifyAdminCode = async () => {
   if (!canSubmit.value || loading.value) return;
   loading.value = true;
   errorMessage.value = "";
 
-  if (!springAxiosInstance) {
+  if (!springAdminAxiosInst) {
     errorMessage.value = "관리자 API 클라이언트를 초기화하지 못했습니다. (.env 설정 확인)";
     loading.value = false;
     return;
   }
 
   try {
-    const res = await springAxiosInstance.post(
-        "/administrator/code_login",
+    const res = await springAdminAxiosInst.post(
+        "/administrator/authentication/code_login",
         {
           administratorId: administratorId.value,
           administratorpassword: administratorpassword.value,
@@ -142,18 +142,9 @@ const verifyAdminCode = async () => {
         }
     );
     console.log("status", res.status);
-    if (res.status === 200) {
-      //Authorization 헤더에서 토큰 추출
-      const authHeader = res.headers?.["authorization"] ?? res.headers?.["Authorization"];
-      if (authHeader && authHeader.startsWith("Bearer ")) {
-        const token = authHeader.substring(7); // "Bearer " 제거
-        localStorage.setItem("temporaryAdminToken", token);
-      } else {
-        // 토큰이 없다면 경고
-        console.warn("Authorization header(Bearer ...) not found in response.");
-      }
-      console.log("auth", res.headers?.authorization ?? res.headers?.Authorization);
-      router.push({name:"AdminAuthSocialLogin"});
+    if (res.status === 204|| res.status ===200) {
+      // 쿠키는 이미 저장됨(브라우저가 자동 처리). JS로 토큰을 만지지 않는다.
+      router.push({ name: "AdminAuthSocialLogin" });
     } else if (res.status === 401) {
       errorMessage.value = "아이디 또는 비밀번호가 올바르지 않습니다.";
     } else {

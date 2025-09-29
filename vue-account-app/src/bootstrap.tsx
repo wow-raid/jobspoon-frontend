@@ -3,9 +3,6 @@ import { createApp, h } from "vue";
 import type { App as VueApp } from "vue";
 import App from "./App.vue";
 import { loadFonts } from "./plugins/webfontloader";
-import { setupAdminInterceptors } from "@/account/utility/axiosInstance";
-import { listenAdminSessionSync } from "@/security/admin/adminSession.ts"; // (선택) 멀티탭 동기화
-import { loadAdminSession, clearAdminSession } from "@/security/admin/adminSession.ts"; // (선택)
 import "vuetify/styles";
 // ⚠️ MDI CSS는 Shadow DOM에 주입하므로 전역 import 제거 권장
 // import "@mdi/font/css/materialdesignicons.css";
@@ -17,6 +14,7 @@ import * as labsComponents from "vuetify/labs/components";
 import { createVuetify } from "vuetify/lib/framework.mjs";
 import { createPinia } from "pinia";
 import router from "./router";
+import {setupAdminInterceptors} from "@/account/utility/adminApi.ts";
 
 let adminSecurityInitialized =false;
 let offAdminSessionSync:null | (()=> void)=null;
@@ -29,7 +27,7 @@ let lastEventBus: any | null = null;
 export const vueAccountAppMount = async (el: string | Element, eventBus: any) => {
     const container = typeof el === "string" ? document.querySelector(el) : el;
     if (!container) return;
-    initAdminSecurityOnce();
+    // initAdminSecurityOnce();
     // 쉐도우 DOM 사용 코드 (주석 처리)
     /*
     // ShadowRoot 재사용(이미 있으면 attachShadow 금지)
@@ -49,17 +47,17 @@ export const vueAccountAppMount = async (el: string | Element, eventBus: any) =>
     // Vuetify / MDI CSS를 Shadow DOM에 주입 (대기)
     await injectVuetifyCssIntoShadow(shadowRoot);
     */
-    
+
     // 일반 DOM 사용 코드 (쉐도우 DOM 제거)
     // 컨테이너 초기화
     container.innerHTML = "";
-    
+
     // Vue mount용 div
     const appRoot = document.createElement("div");
     appRoot.classList.add("v-application", "v-theme--light");
     (appRoot.style as any).visibility = "hidden";
     container.appendChild(appRoot);
-    
+
     // 필요한 CSS 스타일 로드 (전역 스타일시트로 적용)
     await injectGlobalCss();
 
@@ -119,10 +117,10 @@ export const vueAccountAppMount = async (el: string | Element, eventBus: any) =>
     // 다음 프레임에 표시
     requestAnimationFrame(() => { (shadowAppRoot.style as any).visibility = ""; });
     */
-    
+
     // 일반 DOM 사용 코드
     app.mount(appRoot);
-    
+
     // 다음 프레임에 표시
     requestAnimationFrame(() => { (appRoot.style as any).visibility = ""; });
 };
@@ -161,13 +159,13 @@ async function injectVuetifyCssIntoShadow(shadowRoot: ShadowRoot) {
     ${mdiCss}
   `;
     shadowRoot.appendChild(style);
-    
+
     // Tailwind CSS를 별도 스타일 요소로 추가
     const tailwindStyle = document.createElement("style");
     tailwindStyle.id = "tailwind-shadow-css";
     tailwindStyle.textContent = tailwindCss;
     shadowRoot.appendChild(tailwindStyle);
-    
+
     // 커스텀 CSS 변수 및 레이아웃 스타일 추가
     const customStyle = document.createElement("style");
     customStyle.id = "custom-shadow-css";
@@ -219,7 +217,7 @@ async function injectGlobalCss() {
         /url\((['"\\]?)(?!https?:|data:)([^'"\\)]+)\1\)/g,
         (_: string, _q: string, url: string) => `url('${new URL(url, mdiBase).href}')`
     );
-    
+
     // 기존 스타일 요소가 있는지 확인
     let vuetifyStyle = document.getElementById("vuetify-global-css");
     if (!vuetifyStyle) {
@@ -228,7 +226,7 @@ async function injectGlobalCss() {
         document.head.appendChild(vuetifyStyle);
     }
     vuetifyStyle.textContent = vuetifyCss;
-    
+
     // MDI 아이콘 스타일 추가
     let mdiStyle = document.getElementById("mdi-global-css");
     if (!mdiStyle) {
@@ -237,7 +235,7 @@ async function injectGlobalCss() {
         document.head.appendChild(mdiStyle);
     }
     mdiStyle.textContent = mdiCss;
-    
+
     // Tailwind CSS 추가
     let tailwindStyle = document.getElementById("tailwind-global-css");
     if (!tailwindStyle) {
@@ -246,7 +244,7 @@ async function injectGlobalCss() {
         document.head.appendChild(tailwindStyle);
     }
     tailwindStyle.textContent = tailwindCss;
-    
+
     // 커스텀 CSS 변수 및 레이아웃 스타일 추가
     let customStyle = document.getElementById("custom-global-css");
     if (!customStyle) {
@@ -282,15 +280,15 @@ export const vueAccountAppUnmount = () => {
     }
     routingHandler = null;
 
-    // ⬇️ 추가: 보안 리스너 해제
-    if (onUnauthorizedHandler) {
-        window.removeEventListener("admin-unauthorized", onUnauthorizedHandler);
-        onUnauthorizedHandler = null;
-    }
-    if (offAdminSessionSync) {
-        offAdminSessionSync();
-        offAdminSessionSync = null;
-    }
+    // // ⬇️ 추가: 보안 리스너 해제
+    // if (onUnauthorizedHandler) {
+    //     window.removeEventListener("admin-unauthorized", onUnauthorizedHandler);
+    //     onUnauthorizedHandler = null;
+    // }
+    // if (offAdminSessionSync) {
+    //     offAdminSessionSync();
+    //     offAdminSessionSync = null;
+    // }
     // 쉐도우 DOM 사용 코드 (주석 처리)
     /*
     // ShadowRoot 비우기 (스타일/DOM 정리)
@@ -299,45 +297,45 @@ export const vueAccountAppUnmount = () => {
         shadowRootRef = null;
     }
     */
-    
+
     // 일반 DOM 사용 코드
     // 기존 전역 스타일은 유지 (다른 앱에서도 사용할 수 있음)
-    
+
     lastEventBus = null;
 };
-function initAdminSecurityOnce() {
-    if (adminSecurityInitialized) return;
-    adminSecurityInitialized = true;
-
-    // 1) Axios 인터셉터 1회 등록 (401/403 → 이벤트 발생)
-    setupAdminInterceptors();
-
-    // 2) 401/403 통지 수신 → 관리자 인증 절차로 회송
-    onUnauthorizedHandler = () => {
-        const inAdmin = router.currentRoute.value.matched.some(
-            (r) => r.meta?.section === "ADMIN_APP"
-        );
-        if (inAdmin) router.replace({ name: "AdminAuthCode" });
-    };
-    window.addEventListener("admin-unauthorized", onUnauthorizedHandler);
-
-    // 3) (선택) AdminSession 멀티탭 동기화 수신
-    offAdminSessionSync = listenAdminSessionSync({
-        onClear: () => {
-            const inAdmin = router.currentRoute.value.matched.some(
-                (r) => r.meta?.section === "ADMIN_APP"
-            );
-            if (inAdmin) router.replace({ name: "AdminAuthCode" });
-        },
-        // onSet: (s) => console.log("[admin-sync] SET", s),
-    });
-
-
-    const s = loadAdminSession();
-    if (!s) {
-        // router.replace({ name: "AdminAuthCode" });
-    }
-}
+// function initAdminSecurityOnce() {
+//     if (adminSecurityInitialized) return;
+//     adminSecurityInitialized = true;
+//
+//     // 1) Axios 인터셉터 1회 등록 (401/403 → 이벤트 발생)
+//     setupAdminInterceptors();
+//
+//     // 2) 401/403 통지 수신 → 관리자 인증 절차로 회송
+//     onUnauthorizedHandler = () => {
+//         const inAdmin = router.currentRoute.value.matched.some(
+//             (r) => r.meta?.section === "ADMIN_APP"
+//         );
+//         if (inAdmin) router.replace({ name: "AdminAuthCode" });
+//     };
+//     window.addEventListener("admin-unauthorized", onUnauthorizedHandler);
+//
+//     // 3) (선택) AdminSession 멀티탭 동기화 수신
+//     offAdminSessionSync = listenAdminSessionSync({
+//         onClear: () => {
+//             const inAdmin = router.currentRoute.value.matched.some(
+//                 (r) => r.meta?.section === "ADMIN_APP"
+//             );
+//             if (inAdmin) router.replace({ name: "AdminAuthCode" });
+//         },
+//         // onSet: (s) => console.log("[admin-sync] SET", s),
+//     });
+//
+//
+//     const s = loadAdminSession();
+//     if (!s) {
+//         // router.replace({ name: "AdminAuthCode" });
+//     }
+// }
 interface EventBus {
     listeners: { [eventName: string]: Function[] };
     on(eventName: string, callback: Function): void;

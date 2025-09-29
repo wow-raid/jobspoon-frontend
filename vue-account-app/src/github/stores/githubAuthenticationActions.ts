@@ -1,6 +1,7 @@
 import * as axiosUtility from "../../account/utility/axiosInstance";
-import { saveAdminSession, clearAdminSession } from "@/security/admin/adminSession.ts";
-import { verifyAdminOnServer } from "@/account/utility/axiosInstance"; // 아래 4번 참고
+// import { saveAdminSession, clearAdminSession } from "@/security/admin/adminSession.ts";
+
+import {verifyAdminOnServer} from "@/account/utility/adminApi.ts"; // 아래 4번 참고
 
 // 공용 Axios 인스턴스 생성 유틸을 불러옴. (각 백엔드용 axios 인스턴스를 반환)
 
@@ -62,16 +63,16 @@ export const githubAuthenticationAction = {
                     window.location.href = MAIN_CONTAINER_URL;
                     return;
                 }else{
-                    const ok=await verifyAdminOnServer(accessToken);
+                    const ok=await verifyAdminOnServer();
                     if(!ok){
-                        clearAdminSession();
+                        // clearAdminSession();
                         alert("관리자 권한이 없습니다");
                         router.replace({name: "AdminAuthCode"});
                         return;
                     }
-                    localStorage.setItem("userToken",accessToken);
-                    localStorage.removeItem("temporaryAdminToken");
-                    saveAdminSession();
+                    // localStorage.setItem("userToken",accessToken);
+                    // localStorage.removeItem("temporaryAdminToken");
+                    // saveAdminSession();
                     router.push({name: "AdminOverview"});
                 }
 
