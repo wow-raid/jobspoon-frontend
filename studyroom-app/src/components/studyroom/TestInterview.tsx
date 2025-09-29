@@ -220,27 +220,27 @@ const TestInterview: React.FC = () => {
         setEditingChannel(null);
     };
 
-    const handleUpdateLink = async (newUrl: string) => {
-        if (!editingChannel || !studyId) return;
-        try {
-            // 백엔드에 PUT 요청을 보내 URL을 업데이트합니다.
-            await axiosInstance.put(`/study-rooms/${studyId}/interview-channels`, {
-                channelName: editingChannel.name,
-                url: newUrl,
-            });
+        const handleUpdateLink = async (newUrl: string) => {
+            if (!editingChannel || !studyId) return;
+            try {
+                // 백엔드에 PUT 요청을 보내 URL을 업데이트합니다.
+                await axiosInstance.put(`/study-rooms/${studyId}/interview-channels`, {
+                    channelName: editingChannel.name,
+                    url: newUrl,
+                });
 
-            // API 요청이 성공하면, 프론트엔드의 상태도 업데이트하여 화면에 즉시 반영합니다.
-            setChannels(prev =>
-                prev.map(ch => (ch.name === editingChannel.name ? { ...ch, url: newUrl } : ch)),
-            );
-            handleCloseModal();
-            alert("링크가 성공적으로 저장되었습니다.");
+                // API 요청이 성공하면, 프론트엔드의 상태도 업데이트하여 화면에 즉시 반영합니다.
+                setChannels(prev =>
+                    prev.map(ch => (ch.name === editingChannel.name ? { ...ch, url: newUrl } : ch)),
+                );
+                handleCloseModal();
+                alert("링크가 성공적으로 저장되었습니다.");
 
-        } catch (error) {
-            console.error("링크 업데이트에 실패했습니다:", error);
-            alert("링크 저장 중 오류가 발생했습니다.");
-        }
-    };
+            } catch (error) {
+                console.error("링크 업데이트에 실패했습니다:", error);
+                alert("링크 저장 중 오류가 발생했습니다.");
+            }
+        };
 
     return (
         <Container>
