@@ -26,7 +26,7 @@ export default function MyPageLayout() {
             return;
         }
         try {
-            const data = await fetchMyProfile(); // ✅ token 제거
+            const data = await fetchMyProfile(); // token 제거
             setProfile(data);
         } catch (error) {
             console.error(error);
@@ -42,7 +42,7 @@ export default function MyPageLayout() {
             {/* 좌측 사이드 영역 (프로필 + 메뉴) */}
             <Aside>
 
-                {/* ✅ 홈 버튼 */}
+                {/* 홈 버튼 */}
                 <HomeButton onClick={() => navigate("/mypage")}>
                     <HomeIcon>
                         <FaHome />
