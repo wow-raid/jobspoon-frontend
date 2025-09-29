@@ -252,12 +252,17 @@ export default function UserHistoryPage() {
                             {titles.map((title) => (
                                 <TitleCard key={title.id} equipped={title.equipped}>
                                     <TitleName>{title.displayName}</TitleName>
+
                                     <AcquiredDate>
                                         {new Date(title.acquiredAt).toLocaleDateString()}
                                     </AcquiredDate>
-                                    <ToggleButton onClick={() => handleEquip(title.id)}>
+
+                                    <Description>{title.description}</Description>
+
+                                    {/* 버튼 */}
+                                    <ActionButton onClick={() => handleEquip(title.id)}>
                                         {title.equipped ? "해제" : "장착"}
-                                    </ToggleButton>
+                                    </ActionButton>
                                 </TitleCard>
                             ))}
                         </TitleGrid>
@@ -482,4 +487,30 @@ const Divider = styled.hr`
   border: none;
   border-top: 1px solid #e5e7eb;
   margin: 16px 0;
+`;
+
+const Description = styled.p`
+    font-size: 12px;
+    color: #6b7280;
+    text-align: center;
+    margin: 8px 0;
+    flex-grow: 1; /* 설명이 늘어나도 버튼은 항상 아래 */
+`;
+
+const ActionButton = styled.button`
+    margin-top: auto;
+    align-self: center;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid #3b82f6;   /* 파란 테두리 */
+    color: #3b82f6;              /* 파란 글씨 */
+    background: white;           /* 흰 배경 */
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background: #eff6ff;     /* 연한 파랑 배경 */
+    }
 `;
