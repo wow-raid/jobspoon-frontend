@@ -5,8 +5,7 @@ import http, { authHeader } from "../utils/http";
 import SpoonNoteModal from "../components/SpoonNoteModal";
 import { fetchUserFolders, patchReorderFolders } from "../api/userWordbook";
 import TermCard from "../components/TermCard";
-import { setMemorization } from "../api/memorization";
-import { fetchMemorizationStatuses } from "../api/memorization";
+import { setMemorization, fetchMemorizationStatuses } from "../api/memorization";
 import { moveFolderTerms } from "../api/userWordbookTerms";
 import { renameUserFolder, deleteUserFolder } from "../api/folder";
 import { generatePdfByTermIds } from "../api/ebook";
@@ -38,14 +37,14 @@ const UI = {
         line: "#e5e7eb",
         indigo: "#6366f1",
         indigo50: "#eef2ff",
-        primary: "#4F76F1", // 탭 톤과 일치
+        primary: "#4F76F1",
         primaryStrong: "#3E63E0",
         danger: "#ef4444",
     },
-    /** 탭과 동일한 블루 그라데이션 팔레트 */
     gradient: {
         brand: "linear-gradient(135deg, #4F76F1 0%, #3E63E0 100%)",
-        brandSoft: "linear-gradient(135deg, rgba(79,118,241,0.12) 0%, rgba(62,99,224,0.12) 100%)",
+        brandSoft:
+            "linear-gradient(135deg, rgba(79,118,241,0.12) 0%, rgba(62,99,224,0.12) 100%)",
     },
     radius: { xl: 20, lg: 14, md: 12, sm: 10, pill: 999 },
     shadow: {
@@ -108,7 +107,9 @@ const SegBtn = styled.button<{ $active?: boolean }>`
     color: ${({ $active }) => ($active ? "#fff" : UI.color.sub)};
     background: ${({ $active }) => ($active ? UI.gradient.brand : "#fff")};
     transition: filter 120ms ease;
-    &:hover { filter: brightness(0.98); }
+    &:hover {
+        filter: brightness(0.98);
+    }
 `;
 
 /* ---------- 설정 버튼 + 메뉴 ---------- */
@@ -129,7 +130,9 @@ const SettingsBtn = styled.button`
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    &:hover { background: #f1f5f9; }
+    &:hover {
+        background: #f1f5f9;
+    }
 `;
 
 const PrimaryBtn = styled.button`
@@ -142,18 +145,25 @@ const PrimaryBtn = styled.button`
     font-weight: 700;
     letter-spacing: 0.01em;
     cursor: pointer;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
     transition: transform 80ms ease, filter 160ms ease;
 
-    &:hover { filter: brightness(0.98); }
-    &:active { transform: scale(0.98); }
-    &:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(79,118,241,0.35); }
+    &:hover {
+        filter: brightness(0.98);
+    }
+    &:active {
+        transform: scale(0.98);
+    }
+    &:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(79, 118, 241, 0.35);
+    }
 `;
 
 const Gear = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
         <path
-            d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm7.94-3.5c0-.5-.05-1-.15-1.47l2.12-1.65-2-3.46-2.5 1a7.7 7.7 0 0 0-2.54-1.47l-.38-2.67h-4l-.38 2.67A7.7 7.7 0 0 0 8.5 5.95l-2.5-1-2 3.46 2.12 1.65c-.1.48-.15.97-.15 1.47s.05.99.15 1.47L4 16.12l2 3.46 2.5-1c.78.6 1.62 1.08 2.54 1.47l.38 2.67h4l.38-2.67c.92-.39 1.76-.87 2.54-1.47l2.5 1 2-3.46-2.12-1.65c.1-.48.15-.97.15-1.47Z"
+            d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm7.94-3.5c0-.5-.05-1-.15-1.47l2.12-1.65-2-3.46-2.5 1a7.7 7.7 0 0 0-2.54-1.47l-.38-2.67h-4l-.38 2.67A7.7 7.7 0 0 0 8.5 5.95l-2.5-1-2 3.46 2.12 1.65c-.1.48-.15.97-.15 1.47s.05.99.15 1.47L4 16.12l2 3.46 2.5-1c.78.6 1.62 1.08 2.54 1.47l.38 2.67h4l.38-2.67c.92-.39 1.76-.87 2.54-1.47l2.5 1 2-3.46-2.12-1.65c-.1-.48-.15-.97-.15-1.47Z"
             fill="currentColor"
         />
     </svg>
@@ -186,6 +196,8 @@ const PdfSubMenu = styled.div`
     z-index: 7;
 `;
 
+const SortSubMenu = styled(PdfSubMenu)``;
+
 const MenuItem = styled.button<{ disabled?: boolean }>`
     width: 100%;
     text-align: left;
@@ -195,14 +207,44 @@ const MenuItem = styled.button<{ disabled?: boolean }>`
     padding: 10px 12px;
     cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
     color: ${({ disabled }) => (disabled ? UI.color.muted : UI.color.text)};
-    &:hover { background: ${({ disabled }) => (disabled ? "transparent" : "#f9fafb")}; }
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    &:hover {
+        background: ${({ disabled }) => (disabled ? "transparent" : "#f9fafb")};
+    }
+`;
+
+const RadioItem = styled.button<{ $checked?: boolean }>`
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  &:hover {
+    background: #f9fafb;
+  }
+  & > span:first-child {
+    display: inline-flex;
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    border: 2px solid ${UI.color.primaryStrong};
+    background: ${({ $checked }) => ($checked ? UI.gradient.brand : "transparent")};
+  }
 `;
 
 /* ---------- 리스트/카드 ---------- */
 const Grid = styled.div`
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 14px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
 `;
 
 const CHECK_W = 28;
@@ -211,10 +253,14 @@ const TITLE_SHIFT = CHECK_W + CHECK_GAP;
 
 /** TermCard 내부의 + 버튼 숨김, 제목/설명 가리기, 연관 키워드 숨기기 */
 const HideTermCardAdd = styled.div<{ $hideTitle?: boolean; $hideDesc?: boolean }>`
-    [aria-label="내 단어장에 추가"] { display: none !important; }
+    [aria-label="내 단어장에 추가"] {
+        display: none !important;
+    }
 
     /* 제목은 항상 살짝 오른쪽으로 밀어 체크와 정렬 */
-    article h3[id^="term-"] { margin-left: ${TITLE_SHIFT}px !important; }
+    article h3[id^="term-"] {
+        margin-left: ${TITLE_SHIFT}px !important;
+    }
 
     /* 제목 숨김 모드 */
     ${({ $hideTitle }) =>
@@ -252,12 +298,14 @@ const HideTermCardAdd = styled.div<{ $hideTitle?: boolean; $hideDesc?: boolean }
       article > div:nth-of-type(2) p::selection { background: transparent; }
   `}
 
-    article [aria-label="연관 키워드"] { display: none !important; }
+    article [aria-label="연관 키워드"] {
+        display: none !important;
+    }
 `;
 
 const CardWrap = styled.div`
-    position: relative;
-    border-radius: ${UI.radius.xl}px;
+  position: relative;
+  border-radius: ${UI.radius.xl}px;
 `;
 
 /** 항상 보이는 좌측 체크(첨부칩 느낌) */
@@ -276,7 +324,7 @@ const SelectToggle = styled.button<{ $on?: boolean }>`
 
     background: ${({ $on }) => ($on ? UI.gradient.brand : UI.gradient.brandSoft)};
     color: ${({ $on }) => ($on ? "#fff" : "#0f172a")};
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.28);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
 
     cursor: pointer;
     line-height: 0;
@@ -286,17 +334,28 @@ const SelectToggle = styled.button<{ $on?: boolean }>`
     -webkit-tap-highlight-color: transparent;
     transition: transform 80ms ease, filter 160ms ease;
 
-    &:hover { filter: brightness(0.98); }
-    &:active { transform: scale(0.97); }
+    &:hover {
+        filter: brightness(0.98);
+    }
+    &:active {
+        transform: scale(0.97);
+    }
     &:focus-visible {
         outline: none;
-        box-shadow: 0 0 0 3px rgba(79,118,241,0.35);
+        box-shadow: 0 0 0 3px rgba(79, 118, 241, 0.35);
     }
 `;
 
 const CheckIcon = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" style={{ display: "block" }} aria-hidden="true">
-        <path d="M20 7L10 17l-6-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        <path
+            d="M20 7L10 17l-6-6"
+            stroke="#fff"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+        />
     </svg>
 );
 
@@ -306,7 +365,7 @@ const Hollow = styled.span`
     height: 14px;
     border-radius: 999px;
     border: 2px solid ${UI.color.primaryStrong};
-    background: rgba(255,255,255,0.7);
+    background: rgba(255, 255, 255, 0.7);
     display: block;
 `;
 
@@ -327,15 +386,26 @@ const StatusBtn = styled.button<{ $done?: boolean }>`
 
     background: ${({ $done }) => ($done ? UI.gradient.brand : UI.gradient.brandSoft)};
     color: ${({ $done }) => ($done ? "#fff" : "#0f172a")};
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
 
     cursor: pointer;
     transition: transform 80ms ease, filter 160ms ease;
-    &:hover { filter: brightness(0.985); }
-    &:active { transform: scale(0.97); }
-    &:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(79,118,241,0.35); }
+    &:hover {
+        filter: brightness(0.985);
+    }
+    &:active {
+        transform: scale(0.97);
+    }
+    &:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(79, 118, 241, 0.35);
+    }
 
-    &:disabled { opacity: 0.7; cursor: not-allowed; filter: none; }
+    &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        filter: none;
+    }
 `;
 
 const LearnRow = styled.div`
@@ -368,7 +438,9 @@ const LearnBtn = styled.button<{ $active?: boolean }>`
     cursor: pointer;
     font-size: ${UI.font.tiny};
     font-weight: 700;
-    &:hover { background: #f9fafb; }
+    &:hover {
+        background: #f9fafb;
+    }
 `;
 
 const Empty = styled.div`
@@ -380,30 +452,30 @@ const Empty = styled.div`
 `;
 
 const LoadMore = styled.button`
-    display: block;
-    margin: 20px auto 0;
-    height: 40px;
-    padding: 0 16px;
-    border-radius: ${UI.radius.sm}px;
-    border: 1px solid ${UI.color.line};
-    background: #fff;
-    cursor: pointer;
+  display: block;
+  margin: 20px auto 0;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: ${UI.radius.sm}px;
+  border: 1px solid ${UI.color.line};
+  background: #fff;
+  cursor: pointer;
 `;
 
 /* 하단 Export Tray */
 const Tray = styled.div`
-    position: sticky;
-    bottom: 0;
-    z-index: 7;
-    background: #0f172a;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 10px 14px;
-    border-radius: 12px;
-    margin-top: 10px;
+  position: sticky;
+  bottom: 0;
+  z-index: 7;
+  background: #0f172a;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin-top: 10px;
 `;
 
 export default function WordbookFolderPage() {
@@ -411,7 +483,9 @@ export default function WordbookFolderPage() {
     const navigate = useNavigate();
     const location = useLocation() as any;
 
-    const [folderName, setFolderName] = React.useState<string>(location.state?.folderName ?? "내 단어장");
+    const [folderName, setFolderName] = React.useState<string>(
+        location.state?.folderName ?? "내 단어장"
+    );
 
     const [items, setItems] = React.useState<TermItem[]>([]);
     const [loading, setLoading] = React.useState(true);
@@ -423,7 +497,9 @@ export default function WordbookFolderPage() {
     /** 선택 상태 (항상 노출되는 체크 기반) */
     const [checked, setChecked] = React.useState<Record<string, boolean>>({});
     const allOn =
-        items.length > 0 && Object.values(checked).length === items.length && Object.values(checked).every(Boolean);
+        items.length > 0 &&
+        Object.values(checked).length === items.length &&
+        Object.values(checked).every(Boolean);
 
     // 전체 보기 모드(마스터 스위치)
     const [titleMode, setTitleMode] = React.useState<ViewMode>("inherit");
@@ -435,6 +511,11 @@ export default function WordbookFolderPage() {
 
     // 카드별 암기 상태
     const [learn, setLearn] = React.useState<Record<string, "unmemorized" | "memorized">>({});
+
+    // ===== 정렬 상태 =====
+    type SortKey = "createdAt_desc" | "title_asc" | "title_desc" | "status_asc" | "status_desc";
+    const [sortMenuOpen, setSortMenuOpen] = React.useState(false);
+    const [sortKey, setSortKey] = React.useState<SortKey>("createdAt_desc");
 
     // 저장/내보내기 진행 상태
     const [saving, setSaving] = React.useState<Record<string, boolean>>({});
@@ -473,7 +554,12 @@ export default function WordbookFolderPage() {
     );
 
     const mapRow = (row: TermRow): TermItem | null => {
-        const uwt = row.userWordbookTermId ?? row.userTermId ?? row.uwtId ?? row.id ?? row.user_wordbook_term_id;
+        const uwt =
+            row.userWordbookTermId ??
+            row.userTermId ??
+            row.uwtId ??
+            row.id ??
+            row.user_wordbook_term_id;
         if (uwt == null) return null;
 
         let tId: number | null = row?.term?.id ?? row?.term_id ?? null;
@@ -486,7 +572,8 @@ export default function WordbookFolderPage() {
         }
 
         const title = row.word ?? row.title ?? row.term?.title ?? row.term?.word ?? "(제목 없음)";
-        const description = row.description ?? row.term?.description ?? row.explain ?? row.meaning ?? "";
+        const description =
+            row.description ?? row.term?.description ?? row.explain ?? row.meaning ?? "";
         const createdAt = row.createdAt ?? row.created_at;
         const tags: string[] = row.tags ?? row.term?.tags ?? [];
 
@@ -523,7 +610,8 @@ export default function WordbookFolderPage() {
                 setItems((prev) => (p === 0 ? list : [...prev, ...list]));
                 setHasMore(p + 1 < totalPages);
 
-                if (typeof d.folderName === "string" && d.folderName.trim()) setFolderName(d.folderName);
+                if (typeof d.folderName === "string" && d.folderName.trim())
+                    setFolderName(d.folderName);
             } catch (err: any) {
                 const s = err?.response?.status;
                 if (s === 401) navigate("/login", { state: { from: `/spoon-word/folders/${folderId}` } });
@@ -552,7 +640,6 @@ export default function WordbookFolderPage() {
             return next;
         });
 
-        // 화면에 보이는 항목의 체크 상태를 selectedTermIds 기준으로 반영
         setChecked((prev) => {
             const next: Record<string, boolean> = { ...prev };
             for (const it of items) {
@@ -588,7 +675,9 @@ export default function WordbookFolderPage() {
             }
         })();
 
-        return () => { aborted = true; };
+        return () => {
+            aborted = true;
+        };
     }, [items]);
 
     /* ------ selection / bulk actions ------ */
@@ -605,7 +694,6 @@ export default function WordbookFolderPage() {
         }
     };
 
-    /** 현재 화면에 로드된 항목 기준 전체 선택/해제 */
     const toggleAll = (on: boolean) => {
         const nextChecked: Record<string, boolean> = {};
         const nextSelected = new Set(selectedTermIds);
@@ -646,6 +734,7 @@ export default function WordbookFolderPage() {
         setMoveOpen(true);
         setMenuOpen(false);
         setPdfMenuOpen(false);
+        setSortMenuOpen(false);
     };
 
     const handleConfirmMove = async (destFolderId: string) => {
@@ -692,7 +781,10 @@ export default function WordbookFolderPage() {
             setExporting(true);
             const { blob, meta } = await generatePdfByTermIds({ termIds, title });
             if ((meta as any)?.mismatch) console.warn("[PDF Export] filename mismatch", meta);
-            const preferred = (meta as any)?.cdFilename || (meta as any)?.ebookFilename || `jobspoon_terms_${Date.now()}.pdf`;
+            const preferred =
+                (meta as any)?.cdFilename ||
+                (meta as any)?.ebookFilename ||
+                `jobspoon_terms_${Date.now()}.pdf`;
             const finalName = sanitizeFilename(preferred, `jobspoon_terms_${Date.now()}.pdf`);
             saveBlob(blob, finalName);
         } catch (e: any) {
@@ -702,6 +794,7 @@ export default function WordbookFolderPage() {
             setExporting(false);
             setMenuOpen(false);
             setPdfMenuOpen(false);
+            setSortMenuOpen(false);
         }
     };
 
@@ -786,6 +879,7 @@ export default function WordbookFolderPage() {
             setExporting(false);
             setMenuOpen(false);
             setPdfMenuOpen(false);
+            setSortMenuOpen(false);
         }
     };
 
@@ -798,12 +892,14 @@ export default function WordbookFolderPage() {
             if (!actionsRef.current.contains(t)) {
                 setMenuOpen(false);
                 setPdfMenuOpen(false);
+                setSortMenuOpen(false);
             }
         };
         const onEsc = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
                 setMenuOpen(false);
                 setPdfMenuOpen(false);
+                setSortMenuOpen(false);
             }
         };
         document.addEventListener("mousedown", onDocClick);
@@ -813,10 +909,6 @@ export default function WordbookFolderPage() {
             document.removeEventListener("keydown", onEsc);
         };
     }, [menuOpen]);
-
-    /* ------ 기타 ------ */
-    if (loading && items.length === 0) return <p style={{ padding: 20 }}>⏳ 불러오는 중...</p>;
-    if (error) return <p style={{ color: "red", padding: 20 }}>{error}</p>;
 
     const onLoadMore = () => {
         const next = page + 1;
@@ -840,7 +932,39 @@ export default function WordbookFolderPage() {
         clearAllSelected();
         setMenuOpen(false);
         setPdfMenuOpen(false);
+        setSortMenuOpen(false);
     };
+
+    // ===== 표시 목록(정렬 적용) — 훅은 항상 호출되도록 return보다 위! =====
+    const displayItems = React.useMemo(() => {
+        const arr = [...items];
+        const byTitle = (a: TermItem, b: TermItem) =>
+            a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: "base" });
+        const statusRank = (id: string) => ((learn[id] ?? "unmemorized") === "memorized" ? 1 : 0);
+
+        switch (sortKey) {
+            case "title_asc":
+                arr.sort(byTitle);
+                break;
+            case "title_desc":
+                arr.sort((a, b) => -byTitle(a, b));
+                break;
+            case "status_asc":
+                arr.sort((a, b) => statusRank(a.uwtId) - statusRank(b.uwtId));
+                break;
+            case "status_desc":
+                arr.sort((a, b) => statusRank(b.uwtId) - statusRank(a.uwtId));
+                break;
+            case "createdAt_desc":
+            default:
+                arr.sort((a, b) => {
+                    const ta = a.createdAt ? Date.parse(a.createdAt) : 0;
+                    const tb = b.createdAt ? Date.parse(b.createdAt) : 0;
+                    return tb - ta;
+                });
+        }
+        return arr;
+    }, [items, learn, sortKey]);
 
     return (
         <div style={{ padding: 8 }}>
@@ -899,6 +1023,7 @@ export default function WordbookFolderPage() {
                             onClick={() => {
                                 setMenuOpen((v) => !v);
                                 setPdfMenuOpen(false);
+                                setSortMenuOpen(false);
                             }}
                             aria-haspopup="menu"
                             aria-expanded={menuOpen}
@@ -907,13 +1032,91 @@ export default function WordbookFolderPage() {
                         </SettingsBtn>
                         {menuOpen && (
                             <Menu role="menu" aria-label="설정">
-                                <MenuItem role="menuitem" onClick={openMove}>단어 이동하기</MenuItem>
-                                <MenuItem role="menuitem" onClick={handleDeleteSelected}>단어 삭제하기</MenuItem>
+                                <MenuItem role="menuitem" onClick={openMove}>
+                                    단어 이동하기
+                                </MenuItem>
+                                <MenuItem role="menuitem" onClick={handleDeleteSelected}>
+                                    단어 삭제하기
+                                </MenuItem>
 
-                                {/* PDF 내보내기 - 2단 메뉴 */}
+                                {/* 정렬하기 - 서브메뉴 */}
                                 <div style={{ position: "relative" }}>
-                                    <MenuItem role="menuitem" onClick={() => setPdfMenuOpen((v) => !v)}>
-                                        PDF 내보내기
+                                    <MenuItem
+                                        role="menuitem"
+                                        aria-haspopup="menu"
+                                        aria-expanded={sortMenuOpen}
+                                        onClick={() => {
+                                            setSortMenuOpen((v) => !v);
+                                            setPdfMenuOpen(false);
+                                        }}
+                                    >
+                                        정렬하기 <span aria-hidden="true">›</span>
+                                    </MenuItem>
+                                    {sortMenuOpen && (
+                                        <SortSubMenu role="menu" aria-label="정렬하기">
+                                            <RadioItem
+                                                $checked={sortKey === "createdAt_desc"}
+                                                onClick={() => {
+                                                    setSortKey("createdAt_desc");
+                                                    setMenuOpen(false);
+                                                    setSortMenuOpen(false);
+                                                }}
+                                            >
+                                                <span /> 최신 등록순
+                                            </RadioItem>
+                                            <RadioItem
+                                                $checked={sortKey === "title_asc"}
+                                                onClick={() => {
+                                                    setSortKey("title_asc");
+                                                    setMenuOpen(false);
+                                                    setSortMenuOpen(false);
+                                                }}
+                                            >
+                                                <span /> 제목 오름차순
+                                            </RadioItem>
+                                            <RadioItem
+                                                $checked={sortKey === "title_desc"}
+                                                onClick={() => {
+                                                    setSortKey("title_desc");
+                                                    setMenuOpen(false);
+                                                    setSortMenuOpen(false);
+                                                }}
+                                            >
+                                                <span /> 제목 내림차순
+                                            </RadioItem>
+                                            <RadioItem
+                                                $checked={sortKey === "status_asc"}
+                                                onClick={() => {
+                                                    setSortKey("status_asc");
+                                                    setMenuOpen(false);
+                                                    setSortMenuOpen(false);
+                                                }}
+                                            >
+                                                <span /> 상태: 미암기 → 완료
+                                            </RadioItem>
+                                            <RadioItem
+                                                $checked={sortKey === "status_desc"}
+                                                onClick={() => {
+                                                    setSortKey("status_desc");
+                                                    setMenuOpen(false);
+                                                    setSortMenuOpen(false);
+                                                }}
+                                            >
+                                                <span /> 상태: 완료 → 미암기
+                                            </RadioItem>
+                                        </SortSubMenu>
+                                    )}
+                                </div>
+
+                                {/* PDF 내보내기 - 서브메뉴 */}
+                                <div style={{ position: "relative" }}>
+                                    <MenuItem
+                                        role="menuitem"
+                                        onClick={() => setPdfMenuOpen((v) => !v)}
+                                        aria-haspopup="menu"
+                                        aria-expanded={pdfMenuOpen}
+                                    >
+                                        PDF 내보내기 <span aria-hidden="true">›</span>
                                     </MenuItem>
                                     {pdfMenuOpen && (
                                         <PdfSubMenu role="menu" aria-label="PDF 내보내기 옵션">
@@ -929,28 +1132,38 @@ export default function WordbookFolderPage() {
             </Toolbar>
 
             {/* 본문 */}
-            {items.length === 0 ? (
+            {error ? (
+                <p style={{ color: "red", padding: 20 }}>{error}</p>
+            ) : loading && items.length === 0 ? (
+                <p style={{ padding: 20 }}>⏳ 불러오는 중...</p>
+            ) : items.length === 0 ? (
                 <Empty>아직 담긴 용어가 없습니다.</Empty>
             ) : (
                 <>
                     <Grid>
-                        {items.map((it) => {
-                            const ov = cardView[it.uwtId] || {}; // per-card 오버라이드
+                        {displayItems.map((it) => {
+                            const ov = cardView[it.uwtId] || {};
 
-                            // 숨김 여부 계산(서로 간섭 없음)
                             const titleHidden =
-                                ov.t === "hide" ? true :
-                                    ov.t === "show" ? false :
-                                        titleMode === "allHidden" ? true :
-                                            titleMode === "allShown" ? false :
-                                                false;
-                            
+                                ov.t === "hide"
+                                    ? true
+                                    : ov.t === "show"
+                                        ? false
+                                        : titleMode === "allHidden"
+                                            ? true
+                                            : titleMode === "allShown"
+                                                ? false
+                                                : false;
                             const descHidden =
-                                ov.d === "hide" ? true :
-                                    ov.d === "show" ? false :
-                                        descMode === "allHidden" ? true :
-                                            descMode === "allShown" ? false :
-                                                false;
+                                ov.d === "hide"
+                                    ? true
+                                    : ov.d === "show"
+                                        ? false
+                                        : descMode === "allHidden"
+                                            ? true
+                                            : descMode === "allShown"
+                                                ? false
+                                                : false;
 
                             const isChecked = !!checked[it.uwtId];
                             const status = learn[it.uwtId] ?? "unmemorized";
@@ -959,7 +1172,6 @@ export default function WordbookFolderPage() {
 
                             return (
                                 <CardWrap key={it.uwtId}>
-                                    {/* 좌측 선택 토글 */}
                                     <SelectToggle
                                         $on={isChecked}
                                         aria-label={isChecked ? "선택 해제" : "선택"}
@@ -972,7 +1184,6 @@ export default function WordbookFolderPage() {
                                         {isChecked ? <CheckIcon /> : <Hollow />}
                                     </SelectToggle>
 
-                                    {/* 우측 상단 암기 상태 토글 */}
                                     <StatusBtn
                                         $done={done}
                                         disabled={isSaving}
@@ -1018,7 +1229,6 @@ export default function WordbookFolderPage() {
                                         {done ? "암기 완료" : "미암기"}
                                     </StatusBtn>
 
-                                    {/* 단어/뜻 숨김 적용 */}
                                     <HideTermCardAdd $hideTitle={titleHidden} $hideDesc={descHidden}>
                                         <TermCard
                                             id={Number(it.termId || it.uwtId)}
@@ -1028,16 +1238,14 @@ export default function WordbookFolderPage() {
                                         />
                                     </HideTermCardAdd>
 
-                                    {/* 학습 모드 버튼 */}
                                     <LearnRow aria-label="학습 모드">
                                         <LearnLabel>학습 모드</LearnLabel>
                                         <LearnSeg role="group" aria-label="학습 모드 선택">
-                                            {/* 단어 버튼 */}
                                             <LearnBtn
                                                 $active={titleHidden}
                                                 aria-pressed={titleHidden}
                                                 onClick={() => {
-                                                    setCardView(prev => {
+                                                    setCardView((prev) => {
                                                         const cur = prev[it.uwtId] || {};
                                                         if (titleMode === "allHidden") {
                                                             const nextT = cur.t === "show" ? undefined : "show";
@@ -1055,12 +1263,11 @@ export default function WordbookFolderPage() {
                                                 {titleHidden ? "단어 보이기" : "단어 숨기기"}
                                             </LearnBtn>
 
-                                            {/* 뜻 버튼 */}
                                             <LearnBtn
                                                 $active={descHidden}
                                                 aria-pressed={descHidden}
                                                 onClick={() => {
-                                                    setCardView(prev => {
+                                                    setCardView((prev) => {
                                                         const cur = prev[it.uwtId] || {};
                                                         if (descMode === "allHidden") {
                                                             const nextD = cur.d === "show" ? undefined : "show";
@@ -1091,7 +1298,9 @@ export default function WordbookFolderPage() {
             {/* 하단 Export Tray */}
             {selectedTermIds.size > 0 && (
                 <Tray>
-                    <span>선택 {selectedTermIds.size.toLocaleString()}개 — 필요한 페이지를 더 불러온 뒤에도 선택은 유지돼요.</span>
+          <span>
+            선택 {selectedTermIds.size.toLocaleString()}개 — 필요한 페이지를 더 불러온 뒤에도 선택은 유지돼요.
+          </span>
                     <div style={{ display: "flex", gap: 8 }}>
                         <button
                             onClick={clearAllSelected}
@@ -1106,7 +1315,6 @@ export default function WordbookFolderPage() {
                         >
                             모두 해제
                         </button>
-                        {/* 탭 톤에 맞춘 프라이머리 버튼 */}
                         <button
                             onClick={handleExportSelectedPdf}
                             disabled={exporting}
