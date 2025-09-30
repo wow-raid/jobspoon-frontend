@@ -27,6 +27,12 @@
           :to="{ name: 'AdminUsers' }"
           link
       />
+      <v-list-item
+          prepend-icon="mdi-chair-school"
+          title="스터디룸 관리"
+          :to="{ name: 'AdminStudyRoomReport' }"
+          link
+      />
       <!-- 필요 시 메뉴 추가 -->
     </v-list>
 
@@ -46,7 +52,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import {logoutRequest} from "@/account/utility/adminApi.ts";
+import {logoutRequest} from "@/administrator/utility/adminApi.ts";
 
 const router = useRouter();
 const drawer = ref(true);
