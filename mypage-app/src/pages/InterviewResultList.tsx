@@ -83,115 +83,117 @@ export default function InterviewResultList() {
         });
 
     return (
-        <Section>
+        <>
             <NoticeBanner>🚧 서비스 준비 중입니다</NoticeBanner>
 
-            <Title>면접 기록 보관함</Title>
+            <Section>
+                <Title>면접 기록 보관함</Title>
 
-            {/* 도넛 차트 */}
-            <ChartBox>
-                <ChartTitle>상태별 분포</ChartTitle>
-                <Desc>📊 완료/진행 중 비율을 한눈에 확인할 수 있습니다.</Desc>
+                {/* 도넛 차트 */}
+                <ChartBox>
+                    <ChartTitle>상태별 분포</ChartTitle>
+                    <Desc>📊 완료/진행 중 비율을 한눈에 확인할 수 있습니다.</Desc>
 
-                <ChartRow>
-                    {/* 도넛 차트 */}
-                    <ChartWrapper>
-                        <ResponsiveContainer width={240} height={240}>
-                            <PieChart>
-                                <Pie
-                                    data={chartData}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={90}
-                                    paddingAngle={4}
-                                    dataKey="value">
-                                    {chartData.map((entry, index) => (
-                                        <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <Tooltip />
-                            </PieChart>
-                        </ResponsiveContainer>
+                    <ChartRow>
+                        {/* 도넛 차트 */}
+                        <ChartWrapper>
+                            <ResponsiveContainer width={240} height={240}>
+                                <PieChart>
+                                    <Pie
+                                        data={chartData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={60}
+                                        outerRadius={90}
+                                        paddingAngle={4}
+                                        dataKey="value">
+                                        {chartData.map((entry, index) => (
+                                            <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip />
+                                </PieChart>
+                            </ResponsiveContainer>
 
-                        {/* 중앙 텍스트 */}
-                        <CenterText>
-                            <CenterNumber>{completedCount + inProgressCount}</CenterNumber>
-                            <CenterLabel>총 건수</CenterLabel>
-                        </CenterText>
-                    </ChartWrapper>
+                            {/* 중앙 텍스트 */}
+                            <CenterText>
+                                <CenterNumber>{completedCount + inProgressCount}</CenterNumber>
+                                <CenterLabel>총 건수</CenterLabel>
+                            </CenterText>
+                        </ChartWrapper>
 
-                    {/* 범례는 오른쪽 */}
-                    <Legend>
-                        <LegendItem>
-                            <ColorDot color={COLORS[0]} />
-                            완료 {completedCount}건
-                        </LegendItem>
-                        <LegendItem>
-                            <ColorDot color={COLORS[1]} />
-                            진행 중 {inProgressCount}건
-                        </LegendItem>
-                    </Legend>
-                </ChartRow>
-            </ChartBox>
+                        {/* 범례는 오른쪽 */}
+                        <Legend>
+                            <LegendItem>
+                                <ColorDot color={COLORS[0]} />
+                                완료 {completedCount}건
+                            </LegendItem>
+                            <LegendItem>
+                                <ColorDot color={COLORS[1]} />
+                                진행 중 {inProgressCount}건
+                            </LegendItem>
+                        </Legend>
+                    </ChartRow>
+                </ChartBox>
 
-            {/* 목록 헤더 */}
-            <ListHeader>
-                <SearchInput
-                    type="text"
-                    placeholder="주제 검색..."
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                />
-                <Select
-                    value={filterStatus}
-                    onChange={(e) =>
-                            setFilterStatus(e.target.value as "IN_PROGRESS" | "COMPLETED" | "all")}>
-                    <option value="all">전체</option>
-                    <option value="COMPLETED">완료</option>
-                    <option value="IN_PROGRESS">진행 중</option>
-                </Select>
-                <Select
-                    value={sortOption}
-                    onChange={(e) =>
-                        setSortOption(e.target.value as "latest" | "oldest" | "status")}>
-                    <option value="latest">최신순</option>
-                    <option value="oldest">오래된순</option>
-                    <option value="status">상태별</option>
-                </Select>
-            </ListHeader>
+                {/* 목록 헤더 */}
+                <ListHeader>
+                    <SearchInput
+                        type="text"
+                        placeholder="주제 검색..."
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                    />
+                    <Select
+                        value={filterStatus}
+                        onChange={(e) =>
+                                setFilterStatus(e.target.value as "IN_PROGRESS" | "COMPLETED" | "all")}>
+                        <option value="all">전체</option>
+                        <option value="COMPLETED">완료</option>
+                        <option value="IN_PROGRESS">진행 중</option>
+                    </Select>
+                    <Select
+                        value={sortOption}
+                        onChange={(e) =>
+                            setSortOption(e.target.value as "latest" | "oldest" | "status")}>
+                        <option value="latest">최신순</option>
+                        <option value="oldest">오래된순</option>
+                        <option value="status">상태별</option>
+                    </Select>
+                </ListHeader>
 
-            <List>
-                {displayedInterviews.map((item, index) => (
-                    <Card key={item.id}>
-                        <Info>
-                            <IndexCircle>{index + 1}</IndexCircle>
-                            <DateText>{item.created_at.toLocaleDateString()}</DateText>
-                            <Topic>{item.topic}</Topic>
-                        </Info>
-                        <DetailSection>
-                            <StatusBadge status={item.status}>
-                                {item.status === "COMPLETED" ? "완료" : "진행 중"}
-                            </StatusBadge>
-                            <DetailButton onClick={() => setIsModalOpen(true)}>
-                                상세보기
-                            </DetailButton>
-                            {/*<DetailLink to={`/mypage/interview/history/${item.id}`}>*/}
-                            {/*    상세보기*/}
-                            {/*</DetailLink>*/}
-                        </DetailSection>
-                    </Card>
-                ))}
-            </List>
+                <List>
+                    {displayedInterviews.map((item, index) => (
+                        <Card key={item.id}>
+                            <Info>
+                                <IndexCircle>{index + 1}</IndexCircle>
+                                <DateText>{item.created_at.toLocaleDateString()}</DateText>
+                                <Topic>{item.topic}</Topic>
+                            </Info>
+                            <DetailSection>
+                                <StatusBadge status={item.status}>
+                                    {item.status === "COMPLETED" ? "완료" : "진행 중"}
+                                </StatusBadge>
+                                <DetailButton onClick={() => setIsModalOpen(true)}>
+                                    상세보기
+                                </DetailButton>
+                                {/*<DetailLink to={`/mypage/interview/history/${item.id}`}>*/}
+                                {/*    상세보기*/}
+                                {/*</DetailLink>*/}
+                            </DetailSection>
+                        </Card>
+                    ))}
+                </List>
 
-            {isModalOpen && (
-                <ServiceModal
-                    isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
-                />
-            )}
+                {isModalOpen && (
+                    <ServiceModal
+                        isOpen={isModalOpen}
+                        onClose={() => setIsModalOpen(false)}
+                    />
+                )}
 
-        </Section>
+            </Section>
+        </>
     );
 }
 

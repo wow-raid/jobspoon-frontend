@@ -21,7 +21,7 @@ const TOKENS = {
     color: {
         text: "#111827",
         muted: "#6b7280",
-        blue: "#4F76F1",        // 캡슐 배경 블루
+        blue: "#4F76F1",
         blueStrong: "#3E63E0",
         divider: "rgba(255,255,255,0.45)",
         white: "#ffffff",
@@ -46,9 +46,7 @@ const GRID_COLS = 14;
 const LABEL_COL = 52;
 
 /* styled-components */
-const Root = styled.div`
-    margin-top: ${TOKENS.space(12)};
-`;
+const Root = styled.div` margin-top: ${TOKENS.space(12)}; `;
 
 /** 캡슐 탭 바 (가운데 정렬 + 1:1 동일 폭) */
 const CapsuleWrap = styled.div`
@@ -64,7 +62,7 @@ const Capsule = styled.div`
     background: linear-gradient(180deg, ${TOKENS.color.blue} 0%, ${TOKENS.color.blueStrong} 100%);
     color: ${TOKENS.color.white};
     border-radius: ${TOKENS.radius.capsule}px;
-    padding: ${TOKENS.space(12)} ${TOKENS.space(16)};
+    padding: ${TOKENS.space(12)} ${TOKENS.space(16)} ;
     box-shadow: ${TOKENS.shadow.capsule};
 
     display: grid;
@@ -72,7 +70,6 @@ const Capsule = styled.div`
     align-items: center;
     justify-items: center;
 
-    /* 중앙 구분선 */
     &::before {
         content: "";
         position: absolute;
@@ -115,7 +112,6 @@ const CapsuleTab = styled.button<{ $active?: boolean }>`
         white-space: nowrap;
     }
 
-    /* 아래 삼각 포인터 (활성 탭만 표시) */
     &::after {
         content: "";
         position: absolute;

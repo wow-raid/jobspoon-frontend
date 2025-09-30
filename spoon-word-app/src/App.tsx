@@ -6,7 +6,7 @@ import ExploreFilterBar, { FilterSelection } from "./components/ExploreFilterBar
 import SearchPage from "./pages/SearchPage";
 import TermListPage from "./pages/TermListPage";
 import SpoonNoteModal from "./components/SpoonNoteModal";
-import http, { authHeader } from "./utils/http";
+import http from "./utils/http";
 import { fetchUserFolders, patchReorderFolders } from "./api/userWordbook";
 import WordbookFolderPage from "./pages/WordbookFolderPage";
 import FavoriteTermsPage from "./pages/FavoriteTermsPage.tsx";
@@ -144,11 +144,7 @@ function AppLayout() {
             if (localDup) throw new Error("DUPLICATE_LOCAL");
 
             try {
-                const { data } = await http.post(
-                    "/api/me/folders",
-                    { folderName: raw },
-                    { headers: { ...authHeader() } }
-                );
+                const { data } = await http.post("/me/folders", { folderName: raw });
                 const newId: string = String(data.id);
                 const newName: string = data.folderName ?? raw;
                 setNotebooks((prev) => [{ id: newId, name: newName }, ...prev]);
@@ -171,11 +167,7 @@ function AppLayout() {
             if (!selectedTermId) return;
 
             try {
-                await http.post(
-                    `/api/me/folders/${notebookId}/terms`,
-                    { termId: selectedTermId },
-                    { headers: { ...authHeader() } }
-                );
+                await http.post(`/me/folders/${notebookId}/terms`, { termId: selectedTermId });
                 console.debug("[attach] term", selectedTermId, "-> folder", notebookId, "OK");
                 closeModal();
             } catch (err: any) {
@@ -201,13 +193,20 @@ function AppLayout() {
 
     React.useEffect(() => {
         function onDocClick(e: MouseEvent) {
+            // 버튼 측에서 preventDefault() 했으면 무시
+            if (e.defaultPrevented) return;
+
             const target = e.target as HTMLElement | null;
             if (!target) return;
 
-            // TermCard의 + 버튼 (aria-label 그대로 사용)
+            // TermCard의 + 버튼(aria-label 고정 사용)
             const addBtn = target.closest('button[aria-label="내 단어장에 추가"]') as HTMLElement | null;
             if (!addBtn) return;
             if (modalOpen) return;
+
+            // 미로그인이라면 모달 열지 않음
+            const loggedIn = !!localStorage.getItem("isLoggedIn");
+            if (!loggedIn) return;
 
             const termId = extractTermIdFromArticle(addBtn);
             if (!termId) return;
@@ -216,8 +215,9 @@ function AppLayout() {
             setModalOpen(true);
         }
 
-        document.addEventListener("click", onDocClick, true);
-        return () => document.removeEventListener("click", onDocClick, true);
+        // 버블 단계로 변경 (false) — 버튼의 stopPropagation()이 유효해짐
+        document.addEventListener("click", onDocClick, false);
+        return () => document.removeEventListener("click", onDocClick, false);
     }, [modalOpen]);
 
     const handleSearch = (term: string) => {
@@ -296,7 +296,7 @@ function HomePage() {
     return null;
 }
 
-/** 라우트 구성 — 폴더 라우트를 캐치올보다 먼저! (+ 경로 2가지 모두 지원) */
+/** 라우트 구성 — 폴더 라우트를 캐치올보다 먼저(+ 경로 2가지 모두 지원) */
 export default function App() {
     return (
         <Routes>

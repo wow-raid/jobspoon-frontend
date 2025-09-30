@@ -1,6 +1,5 @@
-// src/components/TermCardWithTagsLazy.tsx
 import React from "react";
-import axiosInstance from "../api/axiosInstance"; // baseURL가 '/api'라고 가정
+import http from "../utils/http"; // 공통 http: baseURL = http://localhost:8080/api, withCredentials: true
 import TermCard, { TermCardProps } from "./TermCard";
 
 type Props = Omit<TermCardProps, "tags"> & {
@@ -14,10 +13,53 @@ type Props = Omit<TermCardProps, "tags"> & {
 const TAGS_CACHE = new Map<number, string[]>();
 const PENDING = new Map<number, Promise<string[]>>();
 
-/** 기본 fetcher: GET /api/terms/{id}/tags -> ["DOM","HTML",...] */
+function dedupe(arr: (string | null | undefined)[]) {
+    return Array.from(new Set(arr.filter(Boolean) as string[]));
+}
+
+/** 다양한 스키마를 단일 문자열 배열로 정규화 */
+function normalizeTags(payload: any): string[] {
+    if (!payload) return [];
+
+    // 1) 배열로 바로 오는 경우 (["HTML","DOM"] 또는 [{name:"HTML"},{tag:{name:"DOM"}}])
+    if (Array.isArray(payload)) {
+        return dedupe(payload.map((x) => (typeof x === "string" ? x : x?.name ?? x?.tag?.name)));
+    }
+
+    // 2) 객체일 때 후보 키
+    const fromKeys =
+        payload.tags ??
+        payload.tagNames ??
+        payload.relatedKeywords ??
+        payload.termTags ??
+        [];
+    if (Array.isArray(fromKeys)) {
+        return dedupe(fromKeys.map((x: any) => (typeof x === "string" ? x : x?.name ?? x?.tag?.name)));
+    }
+
+    // 3) CSV 형태
+    if (typeof payload.tagsCsv === "string" && payload.tagsCsv.trim()) {
+        return dedupe(payload.tagsCsv.split(",").map((s: string) => s.trim()));
+    }
+
+    return [];
+}
+
+/** 기본 fetcher: GET /api/terms/{id}/tags */
 const defaultFetcher = async (id: number): Promise<string[]> => {
-    const { data } = await axiosInstance.get<string[]>(`/terms/${id}/tags`);
-    return Array.isArray(data) ? data.filter(Boolean) : [];
+    try {
+        const res = await http.get(`/terms/${id}/tags`);
+        return normalizeTags(res.data);
+    } catch (e: any) {
+        const status = e?.response?.status;
+        // 인증/권한/없음/서버오류 모두 "태그 없음"으로 무해 처리
+        if (status === 401 || status === 403 || status === 404 || status === 500) {
+            console.warn("[tags] fetch failed:", { id, status, data: e?.response?.data });
+            return [];
+        }
+        console.warn("[tags] fetch error:", e);
+        return [];
+    }
 };
 
 /** 캐시 래퍼 */
@@ -30,7 +72,7 @@ async function fetchTagsOnce(
 
     const p = fetcher(id)
         .then((arr) => {
-            const deduped = Array.from(new Set((arr ?? []).filter(Boolean)));
+            const deduped = dedupe(arr ?? []);
             TAGS_CACHE.set(id, deduped);
             return deduped;
         })
@@ -46,7 +88,7 @@ async function fetchTagsOnce(
 export const TagCache = {
     get: (id: number) => TAGS_CACHE.get(id),
     has: (id: number) => TAGS_CACHE.has(id),
-    set: (id: number, tags: string[]) => TAGS_CACHE.set(id, tags),
+    set: (id: number, tags: string[]) => TAGS_CACHE.set(id, dedupe(tags)),
     clear: () => {
         TAGS_CACHE.clear();
         PENDING.clear();
@@ -62,27 +104,23 @@ const TermCardWithTagsLazy: React.FC<Props> = ({
                                                    onTagClick,
                                                    fallbackApi,
                                                }) => {
-    // tags가 주어지면 그대로 사용, 없으면 lazy 로딩
-    const [loadedTags, setLoadedTags] = React.useState<string[] | null>(tags ?? null);
+    // props.tags가 있으면 우선 사용, 없으면 lazy 로딩
+    const [loadedTags, setLoadedTags] = React.useState<string[] | null>(
+        Array.isArray(tags) ? dedupe(tags) : null
+    );
 
     React.useEffect(() => {
         let cancelled = false;
 
-        // 외부에서 새 tags가 들어오면 즉시 반영
         if (Array.isArray(tags)) {
-            setLoadedTags(tags);
+            setLoadedTags(dedupe(tags));
             return;
         }
 
-        // 없으면 한 번만 API 호출
         (async () => {
-            try {
-                const fetcher = fallbackApi ?? defaultFetcher;
-                const result = await fetchTagsOnce(id, fetcher);
-                if (!cancelled) setLoadedTags(result);
-            } catch {
-                if (!cancelled) setLoadedTags([]); // 실패해도 UI 유지
-            }
+            const fetcher = fallbackApi ?? defaultFetcher;
+            const result = await fetchTagsOnce(id, fetcher);
+            if (!cancelled) setLoadedTags(result);
         })();
 
         return () => {
@@ -102,4 +140,4 @@ const TermCardWithTagsLazy: React.FC<Props> = ({
     );
 };
 
-export default TermCardWithTagsLazy;
+export default React.memo(TermCardWithTagsLazy);

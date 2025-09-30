@@ -55,7 +55,7 @@ export default function ProfileAppearanceCard({profile}: {profile: ProfileAppear
                         <tr>
                             <LabelCell>별명</LabelCell>
                             <Separator>|</Separator>
-                            <ValueCell>{profile.nickname}</ValueCell> {/* ✅ customNickname → nickname */}
+                            <ValueCell>{profile.nickname}</ValueCell>
                         </tr>
                         {/*<tr>*/}
                         {/*    <LabelCell>계정</LabelCell>*/}
@@ -149,28 +149,4 @@ const ValueCell = styled.td`
     color: rgb(31, 41, 55);
     word-break: break-all;
     white-space: normal;
-`;
-
-const ButtonWrapper = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 24px;
-`;
-
-const EditButton = styled.button`
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    font-size: 13px;
-    color: white;
-    background: rgb(59, 130, 246);
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.2s ease-in-out;
-
-    &:hover {
-        background: rgb(37, 99, 235);
-    }
 `;

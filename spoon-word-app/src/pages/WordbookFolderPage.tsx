@@ -8,7 +8,10 @@ import TermCard from "../components/TermCard";
 import { setMemorization } from "../api/memorization";
 import { fetchMemorizationStatuses } from "../api/memorization";
 import { moveFolderTerms } from "../api/userWordbookTerms";
-import { renameUserFolder } from "../api/folder";
+import { renameUserFolder, deleteUserFolder } from "../api/folder";
+import { generatePdfByTermIds } from "../api/ebook";
+import { saveBlob } from "../utils/download";
+import { sanitizeFilename } from "../utils/cdFilename";
 
 /** 서버 응답에서 안전하게 뽑아둘 필드들 */
 type TermRow = any;
@@ -21,6 +24,10 @@ type TermItem = {
     tags?: string[];
 };
 
+type Notebook = { id: string; name: string };
+// 전체 보기 모드: 상속/전체숨김/전체표시
+type ViewMode = "inherit" | "allHidden" | "allShown";
+
 const UI = {
     color: {
         bg: "#ffffff",
@@ -31,8 +38,14 @@ const UI = {
         line: "#e5e7eb",
         indigo: "#6366f1",
         indigo50: "#eef2ff",
-        primary: "#3b82f6",
+        primary: "#4F76F1", // 탭 톤과 일치
+        primaryStrong: "#3E63E0",
         danger: "#ef4444",
+    },
+    /** 탭과 동일한 블루 그라데이션 팔레트 */
+    gradient: {
+        brand: "linear-gradient(135deg, #4F76F1 0%, #3E63E0 100%)",
+        brandSoft: "linear-gradient(135deg, rgba(79,118,241,0.12) 0%, rgba(62,99,224,0.12) 100%)",
     },
     radius: { xl: 20, lg: 14, md: 12, sm: 10, pill: 999 },
     shadow: {
@@ -75,43 +88,74 @@ const Count = styled.span`
     color: ${UI.color.muted};
 `;
 
-const Spacer = styled.div`flex: 1 1 auto;`;
+const Spacer = styled.div`
+    flex: 1 1 auto;
+`;
 
 const Seg = styled.div`
     display: inline-flex;
     border: 1px solid ${UI.color.line};
-    border-radius: ${UI.radius.sm}px;
+    border-radius: ${UI.radius.pill}px;
     overflow: hidden;
 `;
+
 const SegBtn = styled.button<{ $active?: boolean }>`
     height: 34px;
     padding: 0 12px;
-    background: ${({ $active }) => ($active ? UI.color.indigo50 : "#fff")};
-    color: ${({ $active }) => ($active ? UI.color.text : UI.color.sub)};
     border: 0;
     cursor: pointer;
+    font-weight: 700;
+    color: ${({ $active }) => ($active ? "#fff" : UI.color.sub)};
+    background: ${({ $active }) => ($active ? UI.gradient.brand : "#fff")};
+    transition: filter 120ms ease;
+    &:hover { filter: brightness(0.98); }
 `;
 
 /* ---------- 설정 버튼 + 메뉴 ---------- */
-const Actions = styled.div`position: relative;`;
+const Actions = styled.div`
+    position: relative;
+`;
 
 const SettingsBtn = styled.button`
     height: 36px;
     padding: 0 12px;
-    border-radius: ${UI.radius.sm}px;
+    border-radius: ${UI.radius.pill}px;
     border: 1px solid ${UI.color.line};
-    background: #f3f4f6;
+    background: #f8fafc;
     color: ${UI.color.sub};
     font-weight: 700;
     cursor: pointer;
+    transition: background-color 120ms ease;
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    &:hover { background: #f1f5f9; }
+`;
+
+const PrimaryBtn = styled.button`
+    height: 36px;
+    padding: 0 14px;
+    border-radius: ${UI.radius.pill}px;
+    border: 0;
+    background: ${UI.gradient.brand};
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
+    transition: transform 80ms ease, filter 160ms ease;
+
+    &:hover { filter: brightness(0.98); }
+    &:active { transform: scale(0.98); }
+    &:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(79,118,241,0.35); }
 `;
 
 const Gear = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm7.94-3.5c0-.5-.05-1-.15-1.47l2.12-1.65-2-3.46-2.5 1a7.7 7.7 0 0 0-2.54-1.47l-.38-2.67h-4l-.38 2.67A7.7 7.7 0 0 0 8.5 5.95l-2.5-1-2 3.46 2.12 1.65c-.1.48-.15.97-.15 1.47s.05.99.15 1.47L4 16.12l2 3.46 2.5-1c.78.6 1.62 1.08 2.54 1.47l.38 2.67h4l.38-2.67c.92-.39 1.76-.87 2.54-1.47l2.5 1 2-3.46-2.12-1.65c.1-.48.15-.97.15-1.47Z" fill="currentColor"/>
+        <path
+            d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm7.94-3.5c0-.5-.05-1-.15-1.47l2.12-1.65-2-3.46-2.5 1a7.7 7.7 0 0 0-2.54-1.47l-.38-2.67h-4l-.38 2.67A7.7 7.7 0 0 0 8.5 5.95l-2.5-1-2 3.46 2.12 1.65c-.1.48-.15.97-.15 1.47s.05.99.15 1.47L4 16.12l2 3.46 2.5-1c.78.6 1.62 1.08 2.54 1.47l.38 2.67h4l.38-2.67c.92-.39 1.76-.87 2.54-1.47l2.5 1 2-3.46-2.12-1.65c.1-.48.15-.97.15-1.47Z"
+            fill="currentColor"
+        />
     </svg>
 );
 
@@ -119,13 +163,27 @@ const Menu = styled.div`
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
-    min-width: 220px;
+    min-width: 240px;
     background: #fff;
     border: 1px solid ${UI.color.line};
     border-radius: 12px;
     box-shadow: ${UI.shadow.menu};
     padding: 6px;
     z-index: 6;
+`;
+
+const PdfSubMenu = styled.div`
+    position: absolute;
+    top: 0;
+    left: -8px;
+    right: -8px;
+    margin-top: 42px;
+    background: #fff;
+    border: 1px solid ${UI.color.line};
+    border-radius: 12px;
+    box-shadow: ${UI.shadow.menu};
+    padding: 6px;
+    z-index: 7;
 `;
 
 const MenuItem = styled.button<{ disabled?: boolean }>`
@@ -147,90 +205,93 @@ const Grid = styled.div`
     gap: 14px;
 `;
 
+const CHECK_W = 28;
+const CHECK_GAP = 10;
+const TITLE_SHIFT = CHECK_W + CHECK_GAP;
+
 /** TermCard 내부의 + 버튼 숨김, 제목/설명 가리기, 연관 키워드 숨기기 */
-const HideTermCardAdd = styled.div<{
-    $hideTitle?: boolean;
-    $hideDesc?: boolean;
-}>`
+const HideTermCardAdd = styled.div<{ $hideTitle?: boolean; $hideDesc?: boolean }>`
     [aria-label="내 단어장에 추가"] { display: none !important; }
 
-    /* 단어 숨기기: h3 제목 위에 f8fafc 네모 박스 덮기 */
+    /* 제목은 항상 살짝 오른쪽으로 밀어 체크와 정렬 */
+    article h3[id^="term-"] { margin-left: ${TITLE_SHIFT}px !important; }
+
+    /* 제목 숨김 모드 */
     ${({ $hideTitle }) =>
             $hideTitle &&
             `
-    article h3[id^="term-"]{
-      position: relative;
-      color: transparent !important;
-      text-shadow: none !important;
-      user-select: none;
-    }
-    article h3[id^="term-"]::after{
-      content: "";
-      position: absolute;
-      left: -6px;
-      right: -6px;
-      top: -2px;
-      bottom: -2px;
-      background: ${UI.color.panel};
-      border-radius: 10px;
-      pointer-events: none;
-    }
+      article h3[id^="term-"]{
+        position: relative;
+        color: transparent !important;
+        text-shadow: none !important;
+        user-select: none;
+      }
+      article h3[id^="term-"]::selection { background: transparent; }
+      article h3[id^="term-"]::after{
+        content: "";
+        position: absolute;
+        left: -6px;
+        right: -6px;
+        top: -2px;
+        bottom: -2px;
+        background: ${UI.color.panel};
+        border-radius: 10px;
+        pointer-events: none;
+      }
   `}
 
-        /* 뜻 숨기기: 박스(InnerBox)는 유지하고 텍스트만 투명 처리 */
     ${({ $hideDesc }) =>
             $hideDesc &&
             `
-    article > div:nth-of-type(2) {
-      position: relative;
-    }
-    article > div:nth-of-type(2) p {
-      color: transparent !important;
-      text-shadow: none !important;
-      user-select: none;
-    }
-    article > div:nth-of-type(2) p::selection {
-      background: transparent;
-    }
+      article > div:nth-of-type(2) { position: relative; }
+      article > div:nth-of-type(2) p {
+        color: transparent !important;
+        text-shadow: none !important;
+        user-select: none;
+      }
+      article > div:nth-of-type(2) p::selection { background: transparent; }
   `}
 
-        /* 연관 키워드 통째로 숨김 */
-    article [aria-label="연관 키워드"] {
-        display: none !important;
-    }
+    article [aria-label="연관 키워드"] { display: none !important; }
 `;
 
-/** 카드 래퍼 — 선택해도 박스 테두리 없음 */
 const CardWrap = styled.div`
     position: relative;
     border-radius: ${UI.radius.xl}px;
 `;
 
-/** 우측 상단 원형 선택 토글(선택 모드 전용) */
+/** 항상 보이는 좌측 체크(첨부칩 느낌) */
 const SelectToggle = styled.button<{ $on?: boolean }>`
     position: absolute;
-    top: 14px;
-    right: 14px;
+    top: 22px;
+    left: 20px;
     z-index: 3;
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 32px; height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
     border-radius: ${UI.radius.pill}px;
-    border: ${({ $on }) => ($on ? "0" : "1px solid rgba(99,102,241,0.28)")};
-    color: ${({ $on }) => ($on ? "#fff" : UI.color.indigo)};
-    background: ${({ $on }) => ($on ? UI.color.indigo : "#fff")};
+    border: 0;
+
+    background: ${({ $on }) => ($on ? UI.gradient.brand : UI.gradient.brandSoft)};
+    color: ${({ $on }) => ($on ? "#fff" : "#0f172a")};
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.28);
+
     cursor: pointer;
-    line-height: 0; overflow: hidden; contain: paint; backface-visibility: hidden;
+    line-height: 0;
+    overflow: hidden;
+    contain: paint;
+    backface-visibility: hidden;
     -webkit-tap-highlight-color: transparent;
-    transition: background-color 120ms ease, border-color 120ms ease, transform 40ms ease, color 120ms ease;
+    transition: transform 80ms ease, filter 160ms ease;
 
-    outline: none;
-    &:focus { outline: none; }
-    &:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.25); }
-
-    &:hover { background: ${({ $on }) => ($on ? UI.color.indigo : UI.color.indigo50)}; }
-    &:active { transform: scale(0.98); }
-
-    @media (pointer: coarse) { width: 40px; height: 40px; }
+    &:hover { filter: brightness(0.98); }
+    &:active { transform: scale(0.97); }
+    &:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(79,118,241,0.35);
+    }
 `;
 
 const CheckIcon = () => (
@@ -238,41 +299,45 @@ const CheckIcon = () => (
         <path d="M20 7L10 17l-6-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
     </svg>
 );
+
+/* 비선택 점선도 동일 계열 파랑 */
 const Hollow = styled.span`
-    width: 14px; height: 14px; border-radius: 999px; border: 2px solid ${UI.color.indigo}; display: block;
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    border: 2px solid ${UI.color.primaryStrong};
+    background: rgba(255,255,255,0.7);
+    display: block;
 `;
 
-/** 타이틀 옆 '미암기 ↔ 암기 완료' 토글 버튼 */
-const StatusBtn = styled.button<{ $done?: boolean; $shift?: boolean }>`
+/** 암기 상태 칩도 동일 톤으로 */
+const StatusBtn = styled.button<{ $done?: boolean }>`
     position: absolute;
-    top: 20px;
-    right: ${({ $shift }) => ($shift ? "56px" : "20px")}; /* 선택 토글이 있을 땐 살짝 왼쪽으로 이동 */
+    top: 14px;
+    right: 14px;
     z-index: 2;
+
     height: 28px;
-    padding: 0 10px;
-    border-radius: ${UI.radius.sm}px;
-    border: 1px solid ${UI.color.line};
-    background: ${({ $done }) => ($done ? UI.color.indigo50 : "#fff")};
-    color: ${({ $done }) => ($done ? UI.color.indigo : UI.color.sub)};
+    padding: 0 12px;
+    border-radius: ${UI.radius.pill}px;
+    border: 0;
+
     font-size: ${UI.font.tiny};
     font-weight: 700;
+
+    background: ${({ $done }) => ($done ? UI.gradient.brand : UI.gradient.brandSoft)};
+    color: ${({ $done }) => ($done ? "#fff" : "#0f172a")};
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
+
     cursor: pointer;
-    outline: none;
-    -webkit-tap-highlight-color: transparent;
-    transition: background-color 120ms ease, color 120ms ease, transform 40ms ease, border-color 120ms ease;
+    transition: transform 80ms ease, filter 160ms ease;
+    &:hover { filter: brightness(0.985); }
+    &:active { transform: scale(0.97); }
+    &:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(79,118,241,0.35); }
 
-    &:hover { background: #f9fafb; }
-    &:active { transform: scale(0.98); }
-    &:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.20); }
-
-    /* 저장 중 시 약간 비활성 느낌 */
-    &:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-    }
+    &:disabled { opacity: 0.7; cursor: not-allowed; filter: none; }
 `;
 
-/* ----- 카드별 보기 제어(학습 모드: 단어/뜻 숨김) ----- */
 const LearnRow = styled.div`
     margin-top: 12px;
     margin-left: 16px;
@@ -297,7 +362,7 @@ const LearnSeg = styled.div`
 const LearnBtn = styled.button<{ $active?: boolean }>`
     height: 28px;
     padding: 0 10px;
-    background: ${({ $active }) => ($active ? UI.color.indigo50 : "#fff")};
+    background: ${({ $active }) => ($active ? "rgba(79,118,241,0.10)" : "#fff")};
     color: ${({ $active }) => ($active ? UI.color.text : UI.color.sub)};
     border: 0;
     cursor: pointer;
@@ -306,7 +371,6 @@ const LearnBtn = styled.button<{ $active?: boolean }>`
     &:hover { background: #f9fafb; }
 `;
 
-/* 빈 상태/더보기 */
 const Empty = styled.div`
     border: 1px dashed ${UI.color.line};
     border-radius: ${UI.radius.xl}px;
@@ -326,11 +390,21 @@ const LoadMore = styled.button`
     cursor: pointer;
 `;
 
-/* ---------- 이동(폴더 선택) 모달 재사용 ---------- */
-type Notebook = { id: string; name: string };
-
-// 전체 보기 모드: 상속/전체숨김/전체표시
-type ViewMode = "inherit" | "allHidden" | "allShown";
+/* 하단 Export Tray */
+const Tray = styled.div`
+    position: sticky;
+    bottom: 0;
+    z-index: 7;
+    background: #0f172a;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    margin-top: 10px;
+`;
 
 export default function WordbookFolderPage() {
     const { folderId } = useParams<{ folderId: string }>();
@@ -346,81 +420,80 @@ export default function WordbookFolderPage() {
     const [page, setPage] = React.useState(0);
     const [hasMore, setHasMore] = React.useState(false);
 
-    // 선택 모드와 선택된 항목
-    const [selectMode, setSelectMode] = React.useState(false);
+    /** 선택 상태 (항상 노출되는 체크 기반) */
     const [checked, setChecked] = React.useState<Record<string, boolean>>({});
-    const selectedIds = React.useMemo(() => Object.keys(checked).filter((k) => checked[k]), [checked]);
-    const allOn = items.length > 0 && selectedIds.length === items.length;
+    const allOn =
+        items.length > 0 && Object.values(checked).length === items.length && Object.values(checked).every(Boolean);
 
     // 전체 보기 모드(마스터 스위치)
     const [titleMode, setTitleMode] = React.useState<ViewMode>("inherit");
     const [descMode, setDescMode] = React.useState<ViewMode>("inherit");
 
-    // 카드별 보기 상태: 'none' | 'hideTitle' | 'hideDesc'
-    const [cardView, setCardView] = React.useState<Record<string, "none" | "hideTitle" | "hideDesc">>({});
+    // 카드별 보기 상태
+    const [cardView, setCardView] = React.useState<
+        Record<string, "none" | "hideTitle" | "hideDesc" | "showTitle" | "showDesc">
+    >({});
 
-    // 카드별 암기 상태: 'unmemorized' | 'memorized'
+    // 카드별 암기 상태
     const [learn, setLearn] = React.useState<Record<string, "unmemorized" | "memorized">>({});
 
-    // 저장 중 상태 (버튼 디스에이블)
+    // 저장/내보내기 진행 상태
     const [saving, setSaving] = React.useState<Record<string, boolean>>({});
+    const [exporting, setExporting] = React.useState(false);
 
     // 설정 메뉴
     const [menuOpen, setMenuOpen] = React.useState(false);
+    const [pdfMenuOpen, setPdfMenuOpen] = React.useState(false);
     const actionsRef = React.useRef<HTMLDivElement | null>(null);
 
     // 이동 모달
     const [moveOpen, setMoveOpen] = React.useState(false);
     const [notebooks, setNotebooks] = React.useState<Notebook[]>([]);
 
-    const normalize = React.useCallback((s: string) => s.trim().replace(/\s+/g, " ").toLowerCase(), []);
+    // 전역 선택 바구니: termId 기준(페이지 넘어가도 유지)
+    const [selectedTermIds, setSelectedTermIds] = React.useState<Set<number>>(new Set());
+    const [uwtToTerm, setUwtToTerm] = React.useState<Record<string, number | null>>({});
+    const storageKey = React.useMemo(() => `wb:${folderId}:selectedTermIds`, [folderId]);
 
-    /* ------ data fetch ------ */
+    // 선택 바구니 복원
+    React.useEffect(() => {
+        try {
+            const raw = sessionStorage.getItem(storageKey);
+            if (raw) setSelectedTermIds(new Set(JSON.parse(raw)));
+        } catch {}
+    }, [storageKey]);
+
+    const persistSelected = React.useCallback(
+        (next: Set<number>) => {
+            setSelectedTermIds(next);
+            try {
+                sessionStorage.setItem(storageKey, JSON.stringify(Array.from(next)));
+            } catch {}
+        },
+        [storageKey]
+    );
+
     const mapRow = (row: TermRow): TermItem | null => {
-        const uwt =
-            row.userWordbookTermId ??
-            row.userTermId ??
-            row.uwtId ??
-            row.id ??
-            row.user_wordbook_term_id;
+        const uwt = row.userWordbookTermId ?? row.userTermId ?? row.uwtId ?? row.id ?? row.user_wordbook_term_id;
         if (uwt == null) return null;
 
-        // 1) 가장 믿을 수 있는 소스: 중첩 객체의 term.id
-        let tId: number | null =
-            row?.term?.id ?? row?.term_id ?? null;
-
-        // 2) 루트의 termId가 있긴 한데, 이게 uwtId와 같으면 가짜일 확률 높음 → 버림
+        let tId: number | null = row?.term?.id ?? row?.term_id ?? null;
         if (tId == null) {
             const rootTermId = row.termId ?? row.tid ?? row?.term?.termId;
-            if (
-                rootTermId != null &&
-                String(rootTermId) !== String(uwt) // uwtId와 같으면 쓰지 않음
-            ) {
+            if (rootTermId != null && String(rootTermId) !== String(uwt)) {
                 tId = Number(rootTermId);
                 if (!Number.isFinite(tId)) tId = null;
             }
         }
 
-        const title =
-            row.word ??
-            row.title ??
-            row.term?.title ??
-            row.term?.word ??
-            "(제목 없음)";
-
-        const description =
-            row.description ??
-            row.term?.description ??
-            row.explain ??
-            row.meaning ??
-            "";
-
+        const title = row.word ?? row.title ?? row.term?.title ?? row.term?.word ?? "(제목 없음)";
+        const description = row.description ?? row.term?.description ?? row.explain ?? row.meaning ?? "";
         const createdAt = row.createdAt ?? row.created_at;
         const tags: string[] = row.tags ?? row.term?.tags ?? [];
 
         return {
             uwtId: String(uwt),
-            termId: tId != null ? String(tId) : null, // ← term.id 없으면 null
+            termId: tId != null ? String(tId) : null,
             title: String(title),
             description: String(description),
             createdAt,
@@ -428,104 +501,86 @@ export default function WordbookFolderPage() {
         };
     };
 
-    const fetchPage = React.useCallback(async (p: number) => {
-        if (!folderId) return;
-        setLoading(true); setError(null);
-        try {
-            const res = await http.get(`/api/folders/${folderId}/terms`, {
-                params: { page: p+1, perPage: 20, sort: "createdAt,DESC" },
-                headers: { ...authHeader() },
-            });
-            const d = res.data ?? {};
-            const raw: any[] = d.userWordbookTermList || d.items || d.content || d.terms || d.data || [];
-            const list = raw.map(mapRow).filter(Boolean) as TermItem[];
-
-            const totalPages =
-                (typeof d.totalPages === "number" && d.totalPages) ||
-                (typeof d.totalPage === "number" && d.totalPage) ||
-                (typeof d.pages === "number" && d.pages) || 1;
-
-            setItems((prev) => (p === 0 ? list : [...prev, ...list]));
-            setHasMore(p + 1 < totalPages);
-
-            if (typeof d.folderName === "string" && d.folderName.trim()) setFolderName(d.folderName);
-
-            // (선택) 서버가 암기 상태를 내려주면 여기서 초기화
-            // const initLearn: Record<string, "unmemorized" | "memorized"> = {};
-            // raw.forEach((row) => {
-            //   const uwtId = row.userTermId ?? row.userWordbookTermId ?? row.id;
-            //   const s = row.memorizationStatus ?? row.status;
-            //   if (uwtId != null && (s === "MEMORIZED" || s === "LEARNING")) {
-            //     initLearn[String(uwtId)] = s === "MEMORIZED" ? "memorized" : "unmemorized";
-            //   }
-            // });
-            // if (Object.keys(initLearn).length) {
-            //   setLearn((prev) => (p === 0 ? { ...prev, ...initLearn } : { ...initLearn, ...prev }));
-            // }
-        } catch (err: any) {
-            const s = err?.response?.status;
-            if (s === 401) navigate("/login", { state: { from: `/spoon-word/folders/${folderId}` } });
-            else if (s === 404 || s === 403) setError("폴더를 찾을 수 없습니다.");
-            else setError("데이터를 불러오는 중 오류가 발생했습니다.");
-        } finally {
-            setLoading(false);
-        }
-    }, [folderId, navigate]);
-
-    const handleRequestRename = React.useCallback(
-        async (folderId: string, currentName: string) => {
-            const next = window.prompt("새 폴더 이름을 입력하세요.", currentName ?? "");
-            if (next == null) return; // 취소
-            const raw = next.trim();
-            if (!raw) return alert("폴더 이름은 공백일 수 없습니다.");
-            if (raw.length > 60) return alert("폴더 이름은 최대 60자입니다.");
-
-            // 중복 체크(현재 모달에 있는 목록 기준)
-            const dup = notebooks.some(n => n.id !== folderId && normalize(n.name) === normalize(raw));
-            if (dup) return alert("동일한 이름의 폴더가 이미 존재합니다.");
-
+    const fetchPage = React.useCallback(
+        async (p: number) => {
+            if (!folderId) return;
+            setLoading(true);
+            setError(null);
             try {
-                await renameUserFolder(folderId, raw);               // PATCH /api/me/folders/{id}
-                // 로컬 반영 또는 서버 재조회 중 하나 선택
-                setNotebooks(prev => prev.map(n => (n.id === folderId ? { ...n, name: raw } : n)));
-                // 필요 시: setNotebooks(await fetchUserFolders());
-            } catch (e: any) {
-                const s = e?.response?.status;
-                if (s === 409) alert("동일한 이름의 폴더가 이미 존재합니다.");
-                else if (s === 400) alert("폴더 이름 형식이 올바르지 않습니다.");
-                else if (s === 403) alert("이 폴더에 대한 권한이 없습니다.");
-                else if (s === 404) alert("폴더를 찾을 수 없습니다.");
-                else alert("폴더 이름 변경에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+                const res = await http.get(`/folders/${folderId}/terms`, {
+                    params: { page: p + 1, perPage: 20, sort: "createdAt,DESC" },
+                    headers: { ...authHeader() },
+                });
+                const d = res.data ?? {};
+                const raw: any[] = d.userWordbookTermList || d.items || d.content || d.terms || d.data || [];
+                const list = raw.map(mapRow).filter(Boolean) as TermItem[];
+
+                const totalPages =
+                    (typeof d.totalPages === "number" && d.totalPages) ||
+                    (typeof d.totalPage === "number" && d.totalPage) ||
+                    (typeof d.pages === "number" && d.pages) ||
+                    1;
+
+                setItems((prev) => (p === 0 ? list : [...prev, ...list]));
+                setHasMore(p + 1 < totalPages);
+
+                if (typeof d.folderName === "string" && d.folderName.trim()) setFolderName(d.folderName);
+            } catch (err: any) {
+                const s = err?.response?.status;
+                if (s === 401) navigate("/login", { state: { from: `/spoon-word/folders/${folderId}` } });
+                else if (s === 404 || s === 403) setError("폴더를 찾을 수 없습니다.");
+                else setError("데이터를 불러오는 중 오류가 발생했습니다.");
+            } finally {
+                setLoading(false);
             }
         },
-        [notebooks, normalize]
+        [folderId, navigate]
     );
 
+    // 초기 로드
     React.useEffect(() => {
         setPage(0);
         setChecked({});
-        setSelectMode(false);
         fetchPage(0);
     }, [fetchPage]);
 
+    // items 들어올 때 uwtId→termId 매핑 갱신 및 체크 동기화
+    React.useEffect(() => {
+        if (!items.length) return;
+        setUwtToTerm((prev) => {
+            const next = { ...prev };
+            for (const it of items) next[it.uwtId] = it.termId ? Number(it.termId) : null;
+            return next;
+        });
+
+        // 화면에 보이는 항목의 체크 상태를 selectedTermIds 기준으로 반영
+        setChecked((prev) => {
+            const next: Record<string, boolean> = { ...prev };
+            for (const it of items) {
+                const idNum = Number(it.termId);
+                next[it.uwtId] =
+                    Number.isFinite(idNum) && idNum > 0 ? selectedTermIds.has(idNum) : !!prev[it.uwtId];
+            }
+            return next;
+        });
+    }, [items, selectedTermIds]);
+
+    // 암기 상태 초기 동기화
     React.useEffect(() => {
         if (items.length === 0) return;
-
         let aborted = false;
-        const ids = Array.from(new Set(items.map(it => Number(it.termId)).filter(Boolean)));
+        const ids = Array.from(new Set(items.map((it) => Number(it.termId)).filter(Boolean)));
 
         (async () => {
             try {
-                const map = await fetchMemorizationStatuses(ids); // { "123": "MEMORIZED", "456": "LEARNING", ... }
+                const map = await fetchMemorizationStatuses(ids);
                 if (aborted || !map) return;
-
-                setLearn(prev => {
+                setLearn((prev) => {
                     const next = { ...prev };
                     for (const it of items) {
                         const raw = map[String(it.termId)];
                         if (raw === "MEMORIZED") next[it.uwtId] = "memorized";
                         else if (raw === "LEARNING") next[it.uwtId] = "unmemorized";
-                        // 값이 없으면 그대로 두고(기본 미암기), 다음 요청에서 채워짐
                     }
                     return next;
                 });
@@ -537,67 +592,70 @@ export default function WordbookFolderPage() {
         return () => { aborted = true; };
     }, [items]);
 
-
-
     /* ------ selection / bulk actions ------ */
-    const toggleAll = (on: boolean) => {
-        const next: Record<string, boolean> = {};
-        if (on) items.forEach((it) => (next[it.uwtId] = true));
-        setChecked(next);
-    };
-
     const onToggleItem = (uwtId: string) => {
-        setChecked((prev) => ({ ...prev, [uwtId]: !prev[uwtId] }));
+        const currentlyOn = !!checked[uwtId];
+        setChecked((prev) => ({ ...prev, [uwtId]: !currentlyOn }));
+
+        const termId = uwtToTerm[uwtId];
+        if (Number.isFinite(termId) && (termId as number) > 0) {
+            const next = new Set(selectedTermIds);
+            if (currentlyOn) next.delete(termId as number);
+            else next.add(termId as number);
+            persistSelected(next);
+        }
     };
 
-    const handleBulkDelete = async () => {
-        if (selectedIds.length === 0) return;
-        if (!confirm(`선택한 ${selectedIds.length}개 용어를 삭제할까요?`)) return;
-        // TODO: API 연결
-        setItems((prev) => prev.filter((it) => !selectedIds.includes(it.uwtId)));
-        setChecked({}); setSelectMode(false); setMenuOpen(false);
+    /** 현재 화면에 로드된 항목 기준 전체 선택/해제 */
+    const toggleAll = (on: boolean) => {
+        const nextChecked: Record<string, boolean> = {};
+        const nextSelected = new Set(selectedTermIds);
+        if (on) {
+            items.forEach((it) => {
+                nextChecked[it.uwtId] = true;
+                const id = Number(it.termId);
+                if (Number.isFinite(id) && id > 0) nextSelected.add(id);
+            });
+        } else {
+            items.forEach((it) => {
+                nextChecked[it.uwtId] = false;
+                const id = Number(it.termId);
+                if (Number.isFinite(id) && id > 0) nextSelected.delete(id);
+            });
+        }
+        setChecked(nextChecked);
+        persistSelected(nextSelected);
+    };
+
+    const clearAllSelected = () => {
+        persistSelected(new Set());
+        setChecked({});
     };
 
     const openMove = async () => {
-        if (selectedIds.length === 0) return;
-
-        const sel = items.filter(it => selectedIds.includes(it.uwtId));
-        console.table(sel.map(it => ({
-            uwtId: it.uwtId,
-            termId: it.termId, // 반드시 term.id 여야 함
-            title: it.title,
-        })));
-
+        const selectedCount = selectedTermIds.size;
+        if (selectedCount === 0) {
+            alert("먼저 단어를 선택해 주세요.");
+            return;
+        }
         try {
             const list = await fetchUserFolders();
             setNotebooks(list);
-        } catch { setNotebooks([]); }
-        setMoveOpen(true); setMenuOpen(false);
+        } catch {
+            setNotebooks([]);
+        }
+        setMoveOpen(true);
+        setMenuOpen(false);
+        setPdfMenuOpen(false);
     };
 
-
     const handleConfirmMove = async (destFolderId: string) => {
-        if (!folderId || selectedIds.length === 0) return;
-        if (String(destFolderId) === String(folderId)) { setMoveOpen(false); return; }
-
-        const selected = items.filter(it => selectedIds.includes(it.uwtId));
-
-        // termId가 진짜 숫자인 것만 전송
-        const termIds = Array.from(
-            new Set(
-                selected
-                    .map(it => Number(it.termId))
-                    .filter(n => Number.isFinite(n) && n > 0)
-            )
-        );
-
-        // termId 없던 카드들 로그
-        const missing = selected.filter(it => !(Number(it.termId) > 0));
-        if (missing.length) {
-            console.warn("[move] term.id를 알 수 없어 제외된 항목:", missing.map(m => ({ uwtId: m.uwtId, termId: m.termId, title: m.title })));
+        if (!folderId) return;
+        const termIds = Array.from(selectedTermIds);
+        if (termIds.length === 0) {
+            setMoveOpen(false);
+            return;
         }
-
-        if (termIds.length === 0) { setMoveOpen(false); return; }
 
         try {
             const res = await moveFolderTerms(Number(folderId), {
@@ -605,24 +663,14 @@ export default function WordbookFolderPage() {
                 termIds,
             });
 
-            console.group("[moveFolderTerms] result");
-            console.log("source -> target:", folderId, "->", destFolderId);
-            console.log("requested termIds:", termIds);
-            console.log("movedCount:", res.movedCount);
-            console.log("movedTermIds:", res.movedTermIds);
-            console.log("skippedCount:", res.skippedCount);
-            console.table(res.skipped?.map(s => ({ termId: s.termId, reason: `'${s.reason}'` })) ?? []);
-            console.groupEnd();
-
             const moved = new Set((res.movedTermIds ?? []).map(String));
             if (moved.size > 0) {
-                setItems(prev => prev.filter(it => !moved.has(String(it.termId))));
+                setItems((prev) => prev.filter((it) => !moved.has(String(it.termId))));
             }
             setPage(0);
             await fetchPage(0);
 
-            setChecked({});
-            setSelectMode(false);
+            clearAllSelected();
         } catch (err: any) {
             const s = err?.response?.status;
             if (s === 401) alert("로그인이 필요합니다.");
@@ -635,81 +683,236 @@ export default function WordbookFolderPage() {
         }
     };
 
+    /* ------ PDF 내보내기 ------ */
+    const exportByTermIds = async (termIds: number[], title: string) => {
+        if (!termIds.length) {
+            alert("선택한 단어가 없습니다.");
+            return;
+        }
+        try {
+            setExporting(true);
+            const { blob, meta } = await generatePdfByTermIds({ termIds, title });
+            if ((meta as any)?.mismatch) console.warn("[PDF Export] filename mismatch", meta);
+            const preferred = (meta as any)?.cdFilename || (meta as any)?.ebookFilename || `jobspoon_terms_${Date.now()}.pdf`;
+            const finalName = sanitizeFilename(preferred, `jobspoon_terms_${Date.now()}.pdf`);
+            saveBlob(blob, finalName);
+        } catch (e: any) {
+            console.error("[PDF] export failed", e);
+            alert(e?.message ?? "PDF 생성에 실패했습니다.");
+        } finally {
+            setExporting(false);
+            setMenuOpen(false);
+            setPdfMenuOpen(false);
+        }
+    };
+
+    const generatePdfByFolder = React.useCallback(
+        async (folderIdNum: number, title: string) => {
+            const body = {
+                folderId: folderIdNum,
+                userFolderId: folderIdNum,
+                userWordbookFolderId: folderIdNum,
+                title,
+            };
+
+            const call = async (url: string) => {
+                try {
+                    const res = await http.post(url, body, {
+                        headers: { ...authHeader() },
+                        responseType: "blob",
+                        validateStatus: () => true,
+                    });
+
+                    if (res.status >= 200 && res.status < 300) {
+                        const headers = (res as any).headers || {};
+                        const ebookFilename = headers["ebook-filename"] || headers["Ebook-Filename"];
+                        let filename = ebookFilename || `jobspoon_terms_${Date.now()}.pdf`;
+
+                        const cd = headers["content-disposition"] || headers["Content-Disposition"];
+                        if (!ebookFilename && typeof cd === "string") {
+                            const m = cd.match(/filename\*?=UTF-8''([^;]+)|filename="([^"]+)"/i);
+                            const enc = m?.[1] ? decodeURIComponent(m[1]) : m?.[2] || "";
+                            if (enc) filename = sanitizeFilename(enc, filename);
+                        }
+
+                        return { ok: true as const, blob: res.data as Blob, filename };
+                    }
+
+                    let serverMsg = `HTTP ${res.status}`;
+                    try {
+                        const text = await (res.data as Blob).text();
+                        if (text) serverMsg = `${serverMsg} • ${text}`;
+                    } catch {}
+                    return { ok: false as const, status: res.status, message: serverMsg };
+                } catch (e: any) {
+                    return { ok: false as const, status: 0, message: e?.message ?? "요청 실패" };
+                }
+            };
+
+            let result = await call(`/pdf/generate/by-folder`);
+            if (!result.ok && result.status === 404) {
+                result = await call(`/api/pdf/generate/by-folder`);
+            }
+
+            if (!result.ok) {
+                if (result.status === 404) {
+                    alert("폴더를 찾을 수 없거나 접근 권한이 없습니다.\n(서버 메시지) " + result.message);
+                } else if (result.status === 401) {
+                    alert("로그인이 필요합니다.");
+                    navigate("/login", { state: { from: location.pathname } });
+                } else {
+                    alert("PDF 생성에 실패했습니다.\n" + result.message);
+                }
+                throw new Error(result.message);
+            }
+
+            return { blob: result.blob, filename: result.filename };
+        },
+        [navigate, location.pathname]
+    );
+
+    const handleExportSelectedPdf = async () => {
+        const picked = Array.from(selectedTermIds);
+        await exportByTermIds(picked, folderName);
+    };
+
+    const handleExportWholeFolderPdf = async () => {
+        if (!folderId) return;
+        try {
+            setExporting(true);
+            const { blob, filename } = await generatePdfByFolder(Number(folderId), folderName);
+            saveBlob(blob, filename);
+        } catch {
+        } finally {
+            setExporting(false);
+            setMenuOpen(false);
+            setPdfMenuOpen(false);
+        }
+    };
+
     /* ------ settings menu : outside click/esc ------ */
     React.useEffect(() => {
         if (!menuOpen) return;
         const onDocClick = (e: MouseEvent) => {
             if (!actionsRef.current) return;
             const t = e.target as Node;
-            if (!actionsRef.current.contains(t)) setMenuOpen(false);
+            if (!actionsRef.current.contains(t)) {
+                setMenuOpen(false);
+                setPdfMenuOpen(false);
+            }
         };
-        const onEsc = (e: KeyboardEvent) => { if (e.key === "Escape") setMenuOpen(false); };
+        const onEsc = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                setMenuOpen(false);
+                setPdfMenuOpen(false);
+            }
+        };
         document.addEventListener("mousedown", onDocClick);
         document.addEventListener("keydown", onEsc);
-        return () => { document.removeEventListener("mousedown", onDocClick); document.removeEventListener("keydown", onEsc); };
+        return () => {
+            document.removeEventListener("mousedown", onDocClick);
+            document.removeEventListener("keydown", onEsc);
+        };
     }, [menuOpen]);
 
-    /* ------ render ------ */
+    /* ------ 기타 ------ */
     if (loading && items.length === 0) return <p style={{ padding: 20 }}>⏳ 불러오는 중...</p>;
     if (error) return <p style={{ color: "red", padding: 20 }}>{error}</p>;
 
-    const onLoadMore = () => { const next = page + 1; setPage(next); fetchPage(next); };
+    const onLoadMore = () => {
+        const next = page + 1;
+        setPage(next);
+        fetchPage(next);
+    };
 
-    // 상단 버튼: 모드 순환(상속 → 전체숨김 → 전체표시 → 상속)
     const cycleTitleMode = () =>
         setTitleMode((m) => (m === "inherit" ? "allHidden" : m === "allHidden" ? "allShown" : "inherit"));
     const cycleDescMode = () =>
         setDescMode((m) => (m === "inherit" ? "allHidden" : m === "allHidden" ? "allShown" : "inherit"));
+
+    const handleDeleteSelected = () => {
+        if (selectedTermIds.size === 0) {
+            alert("먼저 단어를 선택해 주세요.");
+            return;
+        }
+        if (!confirm(`선택된 ${selectedTermIds.size.toLocaleString()}개 단어를 삭제할까요?`)) return;
+        setItems((prev) => prev.filter((it) => !selectedTermIds.has(Number(it.termId))));
+        clearAllSelected();
+        setMenuOpen(false);
+        setPdfMenuOpen(false);
+    };
 
     return (
         <div style={{ padding: 8 }}>
             {/* 상단 툴바 */}
             <Toolbar>
                 <Row>
-                    <button type="button" onClick={() => navigate(-1)} aria-label="이전으로" style={{ border: 0, background: "transparent", cursor: "pointer" }}>
+                    <button
+                        type="button"
+                        onClick={() => navigate(-1)}
+                        aria-label="이전으로"
+                        style={{ border: 0, background: "transparent", cursor: "pointer" }}
+                    >
                         ←
                     </button>
 
                     <Title>{folderName}</Title>
                     <Count>
                         {items.length.toLocaleString()}개
-                        {selectMode && selectedIds.length > 0 ? ` · 선택 ${selectedIds.length}` : ""}
+                        {selectedTermIds.size > 0 ? ` · 선택 ${selectedTermIds.size.toLocaleString()}` : ""}
                     </Count>
 
                     <Spacer />
 
-                    {/* 보기 옵션(전체 적용) */}
+                    {/* 전체 선택/해제 */}
+                    <PrimaryBtn
+                        type="button"
+                        onClick={() => toggleAll(!allOn)}
+                        aria-pressed={allOn}
+                        title={allOn ? "전체 해제" : "전체 선택"}
+                    >
+                        {allOn ? "전체 해제" : "전체 선택"}
+                    </PrimaryBtn>
+
+                    {/* 보기 옵션 */}
                     <Seg aria-label="보기 옵션">
-                        <SegBtn $active={titleMode !== "inherit"} onClick={cycleTitleMode}>일괄 단어 숨기기</SegBtn>
-                        <SegBtn $active={descMode !== "inherit"} onClick={cycleDescMode}>일괄 뜻 숨기기</SegBtn>
+                        <SegBtn $active={titleMode !== "inherit"} onClick={cycleTitleMode}>
+                            일괄 단어 숨기기
+                        </SegBtn>
+                        <SegBtn $active={descMode !== "inherit"} onClick={cycleDescMode}>
+                            일괄 뜻 숨기기
+                        </SegBtn>
                     </Seg>
 
                     <Actions ref={actionsRef}>
-                        <SettingsBtn type="button" onClick={() => setMenuOpen((v) => !v)} aria-haspopup="menu" aria-expanded={menuOpen}>
+                        <SettingsBtn
+                            type="button"
+                            onClick={() => {
+                                setMenuOpen((v) => !v);
+                                setPdfMenuOpen(false);
+                            }}
+                            aria-haspopup="menu"
+                            aria-expanded={menuOpen}
+                        >
                             <Gear /> 설정
                         </SettingsBtn>
                         {menuOpen && (
-                            <Menu role="menu" aria-label="폴더 설정">
-                                {!selectMode ? (
-                                    <MenuItem role="menuitem" onClick={() => { setSelectMode(true); }}>
-                                        단어 선택 시작
+                            <Menu role="menu" aria-label="설정">
+                                <MenuItem role="menuitem" onClick={openMove}>단어 이동하기</MenuItem>
+                                <MenuItem role="menuitem" onClick={handleDeleteSelected}>단어 삭제하기</MenuItem>
+
+                                {/* PDF 내보내기 - 2단 메뉴 */}
+                                <div style={{ position: "relative" }}>
+                                    <MenuItem role="menuitem" onClick={() => setPdfMenuOpen((v) => !v)}>
+                                        PDF 내보내기
                                     </MenuItem>
-                                ) : (
-                                    <>
-                                        <MenuItem role="menuitem" onClick={() => toggleAll(!allOn)}>
-                                            {allOn ? "전체선택 해제" : "전체선택"}
-                                        </MenuItem>
-                                        <MenuItem role="menuitem" disabled={selectedIds.length === 0} onClick={openMove}>
-                                            선택 항목 이동
-                                        </MenuItem>
-                                        <MenuItem role="menuitem" disabled={selectedIds.length === 0} onClick={handleBulkDelete}>
-                                            선택 항목 삭제
-                                        </MenuItem>
-                                        <MenuItem role="menuitem" onClick={() => { setSelectMode(false); setChecked({}); }}>
-                                            선택 종료
-                                        </MenuItem>
-                                    </>
-                                )}
+                                    {pdfMenuOpen && (
+                                        <PdfSubMenu role="menu" aria-label="PDF 내보내기 옵션">
+                                            <MenuItem onClick={handleExportSelectedPdf}>내가 선택한 단어만 내보내기</MenuItem>
+                                            <MenuItem onClick={handleExportWholeFolderPdf}>단어장 폴더 전체 내보내기</MenuItem>
+                                        </PdfSubMenu>
+                                    )}
+                                </div>
                             </Menu>
                         )}
                     </Actions>
@@ -727,42 +930,44 @@ export default function WordbookFolderPage() {
 
                             const perCard = cardView[it.uwtId] ?? "none";
                             const hideTitleForCard =
-                                titleMode === "allHidden" ? true :
-                                    titleMode === "allShown" ? false :
-                                        perCard === "hideTitle";
+                                titleMode === "allHidden"
+                                    ? perCard !== "showTitle"
+                                    : titleMode === "allShown"
+                                        ? perCard === "hideTitle"
+                                        : perCard === "hideTitle";
 
                             const hideDescForCard =
-                                descMode === "allHidden" ? true :
-                                    descMode === "allShown" ? false :
-                                        perCard === "hideDesc";
+                                descMode === "allHidden"
+                                    ? perCard !== "showDesc"
+                                    : descMode === "allShown"
+                                        ? perCard === "hideDesc"
+                                        : perCard === "hideDesc";
 
-                            // 암기 상태(타이틀 옆 버튼)
+                            const titleHidden = hideTitleForCard;
+                            const descHidden = hideDescForCard;
+
                             const status = learn[it.uwtId] ?? "unmemorized";
                             const done = status === "memorized";
-
                             const isSaving = !!saving[it.uwtId];
 
                             return (
                                 <CardWrap key={it.uwtId}>
-                                    {/* 선택 모드일 때만 우측 상단 선택 토글 */}
-                                    {selectMode && (
-                                        <SelectToggle
-                                            $on={isChecked}
-                                            aria-label={isChecked ? "선택 해제" : "선택"}
-                                            title={isChecked ? "선택 해제" : "선택"}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setChecked((prev) => ({ ...prev, [it.uwtId]: !prev[it.uwtId] }));
-                                            }}
-                                        >
-                                            {isChecked ? <CheckIcon /> : <Hollow />}
-                                        </SelectToggle>
-                                    )}
+                                    {/* 항상 노출되는 좌측 체크(선택 토글) */}
+                                    <SelectToggle
+                                        $on={isChecked}
+                                        aria-label={isChecked ? "선택 해제" : "선택"}
+                                        title={isChecked ? "선택 해제" : "선택"}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onToggleItem(it.uwtId);
+                                        }}
+                                    >
+                                        {isChecked ? <CheckIcon /> : <Hollow />}
+                                    </SelectToggle>
 
-                                    {/* 타이틀 옆 상태 토글(미암기 ↔ 암기 완료) */}
+                                    {/* 우측 상단 암기 상태 토글 */}
                                     <StatusBtn
                                         $done={done}
-                                        $shift={selectMode}
                                         disabled={isSaving}
                                         aria-busy={isSaving}
                                         aria-pressed={done}
@@ -774,19 +979,15 @@ export default function WordbookFolderPage() {
                                             const prev = learn[it.uwtId] ?? "unmemorized";
                                             const nextLocal = prev === "memorized" ? "unmemorized" : "memorized";
 
-                                            // 낙관적 업데이트
                                             setLearn((m) => ({ ...m, [it.uwtId]: nextLocal }));
                                             setSaving((m) => ({ ...m, [it.uwtId]: true }));
-
                                             try {
                                                 await setMemorization({
                                                     termId: it.termId ?? undefined,
                                                     userTermId: it.uwtId,
                                                     done: nextLocal === "memorized",
                                                 });
-                                                // 성공 시 유지
                                             } catch (err: any) {
-                                                // 실패 → 롤백
                                                 setLearn((m) => ({ ...m, [it.uwtId]: prev }));
                                                 const s = err?.response?.status;
                                                 if (s === 401) {
@@ -806,8 +1007,8 @@ export default function WordbookFolderPage() {
                                         {done ? "암기 완료" : "미암기"}
                                     </StatusBtn>
 
-                                    {/* TermCard 내부 + 버튼 숨김 + 보기 옵션 적용 + 연관 키워드 숨김 */}
-                                    <HideTermCardAdd $hideTitle={hideTitleForCard} $hideDesc={hideDescForCard}>
+                                    {/* 단어/뜻 숨김 적용 */}
+                                    <HideTermCardAdd $hideTitle={titleHidden} $hideDesc={descHidden}>
                                         <TermCard
                                             id={Number(it.termId || it.uwtId)}
                                             title={it.title}
@@ -816,33 +1017,56 @@ export default function WordbookFolderPage() {
                                         />
                                     </HideTermCardAdd>
 
-                                    {/* 카드별 보기 제어(학습 모드: 단어/뜻 숨김) */}
+                                    {/* 학습 모드 버튼 */}
                                     <LearnRow aria-label="학습 모드">
                                         <LearnLabel>학습 모드</LearnLabel>
                                         <LearnSeg role="group" aria-label="학습 모드 선택">
+                                            {/* 단어 버튼 */}
                                             <LearnBtn
-                                                $active={perCard === "hideTitle"}
-                                                aria-pressed={perCard === "hideTitle"}
-                                                onClick={() =>
-                                                    setCardView((prev) => ({
-                                                        ...prev,
-                                                        [it.uwtId]: perCard === "hideTitle" ? "none" : "hideTitle",
-                                                    }))
-                                                }
+                                                $active={titleHidden}
+                                                aria-pressed={titleHidden}
+                                                aria-label={titleHidden ? "단어가 숨겨져 있음, 클릭하면 보이기" : "단어가 보이는 중, 클릭하면 숨기기"}
+                                                onClick={() => {
+                                                    setCardView((prev) => {
+                                                        const cur = prev[it.uwtId] ?? "none";
+                                                        if (titleMode === "allHidden") {
+                                                            // 전체 숨김 중 → 이 카드만 보이게(예외)
+                                                            return { ...prev, [it.uwtId]: cur === "showTitle" ? "none" : "showTitle" };
+                                                        } else if (titleMode === "allShown") {
+                                                            // 전체 보임 중 → 이 카드만 숨기기
+                                                            return { ...prev, [it.uwtId]: cur === "hideTitle" ? "none" : "hideTitle" };
+                                                        } else {
+                                                            // 개별 모드 → 토글
+                                                            return { ...prev, [it.uwtId]: cur === "hideTitle" ? "none" : "hideTitle" };
+                                                        }
+                                                    });
+                                                }}
                                             >
-                                                단어 숨기기
+                                                {titleHidden ? "단어 보이기" : "단어 숨기기"}
                                             </LearnBtn>
+
+                                            {/* 뜻 버튼 */}
                                             <LearnBtn
-                                                $active={perCard === "hideDesc"}
-                                                aria-pressed={perCard === "hideDesc"}
-                                                onClick={() =>
-                                                    setCardView((prev) => ({
-                                                        ...prev,
-                                                        [it.uwtId]: perCard === "hideDesc" ? "none" : "hideDesc",
-                                                    }))
-                                                }
+                                                $active={descHidden}
+                                                aria-pressed={descHidden}
+                                                aria-label={descHidden ? "뜻이 숨겨져 있음, 클릭하면 보이기" : "뜻이 보이는 중, 클릭하면 숨기기"}
+                                                onClick={() => {
+                                                    setCardView((prev) => {
+                                                        const cur = prev[it.uwtId] ?? "none";
+                                                        if (descMode === "allHidden") {
+                                                            // 전체 숨김 중 → 이 카드만 뜻 보이기(예외)
+                                                            return { ...prev, [it.uwtId]: cur === "showDesc" ? "none" : "showDesc" };
+                                                        } else if (descMode === "allShown") {
+                                                            // 전체 보임 중 → 이 카드만 뜻 숨기기
+                                                            return { ...prev, [it.uwtId]: cur === "hideDesc" ? "none" : "hideDesc" };
+                                                        } else {
+                                                            // 개별 모드 → 토글
+                                                            return { ...prev, [it.uwtId]: cur === "hideDesc" ? "none" : "hideDesc" };
+                                                        }
+                                                    });
+                                                }}
                                             >
-                                                뜻 숨기기
+                                                {descHidden ? "뜻 보이기" : "뜻 숨기기"}
                                             </LearnBtn>
                                         </LearnSeg>
                                     </LearnRow>
@@ -855,20 +1079,66 @@ export default function WordbookFolderPage() {
                 </>
             )}
 
-            {/* 이동 모달: 기존 SpoonNoteModal 재사용 */}
+            {/* 하단 Export Tray */}
+            {selectedTermIds.size > 0 && (
+                <Tray>
+                    <span>선택 {selectedTermIds.size.toLocaleString()}개 — 필요한 페이지를 더 불러온 뒤에도 선택은 유지돼요.</span>
+                    <div style={{ display: "flex", gap: 8 }}>
+                        <button
+                            onClick={clearAllSelected}
+                            style={{
+                                border: `1px solid ${UI.color.line}`,
+                                background: "transparent",
+                                color: "#fff",
+                                padding: "8px 12px",
+                                borderRadius: 8,
+                                fontWeight: 700,
+                            }}
+                        >
+                            모두 해제
+                        </button>
+                        {/* 탭 톤에 맞춘 프라이머리 버튼 */}
+                        <button
+                            onClick={handleExportSelectedPdf}
+                            disabled={exporting}
+                            style={{
+                                border: 0,
+                                background: "linear-gradient(135deg, #4F76F1 0%, #3E63E0 100%)",
+                                color: "#fff",
+                                padding: "8px 14px",
+                                borderRadius: 999,
+                                fontWeight: 700,
+                                letterSpacing: "0.01em",
+                                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)",
+                                opacity: exporting ? 0.85 : 1,
+                            }}
+                        >
+                            {exporting ? "내보내는 중..." : "선택 항목 PDF 내보내기"}
+                        </button>
+                    </div>
+                </Tray>
+            )}
+
+            {/* 이동 모달 */}
             <SpoonNoteModal
                 open={moveOpen}
                 notebooks={notebooks}
                 onClose={() => setMoveOpen(false)}
                 onCreate={async (name) => {
-                    const { data } = await http.post("/api/me/folders", { folderName: name }, { headers: { ...authHeader() } });
+                    const { data } = await http.post("/me/folders", { folderName: name }, { headers: { ...authHeader() } });
                     const newId = String(data.id);
                     const newName = data.folderName ?? name;
                     setNotebooks((prev) => [{ id: newId, name: newName }, ...prev]);
                     return newId;
                 }}
                 onReorder={async (orderedIds) => {
-                    try { await patchReorderFolders(orderedIds); } catch (e) { console.warn("[folders reorder] 실패", e); }
+                    try {
+                        await patchReorderFolders(orderedIds);
+                        const refreshed = await fetchUserFolders();
+                        setNotebooks(refreshed);
+                    } catch (e) {
+                        console.warn("[folders reorder] 실패", e);
+                    }
                 }}
                 onSave={handleConfirmMove}
                 onGoToFolder={(fid, name) => {
@@ -877,7 +1147,15 @@ export default function WordbookFolderPage() {
                 }}
                 onRename={async (folderId, newName) => {
                     await renameUserFolder(folderId, newName);
-                    setNotebooks(prev => prev.map(n => n.id === folderId ? ({ ...n, name: newName }) : n));
+                    setNotebooks((prev) => prev.map((n) => (n.id === folderId ? { ...n, name: newName } : n)));
+                }}
+                onRequestDelete={async (fid) => {
+                    await deleteUserFolder(fid, "purge");
+                    setNotebooks(await fetchUserFolders());
+                }}
+                onRequestBulkDelete={async (ids) => {
+                    if (!confirm(`선택 ${ids.length}개 폴더 삭제? (안의 용어도 삭제)`)) return;
+                    setNotebooks(await fetchUserFolders());
                 }}
             />
         </div>

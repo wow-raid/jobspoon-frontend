@@ -36,7 +36,6 @@ export default function SideBar() {
                         <StyledNavLink to="user/history">
                             <FaChartLine className="icon" />
                             이력 관리
-                            {/* 하위에 신뢰점수, 랭크, 칭호 이력 나오도록 페이지 구성 */}
                         </StyledNavLink>
                     </li>
 
@@ -44,7 +43,6 @@ export default function SideBar() {
                         <StyledNavLink to="membership">
                             <FaCrown className="icon" />
                             멤버십
-                            {/* 하위에 내 구독 내역 나오도록 페이지 구성 */}
                         </StyledNavLink>
                     </li>
 
@@ -56,22 +54,20 @@ export default function SideBar() {
                     </li>
 
                     <li>
-                        <NavButton onClick={handleOpenModal}>
+                        <StyledNavLink to="my-posts">
                             <MdArticle className="icon" />
                             작성한 글
-                            {/* 하위에 모임, 댓글, 리뷰 내역 나오도록 페이지 구성 */}
-                        </NavButton>
+                        </StyledNavLink>
                     </li>
 
                     <li>
-                        <NavButton onClick={handleOpenModal}>
+                        <StyledNavLink to="schedule">
                             <FaCalendarAlt className="icon" />
                             일정
                             <Badge>4</Badge>
-                        </NavButton>
+                        </StyledNavLink>
                     </li>
 
-                    {/* 구분선 */}
                     <Divider />
 
                     <li>

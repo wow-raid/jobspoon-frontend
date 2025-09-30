@@ -2,7 +2,7 @@ import React from "react";
 import TermCard from "../components/TermCard";
 import SpoonNoteModal from "../components/SpoonNoteModal";
 import { patchReorderFolders, fetchUserFolders } from "../api/userWordbook";
-import { renameUserFolder } from "../api/folder";
+import { renameUserFolder, deleteUserFolder, deleteUserFoldersBulk } from "../api/folder";
 
 type Notebook = { id: string; name: string };
 
@@ -165,6 +165,14 @@ export default function SpoonWordListPage() {
                 onRename={async (folderId, newName) => {
                     await renameUserFolder(folderId, newName);
                     setNotebooks(prev => prev.map(n => n.id === folderId ? ({ ...n, name: newName }) : n));
+                }}
+                onRequestDelete={async (fid, name) => {
+                    await deleteUserFolder(fid, "purge");
+                    setNotebooks(await fetchUserFolders());
+                }}
+                onRequestBulkDelete={async (ids) => {
+                    if (!confirm(`선택 ${ids.length}개 폴더 삭제? (안의 용어도 삭제)`)) return;
+                    setNotebooks(await fetchUserFolders());
                 }}
             />
         </>

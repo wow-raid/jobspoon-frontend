@@ -3,20 +3,21 @@
 import React from "react";
 import styled from "styled-components";
 import { TrustScore } from "../../api/profileAppearanceApi.ts";
+import {
+    calcAttendanceScore,
+    calcInterviewScore,
+    calcProblemScore,
+    calcPostScore,
+    calcStudyroomScore,
+    calcCommentScore,
+    calcTotalScore
+} from "../../utils/trustScoreUtils.ts"; //
 
 type Props = {
     isOpen: boolean;
     onClose: () => void;
     trust: TrustScore;
 };
-
-// 환산 점수 계산 함수
-const calcAttendanceScore = (rate: number) => Math.min(rate * 0.25, 25); // 100% → 25점
-const calcInterviewScore = (count: number) => Math.min(count, 20) * 1;   // 예시: 1회 = 1점 (최대 20)
-const calcProblemScore = (count: number) => Math.min(count, 20) * 1;     // 1회 = 1점 (최대 20)
-const calcPostScore = (count: number) => Math.min(count, 10) * 1.5;      // 1회 = 1.5점 (최대 15)
-const calcStudyroomScore = (count: number) => Math.min(count, 5) * 2;    // 1회 = 2점 (최대 10)
-const calcCommentScore = (count: number) => Math.min(count, 30) * 0.5;   // 1개 = 0.5점 (최대 15)
 
 export default function TrustScoreModal({ isOpen, onClose, trust }: Props) {
     const attendanceScore = calcAttendanceScore(trust.attendanceRate);
@@ -25,6 +26,15 @@ export default function TrustScoreModal({ isOpen, onClose, trust }: Props) {
     const postScore = calcPostScore(trust.monthlyPosts);
     const studyroomScore = calcStudyroomScore(trust.monthlyStudyrooms);
     const commentScore = calcCommentScore(trust.monthlyComments);
+
+    const totalScore = calcTotalScore({
+        attendanceRate: trust.attendanceRate,
+        monthlyInterviews: trust.monthlyInterviews,
+        monthlyProblems: trust.monthlyProblems,
+        monthlyPosts: trust.monthlyPosts,
+        monthlyStudyrooms: trust.monthlyStudyrooms,
+        monthlyComments: trust.monthlyComments
+    });
 
     return (
         <Overlay isOpen={isOpen}>
@@ -40,11 +50,14 @@ export default function TrustScoreModal({ isOpen, onClose, trust }: Props) {
                         <li>🗓️ 출석률: {attendanceScore.toFixed(1)} / 25점</li>
                         <li>🎤 모의면접: {Math.round(interviewScore)} / 20점</li>
                         <li>🧩 문제풀이: {Math.round(problemScore)} / 20점</li>
-                        <li>✍️ 리뷰 작성: {Math.round(postScore)} / 15점</li>
+                        <li>✍️ 글 작성: {Math.round(postScore)} / 15점</li>
                         <li>👥 스터디룸 개설: {Math.round(studyroomScore)} / 10점</li>
                         <li>💬 댓글 작성: {Math.round(commentScore)} / 15점</li>
                     </ul>
-                    <p><b>총점: {Math.round(trust.totalScore)} / 100점</b></p>
+                    <Divider />
+                    <TotalScore>
+                        총점: {totalScore.toFixed(1)} / 100점
+                    </TotalScore>
                 </Content>
 
                 <Footer>
@@ -76,8 +89,8 @@ const Modal = styled.div<{ isOpen: boolean }>`
     border-radius: 12px;
     width: 400px;
     max-width: 90%;
-    max-height: 80vh;      /* 화면 높이 80%까지만 */
-    overflow-y: auto;      /* 넘치면 스크롤 */
+    max-height: 80vh;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -142,4 +155,15 @@ const Divider = styled.hr`
     border: none;
     border-top: 1px solid #e5e7eb;
     margin: 16px 0;
+`;
+
+const TotalScore = styled.div`
+    font-size: 15px;
+    font-weight: 700;
+    color: #2563eb;
+    background: rgba(37, 99, 235, 0.08);
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-top: 8px;
+    text-align: left;
 `;
