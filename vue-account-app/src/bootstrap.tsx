@@ -14,7 +14,7 @@ import * as labsComponents from "vuetify/labs/components";
 import { createVuetify } from "vuetify/lib/framework.mjs";
 import { createPinia } from "pinia";
 import router from "./router";
-import {setupAdminInterceptors} from "@/account/utility/adminApi.ts";
+import {setupAdminInterceptors} from "@/administrator/utility/adminApi.ts";
 
 let adminSecurityInitialized =false;
 let offAdminSessionSync:null | (()=> void)=null;

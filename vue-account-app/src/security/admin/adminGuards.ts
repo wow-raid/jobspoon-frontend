@@ -1,6 +1,6 @@
 // adminGuards.ts
 import type { NavigationGuardNext, RouteLocationNormalized } from "vue-router";
-import { verifyAdminOnServer, validateTempTokenOnServer } from "@/account/utility/adminApi";
+import { verifyAdminOnServer, validateTempTokenOnServer } from "@/administrator/utility/adminApi.ts";
 // 위에 /admin-auth/temp/verify 같은 얇은 엔드포인트 하나 추가 구현 필요.
 
 function isPublicRoute(to: RouteLocationNormalized): boolean {

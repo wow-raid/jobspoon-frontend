@@ -130,7 +130,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { fetchAllStudyRoomReports } from '@/administrator/service/studyRoomReport/studyRoomReportService.ts'
-import type { ReportStatus, StudyRoomReport } from '@/administrator/service/studyRoomReport/dto/studyRoomDto'
+import type { ReportStatus, StudyRoomReport } from '@/administrator/service/studyRoomReport/dto/studyRoomDto.ts'
 
 const loading = ref(false)
 const rows = ref<StudyRoomReport[]>([])
