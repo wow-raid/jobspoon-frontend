@@ -156,6 +156,7 @@ function statusColor(s: ReportStatus) {
   }
 }
 
+
 /** 전체 조회: 백엔드가 List만 반환 */
 async function fetchReports() {
   loading.value = true
