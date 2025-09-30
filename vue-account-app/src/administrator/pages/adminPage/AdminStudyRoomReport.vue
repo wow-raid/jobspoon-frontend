@@ -74,15 +74,15 @@
                 >상태 변경</v-btn>
               </template>
 
-<!--              <v-list density="compact">-->
-<!--                <v-list-item-->
-<!--                    v-for="opt in statusItems"-->
-<!--                    :key="opt.value"-->
-<!--                    @click="updateStatus(item, opt.value); closeStatusMenu()"-->
-<!--                >-->
-<!--                  <v-list-item-title>{{ opt.label }}</v-list-item-title>-->
-<!--                </v-list-item>-->
-<!--              </v-list>-->
+              <v-list density="compact">
+                <v-list-item
+                    v-for="opt in statusItems"
+                    :key="opt.value"
+                    @click="updateStatus(item, opt.value); closeStatusMenu()"
+                >
+                  <v-list-item-title>{{ opt.label }}</v-list-item-title>
+                </v-list-item>
+              </v-list>
             </v-menu>
           </div>
         </template>
@@ -129,7 +129,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { fetchAllStudyRoomReports } from '@/administrator/service/studyRoomReport/studyRoomReportService.ts'
+import { fetchAllStudyRoomReports,updateStudyRoomReportStatus } from '@/administrator/service/studyRoomReport/studyRoomReportService.ts'
 import type { ReportStatus, StudyRoomReport } from '@/administrator/service/studyRoomReport/dto/studyRoomDto.ts'
 
 const loading = ref(false)
@@ -171,17 +171,17 @@ async function fetchReports() {
   }
 }
 
-// async function updateStatus(row: StudyRoomReport, to: ReportStatus) {
-//   if (row.status === to) return
-//   try {
-//     const ok = await updateStudyRoomReportStatus(row.reportId, to)
-//     if (ok) row.status = to
-//     else alert('상태 변경에 실패했습니다.')
-//   } catch (e) {
-//     console.error('[updateStatus] failed:', e)
-//     alert('상태 변경 중 오류가 발생했습니다.')
-//   }
-// }
+async function updateStatus(row: StudyRoomReport, to: ReportStatus) {
+  if (row.status === to) return
+  try {
+    const ok = await updateStudyRoomReportStatus(row.reportId, to)
+    if (ok) row.status = to
+    else alert('상태 변경에 실패했습니다.')
+  } catch (e) {
+    console.error('[updateStatus] failed:', e)
+    alert('상태 변경 중 오류가 발생했습니다.')
+  }
+}
 
 function openDetail(row: StudyRoomReport) {
   selected.value = row

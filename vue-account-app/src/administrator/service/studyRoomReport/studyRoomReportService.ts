@@ -24,3 +24,18 @@ export async function fetchAllStudyRoomReports(): Promise<StudyRoomReport[] | nu
         return null;
     }
 }
+
+export async function updateStudyRoomReportStatus(reportId: number,status: ReportStatus): Promise<boolean> {
+    const axios = ensureSpringAdminAxios(); // withCredentials 포함 인스턴스
+    try {
+        const resp = await axios.patch(
+            `/api/admin/study-rooms/reports/${encodeURIComponent(reportId)}/status`,
+            { status },                          // ← JSON Body (RequestBody)
+            { validateStatus: () => true }       // 4xx도 throw하지 않게
+        );
+        return resp.status === 200 || resp.status === 204;
+    } catch (e) {
+        console.error("[updateStudyRoomReportStatus] error:", e);
+        return false;
+    }
+}
