@@ -2,19 +2,22 @@
 
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
+import { ProfileAppearanceResponse } from "../api/profileAppearanceApi"; // 프로필만
 import {
     fetchUserLevel,
-    fetchMyTitles,
-    fetchTrustScore,
     fetchUserLevelHistory,
+    UserLevelResponse,
+    UserLevelHistoryResponse
+} from "../api/userLevelApi"; // 레벨 관련
+import {
     equipTitle,
     unequipTitle,
-    UserLevel,
-    UserLevelHistory,
-    TrustScore,
-    TitleItem,
-    ProfileAppearanceResponse
-} from "../api/profileAppearanceApi";
+    UserTitleResponse
+} from "../api/userTitleApi"; // 칭호 관련
+import {
+    fetchTrustScore,
+    TrustScoreResponse
+} from "../api/userTrustScoreApi"; // 신뢰점수 관련
 import {
     calcAttendanceScore,
     calcInterviewScore,
@@ -33,23 +36,23 @@ type Status = "loading" | "empty" | "loaded"; // (status 타입)
 
 type OutletContext = {
     profile: ProfileAppearanceResponse | null;
-    refreshProfile: () => Promise<void>;
+    userLevel: UserLevelResponse | null;
+    titles: UserTitleResponse[];
+    refreshAll: () => Promise<void>;
 };
 
 export default function UserHistoryPage() {
 
     // context
-    const { profile, refreshProfile } = useOutletContext<OutletContext>();
+    const { profile, titles, refreshAll } = useOutletContext<OutletContext>();
 
     // 로컬 상태
-    const [userLevel, setUserLevel] = useState<UserLevel | null>(null);
-    const [trustScore, setTrustScore] = useState<TrustScore | null>(null);
-    const [titles, setTitles] = useState<TitleItem[]>([]);
-    const [levelHistory, setLevelHistory] = useState<UserLevelHistory[]>([]);
+    const [userLevel, setUserLevel] = useState<UserLevelResponse | null>(null);
+    const [trustScore, setTrustScore] = useState<TrustScoreResponse | null>(null);
+    const [levelHistory, setLevelHistory] = useState<UserLevelHistoryResponse[]>([]);
 
     // 섹션별 status 관리
     const [levelStatus, setLevelStatus] = useState<Status>("loading");
-    const [titleStatus, setTitleStatus] = useState<Status>("loading");
     const [trustStatus, setTrustStatus] = useState<Status>("loading");
 
     // 토글 상태
@@ -60,13 +63,15 @@ export default function UserHistoryPage() {
     // 칭호 장착/해제
     const handleEquip = async (titleId: number) => {
         try {
-            if (profile?.title?.id === titleId) {
+            const target = titles.find(t => t.id === titleId);
+
+            if (target?.equipped) {
                 await unequipTitle();
-                await refreshProfile();
+                await refreshAll(); // 전체 상태 갱신
                 alert("칭호가 해제되었습니다.");
             } else {
                 const updated = await equipTitle(titleId);
-                await refreshProfile();
+                await refreshAll(); // 전체 상태 갱신
                 alert(`${updated.displayName} 칭호가 장착되었습니다.`);
             }
         } catch (error: any) {
@@ -75,41 +80,26 @@ export default function UserHistoryPage() {
     };
 
     useEffect(() => {
-        Promise.all([fetchUserLevel(), fetchMyTitles(), fetchTrustScore(), fetchUserLevelHistory()])
-            .then(([lvl, t, trust, history]) => {
-                // 레벨
-                if (lvl) {
-                    setUserLevel(lvl);
-                    setLevelStatus("loaded");
-                } else {
-                    setLevelStatus("empty");
-                }
-
-                // 칭호
-                if (t && t.length > 0) {
-                    setTitles(t);
-                    setTitleStatus("loaded");
-                } else {
-                    setTitleStatus("empty");
-                }
-
-                // 신뢰점수
-                if (trust) {
-                    setTrustScore(trust);
-                    setTrustStatus("loaded");
-                } else {
-                    setTrustStatus("empty");
-                }
-
-                // 레벨 이력
+        const loadAll = async () => {
+            try {
+                const [lvl, trust, history] = await Promise.all([
+                    fetchUserLevel(),
+                    fetchTrustScore(),
+                    fetchUserLevelHistory(),
+                ]);
+                setUserLevel(lvl || null);
+                setTrustScore(trust || null);
                 setLevelHistory(history || []);
-            })
-            .catch((err) => {
+                setLevelStatus(lvl ? "loaded" : "empty");
+                setTrustStatus(trust ? "loaded" : "empty");
+            } catch (err) {
                 console.error(err);
                 setLevelStatus("empty");
-                setTitleStatus("empty");
                 setTrustStatus("empty");
-            });
+            }
+        };
+
+        loadAll();
     }, []);
 
     return (
@@ -255,19 +245,24 @@ export default function UserHistoryPage() {
                         </ToggleButton>
                     </HistoryHeader>
 
-                    {titleStatus === "loading" ? (
-                        <Empty>불러오는 중...</Empty>
-                    ) : titleStatus === "empty" ? (
+                    {titles.length === 0 ? (
                         <Empty>획득한 칭호가 없습니다.</Empty>
                     ) : (
                         <TitleGrid>
                             {titles.map((title) => (
-                                <TitleCard key={title.id} equipped={profile?.title?.id === title.id}>
+                                <TitleCard key={title.id} equipped={title.equipped}>
                                     <TitleName>{title.displayName}</TitleName>
-                                    <AcquiredDate>{new Date(title.acquiredAt).toLocaleDateString()}</AcquiredDate>
-                                    <ToggleButton onClick={() => handleEquip(title.id)}>
-                                        {profile?.title?.id === title.id ? "해제" : "장착"}
-                                    </ToggleButton>
+
+                                    <AcquiredDate>
+                                        {new Date(title.acquiredAt).toLocaleDateString()}
+                                    </AcquiredDate>
+
+                                    <Description>{title.description}</Description>
+
+                                    {/* 버튼 */}
+                                    <ActionButton onClick={() => handleEquip(title.id)}>
+                                        {title.equipped ? "해제" : "장착"}
+                                    </ActionButton>
                                 </TitleCard>
                             ))}
                         </TitleGrid>
@@ -478,7 +473,7 @@ const TrustContent = styled.div`
 `;
 
 const TotalScore = styled.div`
-    margin-top: 0px;
+    margin-top: 0;
     padding: 8px 12px;
     border-radius: 8px;
     background: rgba(37, 99, 235, 0.08);
@@ -492,4 +487,30 @@ const Divider = styled.hr`
   border: none;
   border-top: 1px solid #e5e7eb;
   margin: 16px 0;
+`;
+
+const Description = styled.p`
+    font-size: 12px;
+    color: #6b7280;
+    text-align: center;
+    margin: 8px 0;
+    flex-grow: 1; /* 설명이 늘어나도 버튼은 항상 아래 */
+`;
+
+const ActionButton = styled.button`
+    margin-top: auto;
+    align-self: center;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid #3b82f6;   /* 파란 테두리 */
+    color: #3b82f6;              /* 파란 글씨 */
+    background: white;           /* 흰 배경 */
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background: #eff6ff;     /* 연한 파랑 배경 */
+    }
 `;

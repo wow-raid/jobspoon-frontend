@@ -2,16 +2,27 @@
 
 import React, { useState } from "react";
 import { ProfileAppearanceResponse } from "../../api/profileAppearanceApi.ts";
+import { UserLevelResponse } from "../../api/userLevelApi.ts";
+import { UserTitleResponse } from "../../api/userTitleApi.ts";
 import styled from "styled-components";
 import defaultProfile from "../../assets/default_profile.png";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 
-export default function ProfileAppearanceCard({profile}: {profile: ProfileAppearanceResponse}) {
+type Props = {
+    profile: ProfileAppearanceResponse;
+    userLevel?: UserLevelResponse | null;
+    titles?: UserTitleResponse[];
+};
+
+export default function ProfileAppearanceCard({ profile, userLevel, titles }: Props) {
     const [isOpen, setIsOpen] = useState(true);
 
     if (!profile) {
         return <p>불러오는 중...</p>;
     }
+
+    // 수정: 대표 칭호 찾기 (titles 배열에서 isEquipped가 true인 것)
+    const equippedTitle = titles?.find((t) => t.equipped);
 
     return (
         <Card>
@@ -42,26 +53,25 @@ export default function ProfileAppearanceCard({profile}: {profile: ProfileAppear
                             <LabelCell>레벨</LabelCell> {/* 등급 → 레벨 */}
                             <Separator>|</Separator>
                             <ValueCell>
-                                {profile.userLevel
-                                    ? `Lv.${profile.userLevel.level} (Exp ${profile.userLevel.exp}/${profile.userLevel.totalExp})`
+                                {/* 수정: profile.userLevel → userLevel prop으로 변경 */}
+                                {userLevel
+                                    ? `Lv.${userLevel.level} (Exp ${userLevel.exp}/${userLevel.totalExp})`
                                     : "레벨 정보 없음"}
                             </ValueCell>
                         </tr>
                         <tr>
                             <LabelCell>칭호</LabelCell>
                             <Separator>|</Separator>
-                            <ValueCell>{profile.title?.displayName ?? "칭호 없음"}</ValueCell>
+                            <ValueCell>
+                                {/* 수정: profile.title → titles prop에서 equippedTitle */}
+                                {equippedTitle?.displayName ?? "칭호 없음"}
+                            </ValueCell>
                         </tr>
                         <tr>
                             <LabelCell>별명</LabelCell>
                             <Separator>|</Separator>
                             <ValueCell>{profile.nickname}</ValueCell>
                         </tr>
-                        {/*<tr>*/}
-                        {/*    <LabelCell>계정</LabelCell>*/}
-                        {/*    <Separator>|</Separator>*/}
-                        {/*    <ValueCell>{profile.email}</ValueCell>*/}
-                        {/*</tr>*/}
                         </tbody>
                     </InfoTable>
                 </Content>

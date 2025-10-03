@@ -2,52 +2,11 @@ import axios from "axios";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-/** 공통 타입 **/
-export interface TitleItem {
-    id: number;
-    code: string;
-    displayName: string;
-    acquiredAt: string; // ISO datetime
-}
-
 /** 내 프로필 조회 응답 */
 export interface ProfileAppearanceResponse {
     photoUrl: string | null;
     nickname: string;
     email: string;
-    title?: TitleItem;
-    trustScore?: TrustScore; // null 가능하니 optional
-    userLevel?: UserLevel;   // null 가능하니 optional
-}
-
-/** 신뢰 점수 */
-export interface TrustScore {
-    totalScore: number;
-    attendanceRate: number;
-    monthlyInterviews: number;
-    monthlyProblems: number;
-    monthlyPosts: number;
-    monthlyStudyrooms: number;
-    monthlyComments: number;
-    calculatedAt: string; // ISO datetime
-}
-
-/** 레벨 */
-export interface UserLevel {
-    level: number;
-    exp: number;
-    totalExp: number;
-}
-
-/** 레벨 업 이력 */
-export interface UserLevelHistory {
-    level: number;
-    achievedAt: string; // ISO datetime
-}
-
-/** 경험치 추가 요청 */
-export interface AddExpRequest {
-    amount: number;
 }
 
 /** ---------------------- API 함수 ---------------------- **/
@@ -65,7 +24,7 @@ export async function fetchMyProfile() { // token 매개변수 제거
 export async function uploadProfilePhoto(file: File) { // token 매개변수 제거
     // 1. Presigned URL 요청
     const res = await axios.post<string>(
-        `${API_BASE_URL}/profile-appearance/profile/photo/upload-url`,
+        `${API_BASE_URL}/profile-appearance/photo/upload-url`,
         null,
         {
             params: {
@@ -97,67 +56,11 @@ export async function uploadProfilePhoto(file: File) { // token 매개변수 제
     return presignedUrl;
 }
 
-// 보유 칭호 조회
-export async function fetchMyTitles(): Promise<TitleItem[]> { // token 매개변수 제거
-    const res = await axios.get<TitleItem[]>(
-        `${API_BASE_URL}/profile-appearance/title/my`,
-        { withCredentials: true } // Authorization 헤더 제거, 쿠키 자동 전송 옵션 추가
-    );
-    return res.data;
-}
-
-// 칭호 장착
-export async function equipTitle(titleId: number): Promise<TitleItem> { // token 매개변수 제거
-    const res = await axios.put<TitleItem>(
-        `${API_BASE_URL}/profile-appearance/title/${titleId}/equip`,
-        {},
-        { withCredentials: true } // Authorization 헤더 제거, 쿠키 자동 전송 옵션 추가
-    );
-    return res.data;
-}
-
-// 칭호 해제
-export async function unequipTitle(): Promise<void> {
-    await axios.put(
-        `${API_BASE_URL}/profile-appearance/title/unequip`,
-        {},
+// 프로필 사진 다운로드 Presigned URL 발급
+export async function getDownloadUrl() {
+    const res = await axios.get<string>(
+        `${API_BASE_URL}/profile-appearance/photo/download-url`,
         { withCredentials: true }
-    );
-}
-
-// 신뢰 점수 조회
-export async function fetchTrustScore() { // token 매개변수 제거
-    const res = await axios.get<TrustScore>(
-        `${API_BASE_URL}/profile-appearance/trust-score`,
-        { withCredentials: true } // Authorization 헤더 제거, 쿠키 자동 전송 옵션 추가
-    );
-    return res.data;
-}
-
-// 레벨 조회
-export async function fetchUserLevel() { // token 매개변수 제거
-    const res = await axios.get<UserLevel>(
-        `${API_BASE_URL}/profile-appearance/user-level`,
-        { withCredentials: true } // Authorization 헤더 제거, 쿠키 자동 전송 옵션 추가
-    );
-    return res.data;
-}
-
-// 레벨 업 이력 조회
-export async function fetchUserLevelHistory(): Promise<UserLevelHistory[]> {
-    const res = await axios.get<UserLevelHistory[]>(
-        `${API_BASE_URL}/profile-appearance/user-level/history`,
-        { withCredentials: true }
-    );
-    return res.data;
-}
-
-// 경험치 추가
-export async function addExperience(amount: number) { // token 매개변수 제거
-    const res = await axios.post<UserLevel>(
-        `${API_BASE_URL}/profile-appearance/user-level/experience`,
-        { amount },
-        { withCredentials: true } // Authorization 헤더 제거, 쿠키 자동 전송 옵션 추가
     );
     return res.data;
 }

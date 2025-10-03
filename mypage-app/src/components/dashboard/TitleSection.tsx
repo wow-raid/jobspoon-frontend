@@ -1,19 +1,15 @@
 {/* 마이페이지 대쉬보드 - 칭호 */}
 
 import React, { useEffect, useState } from "react";
-import {
-    fetchMyProfile,
-    fetchMyTitles,
-    ProfileAppearanceResponse,
-    TitleItem,
-} from "../../api/profileAppearanceApi.ts";
+import { fetchMyProfile, ProfileAppearanceResponse } from "../../api/profileAppearanceApi.ts";
+import { fetchMyTitles, UserTitleResponse } from "../../api/userTitleApi.ts";
 import styled from "styled-components";
 import defaultTitle from "../../assets/default_rank.png"; // 👉 임시 아이콘
 import TitleGuideModal from "../modals/TitleGuideModal.tsx";
 
 export default function TitleSection() {
     const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
-    const [titles, setTitles] = useState<TitleItem[]>([]);
+    const [titles, setTitles] = useState<UserTitleResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [isGuideOpen, setIsGuideOpen] = useState(false);
 
@@ -39,6 +35,7 @@ export default function TitleSection() {
             return;
         }
 
+        // 프로필은 profileAppearanceApi, 칭호는 userTitleApi에서 불러오기
         Promise.all([fetchMyProfile(), fetchMyTitles()])
             .then(([profileData, titlesData]) => {
                 setProfile(profileData);
@@ -61,11 +58,12 @@ export default function TitleSection() {
             <ContentGrid>
                 {/* 대표 칭호 */}
                 <TitleBox>
-                    {profile?.title ? (
+                    {/* titles 중 equipped === true인 것을 대표 칭호로 표시 */}
+                    {titles.find((t) => t.equipped) ? (
                         <>
-                            <TitleIconLarge src={defaultTitle} alt={profile.title.displayName} />
+                            <TitleIconLarge src={defaultTitle} alt={titles.find((t) => t.equipped)!.displayName} />
                             <p>
-                                <strong>{profile.title.displayName}</strong>
+                                <strong>{titles.find((t) => t.equipped)!.displayName}</strong>
                             </p>
                             <span>현재 장착 중</span>
                         </>

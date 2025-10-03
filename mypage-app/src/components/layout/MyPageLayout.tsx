@@ -7,34 +7,43 @@ import ProfileAppearanceCard from "../profile/ProfileAppearanceCard.tsx";
 import styled from "styled-components";
 import { FaHome } from "react-icons/fa";
 import { fetchMyProfile, ProfileAppearanceResponse } from "../../api/profileAppearanceApi.ts";
+import { fetchUserLevel, UserLevelResponse } from "../../api/userLevelApi.ts";
+import { fetchMyTitles, UserTitleResponse } from "../../api/userTitleApi.ts";
 
 export default function MyPageLayout() {
 
     const navigate = useNavigate();
 
-    {/* 토글 */}
-    const [isProfileOpen, setIsProfileOpen] = useState(true);
-
     {/* 프로필 외형 */}
     const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
+    const [userLevel, setUserLevel] = useState<UserLevelResponse | null>(null);
+    const [titles, setTitles] = useState<UserTitleResponse[]>([]);
 
     //최신 프로필 불러오기
-    const refreshProfile = async () => {
+    const refreshAll = async () => {
         const isLoggedIn = localStorage.getItem("isLoggedIn");
         if (!isLoggedIn) {
             console.error("로그인이 필요합니다.");
             return;
         }
         try {
-            const data = await fetchMyProfile(); // token 제거
-            setProfile(data);
+            const [p, l, t] = await Promise.all([
+                fetchMyProfile(),
+                fetchUserLevel(),
+                fetchMyTitles(),
+            ]);
+            setProfile(p);
+            setUserLevel(l);
+            setTitles(t);
         } catch (error) {
-            console.error(error);
+            console.error("❌ 데이터 갱신 실패:", error);
         }
     };
 
     useEffect(() => {
-        refreshProfile();
+        refreshAll()
+            .catch((err) =>
+                console.error("초기 데이터 로드 실패:", err));
     }, []);
 
     return (
@@ -50,8 +59,14 @@ export default function MyPageLayout() {
                     <HomeLabel>마이페이지</HomeLabel>
                 </HomeButton>
 
-                {/* 프로필 카드 */}
-                {profile && <ProfileAppearanceCard profile={profile} />}
+                {/* 프로필 카드 : ProfileAppearanceCard에 userLevel, titles도 전달 가능 */}
+                {profile && (
+                    <ProfileAppearanceCard
+                        profile={profile}
+                        userLevel={userLevel}
+                        titles={titles}
+                    />
+                )}
 
                 {/* 메뉴 */}
                 <SideBar />
@@ -59,7 +74,8 @@ export default function MyPageLayout() {
 
             {/* 메인 컨텐츠 */}
             <Main>
-                <Outlet context={{ profile, refreshProfile }} />
+                {/* OutletContext에 profile+userLevel+titles+refreshAll 전달 */}
+                <Outlet context={{ profile, userLevel, titles, refreshAll }} />
             </Main>
         </LayoutContainer>
     );
@@ -126,37 +142,4 @@ const HomeIcon = styled.span`
 const HomeLabel = styled.span`
   padding: 2px 6px;
   border-radius: 4px;
-`;
-
-const ProfileWrapper = styled.div<{ isOpen: boolean }>`
-    overflow: hidden;
-    transition: all 0.3s ease-in-out;
-    max-height: ${({ isOpen }) => (isOpen ? "1000px" : "0px")};
-    opacity: ${({ isOpen }) => (isOpen ? 1 : 0)};
-`;
-
-/* 헤더는 투명 */
-const ProfileHeader = styled.div`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 15px;
-    font-weight: 600;
-    color: rgb(17, 24, 39);
-    padding: 6px 0;   /* 여백만 주고 배경 제거 */
-    margin-bottom: 6px;
-    cursor: pointer;
-`;
-
-/* 화살표 아이콘만 파란색 배경 */
-const ArrowIcon = styled.span`
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgb(59, 130, 246);  /* 파란색 */
-  color: white;
-  border-radius: 6px;
-  font-size: 14px;
 `;
