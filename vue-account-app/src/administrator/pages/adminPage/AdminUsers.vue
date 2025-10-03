@@ -107,7 +107,7 @@
  */
 
 import { ref, computed, watch, onMounted } from "vue";
-import { createAxiosInstances } from "@/account/utility/axiosInstance";
+import { createAxiosInstances } from "@/account/utility/axiosInstance.ts";
 
 /** 권한 타입 */
 type Role = "ADMIN" | "USER";
