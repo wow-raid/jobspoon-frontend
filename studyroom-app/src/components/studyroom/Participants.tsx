@@ -87,8 +87,24 @@ const Footer = styled.footer`
 `;
 
 const LeaveButton = styled.button`
-  background-color: #ff6b6b;
-  color: white;
+    background-color: ${({ theme }) => theme.danger ?? '#ff6b6b'};
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover:not(:disabled) {
+        background-color: ${({ theme }) => theme.dangerHover ?? '#f05252'};
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
 `;
 
 const ContentWrapper = styled.div`
@@ -296,7 +312,7 @@ const Participants: React.FC = () => {
             </ContentWrapper>
             <Footer>
                 <LeaveButton onClick={onLeaveOrClose} disabled={studyStatus === 'CLOSED'}>
-                    {userRole === 'LEADER' ? '스터디 폐쇄하기' : '탈퇴하기'}
+                    {userRole === 'LEADER' ? '☠️스터디 폐쇄하기☠️' : '☠️탈퇴하기☠️'}
                 </LeaveButton>
             </Footer>
             <ParticipantsReportModal

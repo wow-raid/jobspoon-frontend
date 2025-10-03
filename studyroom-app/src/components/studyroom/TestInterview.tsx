@@ -1,5 +1,5 @@
 // TestInterview.tsx
-import React, { useState } from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import styled, { css } from 'styled-components';
 import Modal from '../Modal';
 import LinkEditForm from './LinkEditForm.tsx';
@@ -9,6 +9,15 @@ import zoomLogo from '../../assets/zoom_logo.png';
 import discordLogo from '../../assets/discord_logo.png';
 import naverLogo from '../../assets/naver_logo.png';
 import {NavLink, useOutletContext, useParams} from "react-router-dom";
+import axiosInstance from "../../api/axiosInstance.ts";
+
+const channelIconMap: { [key: string]: string } = {
+    Kakao: kakaoLogo,
+    Google: googleLogo,
+    Zoom: zoomLogo,
+    Discord: discordLogo,
+    Naver: naverLogo,
+};
 
 type Channel = {
     name: string;
@@ -22,14 +31,6 @@ interface StudyRoomContext {
     studyStatus: 'RECRUITING' | 'COMPLETED' | 'CLOSED';
     onLeaveOrClose: () => void;
 }
-
-const INITIAL_LINKS: Channel[] = [
-    { name: 'Kakao', url: 'https://open.kakao.com/o/', icon: kakaoLogo },
-    { name: 'Google', url: 'https://meet.google.com/', icon: googleLogo },
-    { name: 'Zoom', url: '', icon: zoomLogo },
-    { name: 'Discord', url: 'https://discord.gg/', icon: discordLogo },
-    { name: 'Naver', url: '', icon: naverLogo },
-];
 
 /* --- NEW: Tab Navigation styled-components --- */
 const NavContainer = styled.div`
@@ -135,15 +136,7 @@ const LinkBtn = styled.a`
   ${channelButtonBase}
 `;
 
-const DisabledBtn = styled.div`
-    ${channelButtonBase}
-    opacity 0.4;
-    cursor: not-allowed;
 
-    &:hover {
-        background-color: ${({ theme }) => theme.surfaceHover};
-    }
-`;
 
 const Icon = styled.img`
   width: 40px;
@@ -153,6 +146,26 @@ const Icon = styled.img`
 
 const Name = styled.span`
   font-size: 14px;
+`;
+
+const DisabledBtn = styled.div`
+    ${channelButtonBase}
+    cursor not-allowed;
+
+    /* ✅ [수정] 자식 Icon 컴포넌트에 흑백 필터를 적용합니다. */
+    & ${Icon} {
+        filter: grayscale(100%);
+        opacity: 0.6;
+    }
+
+    /* ✅ [수정] 전체 버튼을 흐리게 하는 대신, 이름만 흐리게 처리 */
+    & ${Name} {
+        opacity: 0.5;
+    }
+
+    &:hover {
+        background-color: ${({ theme }) => theme.surfaceHover};
+    }
 `;
 
 const EditButton = styled.button`
@@ -174,9 +187,28 @@ const EditButton = styled.button`
 const TestInterview: React.FC = () => {
     const { id: studyRoomId } = useParams<{ id: string }>();
     const { studyId, userRole, studyStatus, onLeaveOrClose } = useOutletContext<StudyRoomContext>();
-    const [channels, setChannels] = useState<Channel[]>(INITIAL_LINKS);
+    const [channels, setChannels] = useState<Channel[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingChannel, setEditingChannel] = useState<Channel | null>(null);
+
+    const fetchChannels = useCallback(async () => {
+        if (!studyId) return;
+        try {
+            const response = await axiosInstance.get(`/study-rooms/${studyId}/interview-channels`);
+            // API 응답 데이터에 프론트엔드에서 사용할 아이콘 경로를 추가합니다.
+            const channelsWithIcons = response.data.map((channel: { name: string; url: string }) => ({
+                ...channel,
+                icon: channelIconMap[channel.name] || '', // 이름에 맞는 아이콘 매핑
+            }));
+            setChannels(channelsWithIcons);
+        } catch (error) {
+            console.error("모의면접 채널 링크를 불러오는데 실패했습니다:", error);
+        }
+    }, [studyId]);
+
+    useEffect(() => {
+        fetchChannels();
+    }, [fetchChannels]);
 
     const handleOpenModal = (channel: Channel) => {
         setEditingChannel(channel);
@@ -188,13 +220,27 @@ const TestInterview: React.FC = () => {
         setEditingChannel(null);
     };
 
-    const handleUpdateLink = (newUrl: string) => {
-        if (!editingChannel) return;
-        setChannels(prev =>
-            prev.map(ch => (ch.name === editingChannel.name ? { ...ch, url: newUrl } : ch)),
-        );
-        handleCloseModal();
-    };
+        const handleUpdateLink = async (newUrl: string) => {
+            if (!editingChannel || !studyId) return;
+            try {
+                // 백엔드에 PUT 요청을 보내 URL을 업데이트합니다.
+                await axiosInstance.put(`/study-rooms/${studyId}/interview-channels`, {
+                    channelName: editingChannel.name,
+                    url: newUrl,
+                });
+
+                // API 요청이 성공하면, 프론트엔드의 상태도 업데이트하여 화면에 즉시 반영합니다.
+                setChannels(prev =>
+                    prev.map(ch => (ch.name === editingChannel.name ? { ...ch, url: newUrl } : ch)),
+                );
+                handleCloseModal();
+                alert("링크가 성공적으로 저장되었습니다.");
+
+            } catch (error) {
+                console.error("링크 업데이트에 실패했습니다:", error);
+                alert("링크 저장 중 오류가 발생했습니다.");
+            }
+        };
 
     return (
         <Container>
