@@ -4,7 +4,7 @@ import env from "navigation-bar-app/src/env.ts";
 
 export const kakaoAuthenticationAction = {
     async requestKakaoLoginToSpring(router: any): Promise<void> {
-        const { djangoAxiosInstance,springAxiosInstance} = axiosUtility.createAxiosInstances();
+        const { springAxiosInstance} = axiosUtility.createAxiosInstances();
         try {
             const res = await springAxiosInstance.get("/kakao-authentication/kakao/link");
             console.log("res.data:", res.data);
@@ -55,7 +55,7 @@ export const kakaoAuthenticationAction = {
                     console.log("신규 유저 진입");
                     sessionStorage.setItem("tempToken", accessToken);
                     sessionStorage.setItem("userInfo", JSON.stringify(user));
-                    router.push("/account/privacy");
+                        router.push("/account/privacy");
                 } else if(!isNewUser) {
                     localStorage.setItem("isLoggedIn", "wxx-sdwsx-ds=!>,?")
                     localStorage.removeItem("tempLoginType");
@@ -102,10 +102,7 @@ export const kakaoAuthenticationAction = {
             "/api/account/signup",
             userInfo,
             {
-                headers: {
-                    "Authorization": `Bearer ${accessToken}`,
-                    "Content-Type": "application/json",
-                },
+                withCredentials: true
             }
         );
 
