@@ -2,13 +2,13 @@ import * as axiosUtility from "../../account/utility/axiosInstance";
 import env from "navigation-bar-app/src/env.ts";
 
 
-export const kakaoAuthenticationAction = {
-    async requestKakaoLoginToSpring(router: any): Promise<void> {
+export const metaAuthenticationAction = {
+    async requestMetaLoginToSpring(router: any): Promise<void> {
         const { springAxiosInstance} = axiosUtility.createAxiosInstances();
         try {
-            const res = await springAxiosInstance.get("/kakao-authentication/kakao/link");
+            const res = await springAxiosInstance.get("/meta_authentication/link");
             console.log("res.data:", res.data);
-            const loginType = "KAKAO";
+            const loginType = "META";
 
             if (!res.data) {
                 throw new Error("응답에 URL이 없습니다.");
@@ -51,28 +51,28 @@ export const kakaoAuthenticationAction = {
 
 
 
+                // 팝업 먼저 닫기
+                try {
+                    popup.close();
+                } catch (e) {
+                    console.warn('팝업 닫기 실패:', e);
+                }
+
                 if(isNewUser) {
-                    console.log("신규 유저 진입");
+                    console.log("메타 신규 유저 진입");
                     sessionStorage.setItem("tempToken", accessToken);
                     sessionStorage.setItem("userInfo", JSON.stringify(user));
-                        router.push("/account/privacy");
+                    console.log("tempToken" + accessToken);
+                    console.log("userInfo" + JSON.stringify(user));
+                    router.push("/account/privacy");
                 } else if(!isNewUser) {
                     localStorage.setItem("isLoggedIn", "wxx-sdwsx-ds=!>,?")
                     localStorage.removeItem("tempLoginType");
                     localStorage.setItem("nickname", user.nickname);
 
-
                     window.location.href = MAIN_CONTAINER_URL;
-
                 } else{
                     alert("로그인중 문제가 발생하였습니다.")
-                }
-
-
-                try {
-                    popup.close();
-                } catch (e) {
-                    console.warn('팝업 닫기 실패:', e);
                 }
             };
 
@@ -95,7 +95,7 @@ export const kakaoAuthenticationAction = {
         const user = sessionStorage.getItem("userInfo");
         if (user) {
             userInfo = JSON.parse(user);
-            userInfo.loginType = "KAKAO";
+            userInfo.loginType = "META";
         }
 
         const res = await springAxiosInstance.post(

@@ -81,20 +81,27 @@ const App: React.FC = () => {
   const location = useLocation();
 
   useEffect(() => {
+
+    if(isLoggedIn){
+      setIsLoggedIn(true);
+    }
+
     const checkLogin = async () => {
       try {
         const result = await tokenVerificationRequest(); // await 필수
 
         console.log(result);
 
-        if (result === false) {
+        if (result.status === false) {
           // result가 false일 때 처리
+          console.log("로그인 인증 실패");
           localStorage.removeItem("nickname");
           localStorage.removeItem("isLoggedIn");
 
-        } else if (result === true) {
-          // result가 true일 때 처리
+        } else if (result.status === true) {
+          localStorage.setItem("nickname", result.nickname);
           localStorage.setItem("isLoggedIn", "dsds-ww-sdx-s>W??");
+          setIsLoggedIn(true);
         }
 
 
@@ -106,6 +113,7 @@ const App: React.FC = () => {
             setIsLoggedIn(true);
           }
           else{
+            localStorage.removeItem("isLoggedIn");
             localStorage.removeItem("nickname");
             setIsLoggedIn(false);}
         }
@@ -119,7 +127,7 @@ const App: React.FC = () => {
   const tokenVerificationRequest = async () => {
 
     const axiosResponse = await tokenVerification();
-    return axiosResponse.data.status;
+    return axiosResponse.data;
 
 
   }

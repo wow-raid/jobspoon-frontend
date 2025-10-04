@@ -91,6 +91,7 @@ import { useKakaoAuthenticationStore } from "../../../kakao/stores/kakaoAuthenti
 import { useGoogleAuthenticationStore } from "../../../google/stores/googleAuthenticationStore";
 import { useNaverAuthenticationStore } from "../../../naver/stores/naverAuthenticationStore";
 import { useHead } from '@vueuse/head';
+import {useMetaAuthenticationStore} from "@/meta/stores/metaAuthenticationStore";
 
 // 스타일 객체 정의
 const containerStyle = {
@@ -237,6 +238,7 @@ useHead({
 const kakaoAuthentication = useKakaoAuthenticationStore();
 const googleAuthentication = useGoogleAuthenticationStore();
 const naverAuthentication = useNaverAuthenticationStore();
+const metaAuthentication = useMetaAuthenticationStore();
 
 const loginType = ref(null);
 const router = useRouter();
@@ -247,7 +249,7 @@ onMounted(() => {
   const userInfo = JSON.parse(user);
 
   const tempType = sessionStorage.getItem("tempLoginType");
-  const validTypes = ["KAKAO", "GOOGLE", "NAVER"];
+  const validTypes = ["KAKAO", "GOOGLE", "NAVER", "META"];
   if (!tempType || !validTypes.includes(tempType)) {
     loginType.value = null;
     alert("잘못된 접근입니다. 로그인 페이지로 이동합니다.");
@@ -273,6 +275,8 @@ const agreeAndLogin = async () => {
       await googleAuthentication.requestGoogleLoginToDjango();
     } else if (loginType.value === "NAVER") {
       await naverAuthentication.requestNaverLoginToDjango();
+    } else if (loginType.value === "META") {
+      await metaAuthentication.requestRegister();
     }
 
     // 로그인 완료 후에만 영구 저장
