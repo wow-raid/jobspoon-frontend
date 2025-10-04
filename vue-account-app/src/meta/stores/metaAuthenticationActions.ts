@@ -51,12 +51,7 @@ export const metaAuthenticationAction = {
 
 
 
-                // 팝업 먼저 닫기
-                try {
-                    popup.close();
-                } catch (e) {
-                    console.warn('팝업 닫기 실패:', e);
-                }
+
 
                 if(isNewUser) {
                     console.log("메타 신규 유저 진입");
@@ -74,6 +69,12 @@ export const metaAuthenticationAction = {
                 } else{
                     alert("로그인중 문제가 발생하였습니다.")
                 }
+
+                try {
+                    popup.close();
+                } catch (e) {
+                    console.warn('팝업 닫기 실패:', e);
+                }
             };
 
             window.addEventListener('message', receiveMessage);
@@ -88,7 +89,7 @@ export const metaAuthenticationAction = {
     },
 
     async requestRegister(): Promise<void> {
-        console.log("회원 가입 시도 !!!")
+        // 모두 동의 후 회원가입 클릭 시 회원가입
         const { springAxiosInstance } = axiosUtility.createAxiosInstances();
         const accessToken = sessionStorage.getItem("tempToken");
         let userInfo = null;
@@ -106,7 +107,7 @@ export const metaAuthenticationAction = {
             }
         );
 
-        localStorage.setItem("userToken", res.data.userToken);
+        localStorage.setItem("isLoggedIn", "wxx-sdwsx-ds=!>,?")
         localStorage.removeItem("tempToken");
         window.location.href = "http://localhost/";
 
