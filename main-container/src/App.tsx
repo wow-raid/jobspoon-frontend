@@ -94,6 +94,15 @@ function InnerApp() {
       location.pathname.startsWith(path)
     );
 
+      const hiddenLayoutsLogo = [
+          "/vue-ai-interview/ai-interview/select",
+          "/vue-ai-interview/ai-interview/form/",
+          "/vue-ai-interview/ai-test/",
+      ];
+      const hiddenLayoutLogo = hiddenLayoutsLogo.some((path) =>
+          location.pathname.startsWith(path)
+      );
+
     // 🔒 SPA 하위 경로는 noindex (정적 랜딩은 인덱싱 허용)
     // - '/studies' (정적 랜딩) → index 허용
     // - '/studies/...'(리모트 SPA) → noindex
@@ -120,7 +129,7 @@ function InnerApp() {
         )}
 
         {!hideLayout && <NavigationBarApp />}
-        {hideLayout && (
+        {hiddenLayoutLogo && (
           <div className="fixed top-0 left-0 p-4 z-50">
             <img
               src={Logo}
