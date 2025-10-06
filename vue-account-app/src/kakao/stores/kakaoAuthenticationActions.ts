@@ -88,28 +88,40 @@ export const kakaoAuthenticationAction = {
     },
 
     async requestRegister(): Promise<void> {
-        console.log("회원 가입 시도 !!!")
-        const { springAxiosInstance } = axiosUtility.createAxiosInstances();
-        const accessToken = sessionStorage.getItem("tempToken");
-        let userInfo = null;
-        const user = sessionStorage.getItem("userInfo");
-        if (user) {
-            userInfo = JSON.parse(user);
-            userInfo.loginType = "KAKAO";
-        }
+        try {
+            const { springAxiosInstance } = axiosUtility.createAxiosInstances();
+            const accessToken = sessionStorage.getItem("tempToken");
+            let userInfo = null;
+            const user = sessionStorage.getItem("userInfo");
 
-        const res = await springAxiosInstance.post(
-            "/api/account/signup",
-            userInfo,
-            {
-                withCredentials: true
+            if (user) {
+                userInfo = JSON.parse(user);
+                userInfo.loginType = "META";
             }
-        );
 
-        localStorage.setItem("userToken", res.data.userToken);
-        localStorage.removeItem("tempToken");
-        window.location.href = "http://localhost/";
+            const res = await springAxiosInstance.post(
+                "/api/account/signup",
+                userInfo,
+                {
+                    headers: {
+                        "Authentication": accessToken
+                    }
+                }
+            );
 
+            localStorage.setItem("isLoggedIn", "wxx-sdwsx-ds=!>,?");
+            localStorage.removeItem("tempToken");
+            window.location.href = "/";
+
+        } catch (error: any) {
+            console.error("회원가입 요청 실패:", error);
+
+            alert("회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+
+            if (error.response) {
+                console.error("서버 응답:", error.response.data);
+            }
+        }
     },
 
 
