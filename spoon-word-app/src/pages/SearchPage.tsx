@@ -8,7 +8,7 @@ import TermCardWithTagsLazy from "../components/TermCardWithTagsLazy";
 // 단어장 모달 & 폴더 관련 API
 import SpoonNoteModal from "../components/SpoonNoteModal";
 import { fetchUserFolders, patchReorderFolders } from "../api/userWordbook";
-import { deleteUserFolder, deleteUserFoldersBulk, renameUserFolder} from "../api/folder";
+import { deleteUserFolder, deleteUserFoldersBulk, renameUserFolder } from "../api/folder";
 
 /** 타입 정의 */
 type Term = { id: number; title: string; description: string; tags?: string[] };
@@ -53,6 +53,22 @@ const TOKENS = {
     shadow: { xl: "0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)" },
 } as const;
 
+/** WordbookFolderPage 톤 맞춤 */
+const UI = {
+    gradient: {
+        brand: "linear-gradient(135deg, #4F76F1 0%, #3E63E0 100%)",
+        brandSoft: "linear-gradient(135deg, rgba(79,118,241,0.12) 0%, rgba(62,99,224,0.12) 100%)",
+    },
+    color: {
+        primaryStrong: "#3E63E0",
+        trayBg: "#0f172a",
+        trayText: "#ffffff",
+        line: "#e5e7eb",
+    },
+    radius: { pill: 999, xl: 20 },
+    space: (n: number) => `${n}px`,
+};
+
 /* ---------------------- styled-components ---------------------- */
 const Root = styled.div` margin-top: ${TOKENS.space(16)}; `;
 
@@ -68,6 +84,8 @@ const InfoRow = styled.div`
     font-size: ${TOKENS.font.base};
     color: ${TOKENS.color.textMuted};
 `;
+
+const Spacer = styled.div` flex: 1 1 auto; `;
 
 const InfoStrongNum = styled.span`
     font-weight: ${TOKENS.font.strong};
@@ -93,6 +111,121 @@ const LoadingMsg = styled.div` margin-top: ${TOKENS.space(16)}; color: ${TOKENS.
 const ErrorMsg = styled.div` margin-top: ${TOKENS.space(16)}; color: ${TOKENS.color.red}; `;
 const List = styled.ul` margin-top: ${TOKENS.space(16)}; padding: 0; list-style: none; `;
 const ListItem = styled.li` & + & { margin-top: ${TOKENS.space(16)}; } `;
+
+/** 카드 래퍼 + 체크 정렬 */
+const CardWrap = styled.div` position: relative; border-radius: 16px; `;
+const CHECK_W = 28;
+const CHECK_GAP = 10;
+const TITLE_SHIFT = CHECK_W + CHECK_GAP;
+
+const AlignWithCheck = styled.div`
+    article h3[id^="term-"] {
+        margin-left: ${TITLE_SHIFT}px !important;
+    }
+`;
+
+/** WordbookFolderPage 동일 체크 토글 */
+const SelectToggle = styled.button<{ $on?: boolean }>`
+    position: absolute;
+    top: 22px;
+    left: 20px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: ${CHECK_W}px;
+    height: ${CHECK_W}px;
+    border-radius: ${UI.radius.pill}px;
+    border: 0;
+
+    background: ${({ $on }) => ($on ? UI.gradient.brand : UI.gradient.brandSoft)};
+    color: ${({ $on }) => ($on ? "#fff" : "#0f172a")};
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+
+    cursor: pointer;
+    line-height: 0;
+    overflow: hidden;
+    contain: paint;
+    backface-visibility: hidden;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 80ms ease, filter 160ms ease;
+
+    &:hover { filter: brightness(0.98); }
+    &:active { transform: scale(0.97); }
+    &:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(79, 118, 241, 0.35);
+    }
+`;
+
+const CheckIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" style={{ display: "block" }} aria-hidden="true">
+        <path d="M20 7L10 17l-6-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+    </svg>
+);
+const Hollow = styled.span`
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    border: 2px solid ${UI.color.primaryStrong};
+    background: rgba(255, 255, 255, 0.7);
+    display: block;
+`;
+
+/** 상단 현재 페이지 전체 선택 버튼 */
+const PrimaryBtn = styled.button`
+    height: 32px;
+    padding: 0 12px;
+    border-radius: ${UI.radius.pill}px;
+    border: 0;
+    background: ${UI.gradient.brand};
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
+    transition: transform 80ms ease, filter 160ms ease;
+    &:hover { filter: brightness(0.98); }
+    &:active { transform: scale(0.98); }
+`;
+
+/** 하단 액션바 */
+const Tray = styled.div`
+    position: sticky;
+    bottom: 0;
+    z-index: 7;
+    background: ${UI.color.trayBg};
+    color: ${UI.color.trayText};
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    margin-top: 10px;
+`;
+
+const TrayBtns = styled.div` display: flex; gap: 8px; `;
+const TrayGhostBtn = styled.button`
+    border: 1px solid ${UI.color.line};
+    background: transparent;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+`;
+const TrayPrimary = styled.button`
+    border: 0;
+    background: ${UI.gradient.brand};
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
+    cursor: pointer;
+`;
 
 /* ---------- Pagination ---------- */
 type PaginationProps = {
@@ -155,6 +288,38 @@ const Pagination: React.FC<PaginationProps> = ({ page, size, total, onChange }) 
 const uniqTags = (arr?: string[] | null) =>
     Array.from(new Set((arr ?? []).filter(Boolean))) as string[];
 
+/** ===== 공용 POST 폴백 도우미 ===== */
+async function postWithFallback(urls: string[], body: any) {
+    let lastErr: any;
+    for (const u of urls) {
+        try {
+            const res = await http.post(u, body);
+            // 항상 body만 반환
+            return res?.data ?? res;
+        } catch (e: any) {
+            lastErr = e;
+            if (e?.response?.status !== 404) throw e;
+        }
+    }
+    throw lastErr;
+}
+
+/** 단일/벌크 공용: 항상 :bulk 호출 */
+async function attachTermsBulk(folderId: string, termIds: number[]) {
+    return postWithFallback(
+        [`/me/folders/${folderId}/terms:bulk`, `/api/me/folders/${folderId}/terms:bulk`],
+        { termIds }
+    );
+}
+
+/** 단일 저장 도우미 */
+async function attachSingleTermToFolder(folderId: string, termId: number) {
+    return postWithFallback(
+        [`/me/folders/${folderId}/terms`, `/api/me/folders/${folderId}/terms`],
+        { termId }
+    );
+}
+
 /** ---------------------- 검색 페이지 ---------------------- */
 export default function SearchPage() {
     const [params] = useSearchParams();
@@ -184,10 +349,44 @@ export default function SearchPage() {
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
 
-    // 단어장 모달 상태
+    // 선택 상태
+    const [selectedIds, setSelectedIds] = React.useState<Set<number>>(new Set());
+    const currentPageIds = React.useMemo(() => results.map(r => r.id), [results]);
+    const allChecked = currentPageIds.length > 0 && currentPageIds.every(id => selectedIds.has(id));
+    const selectedCount = selectedIds.size;
+
+    const toggleOne = (id: number) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+    const toggleAllCurrentPage = () => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            const every = currentPageIds.every(id => next.has(id));
+            if (every) currentPageIds.forEach(id => next.delete(id));
+            else currentPageIds.forEach(id => next.add(id));
+            return next;
+        });
+    };
+    const clearAllSelected = () => setSelectedIds(new Set());
+
+    // 액션바 표시 토글 (닫기)
+    const [showTray, setShowTray] = React.useState(true);
+    React.useEffect(() => {
+        if (selectedCount > 0) setShowTray(true);
+    }, [selectedCount]);
+
+    // 모달 상태
     const [moveOpen, setMoveOpen] = React.useState(false);
     const [notebooks, setNotebooks] = React.useState<Notebook[]>([]);
-    const [selectedTermId, setSelectedTermId] = React.useState<number | null>(null);
+    const [selectedTermId, setSelectedTermId] = React.useState<number | null>(null); // 단일 추가용
+    const [pendingTermIds, setPendingTermIds] = React.useState<number[] | null>(null); // 벌크 추가용
+    const [saving, setSaving] = React.useState(false); // 저장 중 중복 클릭 방지
+    const [savedEver, setSavedEver] = React.useState<Set<number>>(new Set());
 
     // 캐시 키
     const cacheKey = React.useMemo(
@@ -205,9 +404,9 @@ export default function SearchPage() {
 
     /** 검색 + 캐시 복원 */
     React.useEffect(() => {
-        // 쿼리가 하나도 없으면 완전 초기 상태 (탭 전환 직후 등)
         if (!q && !tag && !initial && !alpha && !symbol && !catId) {
             setResults([]); setTotal(0); setLoading(false); setError(null);
+            clearAllSelected();
             requestAnimationFrame(() => window.scrollTo(0, 0));
             return;
         }
@@ -231,10 +430,9 @@ export default function SearchPage() {
         (async () => {
             try {
                 let items: Term[] = [];
-                let nextTotalNum = total;     // 기본은 기존 total 유지(응답이 total을 안 줄 수도 있으니)
+                let nextTotalNum = total;
 
                 if (tag) {
-                    // 태그 검색
                     const res = await fetchTermsByTag(tag, page + 1, size);
                     const rawItems = (res as any).termList ?? [];
                     items = rawItems.map((it: any) => ({
@@ -246,9 +444,8 @@ export default function SearchPage() {
                     const t = (res as any).totalItems;
                     if (typeof t === "number") nextTotalNum = t;
                 } else {
-                    // 일반/카테고리/접두 검색
                     const res = await http.get<ApiResponse>("/terms/search", {
-                        params: { q, page, size, initial, alpha, symbol, catPath }, // <= http 인터셉터가 빈 값 제거
+                        params: { q, page, size, initial, alpha, symbol, catPath },
                         signal: ac.signal,
                     });
                     const rawItems = res.data.items ?? res.data.content ?? [];
@@ -258,17 +455,14 @@ export default function SearchPage() {
                         description: it.description ?? "",
                         tags: extractTags(it),
                     }));
-
                     const hasTotalField =
                         typeof (res.data as any).total === "number" ||
                         typeof (res.data as any).totalElements === "number";
-
                     if (hasTotalField) {
                         nextTotalNum = (res.data as any).total ?? (res.data as any).totalElements ?? nextTotalNum;
                     }
                 }
 
-                // 태그 검색 결과 0 → not-found 라우팅
                 if (tag && nextTotalNum === 0) {
                     const spNF = new URLSearchParams();
                     spNF.set("tag", tag);
@@ -276,7 +470,6 @@ export default function SearchPage() {
                     return;
                 }
 
-                // 페이지 범위 자동 보정 (총합이 확인될 때만)
                 const totalPages = Math.max(1, Math.ceil((nextTotalNum || 0) / (size || 1)));
                 if (page > totalPages - 1 && nextTotalNum > 0) {
                     const sp = new URLSearchParams();
@@ -285,7 +478,7 @@ export default function SearchPage() {
                     if (initial) sp.set("initial", initial);
                     if (alpha) sp.set("alpha", alpha);
                     if (symbol) sp.set("symbol", symbol);
-                    if (catPath) sp.set("catPath", catPath);       // <= 보존
+                    if (catPath) sp.set("catPath", catPath);
                     sp.set("page", String(totalPages - 1));
                     sp.set("size", String(size || 20));
                     navigate({ search: `?${sp.toString()}` }, { replace: true });
@@ -294,6 +487,13 @@ export default function SearchPage() {
 
                 setResults(items);
                 setTotal(nextTotalNum);
+                // 새 결과 들어오면 이번 페이지에 없는 선택은 정리
+                setSelectedIds(prev => {
+                    const keep = new Set<number>();
+                    const idsOnPage = new Set(items.map(i => i.id));
+                    prev.forEach(id => { if (idsOnPage.has(id)) keep.add(id); });
+                    return keep;
+                });
                 writeCache(cacheKey, { q, items, total: nextTotalNum, scrollY: 0 });
             } catch (e: any) {
                 if (e?.name === "CanceledError") return;
@@ -311,10 +511,9 @@ export default function SearchPage() {
         })();
 
         return () => ac.abort();
-        // 중요한 의존성: catId/catPath까지 포함
     }, [q, tag, page, size, initial, alpha, symbol, catId, catPath, navType, cacheKey, navigate, total]);
 
-    /** 태그 배열 추출 유틸 (응답 스키마 방어) */
+    /** 태그 배열 추출 (응답 방어) */
     const extractTags = (it: ApiItem): string[] | undefined => {
         if (Array.isArray(it.tags)) return uniqTags(it.tags);
         if (Array.isArray(it.relatedKeywords)) return uniqTags(it.relatedKeywords);
@@ -328,7 +527,7 @@ export default function SearchPage() {
         return undefined;
     };
 
-    /** 페이지 이동 핸들러 */
+    /** 페이지 이동 */
     const handlePageChange = (nextZeroBased: number) => {
         const sp = new URLSearchParams();
         if (q) sp.set("q", q);
@@ -336,14 +535,13 @@ export default function SearchPage() {
         if (initial) sp.set("initial", initial);
         if (alpha) sp.set("alpha", alpha);
         if (symbol) sp.set("symbol", symbol);
-        if (catPath) sp.set("catPath", catPath);     // <= 보존
+        if (catPath) sp.set("catPath", catPath);
         sp.set("page", String(nextZeroBased));
         sp.set("size", String(size || 20));
-        // 현재 경로 유지 + 쿼리만 변경 (상대 경로 이슈 회피)
         navigate({ search: `?${sp.toString()}` });
     };
 
-    /** 카드 내 태그 클릭 → 태그 검색으로 전환 (기존 조건은 리셋) */
+    /** 카드 내 태그 클릭 → 태그 검색으로 전환 */
     const handleTagClick = (t: string) => {
         const sp = new URLSearchParams();
         sp.set("tag", t);
@@ -352,71 +550,169 @@ export default function SearchPage() {
         navigate({ search: `?${sp.toString()}`});
     };
 
-    /** ========== SpoonNoteModal 연동 ========== */
-    const normalize = React.useCallback((s: string) => s.trim().replace(/\s+/g, " ").toLowerCase(), []);
+    /** 단일 or 벌크 저장 트리거: (+) 버튼
+     *  - 선택된 항목이 있으면: 선택 집합 + 클릭한 카드 → 벌크 저장 모달
+     *  - 선택이 없으면: 클릭한 카드만 → 단일 저장 모달
+     */
+    const handleAddClick = React.useCallback(async (termId: number) => {
+        const hasSelection = selectedIds.size > 0;
 
-    // 폴더 이름 변경
-    const handleRequestRename = React.useCallback(
-        async (folderId: string, currentName: string) => {
-            const next = window.prompt("새 폴더 이름을 입력하세요.", currentName ?? "");
-            if (next == null) return;
-            const raw = next.trim();
-            if (!raw) { alert("폴더 이름은 공백일 수 없습니다."); return; }
-            if (raw.length > 60) { alert("폴더 이름은 최대 60자입니다."); return; }
+        if (hasSelection) {
+            const ids = Array.from(new Set<number>([...Array.from(selectedIds), termId]));
+            setPendingTermIds(ids);
+            setSelectedTermId(null);
+        } else {
+            setSelectedTermId(termId);
+            setPendingTermIds(null);
+        }
 
-            const dup = notebooks.some(n => n.id !== folderId && normalize(n.name) === normalize(raw));
-            if (dup) { alert("동일한 이름의 폴더가 이미 존재합니다."); return; }
-
-            try {
-                await renameUserFolder(folderId, raw);
-                // 최신 목록 재조회(또는 로컬 반영)
-                const list = await fetchUserFolders();
-                setNotebooks(list);
-            } catch (e: any) {
-                const s = e?.response?.status;
-                if (s === 409) alert("동일한 이름의 폴더가 이미 존재합니다.");
-                else if (s === 400) alert("폴더 이름 형식이 올바르지 않습니다.");
-                else if (s === 403) alert("이 폴더에 대한 권한이 없습니다.");
-                else if (s === 404) alert("폴더를 찾을 수 없습니다.");
-                else alert("폴더 이름 변경에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+        try {
+            setNotebooks(await fetchUserFolders());
+        } catch (e: any) {
+            if (e?.response?.status === 401) {
+                alert("로그인이 필요합니다.");
+                navigate("/login");
+                return;
             }
-        },
-        [notebooks, normalize]
-    );
+            setNotebooks([]);
+        }
+        setMoveOpen(true);
+    }, [selectedIds, navigate]);
 
-    // 폴더 생성
-    const handleCreateFolder = React.useCallback(async (name: string) => {
-        const { data } = await http.post("/me/folders", { folderName: name });
-        const newId = String(data.id);
-        const newName = data.folderName ?? name;
-        setNotebooks(prev => [{ id: newId, name: newName }, ...prev]);
-        return newId;
-    }, []);
+    /** 액션바 '내 스푼노트에 저장하기' */
+    const openBulkSave = React.useCallback(async () => {
+        const ids = Array.from(selectedIds);
+        if (ids.length === 0) {
+            alert("먼저 단어를 선택해 주세요.");
+            return;
+        }
+        setSelectedTermId(null);
+        setPendingTermIds(ids);
+        try {
+            setNotebooks(await fetchUserFolders());
+        } catch (e: any) {
+            if (e?.response?.status === 401) {
+                alert("로그인이 필요합니다.");
+                navigate("/login");
+                return;
+            }
+            setNotebooks([]);
+        }
+        setMoveOpen(true);
+    }, [selectedIds, navigate]);
 
-    // 폴더 순서 저장
-    const handleReorderFolders = React.useCallback(async (orderedIds: string[]) => {
-        try { await patchReorderFolders(orderedIds); } catch (e) { console.warn("[folders reorder] 실패", e); }
-    }, []);
+    /** 벌크 응답 파싱: 백엔드(actual) 키에 정확히 맞춤 */
+    type BulkParsed = {
+        addedIds: number[];        // 서버가 ID 배열은 안 주니 비워둠(메시지엔 count만 사용)
+        duplicateIds: number[];
+        failedIds: number[];
+        addedCount: number;        // == attached
+        duplicateCount: number;    // == skipped (중복으로 스킵)
+        failedCount: number;       // == failed
+        invalidCount: number;      // == invalidIds.length
+    };
 
-    // "저장하기" 클릭 시(선택 폴더로 현재 term 저장)
+    function parseBulkResult(data: any): BulkParsed {
+        const num = (v: any) => {
+            const n = Number(v);
+            return Number.isFinite(n) && n >= 0 ? n : 0;
+        };
+
+        // 우리 백엔드가 주는 확정 키들
+        const addedCount     = num(data?.attached);
+        const duplicateCount = num(data?.skipped);
+        const failedCount    = num(data?.failed);
+        const invalidCount   = Array.isArray(data?.invalidIds) ? data.invalidIds.length : 0;
+
+        return {
+            addedIds: [],          // 서버가 배열을 안 줌
+            duplicateIds: [],
+            failedIds: [],
+            addedCount,
+            duplicateCount,
+            failedCount,
+            invalidCount,
+        };
+    }
+
+    /** 모달 저장: 단일 or 벌크 */
     const handleSaveToNotebook = React.useCallback(
         async (notebookId: string) => {
-            if (!selectedTermId) return;
-            // TODO: 실제 attach API 호출로 교체
-            // await attachTermToFolder({ folderId: notebookId, termId: selectedTermId });
-            console.log("add to wordbook:", selectedTermId, "-> folder:", notebookId);
-            setMoveOpen(false);
-            setSelectedTermId(null);
+            if (saving) return;
+            try {
+                setSaving(true);
+
+                // ===== 저장 타깃 결정 =====
+                const idsToSave =
+                    pendingTermIds && pendingTermIds.length > 0
+                        ? pendingTermIds
+                        : selectedTermId
+                            ? [selectedTermId]
+                            : [];
+
+                if (idsToSave.length === 0) {
+                    alert("저장할 항목이 없어요.");
+                    return;
+                }
+
+                // 항상 bulk API 사용 (단일도 1개짜리 배열로)
+                const resData = await attachTermsBulk(notebookId, idsToSave);
+                const { addedIds, duplicateIds, failedIds, addedCount, duplicateCount, failedCount } =
+                    parseBulkResult(resData);
+
+                // 로컬 배지(확실히 아는 것만)
+                const toMark = new Set<number>([...addedIds, ...duplicateIds]);
+                if (toMark.size > 0) {
+                    setSavedEver((prev) => new Set([...prev, ...toMark]));
+                }
+
+                // ===== 메시지 분기 =====
+                const addN = addedCount;
+                const dupN = duplicateCount;
+                const failN = failedCount;
+
+                if (failN > 0) {
+                    alert(`${addN}개 저장, ${dupN}개는 이미 저장됨, ${failN}개는 실패했어요. 잠시 후 다시 시도해 주세요.`);
+                } else if (addN === 0 && dupN > 0) {
+                    // 전부 중복
+                    alert(`이미 저장된 용어가 있습니다. 총 ${dupN}개는 건너뛰었어요.`);
+                } else if (addN > 0 && dupN > 0) {
+                    alert(`${addN}개 저장, ${dupN}개는 이미 저장된 항목이었어요.`);
+                } else if (addN > 0) {
+                    // 전부 신규
+                    if (idsToSave.length === 1) alert("단어가 내 스푼노트에 저장됐어요.");
+                    else alert(`${addN}개 용어를 저장했어요.`);
+                } else {
+                    // 서버가 카운트를 안 내려주거나 특수 포맷일 때 추론 보정
+                    const guessedDup = idsToSave.filter((id) => savedEver.has(id)).length;
+                    if (guessedDup > 0) {
+                        alert(`이미 저장된 용어가 있습니다. 총 ${guessedDup}개는 건너뛰었어요.`);
+                    } else {
+                        alert("변경된 항목이 없어요. 이미 저장되어 있거나 처리할 수 없었어요.");
+                        console.debug("[bulk-save] unexpected response:", resData);
+                    }
+                }
+
+                // 종료/정리
+                setPendingTermIds(null);
+                setSelectedTermId(null);
+                setMoveOpen(false);
+                clearAllSelected();
+            } catch (err: any) {
+                const s = err?.response?.status;
+                if (s === 401) alert("로그인이 필요합니다.");
+                else if (s === 403) alert("해당 폴더 접근 권한이 없습니다.");
+                else if (s === 404) alert("폴더나 용어를 찾을 수 없습니다.");
+                else alert("저장 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+                console.error("[save to notebook] failed:", err);
+            } finally {
+                setSaving(false);
+            }
         },
-        [selectedTermId]
+        [pendingTermIds, selectedTermId, saving, clearAllSelected, savedEver]
     );
 
-    // 카드의 + 버튼
-    const handleAddClick = React.useCallback(async (termId: number) => {
-        setSelectedTermId(termId);
-        try { setNotebooks(await fetchUserFolders()); } catch { setNotebooks([]); }
-        setMoveOpen(true);
-    }, []);
+
 
     return (
         <Root>
@@ -429,6 +725,20 @@ export default function SearchPage() {
                     {symbol && <Chip>기호: {symbol}</Chip>}
                     {catId && <Chip>분류 필터 적용</Chip>}
                     <Tail>에 대한 <InfoStrongNum>{total}</InfoStrongNum>개의 용어가 검색되었습니다.</Tail>
+
+                    {results.length > 0 && (
+                        <>
+                            <Spacer />
+                            <PrimaryBtn
+                                type="button"
+                                onClick={toggleAllCurrentPage}
+                                aria-pressed={allChecked}
+                                title={allChecked ? "현재 페이지 선택 해제" : "현재 페이지 전체 선택"}
+                            >
+                                {allChecked ? "현재 페이지 선택 해제" : "현재 페이지 전체 선택"}
+                            </PrimaryBtn>
+                        </>
+                    )}
                 </InfoRow>
             ) : (
                 <InfoRow>검색어를 입력하거나 분류를 선택해 주세요.</InfoRow>
@@ -440,23 +750,39 @@ export default function SearchPage() {
             {!loading && !error && results.length > 0 && (
                 <>
                     <List>
-                        {results.map((t) => (
-                            <ListItem key={t.id}>
-                                <TermCardWithTagsLazy
-                                    id={t.id}
-                                    title={t.title}
-                                    description={t.description}
-                                    tags={t.tags}
-                                    onTagClick={handleTagClick}
-                                    onAdd={handleAddClick} // 모달 열기
-                                />
-                            </ListItem>
-                        ))}
+                        {results.map((t) => {
+                            const isOn = selectedIds.has(t.id);
+                            return (
+                                <ListItem key={t.id}>
+                                    <CardWrap>
+                                        <SelectToggle
+                                            $on={isOn}
+                                            aria-label={isOn ? "선택 해제" : "선택"}
+                                            title={isOn ? "선택 해제" : "선택"}
+                                            onClick={(e) => { e.stopPropagation(); toggleOne(t.id); }}
+                                        >
+                                            {isOn ? <CheckIcon /> : <Hollow />}
+                                        </SelectToggle>
+
+                                        <AlignWithCheck>
+                                            <TermCardWithTagsLazy
+                                                id={t.id}
+                                                title={t.title}
+                                                description={t.description}
+                                                tags={t.tags}
+                                                onTagClick={handleTagClick}
+                                                onAdd={handleAddClick} // 단일 저장 모달
+                                            />
+                                        </AlignWithCheck>
+
+                                    </CardWrap>
+                                </ListItem>
+                            );
+                        })}
                     </List>
                 </>
             )}
 
-            {/* total이 살아있으면, 빈 페이지라도 네비게이션 유지 */}
             {!loading && !error && (q || tag || initial || alpha || symbol || catId) && total > 0 && (
                 <Pagination page={page} size={size} total={total} onChange={handlePageChange} />
             )}
@@ -465,15 +791,35 @@ export default function SearchPage() {
                 <div style={{ marginTop: TOKENS.space(16), color: TOKENS.color.textMuted }}>검색 결과가 없습니다.</div>
             )}
 
-            {/* 단어장 이동/저장 모달 */}
+            {/* 하단 액션바: 선택이 있고 showTray가 true일 때만 */}
+            {selectedCount > 0 && showTray && (
+                <Tray role="region" aria-label="선택 항목 액션바">
+                    <span>선택 {selectedCount.toLocaleString()}개</span>
+                    <TrayBtns>
+                        <TrayGhostBtn onClick={() => setShowTray(false)}>닫기</TrayGhostBtn>
+                        <TrayPrimary onClick={openBulkSave}>내 스푼노트에 저장하기</TrayPrimary>
+                    </TrayBtns>
+                </Tray>
+            )}
+
+            {/* 스푼노트 모달 */}
             <SpoonNoteModal
                 open={moveOpen}
                 notebooks={notebooks}
-                onClose={() => { setMoveOpen(false); setSelectedTermId(null); }}
+                onClose={() => { setMoveOpen(false); setSelectedTermId(null); setPendingTermIds(null); }}
                 onSave={handleSaveToNotebook}
-                onCreate={handleCreateFolder}
-                onReorder={handleReorderFolders}
-                onGoToFolder={() => { setMoveOpen(false); }} // 검색 페이지에서는 이동 대신 모달만 닫아도 OK
+                onCreate={async (name) => {
+                    const { data } = await http.post("/me/folders", { folderName: name });
+                    const newId = String(data.id);
+                    const newName = data.folderName ?? name;
+                    setNotebooks((prev) => [{ id: newId, name: newName }, ...prev]);
+                    return newId;
+                }}
+                onReorder={async (orderedIds) => {
+                    try { await patchReorderFolders(orderedIds); const refreshed = await fetchUserFolders(); setNotebooks(refreshed); }
+                    catch (e) { console.warn("[folders reorder] 실패", e); }
+                }}
+                onGoToFolder={() => { setMoveOpen(false); }}
                 onRename={async (folderId, newName) => {
                     await renameUserFolder(folderId, newName);
                     setNotebooks(prev => prev.map(n => n.id === folderId ? ({ ...n, name: newName }) : n));
