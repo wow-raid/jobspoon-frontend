@@ -93,8 +93,13 @@ const SearchBtn = styled.button`
     font-size: 14px;
     font-weight: 800;
     letter-spacing: 0.01em;
+
+    appearance: none;
+    color: ${TOKENS.colors.btnText} !important;
+    -webkit-text-fill-color: ${TOKENS.colors.btnText};
+    && { color: ${TOKENS.colors.btnText}; -webkit-text-fill-color: ${TOKENS.colors.btnText}; }
+
     background: ${TOKENS.colors.btnGradient};
-    color: ${TOKENS.colors.btnText};
     cursor: pointer;
     transition: filter 120ms ease, transform 40ms ease;
     -webkit-tap-highlight-color: transparent;
@@ -118,6 +123,7 @@ const BtnIcon = styled.svg`
     height: 18px;
     margin-right: 4px;
     display: inline-block;
+    color: inherit;
 `;
 
 const Popup = styled.div`
