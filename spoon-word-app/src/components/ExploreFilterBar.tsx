@@ -207,7 +207,7 @@ function clearSessionByPrefixes(prefixes: string[]) {
 const ExploreFilterBar: React.FC<Props> = ({
                                                value,
                                                onChange,
-                                               defaultTab = 0,
+                                               defaultTab = 1,
                                                sticky = true,
                                            }) => {
     const [activeTab, setActiveTab] = useState(defaultTab);
@@ -307,15 +307,7 @@ const ExploreFilterBar: React.FC<Props> = ({
             {/* 캡슐형 탭 바 (가운데 정렬 1:1) */}
             <CapsuleWrap role="tablist" aria-label="탐색 방식">
                 <Capsule>
-                    <CapsuleTab
-                        role="tab"
-                        aria-selected={activeTab === 0}
-                        $active={activeTab === 0}
-                        onClick={() => onTabSwitch(0)}
-                    >
-                        <span className="badge">초성 / 알파벳 / 기호로 찾기</span>
-                    </CapsuleTab>
-
+                    {/* 왼쪽: 분류별로 찾기 (activeTab === 1 이면 활성) */}
                     <CapsuleTab
                         role="tab"
                         aria-selected={activeTab === 1}
@@ -323,6 +315,16 @@ const ExploreFilterBar: React.FC<Props> = ({
                         onClick={() => onTabSwitch(1)}
                     >
                         <span className="badge">분류별로 찾기</span>
+                    </CapsuleTab>
+
+                    {/* 오른쪽: 초성/알파벳/기호로 찾기 (activeTab === 0 이면 활성) */}
+                    <CapsuleTab
+                        role="tab"
+                        aria-selected={activeTab === 0}
+                        $active={activeTab === 0}
+                        onClick={() => onTabSwitch(0)}
+                    >
+                        <span className="badge">초성 / 알파벳 / 기호로 찾기</span>
                     </CapsuleTab>
                 </Capsule>
             </CapsuleWrap>
