@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate, useLocation, useSearchParams, useNavigationType } from "react-router-dom";
 import http, { authHeader } from "../utils/http";
 import SpoonNoteModal from "../components/SpoonNoteModal";
 import { fetchUserFolders, patchReorderFolders } from "../api/userWordbook";
@@ -451,17 +451,6 @@ const Empty = styled.div`
     color: ${UI.color.muted};
 `;
 
-const LoadMore = styled.button`
-  display: block;
-  margin: 20px auto 0;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: ${UI.radius.sm}px;
-  border: 1px solid ${UI.color.line};
-  background: #fff;
-  cursor: pointer;
-`;
-
 /* 하단 Export Tray */
 const Tray = styled.div`
   position: sticky;
@@ -478,10 +467,69 @@ const Tray = styled.div`
   margin-top: 10px;
 `;
 
+/* ---------- Pagination ---------- */
+type PaginationProps = {
+    page: number; size: number; total: number;
+    onChange: (nextPageZeroBased: number) => void;
+};
+const PaginationNav = styled.nav`
+    margin-top: ${UI.space(16)};
+    display: flex; align-items: center; justify-content: center;
+    gap: ${UI.space(8)}; user-select: none;
+`;
+const PageNumBtn = styled.button<{ $active: boolean }>`
+    min-width: 34px; height: 34px; padding: 0 10px; border-radius: 999px;
+    border: 1px solid ${({ $active }) => ($active ? UI.color.primary : UI.color.line)};
+    background: ${({ $active }) => ($active ? UI.color.primary : "#fff")};
+    color: ${({ $active }) => ($active ? "#fff" : UI.color.text)};
+    font-weight: ${({ $active }) => ($active ? 700 : 600)};
+    cursor: pointer;
+`;
+const NavBtn = styled.button<{ $disabled: boolean }>`
+    width: 34px; height: 34px; border-radius: 999px; border: 1px solid ${UI.color.line};
+    background: #fff; color: ${({ $disabled }) => ($disabled ? "#c7c7c7" : UI.color.text)};
+    cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "pointer")};
+    display: inline-flex; align-items: center; justify-content: center;
+`;
+
+const Pagination: React.FC<PaginationProps> = ({ page, size, total, onChange }) => {
+    const totalPages = Math.max(1, Math.ceil((total || 0) / (size || 1)));
+    const current = page + 1; // 1-base
+    const maxNumbers = 10;
+
+    let start = Math.max(1, current - Math.floor(maxNumbers / 2));
+    let end = Math.min(totalPages, start + maxNumbers - 1);
+    start = Math.max(1, end - maxNumbers + 1);
+
+    const nums: number[] = [];
+    for (let i = start; i <= end; i++) nums.push(i);
+
+    const go = (p1: number) => {
+        if (p1 < 1 || p1 > totalPages || p1 === current) return;
+        onChange(p1 - 1);
+    };
+
+    return (
+        <PaginationNav aria-label="페이지네이션">
+            <NavBtn aria-label="처음" onClick={() => go(1)} disabled={current === 1} $disabled={current === 1}>«</NavBtn>
+            <NavBtn aria-label="이전" onClick={() => go(current - 1)} disabled={current === 1} $disabled={current === 1}>‹</NavBtn>
+            {nums.map((n) => (
+                <PageNumBtn key={n} onClick={() => go(n)} aria-current={n === current ? "page" : undefined} $active={n === current}>
+                    {n}
+                </PageNumBtn>
+            ))}
+            <NavBtn aria-label="다음" onClick={() => go(current + 1)} disabled={current === totalPages} $disabled={current === totalPages}>›</NavBtn>
+            <NavBtn aria-label="마지막" onClick={() => go(totalPages)} disabled={current === totalPages} $disabled={current === totalPages}>»</NavBtn>
+        </PaginationNav>
+    );
+};
+
 export default function WordbookFolderPage() {
     const { folderId } = useParams<{ folderId: string }>();
     const navigate = useNavigate();
     const location = useLocation() as any;
+    const [searchParams] = useSearchParams();
+    const navType = useNavigationType();
 
     const [folderName, setFolderName] = React.useState<string>(
         location.state?.folderName ?? "내 단어장"
@@ -491,8 +539,9 @@ export default function WordbookFolderPage() {
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
 
-    const [page, setPage] = React.useState(0);
-    const [hasMore, setHasMore] = React.useState(false);
+    const [page, setPage] = React.useState<number>(Number(searchParams.get("page") ?? 0) || 0);
+    const [size, setSize] = React.useState<number>(Number(searchParams.get("size") ?? 20 ) || 20);
+    const [total, setTotal] = React.useState<number>(0); // 전체 개수(서버 totalItems)
 
     /** 선택 상태 (항상 노출되는 체크 기반) */
     const [checked, setChecked] = React.useState<Record<string, boolean>>({});
@@ -516,6 +565,19 @@ export default function WordbookFolderPage() {
     type SortKey = "createdAt_desc" | "title_asc" | "title_desc" | "status_asc" | "status_desc";
     const [sortMenuOpen, setSortMenuOpen] = React.useState(false);
     const [sortKey, setSortKey] = React.useState<SortKey>("createdAt_desc");
+
+    const sortToServer = (k: SortKey): string => {
+        switch (k) {
+            case "title_asc":  return "title,ASC";
+            case "title_desc": return "title,DESC";
+            // case "status_asc": return "memorization,ASC";   // 서버에 이런 필드가 없다면 createdAt로 대체
+            // case "status_desc":return "memorization,DESC";  // ↑ 없다면 제거하거나 createdAt로 매핑
+            case "status_asc":
+            case "status_desc":
+            case "createdAt_desc":
+            default:           return "createdAt,desc";
+        }
+    };
 
     // 저장/내보내기 진행 상태
     const [saving, setSaving] = React.useState<Record<string, boolean>>({});
@@ -588,13 +650,13 @@ export default function WordbookFolderPage() {
     };
 
     const fetchPage = React.useCallback(
-        async (p: number) => {
+        async (p: number, pageSize: number, sortKeyNow: SortKey) => {
             if (!folderId) return;
             setLoading(true);
             setError(null);
             try {
-                const res = await http.get(`/folders/${folderId}/terms`, {
-                    params: { page: p + 1, perPage: 20, sort: "createdAt,DESC" },
+                const res = await http.get(`/me/folders/${folderId}/terms`, {
+                    params: { page: p, perPage: pageSize, sort: sortToServer(sortKeyNow) },
                     headers: { ...authHeader() },
                     withCredentials: true,
                 });
@@ -602,19 +664,22 @@ export default function WordbookFolderPage() {
                 const raw: any[] = d.userWordbookTermList || d.items || d.content || d.terms || d.data || [];
                 const list = raw.map(mapRow).filter(Boolean) as TermItem[];
 
-                const totalPages =
-                    (typeof d.totalPages === "number" && d.totalPages) ||
-                    (typeof d.totalPage === "number" && d.totalPage) ||
-                    (typeof d.pages === "number" && d.pages) ||
-                    1;
+                // 페이지 교체 방식
+                setItems(list);
 
-                setItems((prev) => (p === 0 ? list : [...prev, ...list]));
-                setHasMore(p + 1 < totalPages);
+                // total / totalPages 파싱
+                const nextTotal =
+                    (typeof d.totalItems === "number" && d.totalItems) ||
+                    (typeof d.total === "number" && d.total) ||
+                    (typeof d.totalElements === "number" && d.totalElements) ||
+                    0;
+                setTotal(nextTotal);
 
                 if (typeof d.folderName === "string" && d.folderName.trim())
                     setFolderName(d.folderName);
             } catch (err: any) {
                 const s = err?.response?.status;
+                console.error("server error body:", err?.response?.data);
                 if (s === 401) navigate("/login", { state: { from: `/spoon-word/folders/${folderId}` } });
                 else if (s === 404 || s === 403) setError("폴더를 찾을 수 없습니다.");
                 else setError("데이터를 불러오는 중 오류가 발생했습니다.");
@@ -624,6 +689,41 @@ export default function WordbookFolderPage() {
         },
         [folderId, navigate]
     );
+
+    // 페이지 바뀔 때 URL 업데이트 + 스크롤 상단
+    const syncUrl = React.useCallback((p: number, s: number, sk: SortKey) => {
+        const sp = new URLSearchParams(location.search);
+        sp.set("page", String(p));
+        sp.set("size", String(s));
+        sp.set("sort", sortToServer(sk)); // 백업용, 필요 없으면 제거
+        navigate({ search: `?${sp.toString()}` }, { replace: false });
+    }, [location.search, navigate]);
+
+    const handlePageChange = (nextZeroBased: number) => {
+        setPage(nextZeroBased);
+        syncUrl(nextZeroBased, size, sortKey);
+        // 새 페이지 데이터
+        fetchPage(nextZeroBased, size, sortKey);
+        // 접근성/UX: 맨 위로
+        requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+    };
+
+    // 초기 진입/뒤로가기(POP) 시 복원
+    React.useEffect(() => {
+        // URL → 상태 반영
+        const p = Number(searchParams.get("page") ?? 0) || 0;
+        const s = Number(searchParams.get("size") ?? 20) || 20;
+        setPage(p);
+        setSize(s);
+
+        // 데이터 로드
+        fetchPage(p, s, sortKey);
+        // count도 갱신
+        refreshCount();
+        // POP으로 돌아온 경우 스크롤 복원은 필요하면 sessionStorage로 별도 구현
+        if (navType !== "POP") requestAnimationFrame(() => window.scrollTo(0, 0));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [folderId, searchParams]);
 
     // items 들어올 때 uwtId→termId 매핑 갱신 및 체크 동기화
     React.useEffect(() => {
@@ -755,7 +855,8 @@ export default function WordbookFolderPage() {
             }
 
             setPage(0);
-            await fetchPage(0);
+            syncUrl(0, size, sortKey);
+            await fetchPage(0, size, sortKey);
             clearAllSelected();
 
             // 혹시 서버측 후처리 지연 대비 안전 리프레시
@@ -846,7 +947,6 @@ export default function WordbookFolderPage() {
         setPage(0);
         setChecked({});
         refreshCount();
-        fetchPage(0);
     }, [refreshCount, fetchPage]);
 
     /* ------ PDF 내보내기 ------ */
@@ -988,12 +1088,6 @@ export default function WordbookFolderPage() {
         };
     }, [menuOpen]);
 
-    const onLoadMore = () => {
-        const next = page + 1;
-        setPage(next);
-        fetchPage(next);
-    };
-
     const cycleTitleMode = () =>
         setTitleMode((m) => (m === "allHidden" ? "inherit" : "allHidden"));
 
@@ -1044,6 +1138,15 @@ export default function WordbookFolderPage() {
         return arr;
     }, [items, learn, sortKey]);
 
+    const applySort = (next: SortKey) => {
+        setSortKey(next);
+        setMenuOpen(false);
+        setSortMenuOpen(false);
+        setPage(0);
+        syncUrl(0, size, next);
+        fetchPage(0, size, next);
+    };
+
     return (
         <div style={{ padding: 8 }}>
             {/* 상단 툴바 */}
@@ -1060,7 +1163,7 @@ export default function WordbookFolderPage() {
 
                     <Title>{folderName}</Title>
                     <Count>
-                        {count === null ? `${items.length.toLocaleString()}개` : `${fmt(count)}개`}
+                        {(count ?? total).toLocaleString()}개
                         {selectedTermIds.size > 0 ? ` · 선택 ${fmt(selectedTermIds.size)}` : ""}
                     </Count>
 
@@ -1134,52 +1237,28 @@ export default function WordbookFolderPage() {
                                         <SortSubMenu role="menu" aria-label="정렬하기">
                                             <RadioItem
                                                 $checked={sortKey === "createdAt_desc"}
-                                                onClick={() => {
-                                                    setSortKey("createdAt_desc");
-                                                    setMenuOpen(false);
-                                                    setSortMenuOpen(false);
-                                                }}
+                                                onClick={() => applySort("createdAt_desc")}
                                             >
                                                 <span /> 최신 등록순
                                             </RadioItem>
                                             <RadioItem
                                                 $checked={sortKey === "title_asc"}
-                                                onClick={() => {
-                                                    setSortKey("title_asc");
-                                                    setMenuOpen(false);
-                                                    setSortMenuOpen(false);
-                                                }}
-                                            >
+                                                onClick={() => applySort("title_asc")}>
                                                 <span /> 제목 오름차순
                                             </RadioItem>
                                             <RadioItem
                                                 $checked={sortKey === "title_desc"}
-                                                onClick={() => {
-                                                    setSortKey("title_desc");
-                                                    setMenuOpen(false);
-                                                    setSortMenuOpen(false);
-                                                }}
-                                            >
+                                                onClick={() => applySort("title_desc")}>
                                                 <span /> 제목 내림차순
                                             </RadioItem>
                                             <RadioItem
                                                 $checked={sortKey === "status_asc"}
-                                                onClick={() => {
-                                                    setSortKey("status_asc");
-                                                    setMenuOpen(false);
-                                                    setSortMenuOpen(false);
-                                                }}
-                                            >
+                                                onClick={() => applySort("status_asc")}>
                                                 <span /> 상태: 미암기 → 완료
                                             </RadioItem>
                                             <RadioItem
                                                 $checked={sortKey === "status_desc"}
-                                                onClick={() => {
-                                                    setSortKey("status_desc");
-                                                    setMenuOpen(false);
-                                                    setSortMenuOpen(false);
-                                                }}
-                                            >
+                                                onClick={() => applySort("status_desc")}>
                                                 <span /> 상태: 완료 → 미암기
                                             </RadioItem>
                                         </SortSubMenu>
@@ -1369,7 +1448,11 @@ export default function WordbookFolderPage() {
                         })}
                     </Grid>
 
-                    {hasMore && <LoadMore onClick={onLoadMore}>더 불러오기</LoadMore>}
+                    {total > 0 && (
+                        <div style={{ marginTop: 16}}>
+                            <Pagination page={page} size={size} total={total} onChange={handlePageChange} />
+                        </div>
+                    )}
                 </>
             )}
 
