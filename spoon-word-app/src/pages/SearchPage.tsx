@@ -179,12 +179,18 @@ const PrimaryBtn = styled.button`
     border-radius: ${UI.radius.pill}px;
     border: 0;
     background: ${UI.gradient.brand};
-    color: #fff;
+
+    appearance: none;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff;
+    && { color: #fff; -webkit-text-fill-color: #fff; }
+
     font-weight: 700;
     letter-spacing: 0.01em;
     cursor: pointer;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
     transition: transform 80ms ease, filter 160ms ease;
+
     &:hover { filter: brightness(0.98); }
     &:active { transform: scale(0.98); }
 `;
