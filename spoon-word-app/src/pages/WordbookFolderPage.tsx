@@ -596,6 +596,7 @@ export default function WordbookFolderPage() {
                 const res = await http.get(`/folders/${folderId}/terms`, {
                     params: { page: p + 1, perPage: 20, sort: "createdAt,DESC" },
                     headers: { ...authHeader() },
+                    withCredentials: true,
                 });
                 const d = res.data ?? {};
                 const raw: any[] = d.userWordbookTermList || d.items || d.content || d.terms || d.data || [];
@@ -623,13 +624,6 @@ export default function WordbookFolderPage() {
         },
         [folderId, navigate]
     );
-
-    // 초기 로드
-    React.useEffect(() => {
-        setPage(0);
-        setChecked({});
-        fetchPage(0);
-    }, [fetchPage]);
 
     // items 들어올 때 uwtId→termId 매핑 갱신 및 체크 동기화
     React.useEffect(() => {
@@ -737,6 +731,7 @@ export default function WordbookFolderPage() {
         setSortMenuOpen(false);
     };
 
+    // 이동 완료 핸들러
     const handleConfirmMove = async (destFolderId: string) => {
         if (!folderId) return;
         const termIds = Array.from(selectedTermIds);
@@ -753,12 +748,18 @@ export default function WordbookFolderPage() {
 
             const moved = new Set((res.movedTermIds ?? []).map(String));
             if (moved.size > 0) {
+                // 리스트에서 제거
                 setItems((prev) => prev.filter((it) => !moved.has(String(it.termId))));
+                // 카운트 즉시 반영
+                setCount((c) => Math.max(0, (c ?? 0) - moved.size));
             }
+
             setPage(0);
             await fetchPage(0);
-
             clearAllSelected();
+
+            // 혹시 서버측 후처리 지연 대비 안전 리프레시
+            refreshCount();
         } catch (err: any) {
             const s = err?.response?.status;
             if (s === 401) alert("로그인이 필요합니다.");
@@ -770,6 +771,83 @@ export default function WordbookFolderPage() {
             setMoveOpen(false);
         }
     };
+
+    // 서버 카운트 상태
+    const [count, setCount] = React.useState<number | null>(null);
+    const fmt = (n: number) => n.toLocaleString();
+
+    // 카운트 새로고침 함수
+    const refreshCount = React.useCallback(async () => {
+        if (!folderId) return;
+
+        const parseCount = (data: any) => {
+            // 다양한 스키마 대응
+            if (typeof data === "number") return data;
+            if (data == null) return 0;
+            const keys = ["count", "termsCount", "totalCount", "total", "size", "value"];
+            for (const k of keys) {
+                const v = (data as any)[k];
+                if (typeof v === "number") return v;
+                if (typeof v === "string" && v.trim() && !Number.isNaN(Number(v))) return Number(v);
+            }
+            // text/plain인 경우
+            if (typeof data === "string" && data.trim() && !Number.isNaN(Number(data))) {
+                return Number(data);
+            }
+            return 0;
+        };
+
+        const tryFetch = async (url: string) => {
+            return http.get(url, {
+                headers: { ...authHeader() },
+                withCredentials: true,
+                validateStatus: () => true,
+            });
+        };
+
+        try {
+            let res = await tryFetch(`/me/folders/${folderId}/terms/count`);
+            if (res.status === 404 || res.status === 405) {
+                // 클래스 레벨이 /api인 경우 대비
+                res = await tryFetch(`/api/me/folders/${folderId}/terms/count`);
+            }
+
+            if (res.status === 200) {
+                const value = parseCount(res.data);
+                setCount(Number.isFinite(value) ? value : 0);
+                return;
+            }
+
+            // 인증 실패 시 null 유지 → 상단에 …개로 표시됨
+            if (res.status === 401) {
+                console.warn("[count] 401", res.data);
+                setCount(null);
+                return;
+            }
+
+            // 권한/미존재는 0으로 표기
+            if (res.status === 403 || res.status === 404) {
+                console.warn("[count] ", res.status, res.data);
+                setCount(0);
+                return;
+            }
+
+            console.warn("[count] unexpected", res.status, res.data);
+            setCount(null);
+        } catch (err: any) {
+            console.warn("[count] fetch error", err?.response?.status, err?.response?.data);
+            setCount(null);
+        }
+    }, [folderId]);
+
+
+    // 폴더 바뀌면 카운트/리스트 동시 초기화
+    React.useEffect(() => {
+        setPage(0);
+        setChecked({});
+        refreshCount();
+        fetchPage(0);
+    }, [refreshCount, fetchPage]);
 
     /* ------ PDF 내보내기 ------ */
     const exportByTermIds = async (termIds: number[], title: string) => {
@@ -982,8 +1060,8 @@ export default function WordbookFolderPage() {
 
                     <Title>{folderName}</Title>
                     <Count>
-                        {items.length.toLocaleString()}개
-                        {selectedTermIds.size > 0 ? ` · 선택 ${selectedTermIds.size.toLocaleString()}` : ""}
+                        {count === null ? `${items.length.toLocaleString()}개` : `${fmt(count)}개`}
+                        {selectedTermIds.size > 0 ? ` · 선택 ${fmt(selectedTermIds.size)}` : ""}
                     </Count>
 
                     <Spacer />
