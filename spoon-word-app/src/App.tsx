@@ -1,6 +1,6 @@
-import React from "react";
+import React, {useLayoutEffect} from "react";
 import { Routes, Route, useNavigate, useLocation, Outlet, useSearchParams } from "react-router-dom";
-import styled from "styled-components";
+
 import SearchBar from "./components/SearchBar";
 import ExploreFilterBar, { FilterSelection } from "./components/ExploreFilterBar";
 import SearchPage from "./pages/SearchPage";
@@ -10,35 +10,11 @@ import http from "./utils/http";
 import { fetchUserFolders, patchReorderFolders } from "./api/userWordbook";
 import WordbookFolderPage from "./pages/WordbookFolderPage";
 import FavoriteTermsPage from "./pages/FavoriteTermsPage.tsx";
+import HeroBanner from "./components/HeroBanner";
 
-const TOKENS = {
-    containerMaxWidth: 768,
-    space: (n: number) => `${n}px`,
-    color: { text: "#111827" },
-    h1FontSize: "clamp(24px, 2.5vw, 30px)",
-};
-
-const Container = styled.div`
-    margin-left: auto;
-    margin-right: auto;
-    max-width: ${TOKENS.containerMaxWidth}px;
-    padding-left: ${TOKENS.space(16)};
-    padding-right: ${TOKENS.space(16)};
-    padding-top: ${TOKENS.space(40)};
-    padding-bottom: ${TOKENS.space(40)};
-`;
-
-const Title = styled.h1`
-    font-size: ${TOKENS.h1FontSize};
-    font-weight: 750;
-    letter-spacing: -0.02em;
-    margin: 0 0 ${TOKENS.space(16)} 0;
-    color: ${TOKENS.color.text};
-`;
-
-const Content = styled.div`
-    margin-top: ${TOKENS.space(24)};
-`;
+// 상단 패딩 0인 컨테이너만 사용
+import { PageContainerFlushTop } from "./styles/layout";
+import { NarrowLeft } from "./styles/layout";
 
 function extractTermIdFromArticle(el: HTMLElement | null): number | null {
     const article = el?.closest("article");
@@ -267,16 +243,74 @@ function AppLayout() {
         [closeModal, nav, location.pathname]
     );
 
+    useLayoutEffect(() => {
+        const setShellInsets = () => {
+            // 헤더 안쪽 래퍼(Inner) 잡기
+            const brand = document.querySelector('header a[aria-label="JobSpoon 홈"]') as HTMLElement | null;
+            const inner = brand?.closest('div') as HTMLElement | null; // styled Inner
+
+            if (!inner) return;
+
+            const rect = inner.getBoundingClientRect();
+            const cs = getComputedStyle(inner);
+            const padL = parseFloat(cs.paddingLeft) || 0;
+            const padR = parseFloat(cs.paddingRight) || 0;
+
+            const left  = Math.max(0, Math.round(rect.left  + padL));
+            const right = Math.max(0, Math.round(window.innerWidth - rect.right + padR));
+
+            document.documentElement.style.setProperty("--shell-left",  `${left}px`);
+            document.documentElement.style.setProperty("--shell-right", `${right}px`);
+        };
+
+        setShellInsets();
+        window.addEventListener("resize", setShellInsets);
+        return () => window.removeEventListener("resize", setShellInsets);
+    }, []);
+
     return (
-        <Container>
-            <Title>잡스푼과 함께, 기술 용어를 나만의 언어로!</Title>
+        <PageContainerFlushTop>
+            <HeroBanner
+                align="left"
+                narrow
+                floatingIcons={[
+                    "http://localhost:3006/hero/icon-1.png",
+                    "http://localhost:3006/hero/icon-2.png",
+                    "http://localhost:3006/hero/icon-3.png",
+                ]}
+                assetHost={process.env.MFE_PUBLIC_SERVICE || "http://localhost:3006"}
+                iconProps={{
+                    // 전체 박스 크기/위치 (원하면 같이 조절)
+                    width:  "360px",
+                    height: "240px",
+                    top: "28px",
+                    rightOffset: 0,
 
-            <SearchBar value={q} onChange={setQ} onSearch={handleSearch} />
-            {!isFolderRoute && <ExploreFilterBar value={currentSelection} onChange={handleFilterChange} />}
+                    // ✨ 각 아이콘 개별 위치(%)
+                    positions: [
+                        { left: 20, top: 30 }, // icon-1
+                        { left: 66, top: 12 }, // icon-2
+                        { left: 45, top: 62 }, // icon-3
+                    ],
 
-            <Content>
-                <Outlet />
-            </Content>
+                    // 필요시 크기·그림자
+                    maxIconWidthPercent: 38,
+                    withShadow: false,
+                    // scales: [1.0, 0.9, 0.95], // 개별 스케일도 가능
+                }}
+            />
+
+            <NarrowLeft>
+                <SearchBar value={q} onChange={setQ} onSearch={handleSearch} />
+            </NarrowLeft>
+
+            {!isFolderRoute && (
+                <NarrowLeft>
+                    <ExploreFilterBar value={currentSelection} onChange={handleFilterChange} />
+                </NarrowLeft>
+            )}
+
+            <Outlet />
 
             <SpoonNoteModal
                 open={modalOpen}
@@ -287,7 +321,7 @@ function AppLayout() {
                 onReorder={handleReorder}
                 onGoToFolder={handleGoToFolder}
             />
-        </Container>
+        </PageContainerFlushTop>
     );
 }
 

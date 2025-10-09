@@ -52,8 +52,8 @@ const Root = styled.div` margin-top: ${TOKENS.space(12)}; `;
 const CapsuleWrap = styled.div`
     position: relative;
     overflow: visible;
-    margin: 0 auto ${TOKENS.space(10)} auto;
-    max-width: 820px;
+    width: 100%;
+    margin: 0 0 ${TOKENS.space(10)} 0;
     padding: 0 ${TOKENS.space(4)};
 `;
 

@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { Box, Button, Typography } from "@mui/material";
+import { Container as BaseContainer } from "./layout.ts";
 
 export const SectionLabel = styled(Typography)`
   font-size: 14px;
@@ -32,4 +33,13 @@ export const KeyBtn = styled(Button)<{ $active?: boolean }>`
       background: ${({ theme }) => `${theme.palette.primary.main}14`};
     }
   }
+`;
+
+export const Container = BaseContainer;
+
+export const NarrowLeft = styled.div`
+  max-width: ${({ theme }) => theme?.custom?.layout?.narrowMaxWidth ?? 980}px;
+  width: 100%;
+  margin-left: 0;     /* ← 컨테이너의 왼쪽 라인에 붙임 */
+  margin-right: auto; /* 남는 공간은 오른쪽으로 */
 `;
