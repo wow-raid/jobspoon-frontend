@@ -1,4 +1,5 @@
 import React from "react";
+import { NarrowLeft } from "../styles/layout";
 import styled from "styled-components";
 import { useParams, useNavigate, useLocation, useSearchParams, useNavigationType } from "react-router-dom";
 import http, { authHeader } from "../utils/http";
@@ -37,14 +38,17 @@ const UI = {
         line: "#e5e7eb",
         indigo: "#6366f1",
         indigo50: "#eef2ff",
+        indigo200: "#c7d2fe",
         primary: "#4F76F1",
         primaryStrong: "#3E63E0",
         danger: "#ef4444",
+        quizHover: "#2c73e5",
     },
     gradient: {
         brand: "linear-gradient(135deg, #4F76F1 0%, #3E63E0 100%)",
         brandSoft:
             "linear-gradient(135deg, rgba(79,118,241,0.12) 0%, rgba(62,99,224,0.12) 100%)",
+        quizCta: "linear-gradient(90deg, #3E82E8 0%, #2BC6A6 100%)",
     },
     radius: { xl: 20, lg: 14, md: 12, sm: 10, pill: 999 },
     shadow: {
@@ -62,10 +66,10 @@ const Toolbar = styled.div`
     top: 0;
     z-index: 5;
     background: ${UI.color.bg};
-    border-bottom: 1px solid ${UI.color.line};
+    //border-bottom: 1px solid ${UI.color.line};
     padding: 12px 8px;
     margin-bottom: 16px;
-    box-shadow: ${UI.shadow.bar};
+    // box-shadow: ${UI.shadow.bar};
 `;
 
 const Row = styled.div`
@@ -84,7 +88,10 @@ const Title = styled.h2`
 const Count = styled.span`
     margin-left: 8px;
     font-size: ${UI.font.body};
+    font-weight: 400;
+    letter-spacing: -0.02em;
     color: ${UI.color.muted};
+    line-height: 1;           /* 라인 높이 통일 */
 `;
 
 const Spacer = styled.div`
@@ -253,7 +260,9 @@ const TITLE_SHIFT = CHECK_W + CHECK_GAP;
 
 /** TermCard 내부의 + 버튼 숨김, 제목/설명 가리기, 연관 키워드 숨기기 */
 const HideTermCardAdd = styled.div<{ $hideTitle?: boolean; $hideDesc?: boolean }>`
-    [aria-label="내 단어장에 추가"] {
+    /* TermCard 내부의 + 버튼 완전 숨김 (두 환경 라벨 모두 처리) */
+    article [aria-label="내 단어장에 추가"],
+    article [aria-label="내 스푼노트에 추가"] {
         display: none !important;
     }
 
@@ -262,10 +271,15 @@ const HideTermCardAdd = styled.div<{ $hideTitle?: boolean; $hideDesc?: boolean }
         margin-left: ${TITLE_SHIFT}px !important;
     }
 
-    /* 제목 숨김 모드 */
-    ${({ $hideTitle }) =>
-            $hideTitle &&
-            `
+  /* 제목은 항상 살짝 오른쪽으로 밀어 체크와 정렬 */
+  article h3[id^="term-"] {
+    margin-left: ${TITLE_SHIFT}px !important;
+  }
+
+  /* 제목 숨김 모드 */
+  ${({ $hideTitle }) =>
+    $hideTitle &&
+    `
       article h3[id^="term-"]{
         position: relative;
         color: transparent !important;
@@ -286,9 +300,9 @@ const HideTermCardAdd = styled.div<{ $hideTitle?: boolean; $hideDesc?: boolean }
       }
   `}
 
-    ${({ $hideDesc }) =>
-            $hideDesc &&
-            `
+  ${({ $hideDesc }) =>
+    $hideDesc &&
+    `
       article > div:nth-of-type(2) { position: relative; }
       article > div:nth-of-type(2) p {
         color: transparent !important;
@@ -298,9 +312,9 @@ const HideTermCardAdd = styled.div<{ $hideTitle?: boolean; $hideDesc?: boolean }
       article > div:nth-of-type(2) p::selection { background: transparent; }
   `}
 
-    article [aria-label="연관 키워드"] {
-        display: none !important;
-    }
+  article [aria-label="연관 키워드"] {
+    display: none !important;
+  }
 `;
 
 const CardWrap = styled.div`
@@ -379,32 +393,33 @@ const StatusBtn = styled.button<{ $done?: boolean }>`
     height: 28px;
     padding: 0 12px;
     border-radius: ${UI.radius.pill}px;
-    border: 0;
+    border: 1px solid ${({ $done }) => ($done ? UI.color.indigo200 : UI.color.line)};
+    background: ${({ $done }) => ($done ? UI.color.indigo50 : "#fff")};
+    color: ${({ $done }) => ($done ? UI.color.primaryStrong : UI.color.muted)};
 
     font-size: ${UI.font.tiny};
     font-weight: 700;
-
-    background: ${({ $done }) => ($done ? UI.gradient.brand : UI.gradient.brandSoft)};
-    color: ${({ $done }) => ($done ? "#fff" : "#0f172a")};
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
-
+    letter-spacing: -0.06em;
     cursor: pointer;
-    transition: transform 80ms ease, filter 160ms ease;
+
+    box-shadow: none; /* 이전 인셋 글로시 제거 */
+    transition:
+            background-color 140ms ease,
+            border-color 140ms ease,
+            color 140ms ease,
+            transform 80ms ease;
+
     &:hover {
-        filter: brightness(0.985);
+        background: ${({ $done }) => ($done ? "#e6edff" : "#fafafa")};
     }
-    &:active {
-        transform: scale(0.97);
-    }
+    &:active { transform: scale(0.97); }
     &:focus-visible {
         outline: none;
-        box-shadow: 0 0 0 3px rgba(79, 118, 241, 0.35);
+        box-shadow: 0 0 0 3px rgba(79,118,241,0.25);
     }
-
     &:disabled {
         opacity: 0.7;
         cursor: not-allowed;
-        filter: none;
     }
 `;
 
@@ -492,6 +507,138 @@ const NavBtn = styled.button<{ $disabled: boolean }>`
     display: inline-flex; align-items: center; justify-content: center;
 `;
 
+/* ---------- Option Popup ---------- */
+const MetaSep = styled.span`
+  margin: 0 8px;
+  color: ${UI.color.muted};
+`;
+
+const SortInlineWrap = styled.span`
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    isolation: isolate;   /* 내부 z-index를 독립시켜 안전하게 레이어링 */
+`;
+
+const SortInlineBtn = styled.button`
+    position: relative;
+    padding: 0 0px;                 /* 텍스트 간격만 살짝 */
+    border: 0;
+    background: transparent;
+    font-size: ${UI.font.body};
+    font-weight: 400;               /* Count와 동일 굵기 */
+    letter-spacing: -0.02em;
+    color: ${UI.color.muted};
+    cursor: pointer;
+    line-height: 1;                 /* Count와 동일 라인 높이 */
+    border-radius: ${UI.radius.pill}px;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 0;
+
+    /* 박스가 '생기는' 효과: 레이아웃 변화 없이 오버레이만 표시 */
+    &::after {
+        content: "";
+        position: absolute;
+        inset: -6px -10px;            /* 위아래/좌우 여백 */
+        //border: 1px solid ${UI.color.line};
+        background: #fafafa;
+        border-radius: 10px;
+        opacity: 0;
+        transition: opacity 120ms ease;
+        pointer-events: none;         /* 클릭 방해 X */
+        z-index: -1;
+        will-change: opacity;
+    }
+
+    &:hover::after,
+    &:focus-visible::after,
+    &[aria-expanded="true"]::after {
+        opacity: 1;                   /* 호버/포커스/열림에 박스 표시 */
+    }
+
+    &:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(79,118,241,0.25); /* 키보드 접근성 */
+    }
+`;
+
+const SortPopup = styled.div`
+  position: absolute;
+  top: 22px; /* 타이틀 라인의 아래쪽으로 */
+  left: -8px;
+  right: auto;
+  min-width: 220px;
+  background: #fff;
+  border: 1px solid ${UI.color.line};
+  border-radius: 12px;
+  box-shadow: ${UI.shadow.menu};
+  padding: 6px;
+  z-index: 8;
+`;
+
+/* ---------- QuizCta ---------- */
+const QuizCta = styled.button`
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    height: 42px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 8px;
+    background: ${UI.gradient.quizCta};
+    color: #fff;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.10), inset 0 1px 0 rgba(255,255,255,.25);
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 80ms ease;
+    z-index: 0;                 /* 버튼 자체를 스택 컨텍스트 0으로 */
+
+    /* 텍스트/아이콘은 항상 오버레이 위로 */
+    & > * { position: relative; z-index: 1; }
+
+    /* 왼→오 채우는 오버레이 */
+    &::before{
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: ${UI.color.quizHover};   /* #2c73e5 */
+        transform: scaleX(0);
+        transform-origin: left center;
+        transition: transform 260ms ease;
+        z-index: -1;              /* 오버레이를 텍스트 뒤로 */
+        pointer-events: none;
+        will-change: transform;
+    }
+
+    &:hover::before,
+    &:focus-visible::before { transform: scaleX(1); }
+
+    &:active { transform: scale(0.98); }
+    &:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(79,118,241,.28);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        &::before{ transition: none; }
+    }
+`;
+
+
+const PlusDot = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 5v14M5 12h14" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/>
+    </svg>
+);
+
+
 const Pagination: React.FC<PaginationProps> = ({ page, size, total, onChange }) => {
     const totalPages = Math.max(1, Math.ceil((total || 0) / (size || 1)));
     const current = page + 1; // 1-base
@@ -532,7 +679,7 @@ export default function WordbookFolderPage() {
     const navType = useNavigationType();
 
     const [folderName, setFolderName] = React.useState<string>(
-        location.state?.folderName ?? "내 단어장"
+        location.state?.folderName ?? "내 스푼노트"
     );
 
     const [items, setItems] = React.useState<TermItem[]>([]);
@@ -566,6 +713,10 @@ export default function WordbookFolderPage() {
     const [sortMenuOpen, setSortMenuOpen] = React.useState(false);
     const [sortKey, setSortKey] = React.useState<SortKey>("createdAt_desc");
 
+    // 인라인 정렬 팝업 상태/레퍼런스
+    const [sortInlineOpen, setSortInlineOpen] = React.useState(false);
+    const inlineSortRef = React.useRef<HTMLSpanElement | null>(null);
+
     const sortToServer = (k: SortKey): string => {
         switch (k) {
             case "title_asc":  return "title,ASC";
@@ -578,6 +729,18 @@ export default function WordbookFolderPage() {
             default:           return "createdAt,desc";
         }
     };
+
+    // 현재 정렬 라벨
+    const sortLabel = React.useMemo(() => {
+        switch (sortKey) {
+            case "title_asc":  return "제목순";
+            case "title_desc": return "제목역순";
+            case "status_asc": return "상태: 미암기→완료";
+            case "status_desc":return "상태: 완료→미암기";
+            case "createdAt_desc":
+            default:           return "최신 등록순";
+        }
+    }, [sortKey]);
 
     // 저장/내보내기 진행 상태
     const [saving, setSaving] = React.useState<Record<string, boolean>>({});
@@ -605,15 +768,12 @@ export default function WordbookFolderPage() {
         } catch {}
     }, [storageKey]);
 
-    const persistSelected = React.useCallback(
-        (next: Set<number>) => {
-            setSelectedTermIds(next);
-            try {
-                sessionStorage.setItem(storageKey, JSON.stringify(Array.from(next)));
-            } catch {}
-        },
-        [storageKey]
-    );
+    const persistSelected = React.useCallback((next: Set<number>) => {
+        setSelectedTermIds(next);
+        try {
+            sessionStorage.setItem(storageKey, JSON.stringify(Array.from(next)));
+        } catch {}
+    }, [storageKey]);
 
     const mapRow = (row: TermRow): TermItem | null => {
         const uwt =
@@ -1061,16 +1221,19 @@ export default function WordbookFolderPage() {
         }
     };
 
-    /* ------ settings menu : outside click/esc ------ */
+    /* ------ settings & inline-sort : outside click/esc ------ */
     React.useEffect(() => {
-        if (!menuOpen) return;
+        if (!menuOpen && !sortInlineOpen) return;
+
         const onDocClick = (e: MouseEvent) => {
-            if (!actionsRef.current) return;
             const t = e.target as Node;
-            if (!actionsRef.current.contains(t)) {
+            const inActions = actionsRef.current?.contains(t);
+            const inInline  = inlineSortRef.current?.contains(t);
+            if (!inActions && !inInline) {
                 setMenuOpen(false);
                 setPdfMenuOpen(false);
                 setSortMenuOpen(false);
+                setSortInlineOpen(false);
             }
         };
         const onEsc = (e: KeyboardEvent) => {
@@ -1078,15 +1241,17 @@ export default function WordbookFolderPage() {
                 setMenuOpen(false);
                 setPdfMenuOpen(false);
                 setSortMenuOpen(false);
+                setSortInlineOpen(false);
             }
         };
+
         document.addEventListener("mousedown", onDocClick);
         document.addEventListener("keydown", onEsc);
         return () => {
             document.removeEventListener("mousedown", onDocClick);
             document.removeEventListener("keydown", onEsc);
         };
-    }, [menuOpen]);
+    }, [menuOpen, sortInlineOpen]);
 
     const cycleTitleMode = () =>
         setTitleMode((m) => (m === "allHidden" ? "inherit" : "allHidden"));
@@ -1142,13 +1307,28 @@ export default function WordbookFolderPage() {
         setSortKey(next);
         setMenuOpen(false);
         setSortMenuOpen(false);
+        setSortInlineOpen(false);
         setPage(0);
         syncUrl(0, size, next);
         fetchPage(0, size, next);
     };
 
+    // 퀴즈 시작
+    const onStartQuiz = () => {
+        const termIds = Array.from(selectedTermIds);
+        const hasSelection = termIds.length > 0;
+        navigate("/spoon-quiz/start", {
+            state: {
+                source: hasSelection ? "selected" : "folder",
+                folderId: folderId ? Number(folderId) : null,
+                termIds: hasSelection ? termIds : undefined,
+            },
+        });
+    };
+
+
     return (
-        <div style={{ padding: 8 }}>
+        <NarrowLeft style={{ padding: "8px 0 24px" }}>  {/* SearchBar와 동일 폭/정렬 */}
             {/* 상단 툴바 */}
             <Toolbar>
                 <Row>
@@ -1162,129 +1342,55 @@ export default function WordbookFolderPage() {
                     </button>
 
                     <Title>{folderName}</Title>
+                    <Count>{(count ?? total).toLocaleString()}개</Count>
+                    <MetaSep aria-hidden="true">|</MetaSep>
+                    <SortInlineWrap ref={inlineSortRef}>
+                        <SortInlineBtn
+                            type="button"
+                            aria-haspopup="menu"
+                            aria-expanded={sortInlineOpen}
+                            onClick={() => {
+                                setSortInlineOpen(v => !v);
+                                // 다른 메뉴는 닫기
+                                setMenuOpen(false);
+                                setPdfMenuOpen(false);
+                                setSortMenuOpen(false);
+                            }}
+                        >
+                            {sortLabel}
+                        </SortInlineBtn>
+
+                        {sortInlineOpen && (
+                            <SortPopup role="menu" aria-label="정렬하기">
+                                <RadioItem $checked={sortKey === "createdAt_desc"} onClick={() => applySort("createdAt_desc")}>
+                                    <span /> 최신 등록순
+                                </RadioItem>
+                                <RadioItem $checked={sortKey === "title_asc"} onClick={() => applySort("title_asc")}>
+                                    <span /> 제목순
+                                </RadioItem>
+                                <RadioItem $checked={sortKey === "title_desc"} onClick={() => applySort("title_desc")}>
+                                    <span /> 제목역순
+                                </RadioItem>
+                                <RadioItem $checked={sortKey === "status_asc"} onClick={() => applySort("status_asc")}>
+                                    <span /> 상태: 미암기 → 완료
+                                </RadioItem>
+                                <RadioItem $checked={sortKey === "status_desc"} onClick={() => applySort("status_desc")}>
+                                    <span /> 상태: 완료 → 미암기
+                                </RadioItem>
+                            </SortPopup>
+                        )}
+                    </SortInlineWrap>
+
                     <Count>
-                        {(count ?? total).toLocaleString()}개
                         {selectedTermIds.size > 0 ? ` · 선택 ${fmt(selectedTermIds.size)}` : ""}
                     </Count>
 
                     <Spacer />
 
-                    {/* 전체 선택/해제 */}
-                    <PrimaryBtn
-                        type="button"
-                        onClick={() => toggleAll(!allOn)}
-                        aria-pressed={allOn}
-                        title={allOn ? "전체 해제" : "전체 선택"}
-                    >
-                        {allOn ? "전체 해제" : "전체 선택"}
-                    </PrimaryBtn>
-
-                    {/* 보기 옵션 */}
-                    <Seg aria-label="보기 옵션">
-                        <SegBtn
-                            $active={titleMode === "allHidden"}
-                            aria-pressed={titleMode === "allHidden"}
-                            onClick={cycleTitleMode}
-                        >
-                            {titleMode === "allHidden" ? "일괄 단어 보이기" : "일괄 단어 숨기기"}
-                        </SegBtn>
-
-                        <SegBtn
-                            $active={descMode === "allHidden"}
-                            aria-pressed={descMode === "allHidden"}
-                            onClick={cycleDescMode}
-                        >
-                            {descMode === "allHidden" ? "일괄 뜻 보이기" : "일괄 뜻 숨기기"}
-                        </SegBtn>
-                    </Seg>
-
-                    <Actions ref={actionsRef}>
-                        <SettingsBtn
-                            type="button"
-                            onClick={() => {
-                                setMenuOpen((v) => !v);
-                                setPdfMenuOpen(false);
-                                setSortMenuOpen(false);
-                            }}
-                            aria-haspopup="menu"
-                            aria-expanded={menuOpen}
-                        >
-                            <Gear /> 설정
-                        </SettingsBtn>
-                        {menuOpen && (
-                            <Menu role="menu" aria-label="설정">
-                                <MenuItem role="menuitem" onClick={openMove}>
-                                    단어 이동하기
-                                </MenuItem>
-                                <MenuItem role="menuitem" onClick={handleDeleteSelected}>
-                                    단어 삭제하기
-                                </MenuItem>
-
-                                {/* 정렬하기 - 서브메뉴 */}
-                                <div style={{ position: "relative" }}>
-                                    <MenuItem
-                                        role="menuitem"
-                                        aria-haspopup="menu"
-                                        aria-expanded={sortMenuOpen}
-                                        onClick={() => {
-                                            setSortMenuOpen((v) => !v);
-                                            setPdfMenuOpen(false);
-                                        }}
-                                    >
-                                        정렬하기 <span aria-hidden="true">›</span>
-                                    </MenuItem>
-                                    {sortMenuOpen && (
-                                        <SortSubMenu role="menu" aria-label="정렬하기">
-                                            <RadioItem
-                                                $checked={sortKey === "createdAt_desc"}
-                                                onClick={() => applySort("createdAt_desc")}
-                                            >
-                                                <span /> 최신 등록순
-                                            </RadioItem>
-                                            <RadioItem
-                                                $checked={sortKey === "title_asc"}
-                                                onClick={() => applySort("title_asc")}>
-                                                <span /> 제목 오름차순
-                                            </RadioItem>
-                                            <RadioItem
-                                                $checked={sortKey === "title_desc"}
-                                                onClick={() => applySort("title_desc")}>
-                                                <span /> 제목 내림차순
-                                            </RadioItem>
-                                            <RadioItem
-                                                $checked={sortKey === "status_asc"}
-                                                onClick={() => applySort("status_asc")}>
-                                                <span /> 상태: 미암기 → 완료
-                                            </RadioItem>
-                                            <RadioItem
-                                                $checked={sortKey === "status_desc"}
-                                                onClick={() => applySort("status_desc")}>
-                                                <span /> 상태: 완료 → 미암기
-                                            </RadioItem>
-                                        </SortSubMenu>
-                                    )}
-                                </div>
-
-                                {/* PDF 내보내기 - 서브메뉴 */}
-                                <div style={{ position: "relative" }}>
-                                    <MenuItem
-                                        role="menuitem"
-                                        onClick={() => setPdfMenuOpen((v) => !v)}
-                                        aria-haspopup="menu"
-                                        aria-expanded={pdfMenuOpen}
-                                    >
-                                        PDF 내보내기 <span aria-hidden="true">›</span>
-                                    </MenuItem>
-                                    {pdfMenuOpen && (
-                                        <PdfSubMenu role="menu" aria-label="PDF 내보내기 옵션">
-                                            <MenuItem onClick={handleExportSelectedPdf}>내가 선택한 단어만 내보내기</MenuItem>
-                                            <MenuItem onClick={handleExportWholeFolderPdf}>단어장 폴더 전체 내보내기</MenuItem>
-                                        </PdfSubMenu>
-                                    )}
-                                </div>
-                            </Menu>
-                        )}
-                    </Actions>
+                    <QuizCta onClick={onStartQuiz}>
+                        <PlusDot />
+                        <span>나만의 스푼퀴즈 시작!</span>
+                    </QuizCta>
                 </Row>
             </Toolbar>
 
@@ -1536,6 +1642,6 @@ export default function WordbookFolderPage() {
                     setNotebooks(await fetchUserFolders());
                 }}
             />
-        </div>
+        </NarrowLeft>
     );
 }

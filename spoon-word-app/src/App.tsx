@@ -1,5 +1,6 @@
 import React, {useLayoutEffect} from "react";
 import { Routes, Route, useNavigate, useLocation, Outlet, useSearchParams } from "react-router-dom";
+import { matchPath } from "react-router-dom";
 
 import SearchBar from "./components/SearchBar";
 import ExploreFilterBar, { FilterSelection } from "./components/ExploreFilterBar";
@@ -48,7 +49,12 @@ function AutoContent() {
 function AppLayout() {
     const nav = useNavigate();
     const location = useLocation();
+    const hideSearchOnThisRoute =
+        !!matchPath("/spoon-word/folders/:folderId/*", location.pathname) ||
+        !!matchPath("/spoon-word/folders/:folderId", location.pathname);
     console.debug("[AppLayout] pathname =", location.pathname);
+
+
 
     const isFolderRoute =
         location.pathname.startsWith("/spoon-word/folders") ||
@@ -300,9 +306,11 @@ function AppLayout() {
                 }}
             />
 
-            <NarrowLeft>
-                <SearchBar value={q} onChange={setQ} onSearch={handleSearch} />
-            </NarrowLeft>
+            {!isFolderRoute && (
+                <NarrowLeft>
+                    <SearchBar value={q} onChange={setQ} onSearch={handleSearch} />
+                </NarrowLeft>
+            )}
 
             {!isFolderRoute && (
                 <NarrowLeft>
