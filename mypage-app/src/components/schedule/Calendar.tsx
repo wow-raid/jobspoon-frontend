@@ -26,6 +26,7 @@ export default function Calendar({ schedules, onEventClick }: Props) {
         allDay: false,
         description: s.description,
         studyRoomTitle: s.studyRoomTitle,
+        studyRoomId: s.studyRoomId
     }));
 
     // 이벤트 셀 커스터마이징 (한 줄로 잘리지 않게)

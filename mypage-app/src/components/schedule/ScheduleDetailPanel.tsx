@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 
 type Props = {
     schedule: any | null;
@@ -7,6 +8,13 @@ type Props = {
 };
 
 export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
+    const navigate = useNavigate();
+
+    const handleMoveToStudyRoom = () => {
+        if (!schedule?.studyRoomId) return;
+        navigate(`/studyroom/${schedule.studyRoomId}`);
+    };
+
     return (
         <AnimatePresence>
             {schedule && (
@@ -31,6 +39,12 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
                                 <br />~ {new Date(schedule.end).toLocaleString()}
                             </Time>
                         </Content>
+
+                        <ButtonArea>
+                            <MoveButton onClick={handleMoveToStudyRoom}>
+                                스터디룸으로 이동하기
+                            </MoveButton>
+                        </ButtonArea>
                     </Panel>
                 </>
             )}
@@ -103,4 +117,25 @@ const Content = styled.div`
 const Time = styled.div`
     font-size: 13px;
     color: #6b7280;
+`;
+
+const ButtonArea = styled.div`
+  border-top: 1px solid #e5e7eb;
+  padding-top: 12px;
+  margin-top: auto;
+`;
+
+const MoveButton = styled.button`
+  width: 100%;
+  padding: 12px;
+  background: #3b82f6;
+  color: white;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  &:hover {
+    background: #2563eb;
+  }
 `;
