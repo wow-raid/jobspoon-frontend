@@ -167,7 +167,7 @@ const StudyRoomCard: React.FC<StudyRoomCardProps> = ({ room, isLoggedIn, onCardC
       <CardBody>
         <JobCategory>{room.recruitingRoles?.[0] || '기타'}</JobCategory>
         <Title>{room.title}</Title>
-        <HostInfo>by {room.host?.nickname || '모임장'}</HostInfo>
+          <HostInfo>by {room.hostNickname || '모임장'}</HostInfo>
       </CardBody>
 
       <CardFooter>
@@ -176,7 +176,13 @@ const StudyRoomCard: React.FC<StudyRoomCardProps> = ({ room, isLoggedIn, onCardC
             <TagItem key={`${tag}-${idx}`}>{tag}</TagItem>
           ))}
         </Tags>
-        <PostedAt>{new Date(room.createdAt).toLocaleDateString()}</PostedAt>
+          <PostedAt>
+              {new Date(room.createdAt).toLocaleDateString("ko-KR", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+              })}
+          </PostedAt>
       </CardFooter>
     </>
   );
