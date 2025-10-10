@@ -1,14 +1,41 @@
-// pages/SchedulePage.tsx
+{/* 스터디 모임 일정 탭 */}
+
 import styled from "styled-components";
+import { useEffect, useState } from "react";
+import {
+    fetchUserStudySchedules,
+    UserStudySchedule
+} from "../api/studyScheduleApi.ts";
+import Calendar from "../components/schedule/Calendar.tsx";
 
 export default function SchedulePage() {
+
+    const [schedules, setSchedules] = useState<UserStudySchedule[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const load = async () => {
+            try {
+                const data = await fetchUserStudySchedules();
+                setSchedules(data);
+            } catch (e) {
+                console.error("일정 불러오기 실패:", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+        load();
+    }, []);
+
+    if (loading) return <p>불러오는 중...</p>;
+    if (schedules.length === 0) return <NoticeBanner>현재 등록된 일정이 없습니다.</NoticeBanner>;
+
     return (
         <>
-            <NoticeBanner>🚧 서비스 준비 중입니다</NoticeBanner>
-
             <Section>
-                <Title>내 일정</Title>
+                <Title>내 스터디 모임 일정</Title>
                 {/* 👉 나중에 달력/일정 목록 들어갈 자리 */}
+                <Calendar schedules={schedules}/>
             </Section>
         </>
     );
