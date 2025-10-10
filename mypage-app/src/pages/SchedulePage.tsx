@@ -7,35 +7,32 @@ import {
     UserStudySchedule
 } from "../api/studyScheduleApi.ts";
 import Calendar from "../components/schedule/Calendar.tsx";
+import ScheduleDetailPanel from "../components/schedule/ScheduleDetailPanel.tsx";
 
 export default function SchedulePage() {
-
     const [schedules, setSchedules] = useState<UserStudySchedule[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [selected, setSelected] = useState<UserStudySchedule | null>(null);
 
     useEffect(() => {
-        const load = async () => {
-            try {
-                const data = await fetchUserStudySchedules();
-                setSchedules(data);
-            } catch (e) {
-                console.error("일정 불러오기 실패:", e);
-            } finally {
-                setLoading(false);
-            }
-        };
-        load();
+        fetchUserStudySchedules().then(setSchedules);
     }, []);
-
-    if (loading) return <p>불러오는 중...</p>;
-    if (schedules.length === 0) return <NoticeBanner>현재 등록된 일정이 없습니다.</NoticeBanner>;
 
     return (
         <>
             <Section>
                 <Title>내 스터디 모임 일정</Title>
-                {/* 👉 나중에 달력/일정 목록 들어갈 자리 */}
-                <Calendar schedules={schedules}/>
+
+                {/* 일정 달력 */}
+                <Calendar
+                    schedules={schedules}
+                    onEventClick={(event) => setSelected(event)}
+                />
+
+                {/* 일정 상세 패널 */}
+                <ScheduleDetailPanel
+                    schedule={selected}
+                    onClose={() => setSelected(null)}
+                />
             </Section>
         </>
     );
@@ -43,6 +40,7 @@ export default function SchedulePage() {
 
 /* ================== styled-components ================== */
 const Section = styled.section`
+    position: relative; /* ✅ 슬라이드 패널 위치 기준 */
     padding: 24px;
     border-radius: 12px;
     background: #fff;
@@ -50,6 +48,7 @@ const Section = styled.section`
     display: flex;
     flex-direction: column;
     gap: 20px;
+    overflow: hidden;
 `;
 
 const Title = styled.h2`

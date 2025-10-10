@@ -15,15 +15,25 @@ const localizer = dateFnsLocalizer({
 
 type Props = {
     schedules: UserStudySchedule[];
+    onEventClick?: (event: any) => void;
 };
 
-export default function Calendar({ schedules }: Props) {
+export default function Calendar({ schedules, onEventClick }: Props) {
     const events = schedules.map((s) => ({
         title: `${s.studyRoomTitle} - ${s.title}`,
         start: new Date(s.startTime),
         end: new Date(s.endTime),
         allDay: false,
+        description: s.description,
+        studyRoomTitle: s.studyRoomTitle,
     }));
+
+    // 이벤트 셀 커스터마이징 (한 줄로 잘리지 않게)
+    const CustomEvent = ({ event }: any) => (
+        <div style={{ whiteSpace: "normal", overflow: "visible", fontSize: 13 }}>
+            {event.title}
+        </div>
+    );
 
     return (
         <div style={{ height: 600 }}>
@@ -32,7 +42,10 @@ export default function Calendar({ schedules }: Props) {
                 events={events}
                 startAccessor="start"
                 endAccessor="end"
+                onSelectEvent={onEventClick}
                 culture="ko"
+                style={{ height: 650 }}
+                components={{ event: CustomEvent }}
                 messages={{
                     next: "다음",
                     previous: "이전",
