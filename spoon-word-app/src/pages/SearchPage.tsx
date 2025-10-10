@@ -9,6 +9,7 @@ import TermCardWithTagsLazy from "../components/TermCardWithTagsLazy";
 import SpoonNoteModal from "../components/SpoonNoteModal";
 import { fetchUserFolders, patchReorderFolders } from "../api/userWordbook";
 import { deleteUserFolder, deleteUserFoldersBulk, renameUserFolder } from "../api/folder";
+import { NarrowLeft } from "../styles/layout";
 
 /** 타입 정의 */
 type Term = { id: number; title: string; description: string; tags?: string[] };
@@ -179,12 +180,18 @@ const PrimaryBtn = styled.button`
     border-radius: ${UI.radius.pill}px;
     border: 0;
     background: ${UI.gradient.brand};
-    color: #fff;
+
+    appearance: none;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff;
+    && { color: #fff; -webkit-text-fill-color: #fff; }
+
     font-weight: 700;
     letter-spacing: 0.01em;
     cursor: pointer;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
     transition: transform 80ms ease, filter 160ms ease;
+
     &:hover { filter: brightness(0.98); }
     &:active { transform: scale(0.98); }
 `;
@@ -716,39 +723,43 @@ export default function SearchPage() {
 
     return (
         <Root>
-            {(q || tag || initial || alpha || symbol || catId) ? (
-                <InfoRow aria-live="polite">
-                    {q && <Chip>검색어: {q}</Chip>}
-                    {tag && <Chip>#{tag}</Chip>}
-                    {initial && <Chip>초성: {initial}</Chip>}
-                    {alpha && <Chip>알파벳: {alpha}</Chip>}
-                    {symbol && <Chip>기호: {symbol}</Chip>}
-                    {catId && <Chip>분류 필터 적용</Chip>}
-                    <Tail>에 대한 <InfoStrongNum>{total}</InfoStrongNum>개의 용어가 검색되었습니다.</Tail>
+            {/* 안내/칩줄 + 로딩/에러 메시지 */}
+            <NarrowLeft>
+                {(q || tag || initial || alpha || symbol || catId) ? (
+                    <InfoRow aria-live="polite">
+                        {q && <Chip>검색어: {q}</Chip>}
+                        {tag && <Chip>#{tag}</Chip>}
+                        {initial && <Chip>초성: {initial}</Chip>}
+                        {alpha && <Chip>알파벳: {alpha}</Chip>}
+                        {symbol && <Chip>기호: {symbol}</Chip>}
+                        {catId && <Chip>분류 필터 적용</Chip>}
+                        <Tail>에 대한 <InfoStrongNum>{total}</InfoStrongNum>개의 용어가 검색되었습니다.</Tail>
 
-                    {results.length > 0 && (
-                        <>
-                            <Spacer />
-                            <PrimaryBtn
-                                type="button"
-                                onClick={toggleAllCurrentPage}
-                                aria-pressed={allChecked}
-                                title={allChecked ? "현재 페이지 선택 해제" : "현재 페이지 전체 선택"}
-                            >
-                                {allChecked ? "현재 페이지 선택 해제" : "현재 페이지 전체 선택"}
-                            </PrimaryBtn>
-                        </>
-                    )}
-                </InfoRow>
-            ) : (
-                <InfoRow>검색어를 입력하거나 분류를 선택해 주세요.</InfoRow>
-            )}
+                        {results.length > 0 && (
+                            <>
+                                <Spacer />
+                                <PrimaryBtn
+                                    type="button"
+                                    onClick={toggleAllCurrentPage}
+                                    aria-pressed={allChecked}
+                                    title={allChecked ? "현재 페이지 선택 해제" : "현재 페이지 전체 선택"}
+                                >
+                                    {allChecked ? "현재 페이지 선택 해제" : "현재 페이지 전체 선택"}
+                                </PrimaryBtn>
+                            </>
+                        )}
+                    </InfoRow>
+                ) : (
+                    <InfoRow>검색어를 입력하거나 분류를 선택해 주세요.</InfoRow>
+                )}
 
-            {loading && <LoadingMsg>불러오는 중...</LoadingMsg>}
-            {error && <ErrorMsg>{error}</ErrorMsg>}
+                {loading && <LoadingMsg>불러오는 중...</LoadingMsg>}
+                {error && <ErrorMsg>{error}</ErrorMsg>}
+            </NarrowLeft>
 
+            {/* 검색 결과 리스트 */}
             {!loading && !error && results.length > 0 && (
-                <>
+                <NarrowLeft>
                     <List>
                         {results.map((t) => {
                             const isOn = selectedIds.has(t.id);
@@ -771,27 +782,34 @@ export default function SearchPage() {
                                                 description={t.description}
                                                 tags={t.tags}
                                                 onTagClick={handleTagClick}
-                                                onAdd={handleAddClick} // 단일 저장 모달
+                                                onAdd={handleAddClick}
                                             />
                                         </AlignWithCheck>
-
                                     </CardWrap>
                                 </ListItem>
                             );
                         })}
                     </List>
-                </>
+                </NarrowLeft>
             )}
 
+            {/* 페이지네이션 */}
             {!loading && !error && (q || tag || initial || alpha || symbol || catId) && total > 0 && (
-                <Pagination page={page} size={size} total={total} onChange={handlePageChange} />
+                <NarrowLeft>
+                    <Pagination page={page} size={size} total={total} onChange={handlePageChange} />
+                </NarrowLeft>
             )}
 
+            {/* 결과 없음 */}
             {!loading && !error && (q || tag || initial || alpha || symbol || catId) && results.length === 0 && (
-                <div style={{ marginTop: TOKENS.space(16), color: TOKENS.color.textMuted }}>검색 결과가 없습니다.</div>
+                <NarrowLeft>
+                    <div style={{ marginTop: TOKENS.space(16), color: TOKENS.color.textMuted }}>
+                        검색 결과가 없습니다.
+                    </div>
+                </NarrowLeft>
             )}
 
-            {/* 하단 액션바: 선택이 있고 showTray가 true일 때만 */}
+            {/* 하단 액션바: 전체 폭 유지 */}
             {selectedCount > 0 && showTray && (
                 <Tray role="region" aria-label="선택 항목 액션바">
                     <span>선택 {selectedCount.toLocaleString()}개</span>
