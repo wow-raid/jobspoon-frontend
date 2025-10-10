@@ -19,11 +19,13 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
         <AnimatePresence>
             {schedule && (
                 <>
+                    {/* 반투명 배경 (살짝만 어둡게 유지) */}
                     <Dim onClick={onClose} />
+
                     <Panel
-                        initial={{ x: "100%" }}
-                        animate={{ x: 0 }}
-                        exit={{ x: "100%" }}
+                        initial={{ x: "100%", opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: "100%", opacity: 0 }}
                         transition={{ type: "spring", stiffness: 70, damping: 15 }}
                     >
                         <Header>
@@ -35,14 +37,28 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
                             <h2>{schedule.title}</h2>
                             <p>{schedule.description}</p>
                             <Time>
-                                🕒 {new Date(schedule.start).toLocaleString()}
-                                <br />~ {new Date(schedule.end).toLocaleString()}
+                                🕒{" "}
+                                {new Date(schedule.start).toLocaleString("ko-KR", {
+                                    month: "long",
+                                    day: "numeric",
+                                    weekday: "short",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                })}
+                                <br />~{" "}
+                                {new Date(schedule.end).toLocaleString("ko-KR", {
+                                    month: "long",
+                                    day: "numeric",
+                                    weekday: "short",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                })}
                             </Time>
                         </Content>
 
                         <ButtonArea>
                             <MoveButton onClick={handleMoveToStudyRoom}>
-                                스터디룸으로 이동하기
+                                스터디룸으로 이동하기 →
                             </MoveButton>
                         </ButtonArea>
                     </Panel>
@@ -54,24 +70,26 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
 
 /* ================== styled-components ================== */
 const Dim = styled.div`
-    position: fixed;
+    position: absolute; /* 🔹 전체 fixed 대신 캘린더 내부 기준 */
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.25);
-    z-index: 999; /* 🔹 수정: NavBar보다 위로 */
+    background: rgba(0, 0, 0, 0.1); /* 🔹 너무 어둡지 않게 */
+    z-index: 20;
 `;
 
 const Panel = styled(motion.div)`
-    position: fixed;
+    position: absolute;
     top: 0;
     right: 0;
-    width: 380px;
+    width: 360px; /* 🔹 전체보다 살짝 좁게 */
     height: 100%;
-    background: #fff;
-    z-index: 1000; /* 🔹 수정: 닫기 버튼 포함해서 최상단에 */
-    box-shadow: -4px 0 8px rgba(0, 0, 0, 0.05);
+    background: #ffffff;
+    border-left: 1px solid #e5e7eb;
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.05);
+    border-radius: 16px 0 0 16px; /* 🔹 오른쪽 둥근 모서리 */
     display: flex;
     flex-direction: column;
     padding: 24px;
+    z-index: 25;
 `;
 
 const Header = styled.div`
@@ -83,14 +101,22 @@ const Header = styled.div`
 `;
 
 const CloseBtn = styled.button`
-    font-size: 22px;
-    background: none;
+    font-size: 26px;
+    font-weight: 400;
+    background: #f3f4f6;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     border: none;
+    color: #374151;
     cursor: pointer;
-    color: #9ca3af;
-    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
     &:hover {
-        color: #111827;
+        background: #e5e7eb;
+        transform: scale(1.1);
     }
 `;
 
@@ -120,22 +146,22 @@ const Time = styled.div`
 `;
 
 const ButtonArea = styled.div`
-  border-top: 1px solid #e5e7eb;
-  padding-top: 12px;
-  margin-top: auto;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 12px;
+    margin-top: auto;
 `;
 
 const MoveButton = styled.button`
-  width: 100%;
-  padding: 12px;
-  background: #3b82f6;
-  color: white;
-  font-weight: 600;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
-  &:hover {
-    background: #2563eb;
-  }
+    width: 100%;
+    padding: 12px;
+    background: #3b82f6;
+    color: white;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+    &:hover {
+        background: #2563eb;
+    }
 `;
