@@ -11,11 +11,11 @@ import { updateNickname } from "../api/accountProfileApi.ts";
 
 type OutletContextType = {
     profile: ProfileAppearanceResponse | null;
-    refreshProfile: () => Promise<void>;
+    refreshAll: () => Promise<void>;
 };
 
 export default function AccountProfileEdit() {
-    const { profile, refreshProfile } = useOutletContext<OutletContextType>();
+    const { profile, refreshAll } = useOutletContext<OutletContextType>();
 
     // 서비스 모달 상태
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -99,7 +99,7 @@ export default function AccountProfileEdit() {
 
         try {
             await updateNickname(tempNickname); // ✅ token 인자 제거
-            await refreshProfile();
+            await refreshAll();
             setIsEditingNickname(false);
             setNicknameError(null);
             setNicknameSuccess("닉네임이 성공적으로 변경되었습니다.");
@@ -135,7 +135,7 @@ export default function AccountProfileEdit() {
         try {
             setIsUploading(true);
             await uploadProfilePhoto(file); // ✅ token 인자 제거
-            await refreshProfile();
+            await refreshAll();
             setPhotoError(null);
             setPhotoSuccess("사진 업로드 성공");
         } catch (err: any) {

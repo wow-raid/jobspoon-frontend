@@ -1,14 +1,38 @@
-// pages/SchedulePage.tsx
+{/* 스터디 모임 일정 탭 */}
+
 import styled from "styled-components";
+import { useEffect, useState } from "react";
+import {
+    fetchUserStudySchedules,
+    UserStudySchedule
+} from "../api/studyScheduleApi.ts";
+import Calendar from "../components/schedule/Calendar.tsx";
+import ScheduleDetailPanel from "../components/schedule/ScheduleDetailPanel.tsx";
 
 export default function SchedulePage() {
+    const [schedules, setSchedules] = useState<UserStudySchedule[]>([]);
+    const [selected, setSelected] = useState<UserStudySchedule | null>(null);
+
+    useEffect(() => {
+        fetchUserStudySchedules().then(setSchedules);
+    }, []);
+
     return (
         <>
-            <NoticeBanner>🚧 서비스 준비 중입니다</NoticeBanner>
-
             <Section>
-                <Title>내 일정</Title>
-                {/* 👉 나중에 달력/일정 목록 들어갈 자리 */}
+                <Title>내 스터디 모임 일정</Title>
+
+                {/* 일정 달력 */}
+                <Calendar
+                    schedules={schedules}
+                    onEventClick={(event) => setSelected(event)}
+                />
+
+                {/* 일정 상세 패널 */}
+                <ScheduleDetailPanel
+                    schedule={selected}
+                    onClose={() => setSelected(null)}
+                />
             </Section>
         </>
     );
@@ -16,6 +40,7 @@ export default function SchedulePage() {
 
 /* ================== styled-components ================== */
 const Section = styled.section`
+    position: relative; /* ✅ 슬라이드 패널 위치 기준 */
     padding: 24px;
     border-radius: 12px;
     background: #fff;
@@ -23,6 +48,7 @@ const Section = styled.section`
     display: flex;
     flex-direction: column;
     gap: 20px;
+    overflow: hidden;
 `;
 
 const Title = styled.h2`
