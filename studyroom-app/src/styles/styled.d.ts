@@ -22,6 +22,8 @@ declare module 'styled-components' {
 
         badgeRecruitingBg: string;
         badgeRecruitingFg: string;
+        badgeCompletedBg: string;
+        badgeCompletedFg: string;
         badgeClosedBg: string;
         badgeClosedFg: string;
 
