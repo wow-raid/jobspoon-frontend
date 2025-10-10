@@ -57,7 +57,7 @@ const Dim = styled.div`
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(0, 0, 0, 0.25);
-    z-index: 9;
+    z-index: 999; /* 🔹 수정: NavBar보다 위로 */
 `;
 
 const Panel = styled(motion.div)`
@@ -67,7 +67,7 @@ const Panel = styled(motion.div)`
     width: 380px;
     height: 100%;
     background: #fff;
-    z-index: 10;
+    z-index: 1000; /* 🔹 수정: 닫기 버튼 포함해서 최상단에 */
     box-shadow: -4px 0 8px rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
