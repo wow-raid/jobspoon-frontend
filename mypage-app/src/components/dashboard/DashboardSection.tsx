@@ -9,10 +9,7 @@ import {
     QuizCompletionResponse,
     WritingCountResponse,
 } from "../../api/dashboardApi.ts";
-import {
-    fetchTrustScore,
-    TrustScore
-} from "../../api/profileAppearanceApi.ts";
+import { fetchTrustScore, TrustScoreResponse } from "../../api/userTrustScoreApi.ts";
 import {PieChart, Pie, Cell, ResponsiveContainer} from "recharts";
 import styled from "styled-components";
 import LevelSection from "./LevelSection.tsx";
@@ -20,15 +17,7 @@ import TitleSection from "./TitleSection.tsx";
 import TrustScoreModal from "../modals/TrustScoreModal.tsx";
 import WritingModal from "../modals/WritingModal.tsx";
 
-type InterviewItem = {
-    id: number;
-    topic: string;
-    yearsOfExperience: number;
-    created_at: Date;
-    status: "IN_PROGRESS" | "COMPLETED"; // 추가
-};
-
-const COLORS = ["rgb(59,130,246)", "rgb(229,231,235)"]; // 파랑 / 회색
+const COLORS = ["rgb(59,130,246)", "rgb(229,231,235)"];
 
 // 공통 도넛 데이터 생성
 const makeDonutData = (percent: number) => [
@@ -93,7 +82,7 @@ export default function DashboardSection() {
     const [interview, setInterview] = useState<{ interviewTotalCount: number; interviewMonthlyCount: number } | null>(null);
     const [quiz, setQuiz] = useState<QuizCompletionResponse | null>(null);
     const [writing, setWriting] = useState<WritingCountResponse | null>(null);
-    const [trust, setTrust] = useState<TrustScore | null>(null);
+    const [trust, setTrust] = useState<TrustScoreResponse | null>(null);
 
     const [trustModalOpen, setTrustModalOpen] = useState(false);
     const [writingModalOpen, setWritingModalOpen] = useState(false);
@@ -110,7 +99,7 @@ export default function DashboardSection() {
         getWritingCount().then(setWriting).catch(console.error);
         fetchTrustScore().then(setTrust).catch(console.error);
 
-        // ✅ 임시 목데이터 (API 삭제됨)
+        // ✅ 임시 목데이터
         setInterview({
             interviewTotalCount: 12,   // 총 인터뷰 횟수
             interviewMonthlyCount: 3,  // 이번 달 인터뷰 횟수

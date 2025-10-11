@@ -1,18 +1,14 @@
 {/* 마이페이지 대쉬보드 - 레벨 */}
 
 import React, { useEffect, useState } from "react";
-import {
-    fetchMyProfile,
-    fetchUserLevel,
-    ProfileAppearanceResponse,
-    UserLevel,
-} from "../../api/profileAppearanceApi.ts";
+import { fetchMyProfile, ProfileAppearanceResponse } from "../../api/profileAppearanceApi.ts";
+import { fetchUserLevel, UserLevelResponse } from "../../api/userLevelApi.ts";
 import styled from "styled-components";
-import LevelGuideModal from "../modals/LevelGuideModal.tsx"; // 새 모달 추가
+import LevelGuideModal from "../modals/LevelGuideModal.tsx";
 
 export default function LevelSection() {
     const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
-    const [userLevel, setUserLevel] = useState<UserLevel | null>(null);
+    const [userLevel, setUserLevel] = useState<UserLevelResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [isGuideOpen, setIsGuideOpen] = useState(false);
 

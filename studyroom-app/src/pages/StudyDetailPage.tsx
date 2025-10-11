@@ -4,7 +4,6 @@ import styled from 'styled-components';
 import { useParams, useNavigate } from 'react-router-dom';
 import { StudyRoom, StudyApplication } from '../types/study';
 import axiosInstance from "../api/axiosInstance";
-import { FAKE_STUDY_ROOMS } from '../data/mockData';
 import StudyDetailView, {ApplyBtn} from '../components/StudyDetailView';
 import Modal from '../components/Modal';
 import ApplicationForm from '../components/ApplicationForm';
@@ -30,6 +29,20 @@ const ActionButton = styled.button`
     cursor: not-allowed;
     opacity: 0.6;
   }
+`;
+
+const ApplyButton = styled(ActionButton)`
+  background-color: ${({ theme }) => theme.accent ?? theme.primary};
+  color: #fff;
+  &:hover:not(:disabled) { 
+    background-color: ${({ theme }) => theme.accentHover ?? theme.primaryHover};
+  }
+`;
+
+const EditButton = styled(ActionButton)`
+  background-color: #4B5563; /* 중립적인 회색 계열 */
+  color: #fff;
+  &:hover:not(:disabled) { background-color: #6B7280; }
 `;
 
 const PendingButton = styled(ActionButton)`
@@ -63,13 +76,16 @@ const CancelButton = styled(ActionButton)`
 `;
 
 const ButtonWrapper = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
 `;
-
 
 const StudyDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const { isLoggedIn } = useAuth();
     const navigate = useNavigate();
-    const { currentUserId } = useAuth();
     const [study, setStudy] = useState<StudyRoom | null>(null);
     const [loading, setLoading] = useState(true);
     const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
@@ -78,16 +94,15 @@ const StudyDetailPage: React.FC = () => {
     // ✅ 2. 신청 상태와 ID를 저장할 state 추가
     const [application, setApplication] = useState<StudyApplication | null>(null);
 
-    // 👇 2. useEffect를 API 호출 로직으로 변경
+    //
     useEffect(() => {
         const fetchAllData = async () => {
             if (!id) return;
             setLoading(true);
             try {
-                // ✅ 3. 스터디 상세 정보와 내 지원 상태를 동시에 조회
                 const [studyResponse, applicationResponse] = await Promise.all([
                     axiosInstance.get(`/study-rooms/${id}`),
-                    axiosInstance.get(`/study-rooms/${id}/my-application`) // 백엔드에 추가된 API
+                    axiosInstance.get(`/study-rooms/${id}/my-application`)
                 ]);
                 setStudy(studyResponse.data);
                 setApplication(applicationResponse.data);
@@ -101,6 +116,12 @@ const StudyDetailPage: React.FC = () => {
         fetchAllData();
     }, [id]);
 
+    useEffect(() => {
+        if (study) {
+            console.log("API로부터 받은 study 객체:", study);
+        }
+    }, [study]);
+
     const handleUpdateSuccess = (updateStudy: StudyRoom) => {
         setStudy(updateStudy);
         setIsEditModalOpen(false);
@@ -108,11 +129,10 @@ const StudyDetailPage: React.FC = () => {
     }
 
     const handleApplicationSubmit = async (message: string) => {
-        if (!study || !currentUserId) return;
+        if (!study || !isLoggedIn) return;
         try {
             await axiosInstance.post('/study-applications', {
                 studyRoomId: study.id,
-                applicantId: currentUserId,
                 message: message,
             });
             navigate('/success', { state: { title: study.title } });
@@ -141,17 +161,19 @@ const StudyDetailPage: React.FC = () => {
     if (loading) return <div>로딩 중...</div>;
     if (!study) return <div>스터디 정보를 찾을 수 없습니다.</div>;
 
-    console.log('isOwner 비교 전 값 확인:', {
-        '로그인된 사용자 ID': currentUserId,
-        '스터디 생성자 ID': study.hostId
-    });
-
-    const isOwner = currentUserId !== null && study.hostId === currentUserId;
+    const isOwner = study.owner;
 
     // ✅ 5. 상태에 따라 다른 버튼을 보여주는 렌더링 함수
     const renderActionButton = () => {
         if (isOwner) {
-            return <ApplyBtn onClick={() => setIsEditModalOpen(true)}>정보 수정하기</ApplyBtn>;
+            return (
+                <ButtonWrapper>
+                    <ApprovedButton onClick={() => navigate(`/studies/joined-study/${study.id}`)}>
+                        모임으로 이동
+                    </ApprovedButton>
+                    <EditButton onClick={() => setIsEditModalOpen(true)}>정보 수정하기</EditButton>
+                </ButtonWrapper>
+            );
         }
 
         if (study.status === 'COMPLETED') {
@@ -184,7 +206,7 @@ const StudyDetailPage: React.FC = () => {
 
             case 'NOT_APPLIED':
             default:
-                return <ApplyBtn onClick={() => setIsApplyModalOpen(true)}>참가 신청하기</ApplyBtn>;
+                return <ApplyButton onClick={() => setIsApplyModalOpen(true)}>참가 신청하기</ApplyButton>;
         }
     };
 

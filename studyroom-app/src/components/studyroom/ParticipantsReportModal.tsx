@@ -55,6 +55,39 @@ const ModalActions = styled.div`
     display: flex;
     justify-content: flex-end;
     gap: 12px;
+    margin-top: 8px;
+`;
+
+// ✅ [추가] 버튼들의 기본 스타일을 정의합니다.
+const BaseButton = styled.button`
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+`;
+
+// ✅ [추가] 취소 버튼 스타일
+const CancelButton = styled(BaseButton)`
+  background-color: ${({ theme }) => theme.surfaceHover};
+  color: ${({ theme }) => theme.subtle};
+  border: 1px solid ${({ theme }) => theme.border};
+
+  &:hover {
+    background-color: ${({ theme }) => theme.border};
+  }
+`;
+
+// ✅ [추가] 신고 제출 버튼 스타일
+const SubmitButton = styled(BaseButton)`
+  background-color: ${({ theme }) => theme.danger ?? '#ff6b6b'};
+  color: white;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.dangerHover ?? '#f05252'};
+  }
 `;
 
 // component Props type
@@ -125,8 +158,9 @@ const ParticipantsReportModal: React.FC<ParticipantsReportModalProps> = ({ study
                 />
 
                 <ModalActions>
-                    <button onClick={onClose}> 취소</button>
-                    <button onClick={handleSubmit}> 신고 제출</button>
+                    <SubmitButton onClick={handleSubmit}>신고 제출</SubmitButton>
+                    <CancelButton onClick={onClose}>취소</CancelButton>
+
                 </ModalActions>
             </ModalContent>
         </ModalOverlay>

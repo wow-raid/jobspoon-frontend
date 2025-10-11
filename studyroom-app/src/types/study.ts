@@ -14,6 +14,7 @@ export interface StudyRoom {
     hostId: number;
     hostNickname: string;
     currentMembers?: number;
+    owner?: boolean;
     // 아래 필드들은 백엔드 응답에 맞춰 제거하거나 수정
     // job?: string;
     // category?: string;
