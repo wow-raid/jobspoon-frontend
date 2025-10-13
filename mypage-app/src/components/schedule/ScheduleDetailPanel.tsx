@@ -26,7 +26,7 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
     const handleMouseMove = (e: MouseEvent) => {
         if (!resizing.current) return;
         const newWidth = window.innerWidth - e.clientX;
-        setWidth(Math.min(Math.max(newWidth, 320), 800)); // 320~800px 사이 제한
+        setWidth(Math.min(Math.max(newWidth, 320), 800));
     };
 
     const handleMouseUp = () => {
@@ -34,12 +34,10 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
         document.body.style.cursor = "default";
     };
 
-    // 일정이 바뀔 때마다 초기화
     useEffect(() => {
         if (schedule) setWidth(400);
     }, [schedule]);
 
-    // 드래그 이벤트 등록
     useEffect(() => {
         window.addEventListener("mousemove", handleMouseMove);
         window.addEventListener("mouseup", handleMouseUp);
@@ -61,9 +59,7 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
         <AnimatePresence>
             {schedule && (
                 <>
-                    {/* 반투명 배경 (살짝만 어둡게 유지) */}
                     <Dim onClick={onClose} />
-
                     <Panel
                         as={motion.div}
                         initial={{ x: "100%", opacity: 0 }}
@@ -73,7 +69,7 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
                         style={{ width }}
                     >
                         <Header>
-                            <h3>{schedule.studyRoomTitle}</h3>
+                            <h3>{schedule.type === "study" ? schedule.studyRoomTitle : "개인 일정"}</h3>
                             <CloseBtn onClick={onClose}>×</CloseBtn>
                         </Header>
 
@@ -101,9 +97,16 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
                         </Content>
 
                         <ButtonArea>
-                            <MoveButton onClick={handleMoveToStudyRoom}>
-                                스터디룸으로 이동하기 →
-                            </MoveButton>
+                            {schedule.type === "personal" ? (
+                                <>
+                                    <MoveButton>수정</MoveButton>
+                                    <DeleteButton>삭제</DeleteButton>
+                                </>
+                            ) : (
+                                <MoveButton onClick={handleMoveToStudyRoom}>
+                                    스터디룸으로 이동하기 →
+                                </MoveButton>
+                            )}
                         </ButtonArea>
 
                         <ResizeHandle onMouseDown={handleMouseDown} />
@@ -116,9 +119,9 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
 
 /* ================== styled-components ================== */
 const Dim = styled.div`
-    position: absolute; /* 🔹 전체 fixed 대신 캘린더 내부 기준 */
+    position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.1); /* 🔹 너무 어둡지 않게 */
+    background: rgba(0, 0, 0, 0.1);
     z-index: 20;
 `;
 
@@ -126,12 +129,11 @@ const Panel = styled(motion.div)`
     position: absolute;
     top: 0;
     right: 0;
-    width: 360px; /* 🔹 전체보다 살짝 좁게 */
     height: 100%;
     background: #ffffff;
     border-left: 1px solid #e5e7eb;
     box-shadow: -4px 0 12px rgba(0, 0, 0, 0.05);
-    border-radius: 16px 0 0 16px; /* 🔹 오른쪽 둥근 모서리 */
+    border-radius: 16px 0 0 16px;
     display: flex;
     flex-direction: column;
     padding: 24px;
@@ -148,7 +150,6 @@ const Header = styled.div`
 
 const CloseBtn = styled.button`
     font-size: 26px;
-    font-weight: 400;
     background: #f3f4f6;
     width: 36px;
     height: 36px;
@@ -156,9 +157,6 @@ const CloseBtn = styled.button`
     border: none;
     color: #374151;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     transition: all 0.2s;
     &:hover {
         background: #e5e7eb;
@@ -170,14 +168,12 @@ const Content = styled.div`
     margin-top: 16px;
     flex: 1;
     overflow-y: auto;
-
     h2 {
         font-size: 18px;
         font-weight: 700;
         color: #1f2937;
         margin-bottom: 8px;
     }
-
     p {
         font-size: 14px;
         line-height: 1.5;
@@ -195,10 +191,12 @@ const ButtonArea = styled.div`
     border-top: 1px solid #e5e7eb;
     padding-top: 12px;
     margin-top: auto;
+    display: flex;
+    gap: 8px;
 `;
 
 const MoveButton = styled.button`
-    width: 100%;
+    flex: 1;
     padding: 12px;
     background: #3b82f6;
     color: white;
@@ -209,6 +207,13 @@ const MoveButton = styled.button`
     transition: background 0.2s;
     &:hover {
         background: #2563eb;
+    }
+`;
+
+const DeleteButton = styled(MoveButton)`
+    background: #ef4444;
+    &:hover {
+        background: #dc2626;
     }
 `;
 
