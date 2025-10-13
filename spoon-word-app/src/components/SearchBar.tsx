@@ -29,8 +29,8 @@ const TOKENS = {
         primaryStrong: "#3E63E0",
         ringFocus: "#4F76F1",
         /** 버튼 톤: 캡슐과 동일 그라데이션 */
-        btnGradient: "linear-gradient(135deg, #4F76F1 0%, #3E63E0 100%)",
-        btnGradientHover: "linear-gradient(135deg, #557CF3 0%, #4068E3 100%)",
+        btnBg: "#3f80ea",
+        btnBgHover: "#1e63d2",
         btnText: "#ffffff",
     },
     z: { popup: 20 },
@@ -93,16 +93,21 @@ const SearchBtn = styled.button`
     font-size: 14px;
     font-weight: 800;
     letter-spacing: 0.01em;
-    background: ${TOKENS.colors.btnGradient};
-    color: ${TOKENS.colors.btnText};
+
+    appearance: none;
+    color: ${TOKENS.colors.btnText} !important;
+    -webkit-text-fill-color: ${TOKENS.colors.btnText};
+    && { color: ${TOKENS.colors.btnText}; -webkit-text-fill-color: ${TOKENS.colors.btnText}; }
+
+    /* 단색으로 변경 */
+    background: ${TOKENS.colors.btnBg};
     cursor: pointer;
-    transition: filter 120ms ease, transform 40ms ease;
+    transition: background-color 120ms ease, transform 40ms ease;
     -webkit-tap-highlight-color: transparent;
     box-shadow: ${TOKENS.shadow.innerHighlight};
 
     &:hover {
-        background: ${TOKENS.colors.btnGradientHover};
-        filter: brightness(0.99);
+        background: ${TOKENS.colors.btnBgHover};
     }
     &:active {
         transform: translateY(-50%) scale(0.98);
@@ -118,6 +123,7 @@ const BtnIcon = styled.svg`
     height: 18px;
     margin-right: 4px;
     display: inline-block;
+    color: inherit;
 `;
 
 const Popup = styled.div`

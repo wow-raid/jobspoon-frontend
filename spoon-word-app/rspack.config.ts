@@ -12,7 +12,7 @@ const isDev = process.env.NODE_ENV === "development";
 // Target browsers, see: https://github.com/browserslist/browserslist
 const targets = ["chrome >= 87", "edge >= 88", "firefox >= 78", "safari >= 14"];
 
-export default defineConfig({
+module.exports = defineConfig({
   context: __dirname,
   entry: {
     main: "./src/index.tsx",
@@ -40,6 +40,23 @@ export default defineConfig({
   module: {
     rules: [
       {
+        test: /\.(png|jpe?g|gif|svg|webp|avif)$/i,
+        type: "asset",
+        parser: {
+          dataUrlCondition: { maxSize: 8 * 1024 } // 8KB 이하는 data URL로 인라인
+        },
+        generator: {
+          filename: "static/media/[name].[contenthash][ext]"
+        }
+      },
+
+      // CSS
+      {
+        test: /\.css$/,
+        use: ["postcss-loader"],
+        type: "css",
+      },
+      {
         test: /\.svg$/,
         type: "asset",
       },
@@ -55,16 +72,9 @@ export default defineConfig({
             loader: "builtin:swc-loader",
             options: {
               jsc: {
-                parser: {
-                  syntax: "typescript",
-                  tsx: true,
-                },
+                parser: { syntax: "typescript", tsx: true },
                 transform: {
-                  react: {
-                    runtime: "automatic",
-                    development: isDev,
-                    refresh: isDev,
-                  },
+                  react: { runtime: "automatic", development: isDev, refresh: isDev },
                 },
               },
               env: { targets },
