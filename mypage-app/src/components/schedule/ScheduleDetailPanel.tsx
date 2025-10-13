@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
 
 type Props = {
     schedule: any | null;
@@ -9,11 +10,44 @@ type Props = {
 
 export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
     const navigate = useNavigate();
+    const [width, setWidth] = useState(400);
+    const resizing = useRef(false);
 
     const handleMoveToStudyRoom = () => {
         if (!schedule?.studyRoomId) return;
         navigate(`/studyroom/${schedule.studyRoomId}`);
     };
+
+    const handleMouseDown = () => {
+        resizing.current = true;
+        document.body.style.cursor = "ew-resize";
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+        if (!resizing.current) return;
+        const newWidth = window.innerWidth - e.clientX;
+        setWidth(Math.min(Math.max(newWidth, 320), 800)); // 320~800px 사이 제한
+    };
+
+    const handleMouseUp = () => {
+        resizing.current = false;
+        document.body.style.cursor = "default";
+    };
+
+    // 일정이 바뀔 때마다 초기화
+    useEffect(() => {
+        if (schedule) setWidth(400);
+    }, [schedule]);
+
+    // 드래그 이벤트 등록
+    useEffect(() => {
+        window.addEventListener("mousemove", handleMouseMove);
+        window.addEventListener("mouseup", handleMouseUp);
+        return () => {
+            window.removeEventListener("mousemove", handleMouseMove);
+            window.removeEventListener("mouseup", handleMouseUp);
+        };
+    }, []);
 
     return (
         <AnimatePresence>
@@ -23,10 +57,12 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
                     <Dim onClick={onClose} />
 
                     <Panel
+                        as={motion.div}
                         initial={{ x: "100%", opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         exit={{ x: "100%", opacity: 0 }}
                         transition={{ type: "spring", stiffness: 70, damping: 15 }}
+                        style={{ width }}
                     >
                         <Header>
                             <h3>{schedule.studyRoomTitle}</h3>
@@ -61,6 +97,8 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
                                 스터디룸으로 이동하기 →
                             </MoveButton>
                         </ButtonArea>
+
+                        <ResizeHandle onMouseDown={handleMouseDown} />
                     </Panel>
                 </>
             )}
@@ -163,5 +201,18 @@ const MoveButton = styled.button`
     transition: background 0.2s;
     &:hover {
         background: #2563eb;
+    }
+`;
+
+const ResizeHandle = styled.div`
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 6px;
+    height: 100%;
+    cursor: ew-resize;
+    background: transparent;
+    &:hover {
+        background: rgba(0, 0, 0, 0.05);
     }
 `;
