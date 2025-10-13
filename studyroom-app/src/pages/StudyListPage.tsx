@@ -1,5 +1,5 @@
 // studyroom-app/src/pages/StudyListPage.tsx
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { Link, useNavigate } from 'react-router-dom';
 import StudyRoomCard from '../components/StudyRoomCard';
@@ -103,20 +103,28 @@ const StudyListPage: React.FC = () => {
     });
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const { isLoggedIn } = useAuth();
+    const {isLoggedIn} = useAuth();
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchStudyRooms = async () => {
-            try {
-                const response = await axiosInstance.get('/study-rooms', { params: { size: 20 } });
-                setStudyRooms(response.data.studyRoomList);
-            } catch (error) {
-                console.error("스터디모임 목록을 불러오는 데 실패했습니다:", error);
-            }
-        };
-        fetchStudyRooms();
+    const fetchStudyRooms = useCallback(async () => {
+        try {
+            const response = await axiosInstance.get('/study-rooms', {params: {size: 20}});
+            setStudyRooms(response.data.studyRoomList);
+        } catch (error) {
+            console.error("스터디모임 목록을 불러오는 데 실패했습니다:", error);
+        }
     }, []);
+
+    useEffect(() => {
+        fetchStudyRooms();
+    }, [fetchStudyRooms]);
+
+    useEffect(() => {
+        window.addEventListener('focus', fetchStudyRooms);
+        return () => {
+            window.removeEventListener('focus', fetchStudyRooms);
+        };
+    }, [fetchStudyRooms]);
 
     const filteredRooms = useMemo(() => {
         let rooms = studyRooms;
