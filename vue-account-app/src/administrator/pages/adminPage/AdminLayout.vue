@@ -33,7 +33,12 @@
           :to="{ name: 'AdminStudyRoomReport' }"
           link
       />
-      <!-- 필요 시 메뉴 추가 -->
+      <v-list-item
+          prepend-icon="mdi-chair-school"
+          title="Aws 비용 관리"
+          :to="{ name: 'AdminAwsCostExplorer' }"
+          link
+      />
     </v-list>
 
     <template #append>
