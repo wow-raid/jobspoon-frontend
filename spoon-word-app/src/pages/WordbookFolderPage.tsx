@@ -12,6 +12,7 @@ import { renameUserFolder, deleteUserFolder } from "../api/folder";
 import { generatePdfByTermIds } from "../api/ebook";
 import { saveBlob } from "../utils/download";
 import { sanitizeFilename } from "../utils/cdFilename";
+import { goToAccountLogin } from "../utils/auth";
 
 /** 서버 응답에서 안전하게 뽑아둘 필드들 */
 type TermRow = any;
@@ -1333,7 +1334,7 @@ export default function WordbookFolderPage() {
             } catch (err: any) {
                 const s = err?.response?.status;
                 console.error("server error body:", err?.response?.data);
-                if (s === 401) navigate("/login", { state: { from: `/spoon-word/folders/${folderId}` } });
+                if (s === 401) { goToAccountLogin(); return; }
                 else if (s === 404 || s === 403) setError("폴더를 찾을 수 없습니다.");
                 else setError("데이터를 불러오는 중 오류가 발생했습니다.");
             } finally {
@@ -1516,7 +1517,10 @@ export default function WordbookFolderPage() {
             refreshCount();
         } catch (err: any) {
             const s = err?.response?.status;
-            if (s === 401) alert("로그인이 필요합니다.");
+            if (s === 401) {
+                alert("로그인이 필요합니다.");
+                goToAccountLogin(location.pathname + location.search);
+            }
             else if (s === 403) alert("해당 폴더 접근 권한이 없습니다.");
             else if (s === 404) alert("대상/소스 폴더를 찾을 수 없습니다.");
             else alert("이동 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.");
@@ -1682,7 +1686,7 @@ export default function WordbookFolderPage() {
                     alert("폴더를 찾을 수 없거나 접근 권한이 없습니다.\n(서버 메시지) " + result.message);
                 } else if (result.status === 401) {
                     alert("로그인이 필요합니다.");
-                    navigate("/login", { state: { from: location.pathname } });
+                    goToAccountLogin(location.pathname + location.search);
                 } else {
                     alert("PDF 생성에 실패했습니다.\n" + result.message);
                 }
@@ -1810,13 +1814,14 @@ export default function WordbookFolderPage() {
     const onStartQuiz = () => {
         const termIds = Array.from(selectedTermIds);
         const hasSelection = termIds.length > 0;
-        navigate("/spoon-quiz/start", {
-            state: {
-                source: hasSelection ? "selected" : "folder",
-                folderId: folderId ? Number(folderId) : null,
-                termIds: hasSelection ? termIds : undefined,
-            },
-        });
+        const base = location.pathname.startsWith("/spoon-word") ? "/spoon-word" : "";
+        navigate(`${base}/spoon-quiz/start`, { state: {
+                source,
+                folderId: source === "folder" ? Number(quizFolderId) : null,
+                category: source === "category" ? quizCategory : null,
+                count: quizCount,
+                type: quizType,
+                level: quizLevel, } });
     };
 
     // 퀴즈 설정 모달 상태
@@ -2026,10 +2031,10 @@ export default function WordbookFolderPage() {
                             <Section>
                                 <h4>문제 유형</h4>
                                 <ChipRow>
-                                    <CountChip $on={quizType==="mix"} onClick={()=>setQuizType("mix")}>문제 유형 섞기</CountChip>
+                                    <CountChip $on={quizType==="mix"} onClick={()=>setQuizType("mix")}>유형 섞기</CountChip>
                                     <CountChip $on={quizType==="mcq"} onClick={()=>setQuizType("mcq")}>객관식</CountChip>
-                                    <CountChip $on={quizType==="ox"} onClick={()=>setQuizType("ox")}>OX문제</CountChip>
-                                    <CountChip $on={quizType==="initial"} onClick={()=>setQuizType("initial")}>초성문제</CountChip>
+                                    <CountChip $on={quizType==="ox"} onClick={()=>setQuizType("ox")}>O/X</CountChip>
+                                    <CountChip $on={quizType==="initial"} onClick={()=>setQuizType("initial")}>초성</CountChip>
                                 </ChipRow>
                             </Section>
 
@@ -2037,10 +2042,10 @@ export default function WordbookFolderPage() {
                             <Section>
                                 <h4>문제 난이도</h4>
                                 <ChipRow>
-                                    <CountChip $on={quizLevel==="mix"} onClick={()=>setQuizLevel("mix")}>문제 난이도 섞기</CountChip>
-                                    <CountChip $on={quizLevel==="hard"} onClick={()=>setQuizLevel("hard")}>쉬운 문제</CountChip>
+                                    <CountChip $on={quizLevel==="mix"} onClick={()=>setQuizLevel("mix")}>난이도 섞기</CountChip>
+                                    <CountChip $on={quizLevel==="easy"} onClick={()=>setQuizLevel("easy")}>쉬운 문제</CountChip>
                                     <CountChip $on={quizLevel==="normal"} onClick={()=>setQuizLevel("normal")}>보통 문제</CountChip>
-                                    <CountChip $on={quizLevel==="easy"} onClick={()=>setQuizLevel("easy")}>어려운 문제</CountChip>
+                                    <CountChip $on={quizLevel==="hard"} onClick={()=>setQuizLevel("hard")}>어려운 문제</CountChip>
                                 </ChipRow>
                             </Section>
                         </SheetBody>
@@ -2054,16 +2059,14 @@ export default function WordbookFolderPage() {
                                     if (source === "category" && !quizCategory) { setQuizErr("카테고리를 선택해 주세요."); return; }
                                     setQuizErr("");
 
-                                    navigate("/spoon-quiz/start", {
-                                        state: {
+                                    const base = location.pathname.startsWith("/spoon-word") ? "/spoon-word" : "";
+                                    navigate(`${base}/spoon-quiz/start`, { state: {
                                             source,
                                             folderId: source === "folder" ? Number(quizFolderId) : null,
                                             category: source === "category" ? quizCategory : null,
                                             count: quizCount,
                                             type: quizType,
-                                            level: quizLevel,
-                                        },
-                                    });
+                                            level: quizLevel, } });
                                     setQuizOpen(false);
                                 }}
                             >
@@ -2158,7 +2161,7 @@ export default function WordbookFolderPage() {
                                                 const s = err?.response?.status;
                                                 if (s === 401) {
                                                     alert("로그인이 필요합니다.");
-                                                    navigate("/login", { state: { from: location.pathname } });
+                                                    goToAccountLogin(location.pathname + location.search);
                                                 } else if (s === 404) {
                                                     alert("용어를 찾을 수 없습니다.");
                                                 } else {

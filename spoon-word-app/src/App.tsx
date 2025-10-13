@@ -1,4 +1,4 @@
-import React, {useLayoutEffect} from "react";
+import React, { useLayoutEffect } from "react";
 import { Routes, Route, useNavigate, useLocation, Outlet, useSearchParams } from "react-router-dom";
 import { matchPath } from "react-router-dom";
 
@@ -10,13 +10,14 @@ import SpoonNoteModal from "./components/SpoonNoteModal";
 import http from "./utils/http";
 import { fetchUserFolders, patchReorderFolders } from "./api/userWordbook";
 import WordbookFolderPage from "./pages/WordbookFolderPage";
-import FavoriteTermsPage from "./pages/FavoriteTermsPage.tsx";
+import FavoriteTermsPage from "./pages/FavoriteTermsPage";
 import HeroBanner from "./components/HeroBanner";
+import QuizPlayPage from "./pages/QuizPlayPage.tsx";
 
-// 상단 패딩 0인 컨테이너만 사용
-import { PageContainerFlushTop } from "./styles/layout";
-import { NarrowLeft } from "./styles/layout";
+import { PageContainerFlushTop, NarrowLeft } from "./styles/layout";
+import { goToAccountLogin } from "./utils/auth";
 
+/* == 유틸 == */
 function extractTermIdFromArticle(el: HTMLElement | null): number | null {
     const article = el?.closest("article");
     if (!article) return null;
@@ -27,13 +28,11 @@ function extractTermIdFromArticle(el: HTMLElement | null): number | null {
     const idNum = Number(m[1]);
     return Number.isFinite(idNum) ? idNum : null;
 }
-
-/** 폴더 정규화 (프론트 로컬 중복 체크용) */
 function normalizeName(s: string) {
     return (s ?? "").trim().replace(/\s+/g, " ").toLowerCase();
 }
 
-/** 라우트가 매칭되지 않을 때 자동으로 적절한 페이지를 보여주는 fallback */
+/* == 라우트 미매칭 fallback == */
 function AutoContent() {
     const [params] = useSearchParams();
     const q = (params.get("q") ?? "").trim();
@@ -45,16 +44,24 @@ function AutoContent() {
     return null;
 }
 
-/** 공통 레이아웃 */
+/* == 서버 로그인 호환 라우트: 누군가가 내부에서 /login 으로 네비게이트하더라도 서버 로그인으로 보내줌 == */
+function RedirectToAccountLogin() {
+    const location = useLocation();
+    React.useEffect(() => {
+        const backTo = location.pathname + location.search;
+        goToAccountLogin(backTo);
+    }, [location.pathname, location.search]);
+    return <div style={{ padding: 24 }}>로그인 페이지로 이동 중…</div>;
+}
+
+/* == 공통 레이아웃 == */
 function AppLayout() {
     const nav = useNavigate();
     const location = useLocation();
-    const hideSearchOnThisRoute =
-        !!matchPath("/spoon-word/folders/:folderId/*", location.pathname) ||
-        !!matchPath("/spoon-word/folders/:folderId", location.pathname);
-    console.debug("[AppLayout] pathname =", location.pathname);
 
-
+    const isQuizRoute =
+        location.pathname.includes("/spoon-quiz/") ||
+        location.pathname.includes("/spoon-word/spoon-quiz/");
 
     const isFolderRoute =
         location.pathname.startsWith("/spoon-word/folders") ||
@@ -156,13 +163,14 @@ function AppLayout() {
                 const status = err?.response?.status;
                 if (status === 401) {
                     closeModal();
-                    nav("/login", { state: { from: `/spoon-word/folders/${notebookId}` } });
+                    // ★ 서버 로그인으로 풀 리디렉트
+                    goToAccountLogin(location.pathname + location.search);
                 } else {
                     console.error("[attach] 폴더에 용어 추가 실패:", err);
                 }
             }
         },
-        [selectedTermId, closeModal, nav]
+        [selectedTermId, closeModal, location.pathname, location.search]
     );
 
     // URL ?q= ↔ 입력값 동기화
@@ -175,13 +183,10 @@ function AppLayout() {
 
     React.useEffect(() => {
         function onDocClick(e: MouseEvent) {
-            // 버튼 측에서 preventDefault() 했으면 무시
             if (e.defaultPrevented) return;
-
             const target = e.target as HTMLElement | null;
             if (!target) return;
 
-            // TermCard의 + 버튼(aria-label 고정 사용)
             const addBtn = target.closest('button[aria-label="내 단어장에 추가"]') as HTMLElement | null;
             if (!addBtn) return;
             if (modalOpen) return;
@@ -197,7 +202,6 @@ function AppLayout() {
             setModalOpen(true);
         }
 
-        // 버블 단계로 변경 (false) — 버튼의 stopPropagation()이 유효해짐
         document.addEventListener("click", onDocClick, false);
         return () => document.removeEventListener("click", onDocClick, false);
     }, [modalOpen]);
@@ -239,7 +243,6 @@ function AppLayout() {
         (folderId: string, name?: string) => {
             console.debug("[goToFolder] id=", folderId, "name=", name, "from", location.pathname);
             closeModal();
-            // 호스트가 /spoon-word/* 또는 루트에 마운트되어도 안전하게
             if (location.pathname.startsWith("/spoon-word")) {
                 nav(`/spoon-word/folders/${folderId}`, { state: { folderName: name } });
             } else {
@@ -251,10 +254,8 @@ function AppLayout() {
 
     useLayoutEffect(() => {
         const setShellInsets = () => {
-            // 헤더 안쪽 래퍼(Inner) 잡기
             const brand = document.querySelector('header a[aria-label="JobSpoon 홈"]') as HTMLElement | null;
-            const inner = brand?.closest('div') as HTMLElement | null; // styled Inner
-
+            const inner = brand?.closest('div') as HTMLElement | null;
             if (!inner) return;
 
             const rect = inner.getBoundingClientRect();
@@ -262,10 +263,10 @@ function AppLayout() {
             const padL = parseFloat(cs.paddingLeft) || 0;
             const padR = parseFloat(cs.paddingRight) || 0;
 
-            const left  = Math.max(0, Math.round(rect.left  + padL));
+            const left = Math.max(0, Math.round(rect.left + padL));
             const right = Math.max(0, Math.round(window.innerWidth - rect.right + padR));
 
-            document.documentElement.style.setProperty("--shell-left",  `${left}px`);
+            document.documentElement.style.setProperty("--shell-left", `${left}px`);
             document.documentElement.style.setProperty("--shell-right", `${right}px`);
         };
 
@@ -276,43 +277,39 @@ function AppLayout() {
 
     return (
         <PageContainerFlushTop>
-            <HeroBanner
-                align="left"
-                narrow
-                floatingIcons={[
-                    "http://localhost:3006/hero/icon-1.png",
-                    "http://localhost:3006/hero/icon-2.png",
-                    "http://localhost:3006/hero/icon-3.png",
-                ]}
-                assetHost={process.env.MFE_PUBLIC_SERVICE || "http://localhost:3006"}
-                iconProps={{
-                    // 전체 박스 크기/위치 (원하면 같이 조절)
-                    width:  "360px",
-                    height: "240px",
-                    top: "28px",
-                    rightOffset: 0,
+            {!isQuizRoute && (
+                <HeroBanner
+                    align="left"
+                    narrow
+                    floatingIcons={[
+                        "http://localhost:3006/hero/icon-1.png",
+                        "http://localhost:3006/hero/icon-2.png",
+                        "http://localhost:3006/hero/icon-3.png",
+                    ]}
+                    assetHost={process.env.MFE_PUBLIC_SERVICE || "http://localhost:3006"}
+                    iconProps={{
+                        width: "360px",
+                        height: "240px",
+                        top: "28px",
+                        rightOffset: 0,
+                        positions: [
+                            { left: 20, top: 30 }, // icon-1
+                            { left: 66, top: 12 }, // icon-2
+                            { left: 45, top: 62 }, // icon-3
+                        ],
+                        maxIconWidthPercent: 38,
+                        withShadow: false,
+                    }}
+                />
+            )}
 
-                    // ✨ 각 아이콘 개별 위치(%)
-                    positions: [
-                        { left: 20, top: 30 }, // icon-1
-                        { left: 66, top: 12 }, // icon-2
-                        { left: 45, top: 62 }, // icon-3
-                    ],
-
-                    // 필요시 크기·그림자
-                    maxIconWidthPercent: 38,
-                    withShadow: false,
-                    // scales: [1.0, 0.9, 0.95], // 개별 스케일도 가능
-                }}
-            />
-
-            {!isFolderRoute && (
+            {!isFolderRoute && !isQuizRoute && (
                 <NarrowLeft>
                     <SearchBar value={q} onChange={setQ} onSearch={handleSearch} />
                 </NarrowLeft>
             )}
 
-            {!isFolderRoute && (
+            {!isFolderRoute && !isQuizRoute && (
                 <NarrowLeft>
                     <ExploreFilterBar value={currentSelection} onChange={handleFilterChange} />
                 </NarrowLeft>
@@ -333,12 +330,12 @@ function AppLayout() {
     );
 }
 
-/** 홈(빈 본문 허용) */
+/* == 홈(빈 본문 허용) == */
 function HomePage() {
     return null;
 }
 
-/** 라우트 구성 — 폴더 라우트를 캐치올보다 먼저(+ 경로 2가지 모두 지원) */
+/* == 라우트 구성 == */
 export default function App() {
     return (
         <Routes>
@@ -347,12 +344,24 @@ export default function App() {
                 <Route path="search" element={<SearchPage />} />
                 <Route path="terms/by-tag" element={<TermListPage />} />
 
-                {/* 폴더 상세: 두 경로 모두 지원 */}
+                {/* 폴더 상세 */}
                 <Route path="spoon-word/folders/:folderId" element={<WordbookFolderPage />} />
                 <Route path="folders/:folderId" element={<WordbookFolderPage />} />
                 <Route path="favorites" element={<FavoriteTermsPage />} />
 
-                {/* 캐치올은 맨 마지막 */}
+                {/* ✅ 퀴즈 시작 테스트: 루트/베이스 둘 다 수신 */}
+                <Route path="spoon-quiz/start" element={<QuizPlayPage />} />
+                <Route path="spoon-word">
+                    <Route path="spoon-quiz/start" element={<QuizPlayPage />} />
+                </Route>
+                {/* 여유로 */}
+                <Route path="spoon-quiz/*" element={<QuizPlayPage />} />
+                <Route path="spoon-word/spoon-quiz/*" element={<QuizPlayPage />} />
+
+                {/* 호환: 누군가 내부에서 /login 으로 이동해도 서버 로그인으로 넘김 */}
+                <Route path="login" element={<RedirectToAccountLogin />} />
+
+                {/* 항상 마지막 */}
                 <Route path="*" element={<AutoContent />} />
             </Route>
         </Routes>
