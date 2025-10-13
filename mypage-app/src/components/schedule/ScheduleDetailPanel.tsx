@@ -49,6 +49,14 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
         };
     }, []);
 
+    useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+        };
+        window.addEventListener("keydown", handleEsc);
+        return () => window.removeEventListener("keydown", handleEsc);
+    }, [onClose]);
+
     return (
         <AnimatePresence>
             {schedule && (
