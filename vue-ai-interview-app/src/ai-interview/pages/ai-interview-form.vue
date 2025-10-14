@@ -82,10 +82,89 @@
                   :key="index"
                   :value="project"
                   :style="[chipStyle, selectedProjectExperience === project ? selectedChipStyle : {}]"
-                  @click="selectedProjectExperience = project"
+                  @click="handleProjectExperienceChange(project)"
                 >
                   {{ project }}
                 </v-chip>
+              </div>
+              
+              <!-- 프로젝트 경험이 '있음'일 때 프로젝트 입력 폼 표시 -->
+              <div v-if="selectedProjectExperience === '있음'" :style="projectFormContainerStyle" 
+                   class="project-form-animation"
+                   v-motion
+                   :initial="{ opacity: 0, y: 20 }"
+                   :enter="{ opacity: 1, y: 0, transition: { delay: 100, duration: 500 } }">
+                <div :style="projectFormHeaderStyle">
+                  <v-icon :style="projectFormIconStyle">mdi-folder-multiple-outline</v-icon>
+                  <span :style="projectFormTitleStyle">프로젝트 상세 정보</span>
+                </div>
+                
+                <div v-for="(project, index) in projectList" :key="index" 
+                     :style="projectItemStyle"
+                     class="project-item-animation"
+                     v-motion
+                     :initial="{ opacity: 0, scale: 0.95 }"
+                     :enter="{ opacity: 1, scale: 1, transition: { delay: 150 + index * 50, duration: 400 } }">
+                  <div :style="projectHeaderStyle">
+                    <div :style="projectBadgeStyle">
+                      <v-icon size="16" color="white">mdi-briefcase-outline</v-icon>
+                      <span>프로젝트 {{ index + 1 }}</span>
+                    </div>
+                    <v-btn 
+                      v-if="projectList.length > 1"
+                      icon 
+                      small 
+                      @click="removeProject(index)"
+                      :style="removeProjectBtnStyle"
+                      class="remove-btn-animation"
+                    >
+                      <v-icon size="18" color="#ef4444">mdi-close-circle</v-icon>
+                    </v-btn>
+                  </div>
+                  
+                  <div :style="projectInputWrapperStyle">
+                    <div :style="inputLabelStyle">
+                      <v-icon size="16" color="#3b82f6">mdi-text-box-outline</v-icon>
+                      <span>프로젝트 이름</span>
+                    </div>
+                    <v-text-field
+                      v-model="project.projectName"
+                      placeholder="예: job-spoon 프로젝트"
+                      outlined
+                      dense
+                      :style="projectInputStyle"
+                      hide-details="auto"
+                      class="custom-input"
+                    ></v-text-field>
+                  </div>
+                  
+                  <div :style="projectInputWrapperStyle">
+                    <div :style="inputLabelStyle">
+                      <v-icon size="16" color="#3b82f6">mdi-file-document-outline</v-icon>
+                      <span>프로젝트 설명</span>
+                    </div>
+                    <v-textarea
+                      v-model="project.projectDescription"
+                      placeholder="예: AI 면접 프로젝트입니다. 사용자가 실전처럼 면접을 연습할 수 있도록 도와줍니다."
+                      outlined
+                      dense
+                      rows="3"
+                      :style="projectInputStyle"
+                      hide-details="auto"
+                      class="custom-input"
+                    ></v-textarea>
+                  </div>
+                </div>
+                
+                <v-btn
+                  :style="addProjectBtnStyle"
+                  @click="addProject"
+                  elevation="0"
+                  class="add-project-btn-animation"
+                >
+                  <v-icon left size="20">mdi-plus-circle-outline</v-icon>
+                  <span :style="addProjectBtnTextStyle">프로젝트 추가</span>
+                </v-btn>
               </div>
             </div>
 
@@ -325,6 +404,76 @@
   from { transform: rotate(-45deg); opacity: 0; }
   to { transform: rotate(0); opacity: 1; }
 }
+
+/* 프로젝트 폼 애니메이션 */
+.project-form-animation {
+  animation: slideInUp 0.5s ease-out;
+}
+
+.project-item-animation {
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.project-item-animation:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15) !important;
+}
+
+.remove-btn-animation {
+  transition: all 0.3s ease;
+}
+
+.remove-btn-animation:hover {
+  transform: rotate(90deg) scale(1.1);
+}
+
+.add-project-btn-animation {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+}
+
+.add-project-btn-animation::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.add-project-btn-animation:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.add-project-btn-animation:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+}
+
+.custom-input {
+  transition: all 0.3s ease;
+}
+
+.custom-input:focus-within {
+  transform: translateY(-1px);
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 </style>
 
 <script setup>
@@ -381,8 +530,26 @@ const selectedCareer = ref("");
 
 // 프로젝트 경험
 const projectExperience = ref(["있음", "없음"]);
-const projectExperienceMap = { 있음: 2, 없음: 1 };
 const selectedProjectExperience = ref("");
+const projectList = ref([{ projectName: "", projectDescription: "" }]);
+
+// 프로젝트 경험 변경 핸들러
+const handleProjectExperienceChange = (value) => {
+  selectedProjectExperience.value = value;
+  if (value === "없음") {
+    projectList.value = [{ projectName: "", projectDescription: "" }];
+  }
+};
+
+// 프로젝트 추가
+const addProject = () => {
+  projectList.value.push({ projectName: "", projectDescription: "" });
+};
+
+// 프로젝트 제거
+const removeProject = (index) => {
+  projectList.value.splice(index, 1);
+};
 
 // 기술 스택
 const skills = ref([
@@ -409,13 +576,23 @@ const toggleSkill = (skill) => {
 
 // 폼 유효성 검사
 const isFormValid = computed(() => {
-  return (
+  const basicValid = (
     selectedKeyword.value &&
     selectedAcademicBackground.value &&
     selectedCareer.value &&
     selectedProjectExperience.value &&
     selectedTechSkills.value.length > 0
   );
+  
+  // 프로젝트 경험이 '있음'일 때 프로젝트 정보 검증
+  if (selectedProjectExperience.value === "있음") {
+    const projectValid = projectList.value.every(
+      (project) => project.projectName.trim() !== "" && project.projectDescription.trim() !== ""
+    );
+    return basicValid && projectValid;
+  }
+  
+  return basicValid;
 });
 
 // 면접 시작 함수
@@ -426,15 +603,18 @@ const startInterview = () => {
   }
   
   const jobstorage = {
-    interviewType: interviewType.value,
-    interviewSubType: interviewSubType.value || "기술면접",
+    interviewType: interviewType.value === "기업별" ? "COMPANY" : "TECH",
     company: selectedCompany.value || "",
-    academic: academicBackgroundMap[selectedAcademicBackground.value],
-    exp: careerMap[selectedCareer.value],
-    project: projectExperienceMap[selectedProjectExperience.value],
-    tech: keywordMap[selectedKeyword.value],
-    skills: selectedTechSkills.value.map((skill) => skillsMap[skill]),
-    preparedness: preparednessLevel.value,
+    major: selectedAcademicBackground.value,
+    career: selectedCareer.value,
+    projectExp: selectedProjectExperience.value === "있음",
+    job: selectedKeyword.value,
+    interviewAccountProjectRequests: selectedProjectExperience.value === "있음" 
+      ? projectList.value.filter(p => p.projectName.trim() && p.projectDescription.trim())
+      : [],
+    techStacks: selectedTechSkills.value,
+    firstQuestion: "",
+    firstAnswer: ""
   };
   
   // 선택 정보 확인 메시지
@@ -445,8 +625,11 @@ ${selectedCompany.value ? '선택한 회사: ' + selectedCompany.value : ''}
 선택한 경력: ${selectedCareer.value}
 프로젝트 경험: ${selectedProjectExperience.value}
 선택한 직무: ${selectedKeyword.value}
-기술 스택: ${selectedTechSkills.value.join(", ")}
-면접 준비도: ${preparednessLabels[preparednessLevel.value - 1]}`;
+기술 스택: ${selectedTechSkills.value.join(", ")}`;
+
+  if (selectedProjectExperience.value === "있음") {
+    message += `\n프로젝트 목록:\n${projectList.value.map((p, i) => `  ${i + 1}. ${p.projectName}`).join('\n')}`;
+  }
 
   if (!confirm(message + "\n\n면접을 시작하시겠습니까?")) return;
 
@@ -756,6 +939,124 @@ const backButtonStyle = {
   top: "30px",
   left: "30px",
   zIndex: 10,
+};
+
+// 프로젝트 폼 스타일
+const projectFormContainerStyle = {
+  marginTop: "1.25rem",
+  padding: "1.5rem",
+  background: "linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 100%)",
+  borderRadius: "16px",
+  border: "2px solid rgba(59, 130, 246, 0.15)",
+  boxShadow: "0 4px 12px rgba(59, 130, 246, 0.08)",
+  backdropFilter: "blur(10px)",
+  WebkitBackdropFilter: "blur(10px)",
+  position: "relative",
+  overflow: "hidden"
+};
+
+const projectFormHeaderStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
+  marginBottom: "1.25rem",
+  paddingBottom: "0.75rem",
+  borderBottom: "2px solid rgba(59, 130, 246, 0.1)"
+};
+
+const projectFormIconStyle = {
+  color: "#3b82f6",
+  fontSize: "24px",
+  filter: "drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2))"
+};
+
+const projectFormTitleStyle = {
+  fontSize: "1rem",
+  fontWeight: "700",
+  color: "#1e293b",
+  letterSpacing: "-0.01em"
+};
+
+const projectItemStyle = {
+  marginBottom: "1.25rem",
+  padding: "1.25rem",
+  background: "linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)",
+  borderRadius: "14px",
+  border: "1px solid rgba(226, 232, 240, 0.6)",
+  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.04)",
+  transition: "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+  position: "relative",
+  overflow: "hidden"
+};
+
+const projectHeaderStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: "1rem"
+};
+
+const projectBadgeStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "8px",
+  padding: "6px 14px",
+  background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+  color: "white",
+  borderRadius: "20px",
+  fontSize: "0.85rem",
+  fontWeight: "700",
+  boxShadow: "0 4px 10px rgba(59, 130, 246, 0.25)",
+  letterSpacing: "0.01em"
+};
+
+const removeProjectBtnStyle = {
+  minWidth: "auto",
+  width: "36px",
+  height: "36px",
+  background: "rgba(239, 68, 68, 0.05)",
+  borderRadius: "50%",
+  transition: "all 0.3s ease"
+};
+
+const projectInputWrapperStyle = {
+  marginBottom: "1rem"
+};
+
+const inputLabelStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  marginBottom: "0.5rem",
+  fontSize: "0.9rem",
+  fontWeight: "600",
+  color: "#475569"
+};
+
+const projectInputStyle = {
+  marginTop: "0.25rem"
+};
+
+const addProjectBtnStyle = {
+  width: "100%",
+  marginTop: "0.75rem",
+  textTransform: "none",
+  fontWeight: "700",
+  padding: "12px 20px",
+  background: "linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(37, 99, 235, 0.08) 100%)",
+  color: "#3b82f6",
+  border: "2px dashed rgba(59, 130, 246, 0.3)",
+  borderRadius: "12px",
+  fontSize: "0.95rem",
+  letterSpacing: "0.01em",
+  transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+  position: "relative",
+  overflow: "hidden"
+};
+
+const addProjectBtnTextStyle = {
+  position: "relative",
+  zIndex: 2
 };
 
 onMounted(() => {

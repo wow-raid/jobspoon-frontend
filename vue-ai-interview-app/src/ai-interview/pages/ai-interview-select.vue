@@ -441,6 +441,263 @@ const router = useRouter();
 const start = ref(false);
 const showInterviewTypeSelection = ref(false);
 
+
+
+// 1단계: 면접 유형 선택
+const interviewTypes = [
+  {
+    type: "전형별",
+    title: "전형별 면접",
+    icon: "mdi-account-group",
+    description: "채용 전형에 맞춤 면접 준비",
+    status: "active"
+  },
+  {
+    type: "채용공고별",
+    title: "채용공고별 면접",
+    icon: "mdi-file-document",
+    description: "특정 채용공고에 맞춤 면접 준비",
+    status: "preparing"
+  },
+  {
+    type: "기업별",
+    title: "기업별 면접",
+    icon: "mdi-domain",
+    description: "특정 기업에 맞춤 면접 준비",
+    status: "active"
+  }
+];
+const selectedInterviewType = ref("");
+
+// 2단계: 면접 세부 유형 선택
+const interviewSubTypes = [
+  {
+    type: "기술면접",
+    title: "기술 면접",
+    icon: "mdi-code-tags",
+    description: "기술적 역량을 평가하는 면접",
+    status: "active"
+  },
+  {
+    type: "인성면접",
+    title: "인성 면접",
+    icon: "mdi-account-heart",
+    description: "인성과 조직 적합성을 평가하는 면접",
+    status: "preparing"
+  },
+  {
+    type: "종합면접",
+    title: "종합 면접",
+    icon: "mdi-account-multiple",
+    description: "기술과 인성을 종합적으로 평가하는 면접",
+    status: "preparing"
+  }
+];
+const selectedInterviewSubType = ref("");
+
+// 회사
+const companies = ref(["당근마켓", "Toss", "SK-encore", "KT M mobile", "네이버", "카카오", "라인", "쿠팡"]);
+const selectedCompany = ref("");
+
+// 전공
+const academicBackgrounds = ref(["전공자", "비전공자"]);
+const academicBackgroundMap = { 전공자: 2, 비전공자: 1 };
+const selectedAcademicBackground = ref("");
+
+// 경력
+const careers = ref(["신입", "3년 이하", "5년 이하", "10년 이하", "10년 이상"]);
+const careerMap = { 신입: 1, "3년 이하": 2, "5년 이하": 3, "10년 이하": 4, "10년 이상": 5 };
+const selectedCareer = ref("");
+
+// 프로젝트 경험
+const projectExperience = ref(["있음", "없음"]);
+const projectExperienceMap = { 있음: 2, 없음: 1 };
+const selectedProjectExperience = ref("");
+
+// 직무
+const keywords = ref(["Backend", "Frontend", "App·Web", "AI", "Embedded", "DevOps"]);
+const keywordMap = { Backend: 1, Frontend: 2, Embedded: 3, AI: 4, DevOps: 5, "App·Web": 6 };
+const selectedKeyword = ref("");
+
+// 기술 스택
+const skills = ref([
+  "풀스택", "백엔드/서버개발", "프론트엔드", "웹개발", "Flutter", "Java",
+  "JavaScript", "Python", "Vue.js", "API", "MYSQL", "AWS", "ReactJS", "ASP",
+  "Angular", "Bootstrap", "Node.js", "jQuery", "PHP", "JSP", "GraphQL", "HTML5",
+]);
+
+const skillsMap = Object.fromEntries(skills.value.map((s, i) => [s, i + 1]));
+const selectedTechSkills = ref([]);
+
+// 폼 유효성 검사
+const isFormValid = computed(() => {
+  return (
+    selectedKeyword.value &&
+    selectedAcademicBackground.value &&
+    selectedCareer.value &&
+    selectedProjectExperience.value &&
+    selectedTechSkills.value.length > 0
+  );
+});
+
+// 기업별 폼 유효성 검사
+const isCompanyFormValid = computed(() => {
+  return (
+    selectedCompany.value &&
+    selectedKeyword.value &&
+    selectedAcademicBackground.value &&
+    selectedCareer.value &&
+    selectedProjectExperience.value &&
+    selectedTechSkills.value.length > 0
+  );
+});
+
+// 선택 핸들러
+const selectInterviewType = (type) => {
+  // 준비중인 옵션은 선택 불가
+  const option = interviewTypes.find(opt => opt.type === type);
+  if (option && option.status === 'preparing') {
+    alert('해당 기능은 현재 준비 중입니다.');
+    return;
+  }
+  
+  selectedInterviewType.value = type;
+  
+  // 전형별 또는 기업별 선택 시 새로운 페이지로 이동
+  if (type === '전형별' || type === '기업별' || type === '채용공고별') {
+    router.push({
+      name: 'ai-interview-detail',
+      params: { type: type }
+    });
+  }
+};
+
+const selectInterviewSubType = (type) => {
+  // 준비중인 옵션은 선택 불가
+  const option = interviewSubTypes.find(opt => opt.type === type);
+  if (option && option.status === 'preparing') {
+    alert('해당 기능은 현재 준비 중입니다.');
+    return;
+  }
+  
+  selectedInterviewSubType.value = type;
+};
+
+// 이전 화면으로 돌아가는 함수
+const backToInterviewTypeSelection = () => {
+  showInterviewTypeSelection.value = false;
+  selectedInterviewSubType.value = "";
+  selectedCompany.value = "";
+};
+
+// TTS 및 기타 로직
+const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
+const handleBeforeUnload = () => {
+  if (synth && synth.speaking) synth.cancel();
+  localStorage.removeItem("interviewInfo");
+};
+
+onBeforeUnmount(() => {
+  if (synth && synth.speaking) synth.cancel();
+  window.removeEventListener("beforeunload", handleBeforeUnload);
+});
+
+const speakNotice = () => {
+  const message = `안녕하십니까? AI 모의 면접 서비스입니다. 면접 유형을 선택하고 상세 정보를 입력하여 맞춤형 면접을 시작하세요.`;
+  const utterance = new SpeechSynthesisUtterance(message);
+  utterance.lang = "ko-KR";
+  utterance.rate = 1;
+  utterance.pitch = 1;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+};
+
+onMounted(() => {
+  // 로그인 체크 (필요시 주석 해제)
+  /*
+  const userToken = localStorage.getItem("userToken");
+  if (!userToken) {
+    alert("로그인이 필요합니다. 로그인 페이지로 이동합니다.");
+    window.location.replace("/vue-account/account/login");
+    return;
+  }
+  */
+  
+  speakNotice();
+  window.addEventListener("beforeunload", handleBeforeUnload);
+});
+
+// 면접 시작 함수
+const startInterview = () => {
+  // 전형별 면접의 기술면접 선택 시
+  if (selectedInterviewType.value === '전형별' && selectedInterviewSubType.value === '기술면접') {
+    if (!isFormValid.value) {
+      alert("모든 필수 항목을 선택해 주세요.");
+      return;
+    }
+    
+    const jobstorage = {
+      interviewType: selectedInterviewType.value,
+      interviewSubType: selectedInterviewSubType.value,
+      company: "",
+      academic: academicBackgroundMap[selectedAcademicBackground.value],
+      exp: careerMap[selectedCareer.value],
+      project: projectExperienceMap[selectedProjectExperience.value],
+      tech: keywordMap[selectedKeyword.value],
+      skills: selectedTechSkills.value.map((skill) => skillsMap[skill]),
+    };
+    
+    // 선택 정보 확인 메시지
+    let message = `
+면접 유형: ${selectedInterviewType.value} - ${selectedInterviewSubType.value}
+전공 여부: ${selectedAcademicBackground.value}
+선택한 경력: ${selectedCareer.value}
+프로젝트 경험: ${selectedProjectExperience.value}
+선택한 직무: ${selectedKeyword.value}
+기술 스택: ${selectedTechSkills.value.join(", ")}`;
+
+    if (!confirm(message + "\n\n면접을 시작하시겠습니까?")) return;
+
+    localStorage.setItem("interviewInfo", JSON.stringify(jobstorage));
+    router.push("/ai-test");
+  }
+  // 기업별 면접 선택 시
+  else if (selectedInterviewType.value === '기업별') {
+    if (!isCompanyFormValid.value) {
+      alert("모든 필수 항목을 선택해 주세요.");
+      return;
+    }
+    
+    const jobstorage = {
+      interviewType: selectedInterviewType.value,
+      interviewSubType: "기술면접", // 기업별 면접은 기본적으로 기술면접로 설정
+      company: selectedCompany.value,
+      academic: academicBackgroundMap[selectedAcademicBackground.value],
+      exp: careerMap[selectedCareer.value],
+      project: projectExperienceMap[selectedProjectExperience.value],
+      tech: keywordMap[selectedKeyword.value],
+      skills: selectedTechSkills.value.map((skill) => skillsMap[skill]),
+    };
+    
+    // 선택 정보 확인 메시지
+    let message = `
+면접 유형: ${selectedInterviewType.value}
+선택한 회사: ${selectedCompany.value}
+전공 여부: ${selectedAcademicBackground.value}
+선택한 경력: ${selectedCareer.value}
+프로젝트 경험: ${selectedProjectExperience.value}
+선택한 직무: ${selectedKeyword.value}
+기술 스택: ${selectedTechSkills.value.join(", ")}`;
+
+    if (!confirm(message + "\n\n면접을 시작하시겠습니까?")) return;
+
+    localStorage.setItem("interviewInfo", JSON.stringify(jobstorage));
+    router.push("/ai-test");
+  }
+};
+
+
+
 // ---------- 스타일 변수 ---------- //
 const containerStyle = { marginBottom:"15%", marginTop: "1%", maxWidth: "1200px" };
 const cardStyle = { padding: "24px", borderRadius: "16px" };
@@ -787,255 +1044,6 @@ const unselectedChipStyle = {
 };
 // --------------------------------- //
 
-// 1단계: 면접 유형 선택
-const interviewTypes = [
-  {
-    type: "전형별",
-    title: "전형별 면접",
-    icon: "mdi-account-group",
-    description: "채용 전형에 맞춤 면접 준비",
-    status: "active"
-  },
-  {
-    type: "채용공고별",
-    title: "채용공고별 면접",
-    icon: "mdi-file-document",
-    description: "특정 채용공고에 맞춤 면접 준비",
-    status: "preparing"
-  },
-  {
-    type: "기업별",
-    title: "기업별 면접",
-    icon: "mdi-domain",
-    description: "특정 기업에 맞춤 면접 준비",
-    status: "active"
-  }
-];
-const selectedInterviewType = ref("");
 
-// 2단계: 면접 세부 유형 선택
-const interviewSubTypes = [
-  {
-    type: "기술면접",
-    title: "기술 면접",
-    icon: "mdi-code-tags",
-    description: "기술적 역량을 평가하는 면접",
-    status: "active"
-  },
-  {
-    type: "인성면접",
-    title: "인성 면접",
-    icon: "mdi-account-heart",
-    description: "인성과 조직 적합성을 평가하는 면접",
-    status: "preparing"
-  },
-  {
-    type: "종합면접",
-    title: "종합 면접",
-    icon: "mdi-account-multiple",
-    description: "기술과 인성을 종합적으로 평가하는 면접",
-    status: "preparing"
-  }
-];
-const selectedInterviewSubType = ref("");
 
-// 회사
-const companies = ref(["당근마켓", "Toss", "SK-encore", "KT M mobile", "네이버", "카카오", "라인", "쿠팡"]);
-const selectedCompany = ref("");
-
-// 전공
-const academicBackgrounds = ref(["전공자", "비전공자"]);
-const academicBackgroundMap = { 전공자: 2, 비전공자: 1 };
-const selectedAcademicBackground = ref("");
-
-// 경력
-const careers = ref(["신입", "3년 이하", "5년 이하", "10년 이하", "10년 이상"]);
-const careerMap = { 신입: 1, "3년 이하": 2, "5년 이하": 3, "10년 이하": 4, "10년 이상": 5 };
-const selectedCareer = ref("");
-
-// 프로젝트 경험
-const projectExperience = ref(["있음", "없음"]);
-const projectExperienceMap = { 있음: 2, 없음: 1 };
-const selectedProjectExperience = ref("");
-
-// 직무
-const keywords = ref(["Backend", "Frontend", "App·Web", "AI", "Embedded", "DevOps"]);
-const keywordMap = { Backend: 1, Frontend: 2, Embedded: 3, AI: 4, DevOps: 5, "App·Web": 6 };
-const selectedKeyword = ref("");
-
-// 기술 스택
-const skills = ref([
-  "풀스택", "백엔드/서버개발", "프론트엔드", "웹개발", "Flutter", "Java",
-  "JavaScript", "Python", "Vue.js", "API", "MYSQL", "AWS", "ReactJS", "ASP",
-  "Angular", "Bootstrap", "Node.js", "jQuery", "PHP", "JSP", "GraphQL", "HTML5",
-]);
-const skillsMap = Object.fromEntries(skills.value.map((s, i) => [s, i + 1]));
-const selectedTechSkills = ref([]);
-
-// 폼 유효성 검사
-const isFormValid = computed(() => {
-  return (
-    selectedKeyword.value &&
-    selectedAcademicBackground.value &&
-    selectedCareer.value &&
-    selectedProjectExperience.value &&
-    selectedTechSkills.value.length > 0
-  );
-});
-
-// 기업별 폼 유효성 검사
-const isCompanyFormValid = computed(() => {
-  return (
-    selectedCompany.value &&
-    selectedKeyword.value &&
-    selectedAcademicBackground.value &&
-    selectedCareer.value &&
-    selectedProjectExperience.value &&
-    selectedTechSkills.value.length > 0
-  );
-});
-
-// 선택 핸들러
-const selectInterviewType = (type) => {
-  // 준비중인 옵션은 선택 불가
-  const option = interviewTypes.find(opt => opt.type === type);
-  if (option && option.status === 'preparing') {
-    alert('해당 기능은 현재 준비 중입니다.');
-    return;
-  }
-  
-  selectedInterviewType.value = type;
-  
-  // 전형별 또는 기업별 선택 시 새로운 페이지로 이동
-  if (type === '전형별' || type === '기업별' || type === '채용공고별') {
-    router.push({
-      name: 'ai-interview-detail',
-      params: { type: type }
-    });
-  }
-};
-
-const selectInterviewSubType = (type) => {
-  // 준비중인 옵션은 선택 불가
-  const option = interviewSubTypes.find(opt => opt.type === type);
-  if (option && option.status === 'preparing') {
-    alert('해당 기능은 현재 준비 중입니다.');
-    return;
-  }
-  
-  selectedInterviewSubType.value = type;
-};
-
-// 이전 화면으로 돌아가는 함수
-const backToInterviewTypeSelection = () => {
-  showInterviewTypeSelection.value = false;
-  selectedInterviewSubType.value = "";
-  selectedCompany.value = "";
-};
-
-// TTS 및 기타 로직
-const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
-const handleBeforeUnload = () => {
-  if (synth && synth.speaking) synth.cancel();
-  localStorage.removeItem("interviewInfo");
-};
-
-onBeforeUnmount(() => {
-  if (synth && synth.speaking) synth.cancel();
-  window.removeEventListener("beforeunload", handleBeforeUnload);
-});
-
-const speakNotice = () => {
-  const message = `안녕하십니까? AI 모의 면접 서비스입니다. 면접 유형을 선택하고 상세 정보를 입력하여 맞춤형 면접을 시작하세요.`;
-  const utterance = new SpeechSynthesisUtterance(message);
-  utterance.lang = "ko-KR";
-  utterance.rate = 1;
-  utterance.pitch = 1;
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utterance);
-};
-
-onMounted(() => {
-  // 로그인 체크 (필요시 주석 해제)
-  /*
-  const userToken = localStorage.getItem("userToken");
-  if (!userToken) {
-    alert("로그인이 필요합니다. 로그인 페이지로 이동합니다.");
-    window.location.replace("/vue-account/account/login");
-    return;
-  }
-  */
-  
-  speakNotice();
-  window.addEventListener("beforeunload", handleBeforeUnload);
-});
-
-// 면접 시작 함수
-const startInterview = () => {
-  // 전형별 면접의 기술면접 선택 시
-  if (selectedInterviewType.value === '전형별' && selectedInterviewSubType.value === '기술면접') {
-    if (!isFormValid.value) {
-      alert("모든 필수 항목을 선택해 주세요.");
-      return;
-    }
-    
-    const jobstorage = {
-      interviewType: selectedInterviewType.value,
-      interviewSubType: selectedInterviewSubType.value,
-      company: "",
-      academic: academicBackgroundMap[selectedAcademicBackground.value],
-      exp: careerMap[selectedCareer.value],
-      project: projectExperienceMap[selectedProjectExperience.value],
-      tech: keywordMap[selectedKeyword.value],
-      skills: selectedTechSkills.value.map((skill) => skillsMap[skill]),
-    };
-    
-    // 선택 정보 확인 메시지
-    let message = `
-면접 유형: ${selectedInterviewType.value} - ${selectedInterviewSubType.value}
-전공 여부: ${selectedAcademicBackground.value}
-선택한 경력: ${selectedCareer.value}
-프로젝트 경험: ${selectedProjectExperience.value}
-선택한 직무: ${selectedKeyword.value}
-기술 스택: ${selectedTechSkills.value.join(", ")}`;
-
-    if (!confirm(message + "\n\n면접을 시작하시겠습니까?")) return;
-
-    localStorage.setItem("interviewInfo", JSON.stringify(jobstorage));
-    router.push("/ai-test");
-  }
-  // 기업별 면접 선택 시
-  else if (selectedInterviewType.value === '기업별') {
-    if (!isCompanyFormValid.value) {
-      alert("모든 필수 항목을 선택해 주세요.");
-      return;
-    }
-    
-    const jobstorage = {
-      interviewType: selectedInterviewType.value,
-      interviewSubType: "기술면접", // 기업별 면접은 기본적으로 기술면접로 설정
-      company: selectedCompany.value,
-      academic: academicBackgroundMap[selectedAcademicBackground.value],
-      exp: careerMap[selectedCareer.value],
-      project: projectExperienceMap[selectedProjectExperience.value],
-      tech: keywordMap[selectedKeyword.value],
-      skills: selectedTechSkills.value.map((skill) => skillsMap[skill]),
-    };
-    
-    // 선택 정보 확인 메시지
-    let message = `
-면접 유형: ${selectedInterviewType.value}
-선택한 회사: ${selectedCompany.value}
-전공 여부: ${selectedAcademicBackground.value}
-선택한 경력: ${selectedCareer.value}
-프로젝트 경험: ${selectedProjectExperience.value}
-선택한 직무: ${selectedKeyword.value}
-기술 스택: ${selectedTechSkills.value.join(", ")}`;
-
-    if (!confirm(message + "\n\n면접을 시작하시겠습니까?")) return;
-
-    localStorage.setItem("interviewInfo", JSON.stringify(jobstorage));
-    router.push("/ai-test");
-  }
-};
 </script>

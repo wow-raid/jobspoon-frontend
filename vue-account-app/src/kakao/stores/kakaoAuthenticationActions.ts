@@ -96,7 +96,7 @@ export const kakaoAuthenticationAction = {
 
             if (user) {
                 userInfo = JSON.parse(user);
-                userInfo.loginType = "META";
+                userInfo.loginType = "KAKAO";
             }
 
             const res = await springAxiosInstance.post(
