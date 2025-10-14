@@ -13,6 +13,7 @@ import { generatePdfByTermIds } from "../api/ebook";
 import { saveBlob } from "../utils/download";
 import { sanitizeFilename } from "../utils/cdFilename";
 import { goToAccountLogin } from "../utils/auth";
+import { startSessionFromFolder, startSessionFromCategory } from "../api/quiz";
 
 /** 서버 응답에서 안전하게 뽑아둘 필드들 */
 type TermRow = any;
@@ -95,96 +96,7 @@ const Spacer = styled.div`
     flex: 1 1 auto;
 `;
 
-// const Seg = styled.div`
-//     display: inline-flex;
-//     border: 1px solid ${UI.color.line};
-//     border-radius: ${UI.radius.pill}px;
-//     overflow: hidden;
-// `;
-
-// const SegBtn = styled.button<{ $active?: boolean }>`
-//     height: 34px;
-//     padding: 0 12px;
-//     border: 0;
-//     cursor: pointer;
-//     font-weight: 700;
-//     color: ${({ $active }) => ($active ? "#fff" : UI.color.sub)};
-//     background: ${({ $active }) => ($active ? UI.gradient.brand : "#fff")};
-//     transition: filter 120ms ease;
-//     &:hover {
-//         filter: brightness(0.98);
-//     }
-// `;
-
 /* ---------- 설정 버튼 + 메뉴 ---------- */
-// const Actions = styled.div`
-//     position: relative;
-// `;
-
-// const SettingsBtn = styled.button`
-//     height: 36px;
-//     padding: 0 12px;
-//     border-radius: ${UI.radius.pill}px;
-//     border: 1px solid ${UI.color.line};
-//     background: #f8fafc;
-//     color: ${UI.color.sub};
-//     font-weight: 700;
-//     cursor: pointer;
-//     transition: background-color 120ms ease;
-//     display: inline-flex;
-//     align-items: center;
-//     gap: 8px;
-//     &:hover {
-//         background: #f1f5f9;
-//     }
-// `;
-
-// const PrimaryBtn = styled.button`
-//     height: 36px;
-//     padding: 0 14px;
-//     border-radius: ${UI.radius.pill}px;
-//     border: 0;
-//     background: ${UI.gradient.brand};
-//     color: #fff;
-//     font-weight: 700;
-//     letter-spacing: 0.01em;
-//     cursor: pointer;
-//     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
-//     transition: transform 80ms ease, filter 160ms ease;
-//
-//     &:hover {
-//         filter: brightness(0.98);
-//     }
-//     &:active {
-//         transform: scale(0.98);
-//     }
-//     &:focus-visible {
-//         outline: none;
-//         box-shadow: 0 0 0 3px rgba(79, 118, 241, 0.35);
-//     }
-// `;
-//
-// const Gear = () => (
-//     <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-//         <path
-//             d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm7.94-3.5c0-.5-.05-1-.15-1.47l2.12-1.65-2-3.46-2.5 1a7.7 7.7 0 0 0-2.54-1.47l-.38-2.67h-4l-.38 2.67A7.7 7.7 0 0 0 8.5 5.95l-2.5-1-2 3.46 2.12 1.65c-.1.48-.15.97-.15 1.47s.05.99.15 1.47L4 16.12l2 3.46 2.5-1c.78.6 1.62 1.08 2.54 1.47l.38 2.67h4l.38-2.67c.92-.39 1.76-.87 2.54-1.47l2.5 1 2-3.46-2.12-1.65c-.1-.48-.15-.97-.15-1.47Z"
-//             fill="currentColor"
-//         />
-//     </svg>
-// );
-//
-// const Menu = styled.div`
-//     position: absolute;
-//     top: calc(100% + 8px);
-//     right: 0;
-//     min-width: 240px;
-//     background: #fff;
-//     border: 1px solid ${UI.color.line};
-//     border-radius: 12px;
-//     box-shadow: ${UI.shadow.menu};
-//     padding: 6px;
-//     z-index: 6;
-// `;
 
 const PdfSubMenu = styled.div`
     position: absolute;
@@ -199,26 +111,6 @@ const PdfSubMenu = styled.div`
     padding: 6px;
     z-index: 7;
 `;
-
-// const SortSubMenu = styled(PdfSubMenu)``;
-//
-// const MenuItem = styled.button<{ disabled?: boolean }>`
-//     width: 100%;
-//     text-align: left;
-//     border: 0;
-//     background: transparent;
-//     border-radius: 8px;
-//     padding: 10px 12px;
-//     cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
-//     color: ${({ disabled }) => (disabled ? UI.color.muted : UI.color.text)};
-//     display: flex;
-//     align-items: center;
-//     justify-content: space-between;
-//     gap: 8px;
-//     &:hover {
-//         background: ${({ disabled }) => (disabled ? "transparent" : "#f9fafb")};
-//     }
-// `;
 
 const RadioItem = styled.button<{ $checked?: boolean }>`
   width: 100%;
@@ -791,7 +683,7 @@ const Select = styled.select`
     letter-spacing: -0.02em;
 `;
 
-/* ---------- Fancy Folder Dropdown ---------- */
+/* ---------- Fancy Folder/Category Dropdown ---------- */
 
 const DDWrap = styled.div`
   position: relative;
@@ -810,8 +702,8 @@ const DDTrigger = styled.button<{ $hasValue?: boolean }>`
   letter-spacing: -0.02em;
   color: ${({ $hasValue }) => ($hasValue ? UI.color.text : UI.color.muted)};
   cursor: pointer;
-  transition: box-shadow .15s ease, border-color .15s ease, transform .08s ease;
-  &:hover { background: #fafafa; }
+  transition: box-shadow .15s ease, border-color .15s ease, transform .08s ease, background .12s ease;
+  &:hover { background: #f9fafb; }
   &:active { transform: translateY(1px); }
   &:focus-visible {
     outline: none; box-shadow: 0 0 0 3px rgba(79,118,241,.25);
@@ -819,15 +711,30 @@ const DDTrigger = styled.button<{ $hasValue?: boolean }>`
   }
 `;
 
-const DDCaret = styled.span`
-  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+// 캐럿 회전
+const DDCaret = styled.span<{ $open?: boolean }>`
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%) rotate(${({ $open }) => ($open ? "180deg" : "0deg")});
+  transition: transform .18s ease;
   pointer-events: none; color: ${UI.color.muted};
   & svg { display:block }
 `;
 
+// '지우기' 버튼
+const DDClear = styled.button`
+  position: absolute;
+  right: 34px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px; height: 22px;
+  border: 0; background: transparent; color: ${UI.color.muted};
+  border-radius: 999px; cursor: pointer;
+  transition: background .12s ease, color .12s ease, transform .08s ease;
+  &:hover { background: #f3f4f6; color: ${UI.color.sub}; }
+  &:active { transform: translateY(-50%) scale(.96); }
+`;
+
 const DDPanel = styled.div`
   position: absolute; top: calc(100% + 6px); left: 0;
-  /* 트리거보다 넓게: 최소 트리거 폭, 최대 520px */
   width: min(100%, 520px);
   max-width: 100%;
   max-height: 320px;
@@ -844,24 +751,67 @@ const DDPanel = styled.div`
   }
 `;
 
+// 검색영역 + 아이콘
+const DDSearchWrap = styled.div`
+  position: relative;
+  border-bottom: 1px solid ${UI.color.line};
+  background: #fafafa;
+`;
+
+const DDSearchIcon = styled.span`
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: ${UI.color.muted};
+  pointer-events: none;
+  & svg { display:block; }
+`;
+
+// 기존 DDSearch 개선
 const DDSearch = styled.input`
   width: 100%;
   height: 36px;
-  padding: 0 12px;
+  padding: 0 12px 0 32px;
   border: 0;
-  border-bottom: 1px solid ${UI.color.line};
-  background: #fafafa;
+  background: transparent;
   font-size: 14px;
   letter-spacing: -0.01em;
   &:focus { outline: none; background: #f6f8fb; }
 `;
 
+// 스크롤 섀도우 컨테이너
+const DDListWrap = styled.div<{ $top?: boolean; $bot?: boolean }>`
+  position: relative;
+  &::before, &::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0;
+    height: 12px;
+    pointer-events: none;
+    transition: opacity .15s ease;
+    z-index: 1;
+  }
+  &::before {
+    top: 0;
+    background: linear-gradient(#fff, rgba(255,255,255,0));
+    opacity: ${({ $top }) => ($top ? 1 : 0)};
+  }
+  &::after {
+    bottom: 0;
+    background: linear-gradient(rgba(255,255,255,0), #fff);
+    opacity: ${({ $bot }) => ($bot ? 1 : 0)};
+  }
+`;
+
 const DDList = styled.div`
+  position: relative;
   max-height: 280px; overflow: auto;
   scrollbar-gutter: stable;
 `;
 
-const DDItem = styled.button<{ $active?: boolean; $selected?: boolean }>`
+// 항목 (depth2 인디케이터 + mark 하이라이트)
+const DDItem = styled.button<{ $active?: boolean; $selected?: boolean; $depth2?: boolean }>`
   width: 100%; text-align: left; border: 0; background: transparent;
   display: grid; grid-template-columns: 1fr auto; align-items: center;
   padding: 10px 12px; cursor: pointer;
@@ -873,6 +823,29 @@ const DDItem = styled.button<{ $active?: boolean; $selected?: boolean }>`
     color: ${UI.color.primaryStrong};
   `}
   &:hover { background: #f9fafb; }
+  mark {
+    background: #fff3cd;
+    color: inherit;
+    padding: 0 2px;
+    border-radius: 3px;
+  }
+  ${({ $depth2 }) =>
+    $depth2 &&
+    `
+      position: relative;
+      padding-left: 20px;
+      &::before{
+        content: "";
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        width: 6px; height: 6px;
+        border-radius: 999px;
+        background: ${UI.color.primaryStrong};
+        opacity: .35;
+        transform: translateY(-50%);
+      }
+  `}
 `;
 
 const DDCheck = () => (
@@ -881,6 +854,32 @@ const DDCheck = () => (
     </svg>
 );
 
+// 빈 상태
+const DDEmpty = styled.div`
+  padding: 14px 12px;
+  color: ${UI.color.muted};
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  svg { opacity: .6; }
+`;
+
+/* ---------- 검색어 하이라이트 헬퍼 ---------- */
+const renderHL = (text: string, keyword: string): React.ReactNode => {
+    const q = keyword.trim();
+    if (!q) return text;
+    const i = text.toLowerCase().indexOf(q.toLowerCase());
+    if (i === -1) return text;
+    return (
+        <>
+            {text.slice(0, i)}
+            <mark>{text.slice(i, i + q.length)}</mark>
+            {text.slice(i + q.length)}
+        </>
+    );
+};
+
+/* ---------- FolderSelect ---------- */
 type FolderSelectProps = {
     value: string;
     onChange: (v: string) => void;
@@ -893,6 +892,21 @@ const FolderSelect: React.FC<FolderSelectProps> = ({ value, onChange, options, p
     const [q, setQ] = React.useState("");
     const [hover, setHover] = React.useState<number>(-1);
     const ref = React.useRef<HTMLDivElement | null>(null);
+
+    // 섀도우/스크롤
+    const listRef = React.useRef<HTMLDivElement | null>(null);
+    const [topShadow, setTopShadow] = React.useState(false);
+    const [botShadow, setBotShadow] = React.useState(false);
+    const updateShadows = React.useCallback(() => {
+        const el = listRef.current;
+        if (!el) return;
+        setTopShadow(el.scrollTop > 0);
+        setBotShadow(el.scrollTop + el.clientHeight < el.scrollHeight - 1);
+    }, []);
+    React.useEffect(() => {
+        if (!open) return;
+        requestAnimationFrame(updateShadows);
+    }, [open, options.length, q, updateShadows]);
 
     const label = React.useMemo(
         () => options.find(o => String(o.id) === String(value))?.name ?? "",
@@ -948,44 +962,62 @@ const FolderSelect: React.FC<FolderSelectProps> = ({ value, onChange, options, p
             >
                 {label || placeholder}
             </DDTrigger>
-            <DDCaret aria-hidden>
+
+            <DDCaret aria-hidden $open={open}>
                 <svg width="18" height="18" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </DDCaret>
 
             {open && (
                 <DDPanel role="listbox" aria-label="폴더 선택">
-                    <DDSearch
-                        autoFocus
-                        placeholder="폴더 검색…"
-                        value={q}
-                        onChange={(e)=>{ setQ(e.target.value); setHover(0); }}
-                    />
-                    <DDList>
-                        {list.length === 0 ? (
-                            <div style={{padding:"14px 12px", color: UI.color.muted}}>결과가 없어요.</div>
-                        ) : list.map((n, i) => {
-                            const selected = String(n.id) === String(value);
-                            return (
-                                <DDItem
-                                    key={n.id}
-                                    $active={i===hover}
-                                    $selected={selected}
-                                    onMouseEnter={()=>setHover(i)}
-                                    onClick={()=>{ onChange(String(n.id)); setOpen(false); setQ(""); setHover(-1); }}
-                                    aria-selected={selected}
-                                >
-                                    <span style={{overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{n.name}</span>
-                                    {selected ? <DDCheck/> : <span/>}
-                                </DDItem>
-                            );
-                        })}
-                    </DDList>
+                    <DDSearchWrap>
+                        <DDSearchIcon aria-hidden>
+                            <svg width="16" height="16" viewBox="0 0 24 24">
+                                <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" strokeWidth="2" />
+                                <path d="M20 20l-3.2-3.2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                            </svg>
+                        </DDSearchIcon>
+                        <DDSearch
+                            autoFocus
+                            placeholder="폴더 검색…"
+                            value={q}
+                            onChange={(e)=>{ setQ(e.target.value); setHover(0); }}
+                        />
+                    </DDSearchWrap>
+
+                    <DDListWrap $top={topShadow} $bot={botShadow}>
+                        <DDList ref={listRef} onScroll={updateShadows}>
+                            {list.length === 0 ? (
+                                <DDEmpty>
+                                    <svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                                    결과가 없어요.
+                                </DDEmpty>
+                            ) : list.map((n, i) => {
+                                const selected = String(n.id) === String(value);
+                                return (
+                                    <DDItem
+                                        key={n.id}
+                                        $active={i===hover}
+                                        $selected={selected}
+                                        onMouseEnter={()=>setHover(i)}
+                                        onClick={()=>{ onChange(String(n.id)); setOpen(false); setQ(""); setHover(-1); }}
+                                        aria-selected={selected}
+                                    >
+                                        <span style={{overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>
+                                            {renderHL(n.name, q)}
+                                        </span>
+                                        {selected ? <DDCheck/> : <span/>}
+                                    </DDItem>
+                                );
+                            })}
+                        </DDList>
+                    </DDListWrap>
                 </DDPanel>
             )}
         </DDWrap>
     );
 };
 
+/* ---------- CategorySelect ---------- */
 type CategorySelectProps = {
     value: string;
     onChange: (v: string) => void;
@@ -1005,6 +1037,21 @@ const CategorySelect: React.FC<CategorySelectProps> = ({
     const [q, setQ] = React.useState("");
     const [hover, setHover] = React.useState<number>(-1);
     const ref = React.useRef<HTMLDivElement | null>(null);
+
+    // 섀도우/스크롤
+    const listRef = React.useRef<HTMLDivElement | null>(null);
+    const [topShadow, setTopShadow] = React.useState(false);
+    const [botShadow, setBotShadow] = React.useState(false);
+    const updateShadows = React.useCallback(() => {
+        const el = listRef.current;
+        if (!el) return;
+        setTopShadow(el.scrollTop > 0);
+        setBotShadow(el.scrollTop + el.clientHeight < el.scrollHeight - 1);
+    }, []);
+    React.useEffect(() => {
+        if (!open) return;
+        requestAnimationFrame(updateShadows);
+    }, [open, options.length, q, updateShadows]);
 
     const label = value || "";
 
@@ -1061,7 +1108,15 @@ const CategorySelect: React.FC<CategorySelectProps> = ({
             >
                 {label || placeholder}
             </DDTrigger>
-            <DDCaret aria-hidden>
+
+            {/* 원클릭 선택 해제 */}
+            {(allowClear && !!label && !open) && (
+                <DDClear aria-label="선택 해제" onClick={(e) => { e.stopPropagation(); onChange(""); }}>
+                    ×
+                </DDClear>
+            )}
+
+            <DDCaret aria-hidden $open={open}>
                 <svg width="18" height="18" viewBox="0 0 24 24">
                     <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
@@ -1069,34 +1124,51 @@ const CategorySelect: React.FC<CategorySelectProps> = ({
 
             {open && (
                 <DDPanel role="listbox" aria-label="카테고리 선택">
-                    <DDSearch
-                        autoFocus
-                        placeholder="카테고리 검색…"
-                        value={q}
-                        onChange={(e)=>{ setQ(e.target.value); setHover(0); }}
-                    />
-                    <DDList>
-                        {list.length === 0 ? (
-                            <div style={{padding:"14px 12px", color: UI.color.muted}}>결과가 없어요.</div>
-                        ) : list.map((it, i) => {
-                            const selected = it.id === value && !it.isClear;
-                            return (
-                                <DDItem
-                                    key={`${it.id}-${i}`}
-                                    $active={i===hover}
-                                    $selected={selected}
-                                    onMouseEnter={()=>setHover(i)}
-                                    onClick={()=> pick(i)}
-                                    aria-selected={selected}
-                                >
-                  <span style={{overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>
-                    {it.label}
-                  </span>
-                                    {selected ? <DDCheck/> : <span/>}
-                                </DDItem>
-                            );
-                        })}
-                    </DDList>
+                    <DDSearchWrap>
+                        <DDSearchIcon aria-hidden>
+                            <svg width="16" height="16" viewBox="0 0 24 24">
+                                <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" strokeWidth="2" />
+                                <path d="M20 20l-3.2-3.2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                            </svg>
+                        </DDSearchIcon>
+                        <DDSearch
+                            autoFocus
+                            placeholder="카테고리 검색…"
+                            value={q}
+                            onChange={(e)=>{ setQ(e.target.value); setHover(0); }}
+                        />
+                    </DDSearchWrap>
+
+                    <DDListWrap $top={topShadow} $bot={botShadow}>
+                        <DDList ref={listRef} onScroll={updateShadows}>
+                            {list.length === 0 ? (
+                                <DDEmpty>
+                                    <svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                                    결과가 없어요.
+                                </DDEmpty>
+                            ) : list.map((it, i) => {
+                                const selected = it.id === value && !it.isClear;
+                                const depth2 = it.label.startsWith("• ");
+                                const clean = depth2 ? it.label.replace(/^•\s*/, "") : it.label;
+                                return (
+                                    <DDItem
+                                        key={`${it.id}-${i}`}
+                                        $active={i===hover}
+                                        $selected={selected}
+                                        $depth2={depth2}
+                                        onMouseEnter={()=>setHover(i)}
+                                        onClick={()=> pick(i)}
+                                        aria-selected={selected}
+                                    >
+                                        <span style={{overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>
+                                            {renderHL(clean, q)}
+                                        </span>
+                                        {selected ? <DDCheck/> : <span/>}
+                                    </DDItem>
+                                );
+                            })}
+                        </DDList>
+                    </DDListWrap>
                 </DDPanel>
             )}
         </DDWrap>
@@ -1164,6 +1236,251 @@ const Primary = styled.button`
     &:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(79,118,241,.25); }
     &:disabled { opacity: .7; cursor: not-allowed; }
 `;
+
+// 타입
+type CategoryRow = {
+    id: number;
+    type: string;
+    group_name: string;
+    name: string;
+    depth: number;
+    sort_order: number;
+    parent_id: number | null;
+};
+
+function groupByGroupName(rows: CategoryRow[] | any): CategoryGroup[] {
+    if (!Array.isArray(rows)) return [];
+    const filtered = rows.filter(
+        (r: CategoryRow) =>
+            (r.type === "직무 중심" || r.type === "언어 중심") &&
+            (r.depth === 1 || r.depth === 2)
+    );
+
+    // 그룹/정렬
+    filtered.sort((a, b) =>
+        a.group_name.localeCompare(b.group_name, "ko") ||
+        a.depth - b.depth ||
+        a.sort_order - b.sort_order ||
+        a.name.localeCompare(b.name, "ko")
+    );
+
+    const map = new Map<string, CategoryGroup>();
+    for (const r of filtered) {
+        if (!map.has(r.group_name)) {
+            map.set(r.group_name, { group: r.group_name, options: [] });
+        }
+        map.get(r.group_name)!.options.push({
+            id: r.id,
+            label: r.depth === 2 ? `• ${r.name}` : r.name, // depth=2는 점으로 들여쓰기
+            depth: r.depth,
+        });
+    }
+    return Array.from(map.values());
+}
+
+const DDGroupHeader = styled.div`
+  padding: 8px 12px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: ${UI.color.muted};
+  background: #fafafa;
+  position: sticky; top: 0; /* 스크롤 시 상단 고정 느낌 */
+  z-index: 1;
+`;
+
+type GroupedCategorySelectProps = {
+    value: number | null;
+    onChange: (v: number | null) => void;
+    groups: CategoryGroup[];
+    placeholder?: string;
+    allowClear?: boolean;
+};
+
+type FlatItem =
+    | { kind: "header"; key: string; label: string }
+    | { kind: "option"; key: string; id: number | null; label: string };
+
+const GroupedCategorySelect: React.FC<GroupedCategorySelectProps> = ({
+                                                                         value, onChange, groups, placeholder = "카테고리 선택", allowClear = true
+                                                                     }) => {
+    const [open, setOpen] = React.useState(false);
+    const [q, setQ] = React.useState("");
+    const [hover, setHover] = React.useState<number>(-1);
+    const ref = React.useRef<HTMLDivElement | null>(null);
+
+    // 섀도우/스크롤
+    const listRef = React.useRef<HTMLDivElement | null>(null);
+    const [topShadow, setTopShadow] = React.useState(false);
+    const [botShadow, setBotShadow] = React.useState(false);
+    const updateShadows = React.useCallback(() => {
+        const el = listRef.current;
+        if (!el) return;
+        setTopShadow(el.scrollTop > 0);
+        setBotShadow(el.scrollTop + el.clientHeight < el.scrollHeight - 1);
+    }, []);
+    React.useEffect(() => {
+        if (!open) return;
+        requestAnimationFrame(updateShadows);
+    }, [open, groups.length, q, updateShadows]);
+
+    // 선택 라벨
+    const selectedLabel = React.useMemo(() => {
+        for (const g of groups) {
+            const f = g.options.find(o => o.id === value);
+            if (f) return f.label.replace(/^•\s*/, ""); // 표시용으로 점 제거
+        }
+        return "";
+    }, [value, groups]);
+
+    // 검색 + 플랫 리스트 (헤더는 선택 불가, 옵션만 선택)
+    const flat: FlatItem[] = React.useMemo(() => {
+        const out: FlatItem[] = [];
+        const query = q.trim().toLowerCase();
+
+        if (allowClear && value != null) {
+            out.push({ kind: "option", key: "__clear__", id: null, label: "선택 해제" });
+        }
+
+        for (const g of groups) {
+            const opts = query
+                ? g.options.filter(o =>
+                    (g.group + " " + o.label).toLowerCase().includes(query)
+                )
+                : g.options;
+
+            if (opts.length === 0) continue;
+
+            out.push({ kind: "header", key: `h:${g.group}`, label: g.group });
+            for (const o of opts) {
+                out.push({ kind: "option", key: `o:${o.id}`, id: o.id, label: o.label });
+            }
+        }
+        return out;
+    }, [groups, q, value, allowClear]);
+
+    // 바깥 클릭/ESC로 닫기
+    React.useEffect(() => {
+        const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+        const onEsc = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+        document.addEventListener("mousedown", onDoc);
+        document.addEventListener("keydown", onEsc);
+        return () => { document.removeEventListener("mousedown", onDoc); document.removeEventListener("keydown", onEsc); };
+    }, []);
+
+    // 키보드 이동: header는 건너뛰고 option에서만 선택
+    const moveHover = (dir: 1 | -1) => {
+        if (flat.length === 0) return;
+        let i = hover;
+        do {
+            i = (i + dir + flat.length) % flat.length;
+        } while (flat[i]?.kind === "header" && i !== hover);
+        setHover(i);
+    };
+
+    const pick = (idx: number) => {
+        const it = flat[idx];
+        if (!it || it.kind !== "option") return;
+        onChange(it.id);        // null 이면 선택 해제
+        setOpen(false);
+        setQ("");
+        setHover(-1);
+    };
+
+    const onKey = (e: React.KeyboardEvent) => {
+        if (!open && (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ")) {
+            e.preventDefault(); setOpen(true); return;
+        }
+        if (!open) return;
+        if (e.key === "ArrowDown") { e.preventDefault(); moveHover(1); }
+        if (e.key === "ArrowUp")   { e.preventDefault(); moveHover(-1); }
+        if (e.key === "Enter")     { e.preventDefault(); pick(hover >= 0 ? hover : flat.findIndex(f => f.kind === "option")); }
+    };
+
+    return (
+        <DDWrap ref={ref}>
+            <DDTrigger
+                $hasValue={!!selectedLabel}
+                onClick={() => setOpen(v => !v)}
+                onKeyDown={onKey}
+                aria-haspopup="listbox"
+                aria-expanded={open}
+            >
+                {selectedLabel || placeholder}
+            </DDTrigger>
+
+            {/* 원클릭 선택 해제 */}
+            {(allowClear && !!selectedLabel && !open) && (
+                <DDClear aria-label="선택 해제" onClick={(e) => { e.stopPropagation(); onChange(null); }}>
+                    ×
+                </DDClear>
+            )}
+
+            <DDCaret aria-hidden $open={open}>
+                <svg width="18" height="18" viewBox="0 0 24 24">
+                    <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+            </DDCaret>
+
+            {open && (
+                <DDPanel role="listbox" aria-label="카테고리 선택">
+                    <DDSearchWrap>
+                        <DDSearchIcon aria-hidden>
+                            <svg width="16" height="16" viewBox="0 0 24 24">
+                                <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" strokeWidth="2" />
+                                <path d="M20 20l-3.2-3.2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                            </svg>
+                        </DDSearchIcon>
+                        <DDSearch
+                            autoFocus
+                            placeholder="카테고리/그룹 검색…"
+                            value={q}
+                            onChange={(e)=>{ setQ(e.target.value); setHover(0); }}
+                        />
+                    </DDSearchWrap>
+
+                    <DDListWrap $top={topShadow} $bot={botShadow}>
+                        <DDList ref={listRef} onScroll={updateShadows}>
+                            {flat.length === 0 ? (
+                                <DDEmpty>
+                                    <svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                                    결과가 없어요.
+                                </DDEmpty>
+                            ) : flat.map((it, i) => {
+                                if (it.kind === "header") {
+                                    return <DDGroupHeader key={it.key}>{it.label}</DDGroupHeader>;
+                                }
+                                const selected = it.id != null && it.id === value;
+                                const depth2 = it.label.startsWith("• ");
+                                const clean = depth2 ? it.label.replace(/^•\s*/, "") : it.label;
+                                return (
+                                    <DDItem
+                                        key={it.key}
+                                        $active={i===hover}
+                                        $selected={selected}
+                                        $depth2={depth2}
+                                        onMouseEnter={()=>setHover(i)}
+                                        onClick={()=> pick(i)}
+                                        aria-selected={selected}
+                                    >
+                                        <span style={{
+                                            overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"
+                                        }}>
+                                            {renderHL(clean, q)}
+                                        </span>
+                                        {selected ? <DDCheck/> : <span/>}
+                                    </DDItem>
+                                );
+                            })}
+                        </DDList>
+                    </DDListWrap>
+                </DDPanel>
+            )}
+        </DDWrap>
+    );
+};
+
+type CategoryOption = { id: number; label: string; depth?: number };
+type CategoryGroup = { group: string; options: CategoryOption[] };
 
 export default function WordbookFolderPage() {
     const { folderId } = useParams<{ folderId: string }>();
@@ -1334,7 +1651,7 @@ export default function WordbookFolderPage() {
             } catch (err: any) {
                 const s = err?.response?.status;
                 console.error("server error body:", err?.response?.data);
-                if (s === 401) { goToAccountLogin(); return; }
+                if (s === 401) { goToAccountLogin(location.pathname + location.search); return; }
                 else if (s === 404 || s === 403) setError("폴더를 찾을 수 없습니다.");
                 else setError("데이터를 불러오는 중 오류가 발생했습니다.");
             } finally {
@@ -1818,10 +2135,9 @@ export default function WordbookFolderPage() {
         navigate(`${base}/spoon-quiz/start`, { state: {
                 source,
                 folderId: source === "folder" ? Number(quizFolderId) : null,
-                category: source === "category" ? quizCategory : null,
-                count: quizCount,
-                type: quizType,
-                level: quizLevel, } });
+                categoryId: source === "category" ? quizCategoryId : null,
+                count: quizCount, type: quizType, level: quizLevel
+            }});
     };
 
     // 퀴즈 설정 모달 상태
@@ -1829,15 +2145,15 @@ export default function WordbookFolderPage() {
     type Source = "folder" | "category" | null;
     const [source, setSource] = React.useState<Source>(null);
     const [quizFolderId, setQuizFolderId] = React.useState<string>("");
-    const [quizCategory, setQuizCategory] = React.useState<string>("");
     const [quizCount, setQuizCount] = React.useState<number>(5);
-    type QType = "mix" | "mcq" | "ox" | "initial";
+    type QType = "mix" | "choice" | "ox" | "initials";
     const [quizType, setQuizType] = React.useState<QType>("mix");
-    type QLevel = "mix" | "hard" | "normal" | "easy";
+    type QLevel = "mix" | "hard" | "medium" | "easy";
     const [quizLevel, setQuizLevel] = React.useState<QLevel>("mix");
     const [quizErr, setQuizErr] = React.useState<string>("");
+    const [quizLoading, setQuizLoading] = React.useState(false);
 
-    const [catFilter, setCatFilter] = React.useState("");
+    const [catFetchFailed, setCatFetchFailed] = React.useState(false);
 
     // 모달 열릴 때 폴더 필요하면 불러오기(한 번만)
     React.useEffect(() => {
@@ -1862,11 +2178,83 @@ export default function WordbookFolderPage() {
             <path
                 d="M8.5 9c.6-1.5 2.1-2.5 3.8-2.5 2.1 0 3.8 1.7 3.8 3.8 0 1.5-1 2.7-2.4 3.3-.9.4-1.3.8-1.3 1.9"
                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                />
+            />
             <path d="M12 17h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
     );
 
+    const [quizCategoryId, setQuizCategoryId] = React.useState<number | null>(null);
+    const [catGroups, setCatGroups] = React.useState<CategoryGroup[]>([]);
+    const extractCategoryRows = (data: any): CategoryRow[] => {
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data?.items)) return data.items;
+        if (Array.isArray(data?.content)) return data.content;
+        if (Array.isArray(data?.data)) return data.data;
+        return [];
+    };
+
+    React.useEffect(() => {
+        (async () => {
+        })();
+    }, []);
+
+    type CategoryDto = { id: number; name: string };
+
+    async function loadCategories() {
+        try {
+            const roots = (await http.get<CategoryDto[]>("/categories", {
+                params: { depth: 0 }, withCredentials: true,
+            })).data;
+
+            if (!roots?.length) {
+                setCatGroups([]);
+                setQuizErr("카테고리 데이터가 비어 있습니다.");
+                setCatFetchFailed(true);
+                return;
+            }
+
+            const groups = await Promise.all(
+                roots.map(async (root) => {
+                    const lv1 = (await http.get<CategoryDto[]>("/categories", {
+                        params: { depth: 1, parentId: root.id }, withCredentials: true,
+                    })).data;
+
+                    // lv2는 병렬로
+                    const lv2Bundles = await Promise.all(
+                        (lv1 ?? []).map(async (c1) => {
+                            const lv2 = (await http.get<CategoryDto[]>("/categories", {
+                                params: { depth: 2, parentId: c1.id }, withCredentials: true,
+                            })).data;
+                            return { parent: c1, children: lv2 ?? [] };
+                        })
+                    );
+
+                    const options: CategoryOption[] = [];
+                    for (const { parent, children } of lv2Bundles) {
+                        options.push({ id: parent.id, label: parent.name, depth: 1 });
+                        for (const c2 of children) {
+                            options.push({ id: c2.id, label: `• ${c2.name}`, depth: 2 });
+                        }
+                    }
+
+                    return { group: root.name, options };
+                })
+            );
+
+            setCatGroups(groups);
+            setQuizErr("");
+            setCatFetchFailed(false);
+        } catch (e) {
+            setQuizErr("카테고리를 불러오지 못했습니다.");
+            setCatFetchFailed(true);
+        }
+    }
+
+    React.useEffect(() => {
+        if (quizOpen && source === "category" && !catFetchFailed && catGroups.length === 0) {
+            loadCategories();
+        }
+    }, [quizOpen, source, catFetchFailed, catGroups.length]);
 
     return (
         <NarrowLeft style={{ padding: "8px 0 24px" }}>  {/* SearchBar와 동일 폭/정렬 */}
@@ -1941,9 +2329,9 @@ export default function WordbookFolderPage() {
                     <Scrim onClick={() => setQuizOpen(false)} />
                     <Sheet role="dialog" aria-modal="true" aria-labelledby="quiz-setup-title">
                         <SheetHeader>
-                            {/*<IconBox aria-hidden>*/}
-                            {/*    <QuizIcon />*/}
-                            {/*</IconBox>*/}
+                            {/*<IconBox aria-hidden>
+                                <QuizIcon />
+                            </IconBox>*/}
                             <TitleWrap>
                                 <h3 id="quiz-setup-title">나만의 스푼퀴즈 만들기</h3>
                                 <small>원하는 문제 출처와 문제 수, 문제 유형, 난이도를 골라 나에게 맞는 퀴즈를 풀어보세요</small>
@@ -1952,6 +2340,7 @@ export default function WordbookFolderPage() {
                         </SheetHeader>
 
                         <SheetBody>
+
                             {/* 문제 고르기 */}
                             <Section>
                                 <h4>문제 고르기</h4>
@@ -1960,8 +2349,7 @@ export default function WordbookFolderPage() {
                                         $on={source === "folder"}
                                         onClick={() => {
                                             setSource("folder");
-                                            setQuizCategory("");  // 카테고리 선택 리셋
-                                            setCatFilter("");     // 카테고리 검색어 리셋
+                                            setQuizCategoryId(null);
                                         }}
                                     >
                                         <IconBox aria-hidden>
@@ -1977,15 +2365,20 @@ export default function WordbookFolderPage() {
                                         $on={source === "category"}
                                         onClick={() => {
                                             setSource("category");
-                                            setQuizFolderId("");  // 폴더 선택 리셋
+                                            setQuizFolderId("");
+                                            setQuizCategoryId(null);
                                         }}
+                                        disabled={catFetchFailed}
+                                        style={catFetchFailed ? { opacity:.6, cursor:"not-allowed" } : undefined}
                                     >
                                         <IconBox aria-hidden>
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 3h12a2 2 0 0 1 2 2v3H4V5a2 2 0 0 1 2-2Zm-2 8h16v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6Z"/></svg>
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M6 3h12a2 2 0 0 1 2 2v3H4V5a2 2 0 0 1 2-2Zm-2 8h16v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6Z"/>
+                                            </svg>
                                         </IconBox>
                                         <div>
                                             <h5>카테고리에서 만들기</h5>
-                                            <p>주제/언어별로 골라 빠르게 시작해요</p>
+                                            <p>{catFetchFailed ? "지금은 불러올 수 없어요 (서버 오류)" : "주제/언어별로 골라 빠르게 시작해요"}</p>
                                         </div>
                                     </OptionCard>
                                 </Cards2>
@@ -2000,25 +2393,31 @@ export default function WordbookFolderPage() {
                                         />
                                     </div>
                                 )}
+                                {quizErr && (
+                                    <div role="alert" style={{marginTop:8, color:"#ef4444", fontSize:13}}>
+                                        {quizErr}
+                                    </div>
+                                )}
 
                                 {/* 카테고리에서 만들기 UI */}
                                 {source === "category" && (
                                     <div style={{ marginTop: 12 }}>
-                                        <CategorySelect
-                                            value={quizCategory}
-                                            onChange={setQuizCategory}
-                                            options={CATEGORIES}
+                                        <GroupedCategorySelect
+                                            value={quizCategoryId}
+                                            onChange={setQuizCategoryId}
+                                            groups={catGroups}
                                             placeholder="카테고리 선택"
                                             allowClear
                                         />
                                     </div>
                                 )}
+
                             </Section>
 
                             {/* 문항 수 */}
                             <Section>
                                 <h4>문항 수</h4>
-                               <ChipRow>
+                                <ChipRow>
                                     {[5,10,15,20].map(n=>(
                                         <CountChip key={n} $on={quizCount===n} onClick={()=>setQuizCount(n)}>
                                             {n}개
@@ -2032,9 +2431,9 @@ export default function WordbookFolderPage() {
                                 <h4>문제 유형</h4>
                                 <ChipRow>
                                     <CountChip $on={quizType==="mix"} onClick={()=>setQuizType("mix")}>유형 섞기</CountChip>
-                                    <CountChip $on={quizType==="mcq"} onClick={()=>setQuizType("mcq")}>객관식</CountChip>
+                                    <CountChip $on={quizType==="choice"} onClick={()=>setQuizType("choice")}>객관식</CountChip>
                                     <CountChip $on={quizType==="ox"} onClick={()=>setQuizType("ox")}>O/X</CountChip>
-                                    <CountChip $on={quizType==="initial"} onClick={()=>setQuizType("initial")}>초성</CountChip>
+                                    <CountChip $on={quizType==="initials"} onClick={()=>setQuizType("initials")}>초성</CountChip>
                                 </ChipRow>
                             </Section>
 
@@ -2044,7 +2443,7 @@ export default function WordbookFolderPage() {
                                 <ChipRow>
                                     <CountChip $on={quizLevel==="mix"} onClick={()=>setQuizLevel("mix")}>난이도 섞기</CountChip>
                                     <CountChip $on={quizLevel==="easy"} onClick={()=>setQuizLevel("easy")}>쉬운 문제</CountChip>
-                                    <CountChip $on={quizLevel==="normal"} onClick={()=>setQuizLevel("normal")}>보통 문제</CountChip>
+                                    <CountChip $on={quizLevel==="medium"} onClick={()=>setQuizLevel("medium")}>보통 문제</CountChip>
                                     <CountChip $on={quizLevel==="hard"} onClick={()=>setQuizLevel("hard")}>어려운 문제</CountChip>
                                 </ChipRow>
                             </Section>
@@ -2053,25 +2452,57 @@ export default function WordbookFolderPage() {
                         <SheetFooter>
                             <Ghost onClick={()=>setQuizOpen(false)}>취소</Ghost>
                             <Primary
-                                onClick={() => {
+                                disabled={quizLoading}
+                                onClick={async () => {
                                     if (!source) { setQuizErr("문제 출처를 먼저 선택해 주세요."); return; }
                                     if (source === "folder" && !quizFolderId) { setQuizErr("폴더를 선택해 주세요."); return; }
-                                    if (source === "category" && !quizCategory) { setQuizErr("카테고리를 선택해 주세요."); return; }
+                                    if (source === "category" && !quizCategoryId) { setQuizErr("카테고리를 선택해 주세요."); return; }
                                     setQuizErr("");
 
-                                    const base = location.pathname.startsWith("/spoon-word") ? "/spoon-word" : "";
-                                    navigate(`${base}/spoon-quiz/start`, { state: {
-                                            source,
-                                            folderId: source === "folder" ? Number(quizFolderId) : null,
-                                            category: source === "category" ? quizCategory : null,
-                                            count: quizCount,
-                                            type: quizType,
-                                            level: quizLevel, } });
-                                    setQuizOpen(false);
+                                    try {
+                                        setQuizLoading(true);
+
+                                        let started: any;
+                                        if (source === "folder") {
+                                            started = await startSessionFromFolder({
+                                                folderId: Number(quizFolderId),
+                                                count: quizCount,
+                                                type: quizType,
+                                                level: quizLevel,
+                                                seedMode: "AUTO",
+                                                fixedSeed: null,
+                                            });
+                                        } else {
+                                            started = await startSessionFromCategory({
+                                                categoryId: Number(quizCategoryId),
+                                                count: quizCount,
+                                                type: quizType,
+                                                level: quizLevel,
+                                                seedMode: "AUTO",
+                                                fixedSeed: null,
+                                            });
+                                        }
+
+                                        const sessionId = started?.sessionId ?? started?.id ?? started?.session?.id;
+                                        if (!sessionId) { alert("세션 생성 응답을 해석할 수 없어요."); return; }
+
+                                        const base = location.pathname.startsWith("/spoon-word") ? "/spoon-word" : "";
+                                        navigate(`${base}/spoon-quiz/session/${sessionId}`, { state: started });
+                                        setQuizOpen(false);
+                                    } catch (err: any) {
+                                        const s = err?.response?.status;
+                                        if (s === 401) { alert("로그인이 필요합니다."); goToAccountLogin(location.pathname + location.search); }
+                                        else if (s === 403 || s === 404) alert("요청이 거부되었거나 리소스를 찾지 못했습니다.");
+                                        else alert("세션 생성 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.");
+                                        console.error("[quiz] start failed:", err);
+                                    } finally {
+                                        setQuizLoading(false);
+                                    }
                                 }}
                             >
-                                퀴즈 시작
+                                {quizLoading ? "시작 중…" : "퀴즈 시작"}
                             </Primary>
+
                         </SheetFooter>
                     </Sheet>
                 </>
