@@ -604,6 +604,35 @@ const onAnswerComplete = async () => {
     return;
   }
 
+  // 첫 번째 질문(자기소개)에 대한 답변인 경우
+  if (interviewSequence === 1) {
+    // 면접 생성 API 호출 (자기소개 답변 포함)
+    const res = await aiInterviewStore.requestCreateInterviewToSpring({
+      interviewType: info.interviewType,
+      company: info.company || "",
+      major: info.major,
+      career: info.career,
+      projectExp: info.projectExp,
+      job: info.job,
+      interviewAccountProjectRequests: info.interviewAccountProjectRequests || [],
+      techStacks: info.techStacks,
+      firstQuestion: "안녕하세요 자기소개 부탁드립니다.",
+      firstAnswer: sttLog.value,
+    });
+
+    currentInterviewId.value = Number(res.interviewId);
+    currentQuestionId.value = res.interviewQAId;
+    currentAIMessage.value = res.interviewQuestion;
+
+    sttLog.value = "";
+    isGenerating.value = false;
+    remainingTime.value = 90;
+    startTimer();
+    replayQuestion();
+    return;
+
+  }
+
   const info = JSON.parse(localStorage.getItem("interviewInfo") || "{}");
   const processedCompanyName = mapCompanyName(info.company);
   const payload = {
