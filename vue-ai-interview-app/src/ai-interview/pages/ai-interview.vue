@@ -1,245 +1,231 @@
 <template>
   <v-container v-if="!start" :style="interviewStartContainerStyle" fluid>
+    <!-- 배경 텍스트 -->
+    <div :style="backgroundTextStyle">
+      AI INTERVIEW
+    </div>
+    
     <div :style="interviewStartWrapperStyle">
-      <!-- 헤더 섹션 추가 -->
+      <!-- 큰 카메라 화면 -->
+      <div :style="mainCameraContainerStyle">
+        <video
+          ref="previewVideo"
+          autoplay
+          playsinline
+          muted
+          :style="mainVideoStyle"
+        />
+        <div :style="videoOverlayStyle" v-if="!mediaChecked">
+          <v-icon size="80" color="white">mdi-video-outline</v-icon>
+          <p :style="overlayTextStyle">카메라를 활성화하세요</p>
+        </div>
+        
+        <!-- 우측 상단 작은 프리뷰 (선택사항) -->
+        <div :style="smallPreviewStyle" v-if="mediaChecked">
+          <video
+            ref="smallPreview"
+            autoplay
+            playsinline
+            muted
+            :style="smallVideoStyle"
+          />
+        </div>
+        
+        <!-- 좌측 상단 타이머 -->
+        <div :style="topLeftBadgeStyle">
+          <v-icon size="16" color="white">mdi-circle</v-icon>
+          <span>03:00</span>
+        </div>
+      </div>
 
-
-      <!-- 메인 카드 섹션 -->
-      <v-card :style="cameraSectionStyle">
-        <v-card-text :style="cameraCardTextStyle">
-          <div :style="interviewStepsStyle">
-            <div :style="stepItemStyle">
-              <div :style="stepNumberStyle">1</div>
-              <div :style="stepContentStyle">
-                <h3 :style="stepTitleStyle">카메라/마이크 확인</h3>
-                <p :style="stepDescStyle">장치가 정상적으로 작동하는지 확인하세요</p>
-              </div>
-            </div>
-            <div :style="stepItemStyle">
-              <div :style="stepNumberStyle">2</div>
-              <div :style="stepContentStyle">
-                <h3 :style="stepTitleStyle">테스트 녹화</h3>
-                <p :style="stepDescStyle">짧은 영상을 녹화하고 재생해보세요</p>
-              </div>
-            </div>
-            <div :style="stepItemStyle">
-              <div :style="stepNumberStyle">3</div>
-              <div :style="stepContentStyle">
-                <h3 :style="stepTitleStyle">면접 시작</h3>
-                <p :style="stepDescStyle">모든 준비가 완료되면 면접을 시작하세요</p>
-              </div>
-            </div>
-          </div>
-
-          <div :style="mainContentStyle">
-            <!-- 카메라 미리보기 섹션 -->
-            <div :style="cameraPreviewSectionStyle">
-              <div :style="cameraContainerStyle">
-                <video
-                  ref="previewVideo"
-                  autoplay
-                  playsinline
-                  muted
-                  :style="previewVideoStyle"
-                />
-                <div :style="videoOverlayStyle" v-if="!mediaChecked">
-                  <v-icon size="48" color="white">mdi-video-off</v-icon>
-                  <p :style="overlayTextStyle">카메라 연결이 필요합니다</p>
-                </div>
-                <div :style="cameraStatusBadgeStyle" v-if="mediaChecked">
-                  <v-icon size="16" color="white">mdi-check-circle</v-icon>
-                  <span>준비 완료</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- 안내 메시지 섹션 -->
-            <div :style="infoSectionStyle">
-
-              <div :style="tipsSectionStyle">
-                <h3 :style="tipsTitleStyle">
-                  <v-icon color="amber darken-2">mdi-lightbulb</v-icon>
-                  면접 팁
-                </h3>
-                <ul :style="tipsListStyle">
-                  <li :style="tipsItemStyle">밝은 조명 아래에서 면접을 진행하세요</li>
-                  <li :style="tipsItemStyle">배경 소음이 적은 조용한 환경을 준비하세요</li>
-                  <li :style="tipsItemStyle">카메라를 눈높이에 맞추고 정면을 응시하세요</li>
-                  <li :style="tipsItemStyle">면접 전 심호흡으로 긴장을 풀어보세요</li>
-                </ul>
-              </div>
-            </div>
+      <!-- 하단 컨트롤 카드 -->
+      <v-card :style="bottomControlCardStyle" class="interview-card">
+        <v-card-text :style="controlCardTextStyle">
+          <!-- 질문 표시 영역 -->
+          <div :style="questionDisplayStyle">
+            <div :style="questionBadgeStyle">Q1</div>
+            <p :style="questionTextDisplayStyle">
+              {{ mediaChecked ? '카메라와 마이크가 정상적으로 작동합니다. 면접을 시작하세요.' : '카메라와 마이크를 확인해주세요' }}
+            </p>
           </div>
           
-          <!-- 컨트롤 버튼 섹션 -->
-          <div :style="controlSectionStyle">
-            <div :style="cameraControlsStyle">
+          <!-- 컨트롤 버튼 -->
+          <div :style="bottomButtonsStyle">
+            <v-btn 
+              v-if="!mediaChecked"
+              color="primary" 
+              :style="mainActionBtnStyle" 
+              elevation="0" 
+              rounded
+              large
+              @click="checkMediaReady"
+            >
+              확인
+            </v-btn>
+            
+            <template v-else>
               <v-btn 
                 color="primary" 
-                :style="cameraControlBtnStyle" 
-                elevation="2" 
-                rounded 
-                @click="checkMediaReady"
-              >
-                <v-icon left>mdi-camera-check</v-icon>
-                카메라/마이크 확인
-              </v-btn>
-              
-              <v-btn 
-                color="success" 
-                :style="cameraControlBtnStyle" 
-                elevation="2" 
-                rounded 
+                :style="secondaryActionBtnStyle" 
+                elevation="0" 
+                rounded
                 @click="startRecording"
+                :disabled="!mediaChecked"
               >
-                <v-icon left>mdi-video</v-icon>
-                녹화 시작
+                <v-icon>mdi-waveform</v-icon>
               </v-btn>
               
               <v-btn 
-                color="error" 
-                :style="cameraControlBtnStyle" 
-                elevation="2" 
-                rounded 
-                @click="stopRecording"
+                color="primary" 
+                :style="mainActionBtnStyle" 
+                elevation="0" 
+                rounded
+                large
+                @click="handleStartInterview"
               >
-                <v-icon left>mdi-stop-circle</v-icon>
-                녹화 종료
+                <v-icon left size="20">mdi-play-circle</v-icon>
+                면접 시작
               </v-btn>
               
               <v-btn 
-                color="info" 
-                :style="cameraControlBtnStyle" 
-                elevation="2" 
-                rounded 
-                @click="playRecording" 
+                color="default" 
+                :style="secondaryActionBtnStyle" 
+                elevation="0" 
+                rounded
+                @click="playRecording"
                 :disabled="!recordedBlob"
               >
-                <v-icon left>mdi-play</v-icon>
-                영상 재생
+                다시듣기
               </v-btn>
-            </div>
-          </div>
-
-          <!-- 면접 시작 버튼 섹션 -->
-          <div :style="startInterviewSectionStyle">
-            <v-btn
-              color="warning"
-              :style="startInterviewBtnStyle"
-              elevation="3"
-              rounded
-              x-large
-              @click="handleStartInterview"
-              :disabled="!mediaChecked"
-            >
-              <v-icon left size="24">mdi-account-tie</v-icon>
-              면접 시작하기
-            </v-btn>
-            <p :style="startDisclaimerStyle" v-if="!mediaChecked">카메라/마이크 확인 후 면접을 시작할 수 있습니다</p>
+            </template>
           </div>
         </v-card-text>
       </v-card>
     </div>
   </v-container>
 
-  <v-container v-else fluid :style="pa0Style">
-    <div :style="videoWrapStyle">
-      <v-row :style="videoRowStyle" no-gutters>
-        <v-col cols="6" :style="colRightStyle">
-          <div :style="videoBoxStyle">
-            <img :src="hhImage" alt="면접관" :style="interviewerImageStyle" />
-          </div>
-        </v-col>
-        <v-col :style="colSpacerStyle"></v-col>
-        <v-col cols="6" :style="colLeftStyle">
-          <div :style="videoBoxStyle">
-            <video
-              ref="userVideo"
-              v-show="start"
-              autoplay
-              playsinline
-              muted
-              :style="userVideoStyle"
-            ></video>
-          </div>
-        </v-col>
-      </v-row>
-    </div>
-    <v-col :style="colSpacerStyle"></v-col>
-    <v-col cols="12" :style="centeredColStyle">
-      <div
-        v-if="visible"
-        :style="[interviewContainerStyle, centeredTextBoxStyle, { marginTop: 0, width: '75%' }]"
-      >
-        <v-icon>mdi-account-tie</v-icon><br />
-
-      </div>
-      <div
-        v-else
-        :style="[interviewContainerStyle, centeredTextBoxStyle, { marginTop: 0, width: '75%' }]"
-      >
-        <v-icon>mdi-account-tie</v-icon><br />
-        <h2 v-html="formattedAIMessage"></h2>
-        <br />
-        <div :style="[timerStyle, remainingTime <= 10 ? redTextStyle : {}]">
-          남은 시간: {{ Math.floor(remainingTime / 60) }}:{{ (remainingTime % 60).toString().padStart(2, "0") }}
+  <v-container v-else fluid :style="interviewActiveContainerStyle">
+    <!-- 메인 화면: 면접관 이미지 (전체 높이) -->
+    <div :style="interviewMainScreenStyle">
+      <!-- 면접관 이미지 -->
+      <img :src="hhImage" alt="면접관" :style="interviewerMainImageStyle" />
+      
+      <!-- 우측 상단: 사용자 비디오 (작은 화면) -->
+      <div :style="userVideoSmallContainerStyle">
+        <video
+          ref="userVideo"
+          v-show="start"
+          autoplay
+          playsinline
+          muted
+          :style="userVideoSmallStyle"
+        ></video>
+        <div v-if="recognizing" :style="recordingBadgeSmallStyle">
+          <v-icon size="12" color="white">mdi-circle</v-icon>
+          <span>녹음중</span>
         </div>
       </div>
-    </v-col>
-
-    <div v-if="isLoading && !finished" :style="aiMessageStyle">
-      <br />
-      <p><strong>다음 질문을 준비 중입니다.</strong></p>
-      <v-icon>mdi-account-tie</v-icon>
-      <div :style="loadingMessageStyle">
-        <div :style="dotStyle"></div>
-        <div :style="dotStyle"></div>
-        <div :style="dotStyle"></div>
+      
+      <!-- 좌측 상단: 타이머 -->
+      <div :style="interviewTimerBadgeStyle">
+        <v-icon size="16" color="white">mdi-clock-outline</v-icon>
+        <span>{{ Math.floor(remainingTime / 60) }}:{{ (remainingTime % 60).toString().padStart(2, "0") }}</span>
       </div>
+      
+      <!-- 하단: 질문 박스 + 답변 버튼 (오버레이) -->
+      <v-card :style="interviewBottomCardStyle" class="interview-card">
+      <v-card-text :style="interviewBottomCardTextStyle">
+        <!-- 질문 표시 -->
+        <div v-if="visible" :style="questionLoadingBoxStyle">
+          <v-icon size="32" color="primary">mdi-loading mdi-spin</v-icon>
+          <p :style="questionLoadingTextStyle">면접 질문을 준비 중입니다...</p>
+        </div>
+        
+        <div v-else :style="questionBoxStyle">
+          <div :style="questionBoxHeaderStyle">
+            <div :style="questionNumberBadgeStyle">Q{{ currentQuestionId + 1 }}</div>
+            <div :style="questionProgressTextStyle">{{ currentQuestionId + 1 }} / 6</div>
+          </div>
+          <p :style="questionBoxTextStyle" v-html="formattedAIMessage"></p>
+        </div>
+        
+        <!-- 답변 버튼 영역 -->
+        <div v-if="!visible" :style="answerButtonAreaStyle">
+          <!-- STT 결과 미리보기 (간단하게) -->
+          <div v-if="sttLog !== ''" :style="sttPreviewStyle">
+            <v-icon size="16" color="#3b82f6">mdi-text-to-speech</v-icon>
+            <span :style="sttPreviewTextStyle">{{ sttLog.substring(0, 50) }}{{ sttLog.length > 50 ? '...' : '' }}</span>
+          </div>
+          
+          <!-- 버튼 그룹 -->
+          <div :style="interviewActionButtonsStyle">
+            <v-btn 
+              v-if="!recognizing"
+              color="primary" 
+              :style="startAnswerBtnStyle" 
+              elevation="0" 
+              rounded
+              large
+              @click="startSTT"
+              :disabled="isGenerating"
+            >
+              <v-icon left size="20">mdi-microphone</v-icon>
+              답변 시작
+            </v-btn>
+            
+            <v-btn 
+              v-else
+              color="error" 
+              :style="stopAnswerBtnStyle" 
+              elevation="0" 
+              rounded
+              large
+              @click="startSTT"
+            >
+              <v-icon left size="20">mdi-stop-circle</v-icon>
+              답변 중지
+            </v-btn>
+            
+            <v-btn 
+              color="default" 
+              :style="replayBtnStyle" 
+              elevation="0" 
+              rounded
+              @click="replayQuestion"
+              :disabled="isGenerating"
+            >
+              <v-icon>mdi-volume-high</v-icon>
+            </v-btn>
+            
+            <v-btn 
+              color="success" 
+              :style="completeBtnStyle" 
+              elevation="0" 
+              rounded
+              @click="onAnswerComplete"
+              :disabled="isGenerating || sttLog === ''"
+            >
+              <v-icon left size="18">{{ isGenerating ? 'mdi-loading mdi-spin' : 'mdi-check-circle' }}</v-icon>
+              {{ isGenerating ? '처리중...' : '답변 완료' }}
+            </v-btn>
+          </div>
+        </div>
+      </v-card-text>
+    </v-card>
     </div>
-
-    <v-container v-if="start && !visible" :style="inputAreaStyle">
-      <div :style="buttonGroupStyle">
-        <button :style="sendButtonStyle" @click="startSTT" :disabled="recognizing">
-          {{ recognizing ? "녹음 중..." : "말하기" }}
-        </button>
-        <button @click="replayQuestion" :style="plainButtonStyle">🗣 AI 질문 듣기</button>
-      </div>
-      <v-btn color="primary" @click="onAnswerComplete" :disabled="isGenerating">
-        <template v-if="isGenerating && finished.value">
-          결과 생성 중...
-        </template>
-        <template v-else-if="isGenerating"> 질문 생성 중... </template>
-        <template v-else> 답변 완료 </template>
-      </v-btn>
-      <div :style="sttLogStyle">
-        <template v-if="recognizing">
-          <p>🎙️ 입력 중입니다...</p>
-        </template>
-        <template v-else-if="isGenerating">
-          <p style="color: gray">
-            {{
-              finished.value
-                ? "📝 결과를 생성하고 있어요..."
-                : "🤖 다음 질문을 생성하고 있어요..."
-            }}
-          </p>
-          <p v-if="sttLog !== ''"><strong>STT 결과:</strong> {{ sttLog }}</p>
-        </template>
-        <template v-else-if="sttLog !== ''">
-          <p><strong>STT 결과:</strong> {{ sttLog }}</p>
-        </template>
-      </div>
-      <v-text-field
-        v-model="sttLog"
-        label="개발 중: 답변 직접 입력"
-        hide-details
-        dense
-        solo
-        style="max-width: 300px"
-      />
-    </v-container>
   </v-container>
+
+  <!-- 맨 위로 올리기 버튼 -->
+  <v-btn
+    :style="scrollTopBtnStyle"
+    @click="scrollToTop"
+    fab
+    color="primary"
+    elevation="8"
+    class="scroll-top-btn"
+  >
+    <v-icon size="28" color="white">mdi-chevron-up</v-icon>
+  </v-btn>
 </template>
 
 <script setup>
@@ -262,529 +248,7 @@ useHead({
   ],
 });
 
-// ==== 스타일 상수 (생략없이 전체) ====
-const interviewContainerStyle = {
-  marginTop: "32px",
-  border: "1px solid rgba(0, 0, 0, 0.08)",
-  padding: "16px",
-  borderRadius: "16px",
-  width: "70%",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  textAlign: "center",
-  background: "#fff",
-  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)"
-};
-const mt16Style = { marginTop: "16px" };
-const mt4Style = { marginTop: "16px" };
 
-// 새로운 스타일 객체 추가
-const mainContentStyle = {
-  display: "flex",
-  flexDirection: "row",
-  gap: "24px",
-  marginTop: "24px",
-  marginBottom: "24px",
-  width: "100%",
-  height: "100%",
-  flexWrap: "wrap"
-};
-
-const cameraPreviewSectionStyle = {
-  flex: "1",
-  minWidth: "300px",
-  minHeight: "300px"
-};
-
-const infoSectionStyle = {
-  flex: "1",
-  minWidth: "300px",
-  display: "flex",
-  flexDirection: "column",
-  gap: "16px"
-};
-
-const controlSectionStyle = {
-  marginTop: "16px",
-  borderTop: "1px solid rgba(0, 0, 0, 0.05)",
-  paddingTop: "16px"
-};
-
-const startInterviewSectionStyle = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  marginTop: "24px",
-  gap: "12px"
-};
-
-const startDisclaimerStyle = {
-  fontSize: "14px",
-  color: "#f44336",
-  margin: "8px 0 0 0"
-};
-
-const cameraStatusBadgeStyle = {
-  position: "absolute",
-  top: "12px",
-  right: "12px",
-  backgroundColor: "rgba(76, 175, 80, 0.8)",
-  color: "white",
-  padding: "4px 8px",
-  borderRadius: "16px",
-  fontSize: "12px",
-  display: "flex",
-  alignItems: "center",
-  gap: "4px",
-  backdropFilter: "blur(2px)"
-};
-
-// const tipsSectionStyle = {
-//   backgroundColor: "#fff8e1",
-//   borderRadius: "12px",
-//   padding: "16px",
-//   border: "1px solid rgba(255, 193, 7, 0.2)"
-// };
-
-const cameraSectionTextStyle = {
-  marginLeft: "24px",
-};
-
-const buttonGroupStyle = {
-  display: "flex",
-  flexWrap: "wrap",
-  justifyContent: "center",
-  gap: "12px",
-  marginTop: "12px"
-};
-
-const cameraCardStyle = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  flexWrap: "wrap"
-}
-const sendButtonStyle = {
-  padding: "10px 12px",
-  backgroundColor: "black",
-  color: "white",
-  border: "none",
-  borderRadius: "20px",
-  cursor: "pointer",
-  fontSize: "16px",
-  height: "40px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  minWidth: "100px",
-  boxSizing: "border-box"
-};
-const plainButtonStyle = {
-  padding: "10px 12px",
-  backgroundColor: "#f1f1f1",
-  color: "#222",
-  border: "none",
-  borderRadius: "20px",
-  cursor: "pointer",
-  fontSize: "16px",
-  height: "40px",
-  minWidth: "100px",
-  boxSizing: "border-box"
-};
-const videoWrapStyle = {
-  width: "75%",
-  margin: "0 auto",
-  paddingTop: "16px"
-};
-const videoRowStyle = {
-  marginTop: "24px",
-  marginBottom: "24px"
-};
-const colRightStyle = {
-  display: "flex",
-  justifyContent: "flex-end",
-  padding: 0
-};
-const colLeftStyle = {
-  display: "flex",
-  justifyContent: "flex-start",
-  padding: 0
-};
-const colSpacerStyle = {
-  maxWidth: "16px",
-  padding: 0
-};
-const videoBoxStyle = {
-  width: "100%",
-  aspectRatio: "4 / 3",
-  border: "2px solid #ccc",
-  borderRadius: "12px",
-  overflow: "hidden",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  backgroundColor: "#000"
-};
-const interviewerImageStyle = {
-  width: "100%",
-  height: "100%",
-  objectFit: "cover"
-};
-const userVideoStyle = {
-  width: "100%",
-  height: "100%",
-  objectFit: "cover"
-};
-const centeredColStyle = {
-  maxWidth: "100%",
-  display: "flex",
-  justifyContent: "center",
-  padding: 0,
-  marginTop: "16px"
-};
-const centeredTextBoxStyle = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  textAlign: "center"
-};
-const timerStyle = {
-  fontWeight: "bold",
-  margin: "16px 0",
-  fontSize: "20px"
-};
-const redTextStyle = {
-  color: "red"
-};
-const aiMessageStyle = {
-  margin: "20px 0",
-  textAlign: "center"
-};
-const loadingMessageStyle = {
-  display: "flex",
-  alignItems: "center",
-  gap: "6px",
-  justifyContent: "center"
-};
-const dotStyle = {
-  width: "10px",
-  height: "10px",
-  borderRadius: "50%",
-  backgroundColor: "#6366f1",
-  margin: "0 2px",
-  animation: "dot-blink 1.4s infinite both"
-};
-const inputAreaStyle = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "20px",
-  width: "50%",
-  marginBottom: 0
-};
-const sttLogStyle = {
-  marginTop: "8px",
-  textAlign: "center"
-};
-const pa0Style = { padding: 0 };
-
-// ==== 미디어 쿼리 및 애니메이션 직접 동적 삽입 ====
-if (typeof window !== "undefined") {
-  const styleTag = document.createElement("style");
-  styleTag.textContent = `
-    @keyframes dot-blink {
-      0%, 80%, 100% { opacity: 0; }
-      40% { opacity: 1; }
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    @media (max-width: 768px) {
-      .button-group, [style*="display: flex"][style*="gap: 12px"] {
-        flex-direction: column !important;
-        align-items: stretch !important;
-      }
-      .button-group > *, [style*="display: flex"][style*="gap: 12px"] > * {
-        width: 100% !important;
-      }
-      .input-area, [style*="width: 50%"] {
-        width: 100% !important;
-      }
-    }
-  `;
-  document.head.appendChild(styleTag);
-}
-
-// 스타일 객체 정의
-const interviewStartContainerStyle = {
-  padding: "16px 12px",
-  maxWidth: "900px",
-  margin: "0 auto",
-  // background: "linear-gradient(to bottom, #f9fafc, #f0f4f8)"
-};
-
-const interviewStartWrapperStyle = {
-  marginBottom: "20px",
-  display: "flex",
-  flexDirection: "column",
-  animation: "fadeIn 0.8s ease-out",
-  alignItems: "center",
-  justifyContent: "center"
-};
-
-const interviewHeaderStyle = {
-  textAlign: "center",
-  marginBottom: "16px",
-  padding: "16px 0",
-  position: "relative"
-};
-
-const interviewLogoStyle = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "12px",
-  marginBottom: "8px"
-};
-
-const interviewLogoTextStyle = {
-  fontSize: "32px",
-  fontWeight: "800",
-  margin: "0",
-  background: "linear-gradient(90deg, #3f51b5, #2196f3, #00bcd4)",
-  WebkitBackgroundClip: "text",
-  WebkitTextFillColor: "transparent",
-  letterSpacing: "-0.5px",
-  textShadow: "0 2px 10px rgba(33, 150, 243, 0.1)"
-};
-
-const interviewSubtitleStyle = {
-  fontSize: "18px",
-  color: "#555",
-  marginTop: "8px",
-  fontWeight: "500",
-  maxWidth: "600px",
-  margin: "8px auto 0"
-};
-
-// 카메라 섹션 스타일
-const cameraSectionStyle = {
-  minWidth: "1100px",
-  borderRadius: "16px",
-  overflow: "hidden",
-  boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)",
-  border: "1px solid rgba(255, 255, 255, 0.7)",
-  background: "#fff",
-  padding: "25px",
-  marginBottom: "16px",
-  backdropFilter: "blur(20px)",
-  WebkitBackdropFilter: "blur(20px)"
-};
-
-const cameraCardTextStyle = {
-  padding: "16px"
-};
-
-const cameraContainerStyle = {
-  position: "relative",
-  width: "100%",
-  height: "100%",
-  paddingBottom: "45%", // 16:9 비율에서 더 작게 조정
-  background: "linear-gradient(to right, #000, #111)",
-  borderRadius: "12px",
-  overflow: "hidden",
-  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.12)",
-  border: "1px solid rgba(255, 255, 255, 0.1)"
-};
-
-const previewVideoStyle = {
-  position: "absolute",
-  top: "0",
-  left: "0",
-  width: "100%",
-  height: "100%",
-  objectFit: "cover"
-};
-
-const videoOverlayStyle = {
-  position: "absolute",
-  top: "0",
-  left: "0",
-  width: "100%",
-  height: "100%",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  background: "rgba(0, 0, 0, 0.7)",
-  color: "white",
-  backdropFilter: "blur(4px)"
-};
-
-const overlayTextStyle = {
-  marginTop: "12px",
-  fontSize: "18px",
-  fontWeight: "500",
-  textShadow: "0 2px 4px rgba(0, 0, 0, 0.5)"
-};
-
-const cameraControlsStyle = {
-  display: "flex",
-  flexWrap: "wrap",
-  gap: "8px",
-  justifyContent: "center",
-  marginTop: "12px"
-};
-
-const cameraControlBtnStyle = {
-  flexGrow: "1",
-  minWidth: "110px",
-  padding: "8px 0",
-  borderRadius: "8px",
-  fontWeight: "500",
-  fontSize: "13px",
-  letterSpacing: "0.2px",
-  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.08)",
-  transition: "all 0.3s ease",
-  textTransform: "none"
-};
-
-// 면접 정보 섹션 스타일
-const interviewInfoSectionStyle = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "24px"
-};
-
-const interviewCardStyle = {
-  borderRadius: "20px",
-  overflow: "hidden",
-  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
-  border: "1px solid rgba(255, 255, 255, 0.7)",
-  background: "#fff"
-};
-
-const startMessageStyle = {
-  backgroundColor: "#e3f2fd",
-  padding: "10px",
-  borderRadius: "8px",
-  borderLeft: "3px solid #2196f3",
-  marginBottom: "12px",
-  fontSize: "13px",
-  lineHeight: "1.5",
-  color: "#0d47a1",
-  boxShadow: "0 1px 4px rgba(33, 150, 243, 0.12)"
-};
-
-const interviewStepsStyle = {
-  display: "flex",
-  justifyContent: "space-between",
-  marginBottom: "16px",
-  flexWrap: "wrap",
-  gap: "8px"
-};
-
-const stepItemStyle = {
-  flex: "1",
-  minWidth: "140px",
-  display: "flex",
-  alignItems: "flex-start",
-  gap: "10px",
-  padding: "10px",
-  borderRadius: "10px",
-  backgroundColor: "rgba(63, 81, 181, 0.05)",
-  transition: "all 0.3s ease",
-  border: "1px solid rgba(63, 81, 181, 0.1)",
-  boxShadow: "0 2px 6px rgba(0, 0, 0, 0.03)",
-  backdropFilter: "blur(10px)",
-  WebkitBackdropFilter: "blur(10px)"
-};
-
-const stepNumberStyle = {
-  width: "28px",
-  height: "28px",
-  borderRadius: "50%",
-  background: "linear-gradient(135deg, #3f51b5, #2196f3, #03a9f4)",
-  color: "white",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontWeight: "bold",
-  fontSize: "14px",
-  boxShadow: "0 2px 4px rgba(33, 150, 243, 0.3)"
-};
-
-const stepContentStyle = {
-  flex: "1"
-};
-
-const stepTitleStyle = {
-  marginTop: "0",
-  marginBottom: "4px",
-  fontSize: "14px",
-  color: "#333",
-  fontWeight: "600"
-};
-
-const stepDescStyle = {
-  margin: "0",
-  color: "#555",
-  fontSize: "12px",
-  lineHeight: "1.4"
-};
-
-const interviewActionsStyle = {
-  padding: "12px 16px 16px",
-  borderTop: "1px solid rgba(0, 0, 0, 0.05)"
-};
-
-const startInterviewBtnStyle = {
-  textTransform: "none",
-  fontSize: "15px",
-  letterSpacing: "0.3px",
-  transition: "all 0.3s ease",
-  fontWeight: "600",
-  boxShadow: "0 4px 8px rgba(255, 152, 0, 0.25)",
-  padding: "8px 24px",
-  minWidth: "180px"
-};
-
-const tipsSectionStyle = {
-  backgroundColor: "#fff8e1",
-  borderRadius: "12px",
-  padding: "12px",
-  boxShadow: "0 2px 8px rgba(255, 193, 7, 0.12)",
-  border: "1px solid rgba(255, 193, 7, 0.2)"
-};
-
-const tipsTitleStyle = {
-  display: "flex",
-  alignItems: "center",
-  gap: "6px",
-  marginTop: "0",
-  marginBottom: "10px",
-  color: "#f57c00",
-  fontSize: "14px",
-  fontWeight: "600"
-};
-
-const tipsListStyle = {
-  margin: "0",
-  paddingLeft: "18px"
-};
-
-const tipsItemStyle = {
-  marginBottom: "6px",
-  color: "#5d4037",
-  fontSize: "12px",
-  lineHeight: "1.4",
-  paddingLeft: "2px"
-};
 
 // ======= script 로직 (전부) =======
 const router = useRouter();
@@ -798,6 +262,7 @@ const recognizing = ref(false);
 const sttLog = ref("");
 const currentAIMessage = ref("");
 const currentQuestionId = ref(1);
+const interviewSequence = ref(1);
 const currentInterviewId = ref(null);
 const remainingTime = ref(90);
 const timer = ref(null);
@@ -808,6 +273,14 @@ const mediaChecked = ref(false);
 const previewVideo = ref(null);
 const mediaStream = ref(null);
 const isGenerating = ref(false);
+
+// 맨 위로 스크롤
+const scrollToTop = () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+};
 
 const mapCompanyName = (original) => {
   const mapping = {
@@ -1024,7 +497,13 @@ const startTimer = () => {
 };
 
 const startSTT = () => {
-  if (recognition && !recognizing.value) {
+  if (!recognition) return;
+  
+  if (recognizing.value) {
+    // STT 중지
+    recognition.stop();
+  } else {
+    // STT 시작
     sttLog.value = "";
     recognition.start();
   }
@@ -1095,7 +574,7 @@ const handleStartInterview = async () => {
   currentQuestionId.value = 1;
   currentAIMessage.value = res.question;
   const utterance = new SpeechSynthesisUtterance(
-    "AI 모의 면접이 곧 시작됩니다. 면접 질문이 화면에 표시되며, 자동으로 음성으로 읽어드립니다."
+      "AI 모의 면접이 곧 시작됩니다. 면접 질문이 화면에 표시되며, 자동으로 음성으로 읽어드립니다."
   );
   utterance.lang = "ko-KR";
   utterance.rate = 1;
@@ -1145,23 +624,23 @@ const onAnswerComplete = async () => {
   let nextQuestionId = null;
   if (currentQuestionId.value === 1) {
     const followUp = await aiInterviewStore.requestFollowUpQuestionToDjango(
-      payload
+        payload
     );
     nextQuestion = followUp?.questions?.[0];
     nextQuestionId = followUp?.questionIds?.[0];
   } else if (currentQuestionId.value === 2) {
     const projectMain =
-      await aiInterviewStore.requestProjectCreateInterviewToDjango(payload);
+        await aiInterviewStore.requestProjectCreateInterviewToDjango(payload);
     nextQuestion = projectMain?.question?.[0];
     nextQuestionId = projectMain?.questionId;
   } else if (currentQuestionId.value === 3 || currentQuestionId.value === 4) {
     const projectFollowUp =
-      await aiInterviewStore.requestProjectFollowUpQuestionToDjango(payload);
+        await aiInterviewStore.requestProjectFollowUpQuestionToDjango(payload);
     nextQuestion = projectFollowUp?.questions?.[0];
     nextQuestionId = projectFollowUp?.questionIds?.[0];
   } else if (currentQuestionId.value === 5) {
     const techFollowUp =
-      await aiInterviewStore.requestTechFollowUpQuestionToDjango(payload);
+        await aiInterviewStore.requestTechFollowUpQuestionToDjango(payload);
     nextQuestion = techFollowUp?.questions?.[0];
     nextQuestionId = techFollowUp?.questionIds?.[0];
   } else {
@@ -1193,13 +672,13 @@ const onAnswerComplete = async () => {
 };
 
 onBeforeUnmount(() => {
-if (
-    typeof window !== "undefined" &&
-    window.speechSynthesis &&
-    window.speechSynthesis.speaking
+  if (
+      typeof window !== "undefined" &&
+      window.speechSynthesis &&
+      window.speechSynthesis.speaking
   ) {
     window.speechSynthesis.cancel();
-  }  
+  }
   localStorage.removeItem("interviewInfo");
   clearInterval(timer.value);
   window.removeEventListener("beforeunload", handleBeforeUnload);
@@ -1208,7 +687,7 @@ if (
 onBeforeRouteLeave((to, from, next) => {
   if (start.value && !finished.value) {
     const answer = window.confirm(
-      "면접이 진행 중입니다. 페이지를 나가시겠습니까?"
+        "면접이 진행 중입니다. 페이지를 나가시겠습니까?"
     );
     answer ? next() : next(false);
   } else {
@@ -1226,4 +705,1463 @@ const playRecording = () => {
     }
   }
 };
+
+
+
+// ==== 스타일 상수 (생략없이 전체) ====
+const interviewContainerStyle = {
+  marginTop: "32px",
+  border: "1px solid rgba(0, 0, 0, 0.08)",
+  padding: "16px",
+  borderRadius: "16px",
+  width: "70%",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  textAlign: "center",
+  background: "#fff",
+  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)"
+};
+const mt16Style = { marginTop: "16px" };
+const mt4Style = { marginTop: "16px" };
+
+// 새로운 스타일 객체 추가
+const mainContentStyle = {
+  display: "grid",
+  gridTemplateColumns: "1.3fr 1fr",
+  gap: "2.5vw",
+  marginTop: "2vh",
+  marginBottom: "2vh",
+  width: "100%",
+  "@media (max-width: 968px)": {
+    gridTemplateColumns: "1fr",
+    gap: "2vh"
+  }
+};
+
+// 면접 준비 화면 스타일
+const interviewProgressStyle = {
+  width: "100%",
+  marginBottom: "2vh"
+};
+
+const progressBarStyle = {
+  height: "4px",
+  backgroundColor: "rgba(59, 130, 246, 0.1)",
+  borderRadius: "12px",
+  marginBottom: "1.5vh",
+  position: "relative",
+  overflow: "hidden"
+};
+
+const progressFillStyle = (percent) => ({
+  position: "absolute",
+  left: "0",
+  top: "0",
+  height: "100%",
+  width: `${percent}%`,
+  background: "linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)",
+  borderRadius: "12px",
+  transition: "width 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+  boxShadow: "0 2px 8px rgba(59, 130, 246, 0.3)"
+});
+
+const stepActiveStyle = {
+  background: "linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)",
+  borderColor: "rgba(59, 130, 246, 0.4)",
+  boxShadow: "0 6px 16px rgba(59, 130, 246, 0.2)",
+  transform: "scale(1.05)"
+};
+
+const stepArrowStyle = {
+  fontSize: "20px",
+  color: "#cbd5e1",
+  fontWeight: "300",
+  margin: "0 0.5vw"
+};
+
+const sectionTitleStyle = {
+  fontSize: "18px",
+  fontWeight: "700",
+  color: "#1a202c",
+  marginBottom: "16px",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px"
+};
+
+const questionDisplayStyle = {
+  marginBottom: "2.5vh",
+  textAlign: "center"
+};
+
+const statusIconStyle = {
+  marginRight: "12px",
+  marginTop: "2px"
+};
+
+const statusContentStyle = {
+  flex: "1"
+};
+
+const statusTitleStyle = {
+  margin: "0 0 4px 0",
+  fontSize: "14px",
+  fontWeight: "700",
+  color: "#1a202c"
+};
+
+const statusTextStyle = {
+  margin: "0",
+  fontSize: "13px",
+  color: "#4a5568",
+  lineHeight: "1.5"
+};
+
+const cameraPreviewSectionStyle = {
+  width: "100%",
+  display: "flex",
+  flexDirection: "column"
+};
+
+const infoSectionStyle = {
+  width: "100%",
+  display: "flex",
+  flexDirection: "column",
+  gap: "20px"
+};
+
+const controlSectionStyle = {
+  marginTop: "16px",
+  borderTop: "1px solid rgba(0, 0, 0, 0.05)",
+  paddingTop: "16px"
+};
+
+const questionTextDisplayStyle = {
+  fontSize: "16px",
+  color: "#1e293b",
+  fontWeight: "500",
+  lineHeight: "1.6",
+  margin: "0",
+  maxWidth: "800px",
+  marginLeft: "auto",
+  marginRight: "auto"
+};
+
+const startDisclaimerStyle = {
+  fontSize: "14px",
+  color: "#64748b",
+  margin: "0",
+  fontWeight: "500",
+  textAlign: "center"
+};
+
+const cameraStatusBadgeStyle = {
+  position: "absolute",
+  top: "16px",
+  right: "16px",
+  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+  color: "white",
+  padding: "8px 16px",
+  borderRadius: "20px",
+  fontSize: "14px",
+  fontWeight: "700",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  backdropFilter: "blur(10px)",
+  boxShadow: "0 6px 16px rgba(16, 185, 129, 0.4)"
+};
+
+const cameraSectionTextStyle = {
+  marginLeft: "24px",
+};
+
+const buttonGroupStyle = {
+  display: "flex",
+  flexWrap: "wrap",
+  justifyContent: "center",
+  gap: "12px",
+  marginTop: "12px"
+};
+
+const cameraCardStyle = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  flexWrap: "wrap"
+}
+const sendButtonStyle = {
+  padding: "12px 20px",
+  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+  color: "white",
+  border: "none",
+  borderRadius: "24px",
+  cursor: "pointer",
+  fontSize: "15px",
+  fontWeight: "600",
+  height: "44px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minWidth: "120px",
+  boxSizing: "border-box",
+  boxShadow: "0 4px 12px rgba(102, 126, 234, 0.3)",
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+};
+const plainButtonStyle = {
+  padding: "12px 20px",
+  backgroundColor: "white",
+  color: "#1a202c",
+  border: "2px solid rgba(102, 126, 234, 0.2)",
+  borderRadius: "24px",
+  cursor: "pointer",
+  fontSize: "15px",
+  fontWeight: "600",
+  height: "44px",
+  minWidth: "120px",
+  boxSizing: "border-box",
+  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+};
+const videoWrapStyle = {
+  width: "75%",
+  margin: "0 auto",
+  paddingTop: "16px"
+};
+const videoRowStyle = {
+  marginTop: "24px",
+  marginBottom: "24px"
+};
+const colRightStyle = {
+  display: "flex",
+  justifyContent: "flex-end",
+  padding: 0
+};
+const colLeftStyle = {
+  display: "flex",
+  justifyContent: "flex-start",
+  padding: 0
+};
+const colSpacerStyle = {
+  maxWidth: "16px",
+  padding: 0
+};
+const videoBoxStyle = {
+  width: "100%",
+  aspectRatio: "4 / 3",
+  border: "3px solid rgba(102, 126, 234, 0.3)",
+  borderRadius: "16px",
+  overflow: "hidden",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  backgroundColor: "#000",
+  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.2)"
+};
+const interviewerImageStyle = {
+  width: "100%",
+  height: "100%",
+  objectFit: "cover"
+};
+const userVideoStyle = {
+  width: "100%",
+  height: "100%",
+  objectFit: "cover"
+};
+const centeredColStyle = {
+  maxWidth: "100%",
+  display: "flex",
+  justifyContent: "center",
+  padding: 0,
+  marginTop: "16px"
+};
+const centeredTextBoxStyle = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  textAlign: "center"
+};
+const timerStyle = {
+  fontWeight: "bold",
+  margin: "16px 0",
+  fontSize: "20px"
+};
+const redTextStyle = {
+  color: "red"
+};
+const aiMessageStyle = {
+  margin: "20px 0",
+  textAlign: "center"
+};
+const loadingMessageStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  justifyContent: "center"
+};
+const dotStyle = {
+  width: "10px",
+  height: "10px",
+  borderRadius: "50%",
+  backgroundColor: "#6366f1",
+  margin: "0 2px",
+  animation: "dot-blink 1.4s infinite both"
+};
+const inputAreaStyle = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "20px",
+  width: "50%",
+  marginBottom: 0
+};
+const sttLogStyle = {
+  marginTop: "8px",
+  textAlign: "center"
+};
+const pa0Style = { padding: 0 };
+
+// ==== 미디어 쿼리 및 애니메이션 직접 동적 삽입 ====
+if (typeof window !== "undefined") {
+  const styleTag = document.createElement("style");
+  styleTag.textContent = `
+    @keyframes dot-blink {
+      0%, 80%, 100% { opacity: 0; }
+      40% { opacity: 1; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInRight {
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes fadeInLeft {
+      from { opacity: 0; transform: translateX(-30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.9; }
+    }
+
+    @keyframes recording-pulse {
+      0% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.8; }
+    }
+
+    @keyframes wave {
+      0% { height: 5px; }
+      25% { height: 15px; }
+      50% { height: 10px; }
+      75% { height: 20px; }
+      100% { height: 5px; }
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-10px); }
+      60% { transform: translateY(-5px); }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes gradient-shift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .interview-card {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .interview-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(102, 126, 234, 0.25) !important;
+    }
+
+    /* 버튼 호버 효과 */
+    button:hover:not(:disabled), .v-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3) !important;
+    }
+
+    button:active:not(:disabled), .v-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    /* 스크롤바 스타일링 */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(102, 126, 234, 0.1);
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
+    }
+
+    @media (max-width: 768px) {
+      .button-group, [style*="display: flex"][style*="gap: 12px"] {
+        flex-direction: column !important;
+        align-items: stretch !important;
+      }
+      .button-group > *, [style*="display: flex"][style*="gap: 12px"] > * {
+        width: 100% !important;
+      }
+      .input-area, [style*="width: 50%"] {
+        width: 100% !important;
+      }
+
+      /* 모바일 환경에서 비디오 레이아웃 조정 */
+      [style*="videoRowStyle"] {
+        flex-direction: column !important;
+      }
+      [style*="colRightStyle"], [style*="colLeftStyle"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+        margin-bottom: 16px !important;
+      }
+      [style*="videoBoxStyle"] {
+        width: 100% !important;
+        aspect-ratio: 4/3 !important;
+        margin-bottom: 16px !important;
+      }
+      [style*="questionContainerStyle"] {
+        padding: 16px !important;
+      }
+      [style*="cameraSectionStyle"] {
+        padding: 16px !important;
+      }
+      [style*="interviewStartContainerStyle"] {
+        padding: 12px 8px !important;
+      }
+      [style*="interviewLogoTextStyle"] {
+        font-size: 24px !important;
+      }
+      [style*="interviewSubtitleStyle"] {
+        font-size: 14px !important;
+      }
+      [style*="stepItemStyle"] {
+        min-width: 100% !important;
+        margin-bottom: 8px !important;
+      }
+    }
+  `;
+  document.head.appendChild(styleTag);
+}
+
+// 스타일 객체 정의
+const interviewStartContainerStyle = {
+  padding: "3vh 20px",
+  maxWidth: "100%",
+  margin: "0 auto",
+  minHeight: "100vh",
+  maxHeight: "100vh",
+  background: "linear-gradient(180deg, #ffffff 0%, #f0f9ff 40%, #e0f2fe 100%)",
+  position: "relative",
+  overflow: "hidden",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center"
+};
+
+const interviewStartWrapperStyle = {
+  maxWidth: "1200px",
+  width: "100%",
+  margin: "0 auto",
+  display: "flex",
+  flexDirection: "column",
+  animation: "fadeIn 0.8s ease-out",
+  alignItems: "center",
+  position: "relative",
+  zIndex: 1,
+  gap: "2vh"
+};
+
+const interviewHeaderStyle = {
+  textAlign: "center",
+  marginBottom: "2vh",
+  padding: "0",
+  position: "relative",
+  width: "100%",
+  maxWidth: "900px"
+};
+
+const heroTagStyle = {
+  display: "inline-block",
+  padding: "8px 20px",
+  background: "linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(139, 92, 246, 0.12))",
+  color: "#3b82f6",
+  borderRadius: "30px",
+  fontSize: "14px",
+  fontWeight: "700",
+  marginBottom: "16px",
+  letterSpacing: "0.03em",
+  border: "1px solid rgba(59, 130, 246, 0.2)"
+};
+
+const backgroundTextStyle = {
+  position: "fixed",
+  fontSize: "clamp(80px, 12vw, 140px)",
+  fontWeight: "900",
+  color: "rgba(200, 230, 255, 0.25)",
+  whiteSpace: "nowrap",
+  left: "50%",
+  top: "50%",
+  transform: "translate(-50%, -50%)",
+  pointerEvents: "none",
+  zIndex: 0,
+  letterSpacing: "0.05em",
+  opacity: 1,
+  transition: "opacity 0.5s ease"
+};
+
+const interviewLogoTextStyle = {
+  fontSize: "clamp(28px, 4vw, 42px)",
+  fontWeight: "900",
+  color: "#1e293b",
+  marginBottom: "0",
+  lineHeight: "1.2",
+  letterSpacing: "-0.04em",
+  margin: "0"
+};
+
+const heroHighlightStyle = {
+  background: "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
+  WebkitBackgroundClip: "text",
+  WebkitTextFillColor: "transparent",
+  backgroundClip: "text"
+};
+
+const interviewSubtitleStyle = {
+  fontSize: "clamp(15px, 1.8vw, 18px)",
+  color: "#64748b",
+  lineHeight: "1.6",
+  marginBottom: "0",
+  fontWeight: "500"
+};
+
+// 메인 카메라 컨테이너
+const mainCameraContainerStyle = {
+  position: "relative",
+  width: "100%",
+  maxWidth: "1200px",
+  height: "65vh",
+  background: "linear-gradient(135deg, #1e293b 0%, #334155 100%)",
+  borderRadius: "24px",
+  overflow: "hidden",
+  boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
+  border: "3px solid rgba(59, 130, 246, 0.2)"
+};
+
+const mainVideoStyle = {
+  position: "absolute",
+  top: "0",
+  left: "0",
+  width: "100%",
+  height: "100%",
+  objectFit: "cover"
+};
+
+const smallPreviewStyle = {
+  position: "absolute",
+  top: "20px",
+  right: "20px",
+  width: "180px",
+  height: "135px",
+  borderRadius: "12px",
+  overflow: "hidden",
+  border: "3px solid rgba(255, 255, 255, 0.3)",
+  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
+  background: "#000"
+};
+
+const smallVideoStyle = {
+  width: "100%",
+  height: "100%",
+  objectFit: "cover"
+};
+
+const topLeftBadgeStyle = {
+  position: "absolute",
+  top: "20px",
+  left: "20px",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  padding: "8px 16px",
+  background: "rgba(0, 0, 0, 0.6)",
+  borderRadius: "20px",
+  color: "white",
+  fontSize: "14px",
+  fontWeight: "600",
+  backdropFilter: "blur(10px)"
+};
+
+const videoOverlayStyle = {
+  position: "absolute",
+  top: "0",
+  left: "0",
+  width: "100%",
+  height: "100%",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "rgba(30, 41, 59, 0.95)",
+  color: "white",
+  backdropFilter: "blur(10px)"
+};
+
+const overlayTextStyle = {
+  marginTop: "24px",
+  fontSize: "20px",
+  fontWeight: "600",
+  textShadow: "0 2px 8px rgba(0, 0, 0, 0.5)",
+  letterSpacing: "0.3px",
+  opacity: 0.95
+};
+
+// 하단 컨트롤 카드
+const bottomControlCardStyle = {
+  width: "100%",
+  maxWidth: "1200px",
+  borderRadius: "24px",
+  overflow: "visible",
+  boxShadow: "0 10px 40px rgba(59, 130, 246, 0.15)",
+  border: "2px solid rgba(59, 130, 246, 0.1)",
+  background: "linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 255, 0.98))",
+  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)"
+};
+
+const controlCardTextStyle = {
+  padding: "2.5vh 3vw"
+};
+
+// 면접 정보 섹션 스타일
+const interviewInfoSectionStyle = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "24px"
+};
+
+const interviewCardStyle = {
+  borderRadius: "20px",
+  overflow: "hidden",
+  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
+  border: "1px solid rgba(255, 255, 255, 0.7)",
+  background: "#fff"
+};
+
+const startMessageStyle = {
+  backgroundColor: "#e3f2fd",
+  padding: "10px",
+  borderRadius: "8px",
+  borderLeft: "3px solid #2196f3",
+  marginBottom: "12px",
+  fontSize: "13px",
+  lineHeight: "1.5",
+  color: "#0d47a1",
+  boxShadow: "0 1px 4px rgba(33, 150, 243, 0.12)"
+};
+
+const interviewStepsStyle = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "1vw",
+  marginBottom: "0"
+};
+
+const stepItemStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: "0.8vw",
+  padding: "1vh 1.2vw",
+  borderRadius: "12px",
+  background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+  border: "2px solid rgba(59, 130, 246, 0.1)",
+  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
+  position: "relative",
+  flex: "0 0 auto"
+};
+
+const stepBadgeStyle = (isActive) => ({
+  width: "28px",
+  height: "28px",
+  borderRadius: "50%",
+  background: isActive ? "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)" : "rgba(59, 130, 246, 0.1)",
+  color: isActive ? "white" : "#94a3b8",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: "14px",
+  fontWeight: "700",
+  flexShrink: 0,
+  transition: "all 0.3s ease",
+  boxShadow: isActive ? "0 4px 12px rgba(59, 130, 246, 0.4)" : "none"
+});
+
+const stepContentStyle = {
+  flex: "1"
+};
+
+const stepTitleStyle = {
+  margin: "0",
+  fontSize: "14px",
+  color: "#1e293b",
+  fontWeight: "700",
+  letterSpacing: "-0.01em",
+  whiteSpace: "nowrap"
+};
+
+const stepDescStyle = {
+  margin: "0",
+  color: "#64748b",
+  fontSize: "13px",
+  lineHeight: "1.5"
+};
+
+const interviewActionsStyle = {
+  padding: "12px 16px 16px",
+  borderTop: "1px solid rgba(0, 0, 0, 0.05)"
+};
+
+const bottomButtonsStyle = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "16px"
+};
+
+const mainActionBtnStyle = {
+  textTransform: "none",
+  fontSize: "16px",
+  letterSpacing: "0.5px",
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+  fontWeight: "700",
+  background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
+  boxShadow: "0 8px 24px rgba(59, 130, 246, 0.35)",
+  padding: "14px 48px",
+  minWidth: "160px",
+  borderRadius: "50px",
+  height: "auto",
+  color: "white"
+};
+
+const secondaryActionBtnStyle = {
+  textTransform: "none",
+  fontSize: "14px",
+  letterSpacing: "0.3px",
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+  fontWeight: "600",
+  background: "rgba(59, 130, 246, 0.1)",
+  color: "#3b82f6",
+  boxShadow: "none",
+  padding: "10px 24px",
+  borderRadius: "50px",
+  height: "auto",
+  border: "2px solid rgba(59, 130, 246, 0.2)"
+};
+
+const questionBadgeStyle = {
+  display: "inline-block",
+  padding: "6px 16px",
+  background: "linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1))",
+  color: "#3b82f6",
+  borderRadius: "20px",
+  fontSize: "13px",
+  fontWeight: "700",
+  marginBottom: "12px",
+  letterSpacing: "0.5px"
+};
+
+const tipsTitleStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  marginTop: "0",
+  marginBottom: "10px",
+  color: "#f57c00",
+  fontSize: "14px",
+  fontWeight: "700"
+};
+
+const tipsListStyle = {
+  margin: "0",
+  paddingLeft: "18px"
+};
+
+const tipsItemStyle = {
+  marginBottom: "6px",
+  color: "#5d4037",
+  fontSize: "12px",
+  lineHeight: "1.5",
+  paddingLeft: "4px"
+};
+
+// 면접 진행 화면 스타일
+const interviewActiveContainerStyle = {
+  padding: "0",
+  margin: "0",
+  maxWidth: "100%",
+  background: "linear-gradient(180deg, #ffffff 0%, #f0f9ff 40%, #e0f2fe 100%)",
+  minHeight: "100vh",
+  maxHeight: "100vh",
+  position: "relative",
+  overflow: "hidden",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center"
+};
+
+const interviewHeaderBarStyle = {
+  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+  color: "white",
+  padding: "12px 20px",
+  boxShadow: "0 4px 16px rgba(102, 126, 234, 0.3)",
+  position: "sticky",
+  top: 0,
+  zIndex: 100
+};
+
+const interviewHeaderContentStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  maxWidth: "1200px",
+  margin: "0 auto",
+  width: "100%"
+};
+
+// 우측 상단 사용자 비디오 (작은 화면)
+const userVideoSmallContainerStyle = {
+  position: "absolute",
+  top: "20px",
+  right: "20px",
+  width: "200px",
+  height: "150px",
+  borderRadius: "12px",
+  overflow: "hidden",
+  border: "3px solid rgba(255, 255, 255, 0.3)",
+  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
+  background: "#000"
+};
+
+const interviewHeaderTitleStyle = {
+  fontSize: "19px",
+  fontWeight: "700",
+  letterSpacing: "0.5px"
+};
+
+const recordingBadgeSmallStyle = {
+  position: "absolute",
+  bottom: "8px",
+  left: "8px",
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  padding: "4px 10px",
+  background: "rgba(239, 68, 68, 0.9)",
+  borderRadius: "12px",
+  color: "white",
+  fontSize: "11px",
+  fontWeight: "600"
+};
+
+const interviewStatusBadgeStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  backgroundColor: "rgba(255, 255, 255, 0.25)",
+  padding: "6px 16px",
+  borderRadius: "20px",
+  fontSize: "14px",
+  fontWeight: "600",
+  backdropFilter: "blur(8px)",
+  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)"
+};
+
+const interviewStatusTextStyle = {
+  color: "white"
+};
+
+const statusLoadingDotsStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: "4px"
+};
+
+const statusDotStyle = {
+  width: "6px",
+  height: "6px",
+  borderRadius: "50%",
+  backgroundColor: "white",
+  opacity: 0.8,
+  animation: "dot-blink 1.4s infinite both"
+};
+
+const videoSectionStyle = {
+  flex: 1,
+  padding: "24px",
+  maxWidth: "1200px",
+  margin: "0 auto",
+  width: "100%"
+};
+
+const participantLabelStyle = {
+  position: "absolute",
+  bottom: "16px",
+  left: "16px",
+  background: "linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.5) 100%)",
+  color: "white",
+  padding: "6px 14px",
+  borderRadius: "16px",
+  fontSize: "13px",
+  fontWeight: "600",
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  backdropFilter: "blur(8px)",
+  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.3)"
+};
+
+const recordingIndicatorStyle = {
+  position: "absolute",
+  top: "16px",
+  right: "16px",
+  background: "linear-gradient(135deg, #f44336 0%, #d32f2f 100%)",
+  color: "white",
+  padding: "6px 14px",
+  borderRadius: "16px",
+  fontSize: "13px",
+  fontWeight: "600",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  backdropFilter: "blur(8px)",
+  boxShadow: "0 4px 12px rgba(244, 67, 54, 0.4)"
+};
+
+const recordingDotStyle = {
+  width: "8px",
+  height: "8px",
+  borderRadius: "50%",
+  backgroundColor: "#f44336",
+  animation: "recording-pulse 1.5s infinite"
+};
+
+const questionSectionStyle = {
+  marginTop: "24px",
+  marginBottom: "24px",
+  width: "100%"
+};
+
+const questionContainerStyle = {
+  background: "rgba(255, 255, 255, 0.95)",
+  borderRadius: "20px",
+  padding: "28px",
+  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
+  width: "100%",
+  animation: "fadeIn 0.7s ease-out",
+  border: "1px solid rgba(102, 126, 234, 0.1)",
+  backdropFilter: "blur(10px)"
+};
+
+const questionPrepareStyle = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "32px 0",
+  gap: "16px"
+};
+
+const questionPrepareTextStyle = {
+  fontSize: "20px",
+  fontWeight: "600",
+  color: "#333",
+  margin: "8px 0"
+};
+
+const loadingDotsStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  marginTop: "8px"
+};
+
+const loadingDotStyle = {
+  width: "10px",
+  height: "10px",
+  borderRadius: "50%",
+  backgroundColor: "#3f51b5",
+  opacity: 0.8,
+  animation: "dot-blink 1.4s infinite both"
+};
+
+const questionHeaderStyle = {
+  display: "flex",
+  alignItems: "center",
+  marginBottom: "16px"
+};
+
+const questionTitleStyle = {
+  fontSize: "18px",
+  fontWeight: "600",
+  color: "#333",
+  margin: 0
+};
+
+const questionContentStyle = {
+  marginBottom: "24px",
+  padding: "20px",
+  background: "linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)",
+  borderRadius: "16px",
+  border: "1px solid rgba(102, 126, 234, 0.15)"
+};
+
+const questionTextStyle = {
+  fontSize: "17px",
+  lineHeight: "1.7",
+  color: "#1a202c",
+  margin: 0,
+  fontWeight: "600"
+};
+
+const timerContainerStyle = {
+  marginTop: "16px"
+};
+
+const aiLoadingMessageStyle = {
+  display: "flex",
+  justifyContent: "center",
+  marginTop: "16px",
+  marginBottom: "16px"
+};
+
+const loadingCardStyle = {
+  backgroundColor: "white",
+  borderRadius: "12px",
+  padding: "16px 24px",
+  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: "8px"
+};
+
+const loadingTextStyle = {
+  fontSize: "15px",
+  color: "#333",
+  margin: 0
+};
+
+const answerSectionStyle = {
+  marginTop: "24px",
+  width: "100%"
+};
+
+const answerControlsStyle = {
+  marginBottom: "16px"
+};
+
+const activeSpeakingStyle = {
+  background: "linear-gradient(135deg, #f44336 0%, #d32f2f 100%)",
+  color: "white",
+  boxShadow: "0 6px 16px rgba(244, 67, 54, 0.4)",
+  animation: "pulse 1.5s infinite",
+  transform: "scale(1.05)"
+};
+
+const answerCompleteBtnStyle = {
+  padding: "10px 16px",
+  fontSize: "14px",
+  fontWeight: "500"
+};
+
+const sttResultContainerStyle = {
+  background: "rgba(255, 255, 255, 0.95)",
+  borderRadius: "16px",
+  padding: "20px",
+  boxShadow: "0 4px 16px rgba(0, 0, 0, 0.1)",
+  marginBottom: "20px",
+  border: "1px solid rgba(102, 126, 234, 0.1)",
+  backdropFilter: "blur(10px)"
+};
+
+const sttHeaderStyle = {
+  display: "flex",
+  alignItems: "center",
+  marginBottom: "12px"
+};
+
+const sttTitleStyle = {
+  fontSize: "16px",
+  fontWeight: "600",
+  color: "#333",
+  margin: 0
+};
+
+const sttContentStyle = {
+  padding: "16px",
+  background: "linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)",
+  borderRadius: "12px",
+  border: "1px solid rgba(102, 126, 234, 0.15)",
+  minHeight: "120px"
+};
+
+const sttRecordingStyle = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  height: "100%",
+  gap: "12px"
+};
+
+const sttRecordingAnimationStyle = {
+  width: "100%",
+  height: "40px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "4px"
+};
+
+const sttRecordingTextStyle = {
+  fontSize: "14px",
+  color: "#333",
+  margin: 0
+};
+
+const sttGeneratingStyle = {
+  fontSize: "14px",
+  color: "#555",
+  margin: "0 0 8px 0"
+};
+
+const sttLogContentStyle = {
+  fontSize: "15px",
+  color: "#333",
+  lineHeight: "1.6",
+  margin: 0,
+  whiteSpace: "pre-wrap"
+};
+
+const sttEmptyStyle = {
+  fontSize: "14px",
+  color: "#757575",
+  fontStyle: "italic",
+  margin: 0,
+  textAlign: "center"
+};
+
+const devInputStyle = {
+  marginTop: "16px"
+};
+
+const devTextFieldStyle = {
+  maxWidth: "500px",
+  margin: "0 auto"
+};
+
+// ===== 새로운 면접 진행 화면 스타일 =====
+
+// 메인 화면 (면접관 이미지)
+const interviewMainScreenStyle = {
+  position: "relative",
+  width: "100%",
+  maxWidth: "1200px",
+  height: "90vh",
+  background: "linear-gradient(135deg, #1e293b 0%, #334155 100%)",
+  borderRadius: "24px",
+  overflow: "visible",
+  boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
+  border: "3px solid rgba(59, 130, 246, 0.2)",
+  display: "flex",
+  alignItems: "flex-end",
+  justifyContent: "center",
+  padding: "0 20px 20px"
+};
+
+const interviewerMainImageStyle = {
+  position: "absolute",
+  top: "0",
+  left: "0",
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+  borderRadius: "24px"
+};
+
+const userVideoSmallStyle = {
+  width: "100%",
+  height: "100%",
+  objectFit: "cover"
+};
+
+const interviewTimerBadgeStyle = {
+  position: "absolute",
+  top: "20px",
+  left: "20px",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  padding: "10px 18px",
+  background: "rgba(0, 0, 0, 0.7)",
+  borderRadius: "20px",
+  color: "white",
+  fontSize: "15px",
+  fontWeight: "700",
+  backdropFilter: "blur(10px)",
+  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)"
+};
+
+// 하단 질문 카드
+const interviewBottomCardStyle = {
+  position: "relative",
+  width: "100%",
+  maxWidth: "100%",
+  borderRadius: "24px",
+  overflow: "visible",
+  boxShadow: "0 -10px 40px rgba(0, 0, 0, 0.2), 0 10px 40px rgba(59, 130, 246, 0.15)",
+  border: "2px solid rgba(59, 130, 246, 0.2)",
+  background: "linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 255, 0.98))",
+  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)",
+  zIndex: 10
+};
+
+const interviewBottomCardTextStyle = {
+  padding: "2.5vh 3vw"
+};
+
+// 질문 로딩 박스
+const questionLoadingBoxStyle = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "3vh 2vw",
+  gap: "16px"
+};
+
+const questionLoadingTextStyle = {
+  fontSize: "16px",
+  color: "#64748b",
+  fontWeight: "500",
+  margin: "0"
+};
+
+// 질문 박스
+const questionBoxStyle = {
+  marginBottom: "2vh"
+};
+
+const questionBoxHeaderStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: "16px"
+};
+
+const questionNumberBadgeStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "8px 20px",
+  background: "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
+  color: "white",
+  borderRadius: "20px",
+  fontSize: "14px",
+  fontWeight: "700",
+  letterSpacing: "0.5px"
+};
+
+const questionProgressTextStyle = {
+  fontSize: "14px",
+  color: "#64748b",
+  fontWeight: "600"
+};
+
+const questionBoxTextStyle = {
+  fontSize: "18px",
+  color: "#1e293b",
+  fontWeight: "500",
+  lineHeight: "1.7",
+  margin: "0"
+};
+
+// 답변 버튼 영역
+const answerButtonAreaStyle = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "16px"
+};
+
+// STT 미리보기
+const sttPreviewStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: "12px",
+  padding: "12px 16px",
+  background: "rgba(59, 130, 246, 0.05)",
+  borderRadius: "12px",
+  border: "1px solid rgba(59, 130, 246, 0.1)"
+};
+
+const sttPreviewTextStyle = {
+  fontSize: "14px",
+  color: "#475569",
+  fontWeight: "400",
+  flex: 1,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap"
+};
+
+// 면접 액션 버튼들
+const interviewActionButtonsStyle = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "12px"
+};
+
+const startAnswerBtnStyle = {
+  textTransform: "none",
+  fontSize: "16px",
+  letterSpacing: "0.5px",
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+  fontWeight: "700",
+  background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
+  boxShadow: "0 8px 24px rgba(59, 130, 246, 0.35)",
+  padding: "14px 48px",
+  minWidth: "180px",
+  borderRadius: "50px",
+  height: "auto",
+  color: "white"
+};
+
+const stopAnswerBtnStyle = {
+  textTransform: "none",
+  fontSize: "16px",
+  letterSpacing: "0.5px",
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+  fontWeight: "700",
+  background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+  boxShadow: "0 8px 24px rgba(239, 68, 68, 0.35)",
+  padding: "14px 48px",
+  minWidth: "180px",
+  borderRadius: "50px",
+  height: "auto",
+  color: "white"
+};
+
+const replayBtnStyle = {
+  textTransform: "none",
+  fontSize: "14px",
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+  fontWeight: "600",
+  background: "rgba(59, 130, 246, 0.1)",
+  color: "#3b82f6",
+  boxShadow: "none",
+  padding: "12px 16px",
+  borderRadius: "50px",
+  height: "auto",
+  border: "2px solid rgba(59, 130, 246, 0.2)",
+  minWidth: "auto"
+};
+
+const completeBtnStyle = {
+  textTransform: "none",
+  fontSize: "15px",
+  letterSpacing: "0.3px",
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+  fontWeight: "700",
+  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+  boxShadow: "0 6px 20px rgba(16, 185, 129, 0.3)",
+  padding: "12px 32px",
+  borderRadius: "50px",
+  height: "auto",
+  color: "white"
+};
+
+// 맨 위로 올리기 버튼 스타일
+const scrollTopBtnStyle = {
+  position: "fixed",
+  bottom: "80px",
+  right: "20px",
+  zIndex: 1000,
+  width: "56px",
+  height: "56px",
+  background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+  boxShadow: "0 8px 24px rgba(59, 130, 246, 0.4)",
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+  cursor: "pointer"
+};
+
+
 </script>
+
+<style scoped>
+.scroll-top-btn {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.scroll-top-btn:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.5) !important;
+}
+
+.scroll-top-btn:active {
+  transform: translateY(-2px) scale(1.02);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+</style>
