@@ -78,7 +78,7 @@ const ContentArea = styled.section`
 const JoinedStudyRoom: React.FC = () => {
     const { id: studyId } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { currentUserId } = useAuth();
+    // const { currentUserId } = useAuth();
     const [study, setStudy] = useState<StudyRoom | null>(null);
     const [loading, setLoading] = useState(true);
     const [userRole, setUserRole] = useState<"LEADER" | "MEMBER">("MEMBER");
@@ -107,13 +107,6 @@ const JoinedStudyRoom: React.FC = () => {
     }, [fetchStudyDetails]);
 
     // 페이지(탭)가 다시 활성화될 때 데이터를 새로고침하는 로직
-    useEffect(() => {
-        window.addEventListener('focus', fetchStudyDetails);
-        return () => {
-            window.removeEventListener('focus', fetchStudyDetails);
-        };
-    }, [fetchStudyDetails]);
-
 
     const handleLeaveOrClose = async () => {
         if (userRole === 'LEADER') {
