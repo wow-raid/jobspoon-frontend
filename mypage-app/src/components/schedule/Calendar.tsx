@@ -10,18 +10,17 @@ const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales
 type Props = {
     schedules: any[];
     onEventClick?: (event: any) => void;
+    view: "month" | "week" | "day";
+    date: Date;
+    onViewChange: (v: "month" | "week" | "day") => void;
+    onDateChange: (d: Date) => void;
 };
 
 // 커스텀 Toolbar
-const CustomToolbar = (toolbar: any) => {
-    const goToBack = () => toolbar.onNavigate("PREV");
-    const goToNext = () => toolbar.onNavigate("NEXT");
-    const goToToday = () => toolbar.onNavigate("TODAY");
-
-    const label = () => {
-        const date = toolbar.date;
-        return `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
-    };
+const CustomToolbar = ({ label, onNavigate, onView, view }: any) => {
+    const goToBack = () => onNavigate("PREV");
+    const goToNext = () => onNavigate("NEXT");
+    const goToToday = () => onNavigate("TODAY");
 
     return (
         <ToolbarWrapper>
@@ -30,7 +29,14 @@ const CustomToolbar = (toolbar: any) => {
                 <button onClick={goToToday}>오늘</button>
                 <button onClick={goToNext}>다음</button>
             </div>
-            <div className="label">{label()}</div>
+            <div className="label">{label}</div>
+
+            {/* 여기 핵심 — onViewChange 대신 onView 사용 */}
+            {view !== "month" && (
+                <BackToMonthBtn onClick={() => onView("month")}>
+                    ← 월간 보기
+                </BackToMonthBtn>
+            )}
         </ToolbarWrapper>
     );
 };
@@ -120,4 +126,14 @@ const ToolbarWrapper = styled.div`
         color: #111827;
         font-size: 15px;
     }
+`;
+
+const BackToMonthBtn = styled.button`
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    cursor: pointer;
 `;

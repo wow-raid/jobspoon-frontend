@@ -24,6 +24,9 @@ export default function SchedulePage() {
     const [selected, setSelected] = useState<UnifiedSchedule | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
+    // 추가: 월간/주간/일간 뷰 상태 관리
+    const [calendarView, setCalendarView] = useState<"month" | "week" | "day">("month");
+    const [calendarDate, setCalendarDate] = useState<Date>(new Date());
 
     // 일정 불러오기 (개인 + 스터디)
     async function loadSchedules() {
@@ -103,8 +106,13 @@ export default function SchedulePage() {
             </HeaderArea>
 
             {/* 달력 */}
+            {/* view, date 상태를 제어하도록 변경 */}
             <Calendar
                 schedules={filteredSchedules}
+                view={calendarView}
+                date={calendarDate}
+                onViewChange={setCalendarView}
+                onDateChange={setCalendarDate}
                 onEventClick={(event) => setSelected(event)}
             />
 

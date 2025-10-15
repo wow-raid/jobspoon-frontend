@@ -31,14 +31,31 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const target = e.target;
 
+        // 체크박스 클릭 시 하루종일 로직 추가
+        if (target instanceof HTMLInputElement && target.type === "checkbox" && target.name === "allDay") {
+            const checked = target.checked;
+
+            setForm((prev) => {
+                // 오늘 날짜 문자열 생성 (yyyy-MM-dd)
+                const today = new Date().toISOString().split("T")[0];
+                return {
+                    ...prev,
+                    allDay: checked,
+                    startTime: checked ? `${today}T00:00` : prev.startTime,
+                    endTime: checked ? `${today}T23:59` : prev.endTime,
+                };
+            });
+            return;
+        }
+
+        // 일반 input / textarea 입력 처리
         if (target instanceof HTMLInputElement) {
-            const { name, value, type, checked } = target;
+            const { name, value } = target;
             setForm((prev) => ({
                 ...prev,
-                [name]: type === "checkbox" ? checked : value,
+                [name]: value,
             }));
         } else {
-            // textarea인 경우
             const { name, value } = target;
             setForm((prev) => ({
                 ...prev,
@@ -51,21 +68,22 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!form.title || !form.startTime || !form.endTime) {
-            alert("제목과 시작/종료 시간을 입력해주세요.");
+        if (!form.title) {
+            alert("제목을 입력해주세요.");
             return;
         }
 
-        // 서버에서 ISO 포맷 요구 시 :00 추가
-        const formattedData: UserScheduleRequest = {
+        // allDay일 경우 start/end null로 전송
+        const data: UserScheduleRequest = {
             ...form,
-            startTime: form.startTime.endsWith(":00") ? form.startTime : form.startTime + ":00",
-            endTime: form.endTime.endsWith(":00") ? form.endTime : form.endTime + ":00",
+            startTime: form.allDay ? null : form.startTime + ":00",
+            endTime: form.allDay ? null : form.endTime + ":00",
         };
 
-        await onSubmit(formattedData);
+        await onSubmit(data);
         alert("일정이 등록되었습니다!");
     };
+
 
     return (
         <Backdrop onClick={onClose}>
@@ -104,7 +122,7 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
                             <input
                                 type="datetime-local"
                                 name="startTime"
-                                value={form.startTime}
+                                value={form.startTime || ""}
                                 onChange={handleChange}
                                 required
                                 disabled={form.allDay} // 종일 일정이면 비활성화
@@ -115,7 +133,7 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
                             <input
                                 type="datetime-local"
                                 name="endTime"
-                                value={form.endTime}
+                                value={form.endTime || ""}
                                 onChange={handleChange}
                                 required
                                 disabled={form.allDay}
