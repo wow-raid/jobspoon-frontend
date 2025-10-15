@@ -1,5 +1,3 @@
-{/* 스터디 모임 일정 탭 */}
-
 import styled from "styled-components";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -8,10 +6,13 @@ import {
 } from "../api/studyScheduleApi.ts";
 import {
     fetchUserSchedules,
-    UserScheduleResponse
+    createUserSchedule,
+    UserScheduleResponse,
+    UserScheduleRequest
 } from "../api/userScheduleApi.ts";
 import Calendar from "../components/schedule/Calendar.tsx";
 import ScheduleDetailPanel from "../components/schedule/ScheduleDetailPanel.tsx";
+import AddScheduleModal from "../components/modals/AddScheduleModal.tsx";
 
 type UnifiedSchedule = (UserScheduleResponse | UserStudySchedule) & {
     type: "personal" | "study";
@@ -21,11 +22,12 @@ export default function SchedulePage() {
     const [allSchedules, setAllSchedules] = useState<UnifiedSchedule[]>([]);
     const [viewMode, setViewMode] = useState<"all" | "personal" | "study">("all");
     const [selected, setSelected] = useState<UnifiedSchedule | null>(null);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
 
     // 일정 불러오기 (개인 + 스터디)
-    useEffect(() => {
-        async function loadSchedules() {
+    async function loadSchedules() {
+        try {
             const [personal, study] = await Promise.all([
                 fetchUserSchedules(),
                 fetchUserStudySchedules(),
@@ -37,10 +39,25 @@ export default function SchedulePage() {
             ];
 
             setAllSchedules(merged);
+        } catch (err) {
+            console.error("일정 불러오기 실패:", err);
         }
+    }
 
+    useEffect(() => {
         loadSchedules();
     }, []);
+
+    // 일정 등록
+    async function handleCreateSchedule(formData: UserScheduleRequest) {
+        try {
+            await createUserSchedule(formData);
+            await loadSchedules(); // 일정 목록 갱신
+            setIsAddModalOpen(false);
+        } catch (err) {
+            console.error("일정 등록 실패:", err);
+        }
+    }
 
     // 보기 모드 필터링
     const filteredSchedules = useMemo(() => {
@@ -50,28 +67,39 @@ export default function SchedulePage() {
 
     return (
         <Section>
+            {/* 상단 헤더 영역 */}
             <HeaderArea>
                 <Title>내 일정</Title>
-                <ViewToggle>
-                    <button
-                        className={viewMode === "all" ? "active" : ""}
-                        onClick={() => setViewMode("all")}
-                    >
-                        전체
-                    </button>
-                    <button
-                        className={viewMode === "personal" ? "active" : ""}
-                        onClick={() => setViewMode("personal")}
-                    >
-                        개인 일정
-                    </button>
-                    <button
-                        className={viewMode === "study" ? "active" : ""}
-                        onClick={() => setViewMode("study")}
-                    >
-                        스터디 일정
-                    </button>
-                </ViewToggle>
+                <RightArea>
+                    {/* 개인 일정일 때만 일정 추가 버튼 */}
+                    {viewMode === "personal" && (
+                        <AddButton onClick={() => setIsAddModalOpen(true)}>
+                            + 일정 추가
+                        </AddButton>
+                    )}
+
+                    {/* 보기 모드 토글 */}
+                    <ViewToggle>
+                        <button
+                            className={viewMode === "all" ? "active" : ""}
+                            onClick={() => setViewMode("all")}
+                        >
+                            전체
+                        </button>
+                        <button
+                            className={viewMode === "personal" ? "active" : ""}
+                            onClick={() => setViewMode("personal")}
+                        >
+                            개인 일정
+                        </button>
+                        <button
+                            className={viewMode === "study" ? "active" : ""}
+                            onClick={() => setViewMode("study")}
+                        >
+                            스터디 일정
+                        </button>
+                    </ViewToggle>
+                </RightArea>
             </HeaderArea>
 
             {/* 달력 */}
@@ -85,6 +113,14 @@ export default function SchedulePage() {
                 schedule={selected}
                 onClose={() => setSelected(null)}
             />
+
+            {/* 일정 추가 모달 */}
+            {isAddModalOpen && (
+                <AddScheduleModal
+                    onClose={() => setIsAddModalOpen(false)}
+                    onSubmit={handleCreateSchedule}
+                />
+            )}
         </Section>
     );
 }
@@ -137,5 +173,26 @@ const ViewToggle = styled.div`
         &:hover {
             background: #e5e7eb;
         }
+    }
+`;
+
+const RightArea = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 12px;
+`;
+
+const AddButton = styled.button`
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    &:hover {
+        background: #2563eb;
     }
 `;
