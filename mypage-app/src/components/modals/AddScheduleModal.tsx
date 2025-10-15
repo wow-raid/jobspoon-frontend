@@ -20,6 +20,30 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
         color: "#3b82f6",
     });
 
+    /** 모달 열릴 때 기본 날짜/시간 자동 설정 */
+    useEffect(() => {
+        const now = new Date();
+
+        // 현재 시간을 30분 단위로 반올림 (예: 18:37 → 19:00)
+        const roundedStart = new Date(now);
+        roundedStart.setMinutes(now.getMinutes() < 30 ? 30 : 0);
+        if (now.getMinutes() >= 30) roundedStart.setHours(now.getHours() + 1);
+
+        const roundedEnd = new Date(roundedStart);
+        roundedEnd.setHours(roundedStart.getHours() + 1); // +1시간
+
+        const formatDate = (date: Date) => date.toISOString().split("T")[0];
+        const formatTime = (date: Date) => date.toTimeString().slice(0, 5); // "HH:mm"
+
+        setForm((prev) => ({
+            ...prev,
+            startDate: formatDate(roundedStart),
+            startTime: formatTime(roundedStart),
+            endDate: formatDate(roundedEnd),
+            endTime: formatTime(roundedEnd),
+        }));
+    }, []); // 최초 한 번만 실행
+
     /** ESC 키로 닫기 */
     useEffect(() => {
         const handleKey = (e: KeyboardEvent) => {
@@ -33,36 +57,68 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const target = e.target;
 
-        // 체크박스 클릭 시 하루종일 로직 추가
+        // ✅ 하루종일 버튼 클릭 시
         if (target instanceof HTMLInputElement && target.type === "checkbox" && target.name === "allDay") {
             const checked = target.checked;
 
             setForm((prev) => {
-                // 오늘 날짜 문자열 생성 (yyyy-MM-dd)
                 const today = new Date().toISOString().split("T")[0];
                 return {
                     ...prev,
                     allDay: checked,
-                    startTime: checked ? `${today}T00:00` : prev.startTime,
-                    endTime: checked ? `${today}T23:59` : prev.endTime,
+                    startTime: checked ? "" : prev.startTime,
+                    endTime: checked ? "" : prev.endTime,
+                    startDate: prev.startDate || today,
+                    endDate: prev.endDate || today,
                 };
             });
             return;
         }
 
-        // 일반 input / textarea 입력 처리
-        if (target instanceof HTMLInputElement) {
+        // ✅ 일반 input / textarea 입력 처리
+        if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
             const { name, value } = target;
-            setForm((prev) => ({
-                ...prev,
-                [name]: value,
-            }));
-        } else {
-            const { name, value } = target;
-            setForm((prev) => ({
-                ...prev,
-                [name]: value,
-            }));
+
+            setForm((prev) => {
+                const updated = { ...prev, [name]: value };
+
+                /** ✅ 시작 날짜 변경 시 → 종료 날짜/시간 자동 보정 */
+                if (name === "startDate" && value) {
+                    const startDate = new Date(value);
+                    const endDate = new Date(prev.endDate);
+
+                    if (!prev.endDate || startDate > endDate) {
+                        updated.endDate = value;
+                    }
+
+                    // 만약 종료 시간이 비어있거나 이전이면 +1시간 자동 보정
+                    if (prev.startTime && (!prev.endTime || prev.startTime >= prev.endTime)) {
+                        const [h, m] = prev.startTime.split(":").map(Number);
+                        const endTime = new Date();
+                        endTime.setHours(h + 1, m);
+                        updated.endTime = endTime.toTimeString().slice(0, 5);
+                    }
+                }
+
+                /** ✅ 시작 시간 변경 시 → 종료 시간 +1시간 자동 보정 */
+                if (name === "startTime" && value) {
+                    const [h, m] = value.split(":").map(Number);
+                    const endTime = new Date();
+                    endTime.setHours(h + 1, m);
+
+                    const newEndDate = new Date(prev.startDate);
+                    if (endTime.getDate() !== new Date().getDate()) {
+                        // 날짜 넘어갈 경우 종료일 +1
+                        newEndDate.setDate(newEndDate.getDate() + 1);
+                    }
+
+                    updated.startTime = value;
+                    updated.endTime = endTime.toTimeString().slice(0, 5);
+                    updated.endDate = newEndDate.toISOString().split("T")[0];
+                }
+
+                return updated;
+            });
         }
     };
 
@@ -183,7 +239,14 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
                                     type="button"
                                     checked={form.allDay}
                                     onClick={() =>
-                                        setForm((prev) => ({ ...prev, allDay: !prev.allDay }))
+                                        setForm((prev) => ({
+                                            ...prev,
+                                            allDay: !prev.allDay,
+                                            startTime: prev.allDay
+                                                ? prev.startTime
+                                                : "",
+                                            endTime: prev.allDay ? prev.endTime : "",
+                                        }))
                                     }
                                 >
                                     <span>{form.allDay ? "종일" : "시간 지정"}</span>
