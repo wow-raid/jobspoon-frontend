@@ -55,6 +55,10 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
         return () => window.removeEventListener("keydown", handleEsc);
     }, [onClose]);
 
+    if (!schedule) return null; // (안전 가드 추가)
+
+    const isStudy = schedule.type === "study"; // 타입 구분 추가
+
     return (
         <AnimatePresence>
             {schedule && (
@@ -68,14 +72,18 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
                         transition={{ type: "spring", stiffness: 70, damping: 15 }}
                         style={{ width }}
                     >
-                        <Header>
-                            <h3>{schedule.type === "study" ? schedule.studyRoomTitle : "개인 일정"}</h3>
+                        <Header $type={schedule.type}>
+                            <h3>
+                                {schedule.title}
+                            </h3>
                             <CloseBtn onClick={onClose}>×</CloseBtn>
                         </Header>
 
                         <Content>
-                            <h2>{schedule.title}</h2>
-                            <p>{schedule.description}</p>
+                            {schedule.description && (
+                                <p className="desc">{schedule.description}</p>
+                            )}
+
                             <Time>
                                 🕒{" "}
                                 {new Date(schedule.start).toLocaleString("ko-KR", {
@@ -84,8 +92,8 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
                                     weekday: "short",
                                     hour: "2-digit",
                                     minute: "2-digit",
-                                })}
-                                <br />~{" "}
+                                })}{" "}
+                                ~{" "}
                                 {new Date(schedule.end).toLocaleString("ko-KR", {
                                     month: "long",
                                     day: "numeric",
@@ -94,18 +102,22 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
                                     minute: "2-digit",
                                 })}
                             </Time>
+
+                            {!isStudy && schedule.location && (
+                                <Location>📍 {schedule.location}</Location>
+                            )}
                         </Content>
 
                         <ButtonArea>
-                            {schedule.type === "personal" ? (
+                            {isStudy ? (
+                                <MoveButton onClick={handleMoveToStudyRoom}>
+                                    스터디룸으로 이동하기 →
+                                </MoveButton>
+                            ) : (
                                 <>
                                     <MoveButton>수정</MoveButton>
                                     <DeleteButton>삭제</DeleteButton>
                                 </>
-                            ) : (
-                                <MoveButton onClick={handleMoveToStudyRoom}>
-                                    스터디룸으로 이동하기 →
-                                </MoveButton>
                             )}
                         </ButtonArea>
 
@@ -140,12 +152,19 @@ const Panel = styled(motion.div)`
     z-index: 25;
 `;
 
-const Header = styled.div`
+/* ✅ Header에 타입별 색상 분기 추가 */
+const Header = styled.div<{ $type?: string }>`
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #e5e7eb;
     padding-bottom: 12px;
+    h3 {
+        font-size: 17px;
+        font-weight: 700;
+        color: ${({ $type }) =>
+                $type === "study" ? "#047857" : "#1d4ed8"};
+    }
 `;
 
 const CloseBtn = styled.button`
@@ -168,21 +187,24 @@ const Content = styled.div`
     margin-top: 16px;
     flex: 1;
     overflow-y: auto;
-    h2 {
-        font-size: 18px;
-        font-weight: 700;
-        color: #1f2937;
-        margin-bottom: 8px;
-    }
-    p {
+
+    /* ✅ 설명 스타일 추가 */
+    .desc {
         font-size: 14px;
-        line-height: 1.5;
+        line-height: 1.6;
         color: #374151;
-        margin-bottom: 12px;
+        margin-bottom: 16px;
     }
 `;
 
 const Time = styled.div`
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 8px;
+`;
+
+/* ✅ 장소 스타일 추가 */
+const Location = styled.div`
     font-size: 13px;
     color: #6b7280;
 `;
