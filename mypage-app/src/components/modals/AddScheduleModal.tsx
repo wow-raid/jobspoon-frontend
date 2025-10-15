@@ -88,10 +88,10 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
                     const endDate = new Date(prev.endDate);
 
                     if (!prev.endDate || startDate > endDate) {
-                        updated.endDate = value;
+                        updated.endDate = value; // 종료일이 시작일보다 과거면 동기화
                     }
 
-                    // 만약 종료 시간이 비어있거나 이전이면 +1시간 자동 보정
+                    // 종료 시간이 비어있거나 시작보다 빠르면 +1시간 보정
                     if (prev.startTime && (!prev.endTime || prev.startTime >= prev.endTime)) {
                         const [h, m] = prev.startTime.split(":").map(Number);
                         const endTime = new Date();
@@ -100,21 +100,60 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
                     }
                 }
 
-                /** ✅ 시작 시간 변경 시 → 종료 시간 +1시간 자동 보정 */
+                /** ✅ 시작 시간 변경 시 → 종료 시간 +1시간 보정 */
                 if (name === "startTime" && value) {
                     const [h, m] = value.split(":").map(Number);
                     const endTime = new Date();
                     endTime.setHours(h + 1, m);
 
                     const newEndDate = new Date(prev.startDate);
-                    if (endTime.getDate() !== new Date().getDate()) {
-                        // 날짜 넘어갈 경우 종료일 +1
+                    if (endTime.getHours() < h) {
+                        // 날짜 넘어가는 경우 다음날로
                         newEndDate.setDate(newEndDate.getDate() + 1);
                     }
 
                     updated.startTime = value;
                     updated.endTime = endTime.toTimeString().slice(0, 5);
                     updated.endDate = newEndDate.toISOString().split("T")[0];
+                }
+
+                /** ✅ 종료 날짜 변경 시 → 시작 날짜/시간 자동 보정 */
+                if (name === "endDate" && value) {
+                    const startDate = new Date(prev.startDate);
+                    const endDate = new Date(value);
+
+                    if (!prev.startDate || endDate < startDate) {
+                        updated.startDate = value; // 종료일이 더 앞이면 시작일 맞춰줌
+                    }
+
+                    // 시작 시간이 종료보다 느리면 -1시간 보정
+                    if (prev.endTime && (!prev.startTime || prev.startTime >= prev.endTime)) {
+                        const [h, m] = prev.endTime.split(":").map(Number);
+                        const startTime = new Date();
+                        startTime.setHours(h - 1, m);
+                        updated.startTime = startTime.toTimeString().slice(0, 5);
+                    }
+                }
+
+                /** ✅ 종료 시간 변경 시 → 시작 시간 -1시간 보정 */
+                if (name === "endTime" && value) {
+                    const [endH, endM] = value.split(":").map(Number);
+                    const startTime = new Date();
+                    startTime.setHours(endH - 1, endM);
+
+                    const newStartDate = new Date(prev.endDate);
+                    if (startTime.getHours() > endH) {
+                        // 자정 넘는 경우 전날로 이동
+                        newStartDate.setDate(newStartDate.getDate() - 1);
+                    }
+
+                    // 시작 시간이 종료보다 느리면 자동 보정
+                    if (!prev.startTime || prev.startTime >= value) {
+                        updated.startTime = startTime.toTimeString().slice(0, 5);
+                        updated.startDate = newStartDate.toISOString().split("T")[0];
+                    }
+
+                    updated.endTime = value;
                 }
 
                 return updated;
