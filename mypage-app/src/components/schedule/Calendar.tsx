@@ -50,7 +50,8 @@ export default function Calendar({ schedules, onEventClick }: Props) {
         start: new Date(s.startTime),
         end: new Date(s.endTime),
         allDay: s.allDay,
-        description: s.description,
+        description: s.description || "",
+        location: s.location || "",         // 개인 일정용
 
         // 개인 일정은 백엔드 color 값 사용, 없으면 fallback
         // 스터디 일정은 프론트 고정 색상 사용
