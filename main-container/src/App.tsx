@@ -22,7 +22,7 @@ import ThemeSync from "./ThemeSync";
 import ThemeToggleButton from "./ThemeToggleButton";
 import { themeAtom } from "@jobspoon/app-state";
 import SuccessPage from "studyroom-app/src/pages/SuccessPage.tsx";
-import Logo from "./assets/img.png";
+import Logo from "./assets/img_1.png";
 import RequireLogin from "./RequireLogin.tsx";
 
 const eventBus = mitt();
@@ -87,6 +87,7 @@ function InnerApp() {
     const hiddenLayouts = [
       "/vue-account/account/login",
       "/vue-ai-interview/ai-interview/select",
+      "/vue-ai-interview/ai-interview/result",
       "/vue-ai-interview/ai-interview/form/",
       "/vue-ai-interview/ai-test/",
     ];
@@ -97,6 +98,7 @@ function InnerApp() {
       const hiddenLayoutsLogo = [
           "/vue-ai-interview/ai-interview/select",
           "/vue-ai-interview/ai-interview/form/",
+          "/vue-ai-interview/ai-interview/result",
           "/vue-ai-interview/ai-test/",
       ];
       const hiddenLayoutLogo = hiddenLayoutsLogo.some((path) =>
@@ -130,11 +132,11 @@ function InnerApp() {
 
         {!hideLayout && <NavigationBarApp />}
         {hiddenLayoutLogo && (
-          <div className="fixed top-0 left-0 p-4 z-50">
+          <div className="fixed top-0 left-0 p-10 z-50">
             <img
               src={Logo}
               alt="Logo"
-              style={{ width: 180, height: 70, objectFit: "contain" }}
+              style={{ width: 180, height: 70, objectFit: "contain", marginLeft:"70px", marginTop:"10px" }}
               onClick={goHome}
             />
           </div>
