@@ -1,63 +1,35 @@
 import http, { authHeader } from "../utils/http";
 
-export type QType = "mix" | "choice" | "ox" | "initials";
-export type QLevel = "mix" | "easy" | "medium" | "hard";
-export type SeedMode = "AUTO" | "DAILY" | "FIXED";
-
-const mapType = (t: QType) =>
-    ({ mix: "MIX", choice: "CHOICE", ox: "OX", initials: "INITIALS" } as const)[t];
-
-const mapLevel = (l: QLevel) =>
-    ({ mix: "MIX", easy: "EASY", medium: "MEDIUM", hard: "HARD" } as const)[l];
-
-export async function startSessionFromFolder(params: {
-    folderId: number;
+export type StartQuizSessionUnifiedPayload = {
+    source: "folder" | "category";
+    folderId?: number;
+    categoryId?: number;
     count: number;
-    type: QType;
-    level: QLevel;
-    seedMode?: SeedMode;
+    type: "mix" | "choice" | "ox" | "initials";
+    level: "mix" | "easy" | "medium" | "hard";
+    seedMode?: "AUTO" | "DAILY" | "FIXED";
     fixedSeed?: number | null;
-}) {
-    const body = {
-        folderId: params.folderId,
-        count: params.count,
-        questionType: mapType(params.type),
-        difficulty: mapLevel(params.level),
-        seedMode: params.seedMode ?? "AUTO",
-        fixedSeed: params.fixedSeed ?? null,
-    };
+};
 
-    const res = await http.post("/me/quiz/sessions/from-folder", body, {
+async function tryPost(url: string, body: any) {
+    return http.post(url, body, {
         headers: { ...authHeader() },
         withCredentials: true,
+        validateStatus: () => true,
     });
-    return res.data;
 }
 
-/**
- * 서버 DTO가 categoryId(Long)만 받는 경우:
- *  - 아래 body의 `category`를 `categoryId`로 바꾸고 숫자 전달하도록 변경해줌
- */
-export async function startSessionFromCategory(params: {
-    categoryId: number
-    count: number;
-    type: QType;
-    level: QLevel;
-    seedMode?: SeedMode;
-    fixedSeed?: number | null;
-}) {
-    const body: any = {
-        categoryId: params.categoryId,
-        count: params.count,
-        questionType: mapType(params.type),
-        difficulty: mapLevel(params.level),
-        seedMode: params.seedMode ?? "AUTO",
-        fixedSeed: params.fixedSeed ?? null,
-    };
-
-    const res = await http.post("/me/quiz/sessions/from-category", body, {
-        headers: { ...authHeader() },
-        withCredentials: true,
-    });
+/** 폴더/카테고리 통합 시작 */
+export async function startQuizUnified(payload: StartQuizSessionUnifiedPayload) {
+    let res = await tryPost(`/me/quiz/sessions/start`, payload);
+    if (res.status === 404) {
+        res = await tryPost(`/api/me/quiz/sessions/start`, payload);
+    }
+    if (res.status < 200 || res.status >= 300) {
+        const msg = (res.data && (res.data.message || res.data.error)) || `HTTP ${res.status}`;
+        const err: any = new Error(msg);
+        (err.response = { status: res.status, data: res.data });
+        throw err;
+    }
     return res.data;
 }

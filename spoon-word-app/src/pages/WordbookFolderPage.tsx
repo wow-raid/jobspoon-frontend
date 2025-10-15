@@ -13,7 +13,7 @@ import { generatePdfByTermIds } from "../api/ebook";
 import { saveBlob } from "../utils/download";
 import { sanitizeFilename } from "../utils/cdFilename";
 import { goToAccountLogin } from "../utils/auth";
-import { startSessionFromFolder, startSessionFromCategory } from "../api/quiz";
+import { startQuizUnified } from "../api/quiz";
 
 /** 서버 응답에서 안전하게 뽑아둘 필드들 */
 type TermRow = any;
@@ -1017,6 +1017,12 @@ const FolderSelect: React.FC<FolderSelectProps> = ({ value, onChange, options, p
     );
 };
 
+const toServerType = (t: "mix" | "choice" | "ox" | "initials") =>
+    ({ mix: "MIX", choice: "CHOICE", ox: "OX", initials: "INITIALS" } as const)[t];
+
+const toServerLevel = (l: "mix" | "easy" | "medium" | "hard") =>
+    ({ mix: "MIX", easy: "EASY", medium: "MEDIUM", hard: "HARD" } as const)[l];
+
 /* ---------- CategorySelect ---------- */
 type CategorySelectProps = {
     value: string;
@@ -1921,7 +1927,7 @@ export default function WordbookFolderPage() {
         setPage(0);
         setChecked({});
         refreshCount();
-    }, [refreshCount, fetchPage]);
+    }, [folderId]);
 
     /* ------ PDF 내보내기 ------ */
     const exportByTermIds = async (termIds: number[], title: string) => {
@@ -2193,11 +2199,6 @@ export default function WordbookFolderPage() {
         return [];
     };
 
-    React.useEffect(() => {
-        (async () => {
-        })();
-    }, []);
-
     type CategoryDto = { id: number; name: string };
 
     async function loadCategories() {
@@ -2255,6 +2256,118 @@ export default function WordbookFolderPage() {
             loadCategories();
         }
     }, [quizOpen, source, catFetchFailed, catGroups.length]);
+
+    function collectQuestionIds(input: any): number[] {
+        if (!input) return [];
+
+        // 문자열: JSON/CSV/단일 수 모두 시도
+        if (typeof input === "string") {
+            const t = input.trim();
+            if (t.startsWith("{") || t.startsWith("[")) {
+                try { return collectQuestionIds(JSON.parse(t)); } catch { return []; }
+            }
+            if (t.includes(",")) return t.split(",").map(s => Number(s.trim())).filter(Number.isFinite);
+            const n = Number(t);
+            return Number.isFinite(n) ? [n] : [];
+        }
+
+        // 숫자 배열
+        if (Array.isArray(input) && input.every(x => Number.isFinite(x))) {
+            return input.map(Number);
+        }
+
+        // 객체 배열: 자주 쓰는 키들에서 ID 추출
+        if (Array.isArray(input) && input.length && typeof input[0] === "object") {
+            const keys = ["id","questionId","quizQuestionId","qqId","qq_id"];
+            const out = input.map((o: any) => {
+                for (const k of keys) {
+                    const v = o?.[k];
+                    if (Number.isFinite(v)) return Number(v);
+                    if (typeof v === "string" && Number.isFinite(Number(v))) return Number(v);
+                }
+                return null;
+            }).filter((n: number | null): n is number => n != null);
+            if (out.length) return out;
+        }
+
+        // 객체 컨테이너: 대표 키부터 시도
+        if (input && typeof input === "object") {
+            const candidates = [
+                "questionIds","questionIdList","quizQuestionIds","quiz_question_ids",
+                "orderedIds","orderedQuestionIds","order","list","ids","items",
+                "questions","data","payload"
+            ];
+            for (const k of candidates) {
+                const got = collectQuestionIds((input as any)[k]);
+                if (got.length) return got;
+            }
+            // 얕은 딥스캔 (재귀)
+            for (const v of Object.values(input)) {
+                const got = collectQuestionIds(v);
+                if (got.length) return got;
+            }
+        }
+
+        return [];
+    }
+
+    function normalizeStartResponse(raw: any) {
+        const root = raw?.data ?? raw ?? {};
+
+        // 세션 ID를 다양한 자리에서 탐색 (숫자로 캐스팅 가능하면 채택)
+        const firstNumber = (v: any) => {
+            const n = Number(v);
+            return Number.isFinite(n) ? n : null;
+        };
+
+        const sid =
+            firstNumber(root.sessionId) ??
+            firstNumber(root.id) ??
+            firstNumber(root.session?.id) ??
+            firstNumber(root.session?.sessionId) ??
+            firstNumber(root.result?.sessionId) ??
+            firstNumber(root.result?.session?.id) ??
+            null;
+
+        const title =
+            root.title ??
+            root.session?.title ??
+            root.quizSet?.title ??
+            root.result?.title ??
+            "";
+
+        // 문항 ID는 root 전체를 대상으로 한 번에 긁어오기 (가장 관대한 전략)
+        const questionIds =
+            collectQuestionIds(root) ||
+            [];
+
+        return { sessionId: sid, title, questionIds };
+    }
+
+    const basePath = React.useMemo(
+        () => (location.pathname.startsWith("/spoon-word") ? "/spoon-word" : ""),
+        [location.pathname]
+    );
+
+    async function fetchQuestionIdsBySession(sessionId: number | string): Promise<number[]> {
+        const call = (url: string) =>
+            http.get(url, {
+                headers: { ...authHeader() },
+                withCredentials: true,
+                validateStatus: () => true,
+            });
+
+        let res = await call(`/me/quiz/sessions/${sessionId}`);
+        if (res.status === 404) {
+            res = await call(`/api/me/quiz/sessions/${sessionId}`);
+        }
+
+        if (res.status >= 200 && res.status < 300) {
+            const norm = normalizeStartResponse(res.data);
+            return Array.isArray(norm.questionIds) ? norm.questionIds : [];
+        }
+        throw new Error(`fetch session failed: HTTP ${res.status}`);
+    }
 
     return (
         <NarrowLeft style={{ padding: "8px 0 24px" }}>  {/* SearchBar와 동일 폭/정렬 */}
@@ -2462,39 +2575,59 @@ export default function WordbookFolderPage() {
                                     try {
                                         setQuizLoading(true);
 
-                                        let started: any;
-                                        if (source === "folder") {
-                                            started = await startSessionFromFolder({
-                                                folderId: Number(quizFolderId),
-                                                count: quizCount,
-                                                type: quizType,
-                                                level: quizLevel,
-                                                seedMode: "AUTO",
-                                                fixedSeed: null,
-                                            });
-                                        } else {
-                                            started = await startSessionFromCategory({
-                                                categoryId: Number(quizCategoryId),
-                                                count: quizCount,
-                                                type: quizType,
-                                                level: quizLevel,
-                                                seedMode: "AUTO",
-                                                fixedSeed: null,
-                                            });
+                                        const payload = {
+                                            source,
+                                            folderId: source === "folder" ? Number(quizFolderId) : undefined,
+                                            categoryId: source === "category" ? Number(quizCategoryId) : undefined,
+                                            count: Number(quizCount),
+                                            type: toServerType(quizType),
+                                            level: toServerLevel(quizLevel),
+                                            seedMode: "AUTO",
+                                            fixedSeed: null,
+                                        };
+
+                                        console.log("[quiz:start] payload", payload);
+
+                                        const started = await startQuizUnified(payload);
+                                        const norm = normalizeStartResponse(started);
+
+                                        let qids = norm.questionIds;
+                                        let sid  = norm.sessionId;
+
+                                        if ((!qids || qids.length === 0) && sid != null) {
+                                            try { qids = await fetchQuestionIdsBySession(sid); } catch {}
                                         }
 
-                                        const sessionId = started?.sessionId ?? started?.id ?? started?.session?.id;
-                                        if (!sessionId) { alert("세션 생성 응답을 해석할 수 없어요."); return; }
+                                        if (!Array.isArray(qids) || qids.length === 0) {
+                                            alert("세션은 생성됐지만 문항 목록을 찾지 못했어요. 서버 응답 필드를 확인해 주세요.");
+                                            return;
+                                        }
 
-                                        const base = location.pathname.startsWith("/spoon-word") ? "/spoon-word" : "";
-                                        navigate(`${base}/spoon-quiz/session/${sessionId}`, { state: started });
+                                        navigate(`${basePath}/spoon-quiz/play`, {
+                                            state: { sessionId: sid, title: norm.title || folderName, questionIds: qids },
+                                        });
                                         setQuizOpen(false);
+
                                     } catch (err: any) {
-                                        const s = err?.response?.status;
-                                        if (s === 401) { alert("로그인이 필요합니다."); goToAccountLogin(location.pathname + location.search); }
-                                        else if (s === 403 || s === 404) alert("요청이 거부되었거나 리소스를 찾지 못했습니다.");
-                                        else alert("세션 생성 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.");
-                                        console.error("[quiz] start failed:", err);
+                                        const status = err?.response?.status;
+                                        const data = err?.response?.data;
+                                        const serverText =
+                                            (typeof data === "string" && data) ||
+                                            data?.message || data?.error || data?.detail || "";
+
+                                        if (status === 401) {
+                                            alert("로그인이 필요합니다."); goToAccountLogin(location.pathname + location.search);
+                                        } else if (status === 403 || status === 404) {
+                                            alert(serverText || "요청이 거부되었거나 리소스를 찾지 못했습니다.");
+                                        } else if (status === 400 && /not.*enough|부족|insufficient/i.test(serverText)) {
+                                            setQuizErr("선택한 출처에 문제가 부족합니다. 문항 수를 줄이거나 다른 출처를 선택해 주세요.");
+                                        } else if (status === 400 && /type|level|enum|invalid/i.test(serverText)) {
+                                            setQuizErr("문제 유형/난이도 값이 서버 형식과 다릅니다. 설정을 다시 선택해 주세요.");
+                                        } else {
+                                            alert(serverText || "세션 생성 중 오류가 발생했어요.");
+                                        }
+
+                                        console.error("[quiz:start] failed:", { status, serverText, err });
                                     } finally {
                                         setQuizLoading(false);
                                     }
@@ -2507,7 +2640,6 @@ export default function WordbookFolderPage() {
                     </Sheet>
                 </>
             )}
-
 
             {/* 본문 */}
             {error ? (
