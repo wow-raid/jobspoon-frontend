@@ -57,19 +57,43 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const target = e.target;
 
-        // ✅ 하루종일 버튼 클릭 시
+        // ✅ 하루종일 토글 시 기존 날짜 유지 + react-big-calendar 인식 가능한 형태로 보정
         if (target instanceof HTMLInputElement && target.type === "checkbox" && target.name === "allDay") {
             const checked = target.checked;
 
+            const now = new Date();
+            const roundedStart = new Date(now);
+            roundedStart.setMinutes(now.getMinutes() < 30 ? 30 : 0);
+            if (now.getMinutes() >= 30) roundedStart.setHours(now.getHours() + 1);
+
+            const roundedEnd = new Date(roundedStart);
+            roundedEnd.setHours(roundedStart.getHours() + 1);
+            const formatTime = (d: Date) => d.toTimeString().slice(0, 5);
+
             setForm((prev) => {
-                const today = new Date().toISOString().split("T")[0];
+                const startDate = prev.startDate || new Date().toISOString().split("T")[0];
+                const endDate = prev.endDate || startDate;
+
+                if (!checked) {
+                    // ✅ 하루종일 해제 시 → 현재 시각 기준 시간 자동 채우기
+                    return {
+                        ...prev,
+                        allDay: false,
+                        startDate,
+                        endDate,
+                        startTime: formatTime(roundedStart),
+                        endTime: formatTime(roundedEnd),
+                    };
+                }
+
+                // ✅ 하루종일 켜질 때 → 시간 비움
                 return {
                     ...prev,
-                    allDay: checked,
-                    startTime: checked ? "" : prev.startTime,
-                    endTime: checked ? "" : prev.endTime,
-                    startDate: prev.startDate || today,
-                    endDate: prev.endDate || today,
+                    allDay: true,
+                    startDate,
+                    endDate,
+                    startTime: "",
+                    endTime: "",
                 };
             });
             return;
@@ -170,12 +194,12 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
             return;
         }
 
-        // 날짜와 시간 합치기
         const startTime = form.allDay
-            ? null
+            ? `${form.startDate}T00:00:00` // ✅ null → 명시적 00:00
             : `${form.startDate}T${form.startTime || "00:00"}:00`;
+
         const endTime = form.allDay
-            ? null
+            ? `${form.endDate}T23:59:59` // ✅ null → 명시적 23:59:59
             : `${form.endDate}T${form.endTime || "23:59"}:00`;
 
         const data: UserScheduleRequest = {
@@ -272,21 +296,24 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
 
                         {/* 시간 바로 아래 종일 일정 배치 */}
                         <AllDayRow>
-                            <label>
+                            <label style={{ cursor: "pointer" }}>
                                 하루 종일
-                                <ToggleSwitch
-                                    type="button"
+                                {/* 실제 체크박스는 숨김 */}
+                                <input
+                                    type="checkbox"
+                                    name="allDay"
                                     checked={form.allDay}
-                                    onClick={() =>
-                                        setForm((prev) => ({
-                                            ...prev,
-                                            allDay: !prev.allDay,
-                                            startTime: prev.allDay
-                                                ? prev.startTime
-                                                : "",
-                                            endTime: prev.allDay ? prev.endTime : "",
-                                        }))
-                                    }
+                                    onChange={handleChange}
+                                    style={{ display: "none" }}
+                                    id="allDayToggle"
+                                />
+                                {/* 시각적 토글 버튼 */}
+                                <ToggleSwitch
+                                    checked={form.allDay}
+                                    onClick={() => {
+                                        const input = document.getElementById("allDayToggle") as HTMLInputElement;
+                                        if (input) input.click(); // ✅ 실제 input 클릭 이벤트 트리거
+                                    }}
                                 >
                                     <span>{form.allDay ? "종일" : "시간 지정"}</span>
                                 </ToggleSwitch>
@@ -304,17 +331,19 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
                         />
                     </label>
 
-                    <OptionRow>
-                        <label>
-                            색상
-                            <input
-                                type="color"
-                                name="color"
-                                value={form.color}
-                                onChange={handleChange}
-                            />
-                        </label>
-                    </OptionRow>
+                    <ColorSelectRow>
+                        <span>색상</span>
+                        <ColorPalette>
+                            {["#A5D8FF", "#B2F2BB", "#FFD6A5", "#D0BFFF", "#FFADAD", "#FDFFB6", "#C8E7FF", "#E8C2FF"].map((c) => (
+                                <ColorCircle
+                                    key={c}
+                                    color={c}
+                                    selected={form.color === c}
+                                    onClick={() => setForm((prev) => ({ ...prev, color: c }))}
+                                />
+                            ))}
+                        </ColorPalette>
+                    </ColorSelectRow>
 
                     <SubmitBtn type="submit">등록하기</SubmitBtn>
                 </Form>
@@ -455,11 +484,11 @@ const AllDayRow = styled.div`
     }
 `;
 
-const ToggleSwitch = styled.button<{ checked: boolean }>`
+const ToggleSwitch = styled.button.attrs({ type: "button" })<{ checked: boolean }>`
     width: 70px;
     height: 28px;
     border-radius: 20px;
-    background: ${({ checked }) => (checked ? "#60a5fa" : "#d1d5db")}; /* ✅ 파랑→하늘색 */
+    background: ${({ checked }) => (checked ? "#60a5fa" : "#d1d5db")};
     border: none;
     cursor: pointer;
     position: relative;
@@ -481,12 +510,6 @@ const ToggleSwitch = styled.button<{ checked: boolean }>`
     }
 `;
 
-const OptionRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
 const SubmitBtn = styled.button`
   background: #3b82f6;
   color: white;
@@ -501,4 +524,33 @@ const SubmitBtn = styled.button`
   &:hover {
     background: #2563eb;
   }
+`;
+
+const ColorSelectRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 14px;
+  color: #374151;
+`;
+
+const ColorPalette = styled.div`
+  display: flex;
+  gap: 8px;
+`;
+
+const ColorCircle = styled.button.attrs({ type: "button" })<{ color: string; selected: boolean }>`
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: ${({ selected }) => (selected ? "2px solid #334155" : "1px solid #d1d5db")};
+    background-color: ${({ color }) => color};
+    cursor: pointer;
+    transition: transform 0.15s ease, border 0.15s ease;
+
+    &:hover {
+        transform: scale(1.15);
+        border-color: #3b82f6;
+    }
 `;
