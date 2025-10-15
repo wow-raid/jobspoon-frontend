@@ -187,8 +187,7 @@ const Backdrop = styled.div`
     background: rgba(0, 0, 0, 0.45);
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* ✅ 위쪽 여유 확보 */
-    padding-top: 5vh;
+    align-items: center; /* 중앙 정렬로 변경 */
     overflow-y: auto;
     z-index: 999;
 `;
@@ -198,8 +197,8 @@ const Modal = styled.div`
     border-radius: 12px;
     padding: 24px;
     width: 420px;
-    max-width: 90vw; /* ✅ 작은 화면 대응 */
-    max-height: 90vh; /* ✅ 스크롤 생기게 */
+    max-width: 90vw; /* 작은 화면 대응 */
+    max-height: 90vh; /* 스크롤 생기게 */
     overflow-y: auto;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     animation: fadeIn 0.25s ease;
