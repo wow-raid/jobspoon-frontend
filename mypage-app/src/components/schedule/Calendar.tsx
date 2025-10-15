@@ -44,15 +44,25 @@ const CustomToolbar = ({ label, onNavigate, onView, view }: any) => {
 export default function Calendar({ schedules, onEventClick }: Props) {
     const events = schedules.map((s) => ({
         title:
-            s.type === "study" ? `${s.studyRoomTitle || ""} - ${s.title}` : s.title,
+            s.type === "study"
+                ? `${s.studyRoomTitle || ""} - ${s.title}`
+                : s.title,
         start: new Date(s.startTime),
         end: new Date(s.endTime),
         allDay: s.allDay,
         description: s.description,
-        color: s.type === "study" ? "#10b981" : "#3b82f6",
+
+        // 개인 일정은 백엔드 color 값 사용, 없으면 fallback
+        // 스터디 일정은 프론트 고정 색상 사용
+        color:
+            s.type === "study"
+                ? "#10b981" // 스터디 일정 (초록색)
+                : s.color || "#3b82f6", // 개인 일정 (백엔드 색 or 기본 파랑)
+
         type: s.type,
         studyRoomId: s.studyRoomId,
     }));
+
 
     const CustomEvent = ({ event }: any) => (
         <div style={{ whiteSpace: "normal", fontSize: 13 }}>{event.title}</div>
