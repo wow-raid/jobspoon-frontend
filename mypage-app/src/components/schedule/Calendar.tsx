@@ -22,6 +22,16 @@ const CustomToolbar = ({ label, onNavigate, onView, view }: any) => {
     const goToNext = () => onNavigate("NEXT");
     const goToToday = () => onNavigate("TODAY");
 
+    // label이 "10월 2025" 형태로 들어올 때 "2025년 10월"로 변환
+    const formattedLabel = (() => {
+        const match = label.match(/(\d{1,2})월\s?(\d{4})/);
+        if (match) {
+            const [_, month, year] = match;
+            return `${year}년 ${month}월`;
+        }
+        return label;
+    })();
+
     return (
         <ToolbarWrapper>
             <div className="nav-buttons">
@@ -29,7 +39,8 @@ const CustomToolbar = ({ label, onNavigate, onView, view }: any) => {
                 <button onClick={goToToday}>오늘</button>
                 <button onClick={goToNext}>다음</button>
             </div>
-            <div className="label">{label}</div>
+
+            <div className="label">{formattedLabel}</div>
 
             {/* 여기 핵심 — onViewChange 대신 onView 사용 */}
             {view !== "month" && (
@@ -114,6 +125,7 @@ const CalendarWrapper = styled.div`
 `;
 
 const ToolbarWrapper = styled.div`
+    position: relative; /* 제목을 absolute로 중앙 배치하기 위함 */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -133,9 +145,13 @@ const ToolbarWrapper = styled.div`
     }
 
     .label {
+        position: absolute;
+        left: 50%;                 /* 가운데 정렬 기준 */
+        transform: translateX(-50%); /* 완전 중앙으로 이동 */
         font-weight: 600;
         color: #111827;
         font-size: 15px;
+        white-space: nowrap;       /* 줄바꿈 방지 */
     }
 `;
 
