@@ -130,9 +130,12 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
                     const endTime = new Date();
                     endTime.setHours(h + 1, m);
 
-                    const newEndDate = new Date(prev.startDate);
+                    // ✅ 기존 종료일을 기준으로 계산 (덮어쓰지 않음)
+                    const currentEndDate = new Date(prev.endDate || prev.startDate);
+                    const newEndDate = new Date(currentEndDate);
+
+                    // ✅ 자정을 넘는 경우만 다음날로 이동
                     if (endTime.getHours() < h) {
-                        // 날짜 넘어가는 경우 다음날로
                         newEndDate.setDate(newEndDate.getDate() + 1);
                     }
 
@@ -165,19 +168,18 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
                     const startTime = new Date();
                     startTime.setHours(endH - 1, endM);
 
-                    const newStartDate = new Date(prev.endDate);
+                    // ✅ 기존 시작일을 기준으로 계산 (덮어쓰지 않음)
+                    const currentStartDate = new Date(prev.startDate || prev.endDate);
+                    const newStartDate = new Date(currentStartDate);
+
+                    // ✅ 자정을 지나 전날로 이동하는 경우만 하루 빼기
                     if (startTime.getHours() > endH) {
-                        // 자정 넘는 경우 전날로 이동
                         newStartDate.setDate(newStartDate.getDate() - 1);
                     }
 
-                    // 시작 시간이 종료보다 느리면 자동 보정
-                    if (!prev.startTime || prev.startTime >= value) {
-                        updated.startTime = startTime.toTimeString().slice(0, 5);
-                        updated.startDate = newStartDate.toISOString().split("T")[0];
-                    }
-
                     updated.endTime = value;
+                    updated.startTime = startTime.toTimeString().slice(0, 5);
+                    updated.startDate = newStartDate.toISOString().split("T")[0];
                 }
 
                 return updated;
