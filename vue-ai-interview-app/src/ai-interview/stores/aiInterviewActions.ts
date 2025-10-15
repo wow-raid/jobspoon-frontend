@@ -16,31 +16,39 @@ const mapCompanyName = (original: string): string => {
 
 export const aiInterviewActions = {
     //첫 질문
-    async requestCreateInterviewToDjango(payload: {
-        userToken: string;
-        jobCategory: number; // 직무
-        experienceLevel: number; // 경력
-        projectExperience: number; // 프로젝트 경험 여부
-        academicBackground: number; // 전공 여부
-        interviewTechStack: number[]; // 기술
-        interviewId: number;
-        companyName: string;
+    async requestCreateInterviewToSpring(payload: {
+        interviewType: string; // "COMPANY" | "TECH"
+        company: string; // 회사명
+        major: string; // 전공 여부 ("전공자" | "비전공자")
+        career: string; // 경력 ("신입" | "3년 이하" | "5년 이하" | "10년 이하" | "10년 이상")
+        projectExp: boolean; // 프로젝트 경험 여부
+        job: string; // 직무 (Backend, Frontend 등)
+        interviewAccountProjectRequests: Array<{
+            projectName: string;
+            projectDescription: string;
+        }>; // 프로젝트 목록
+        techStacks: string[]; // 기술 스택
+        firstQuestion: string; // 첫 번째 질문
+        firstAnswer: string; // 첫 번째 답변
     }): Promise<any> {
-        const { djangoAxiosInstance } = axiosUtility.createAxiosInstances();
+        const { springAxiosInstance } = axiosUtility.createAxiosInstances();
 
         const transformedPayload = {
             ...payload,
-            companyName: mapCompanyName(payload.companyName),
+            company: payload.company ? mapCompanyName(payload.company) : "",
         };
 
         try {
-            const res: AxiosResponse = await djangoAxiosInstance.post(
-                "/interview/create",
-                transformedPayload
+            const res: AxiosResponse = await springAxiosInstance.post(
+                "/api/interview/create",
+                transformedPayload,
+                {
+                    withCredentials: true
+                }
             );
             return res.data;
         } catch (err) {
-            console.error("requestCreateInterviewToDjango() -> error:", err);
+            console.error("requestCreateInterviewToSpring() -> error:", err);
             throw err;
         }
     },
@@ -50,10 +58,10 @@ export const aiInterviewActions = {
         page: number = 1,
         perPage: number = 10
     ): Promise<any> {
-        const { djangoAxiosInstance } = axiosUtility.createAxiosInstances();
+        const { springAxiosInstance } = axiosUtility.createAxiosInstances();
 
         try {
-            const res: AxiosResponse = await djangoAxiosInstance.post(
+            const res: AxiosResponse = await springAxiosInstance.post(
                 "/interview/list",
                 { userToken, page, perPage }
             );
@@ -68,10 +76,10 @@ export const aiInterviewActions = {
         userToken: string;
         interviewId: number;
     }): Promise<any> {
-        const { djangoAxiosInstance } = axiosUtility.createAxiosInstances();
+        const { springAxiosInstance } = axiosUtility.createAxiosInstances();
 
         try {
-            const res: AxiosResponse = await djangoAxiosInstance.post(
+            const res: AxiosResponse = await springAxiosInstance.post(
                 "/interview/remove",
                 {
                     payload,
@@ -85,18 +93,44 @@ export const aiInterviewActions = {
     },
 
     //응답 생성
-    async requestCreateAnswerToDjango(payload: {
-        userToken: string;
+    async requestCreateAnswerToSpring(payload: {
         interviewId: number;
-        questionId: number;
-        answerText: string;
+        interviewQAId: number;
+        answer: string;
+        interviewType: string;
+        interviewSequence: number;
     }): Promise<any> {
-        const { djangoAxiosInstance } = axiosUtility.createAxiosInstances();
-
+        const { springAxiosInstance } = axiosUtility.createAxiosInstances();
         try {
-            const res: AxiosResponse = await djangoAxiosInstance.post(
-                "/interview/user-answer", // ✅ 이걸로 고쳐야 정상 작동
-                payload
+            const res: AxiosResponse = await springAxiosInstance.post(
+                "/api/interview/progress",
+                payload,
+                {
+                    withCredentials: true
+                }
+            );
+
+            return res.data;
+        } catch (err) {
+            console.error("답변 저장 중 오류:", err);
+            throw err;
+        }
+    },
+
+    async requestEndInterviewToSpring(payload: {
+        interviewId: number;
+        interviewQAId: number;
+        answer: string;
+        sender: string;
+    }): Promise<any> {
+        const { springAxiosInstance } = axiosUtility.createAxiosInstances();
+        try {
+            const res: AxiosResponse = await springAxiosInstance.post(
+                "/api/interview/end",
+                payload,
+                {
+                    withCredentials: true
+                }
             );
 
             return res.data;
@@ -118,7 +152,7 @@ export const aiInterviewActions = {
         answerText: string;
         companyName: string;
     }): Promise<any> {
-        const { djangoAxiosInstance } = axiosUtility.createAxiosInstances();
+        const { springAxiosInstance } = axiosUtility.createAxiosInstances();
 
         const transformedPayload = {
             ...payload,
@@ -127,7 +161,7 @@ export const aiInterviewActions = {
 
         try {
             console.log(payload);
-            const res: AxiosResponse = await djangoAxiosInstance.post(
+            const res: AxiosResponse = await springAxiosInstance.post(
                 "/interview/followup", // 백엔드 Django가 저장하고 FastAPI 호출
                 transformedPayload
             );
@@ -149,10 +183,10 @@ export const aiInterviewActions = {
         interviewId: number;
         questionId: number;
     }): Promise<any> {
-        const { djangoAxiosInstance } = axiosUtility.createAxiosInstances();
+        const { springAxiosInstance } = axiosUtility.createAxiosInstances();
 
         try {
-            const res: AxiosResponse = await djangoAxiosInstance.post(
+            const res: AxiosResponse = await springAxiosInstance.post(
                 "/interview/project-create",
                 payload
             );
@@ -176,7 +210,7 @@ export const aiInterviewActions = {
         answerText: string;
         companyName: string;
     }): Promise<any> {
-        const { djangoAxiosInstance } = axiosUtility.createAxiosInstances();
+        const { springAxiosInstance } = axiosUtility.createAxiosInstances();
 
         const transformedPayload = {
             ...payload,
@@ -185,7 +219,7 @@ export const aiInterviewActions = {
 
         try {
             console.log(payload);
-            const res: AxiosResponse = await djangoAxiosInstance.post(
+            const res: AxiosResponse = await springAxiosInstance.post(
                 "/interview/project-followup", // 백엔드 Django가 저장하고 FastAPI 호출
                 transformedPayload
             );
@@ -204,7 +238,7 @@ export const aiInterviewActions = {
         questionId: number;
         answerText: string;
     }): Promise<any> {
-        const { djangoAxiosInstance } = axiosUtility.createAxiosInstances();
+        const { springAxiosInstance } = axiosUtility.createAxiosInstances();
 
         const transformedPayload = {
             ...payload,
@@ -212,7 +246,7 @@ export const aiInterviewActions = {
 
         try {
             console.log(payload);
-            const res: AxiosResponse = await djangoAxiosInstance.post(
+            const res: AxiosResponse = await springAxiosInstance.post(
                 "/interview/tech-followup", // 백엔드 Django가 저장하고 FastAPI 호출
                 transformedPayload
             );
@@ -233,9 +267,9 @@ export const aiInterviewActions = {
         questionId: number;
         interviewTechStack: number[];
     }): Promise<string> {
-        const { djangoAxiosInstance } = axiosUtility.createAxiosInstances();
+        const { springAxiosInstance } = axiosUtility.createAxiosInstances();
         try {
-            const res: AxiosResponse = await djangoAxiosInstance.post(
+            const res: AxiosResponse = await springAxiosInstance.post(
                 "/interview_result/request-interview-summary",
                 payload
             );
@@ -246,19 +280,19 @@ export const aiInterviewActions = {
         }
     },
 
-    //인터뷰 결과 저장
-    async requestGetInterviewResultToDjango(payload: {
-        userToken: string;
-    }): Promise<string> {
-        const { djangoAxiosInstance } = axiosUtility.createAxiosInstances();
+    //인터뷰 결과 조회
+    async requestGetInterviewResultToSpring(interviewId: number): Promise<any> {
+        const { springAxiosInstance } = axiosUtility.createAxiosInstances();
         try {
-            const res: AxiosResponse = await djangoAxiosInstance.post(
-                "/interview_result/get-interview-result",
-                payload
+            const res: AxiosResponse = await springAxiosInstance.get(
+                `/api/interview/result/${interviewId}`,
+                {
+                    withCredentials: true
+                }
             );
             return res.data;
         } catch (error) {
-            console.log("requestSaveInterviewResultToDjango() 중 문제 발생:", error);
+            console.log("requestGetInterviewResultToSpring() 중 문제 발생:", error);
             throw error;
         }
     },
@@ -268,7 +302,7 @@ export const aiInterviewActions = {
         interviewId: number;
         companyName: string;
     }): Promise<string> {
-        const { djangoAxiosInstance } = axiosUtility.createAxiosInstances();
+        const { springAxiosInstance } = axiosUtility.createAxiosInstances();
 
         const transformedPayload = {
             ...payload,
@@ -276,7 +310,7 @@ export const aiInterviewActions = {
         };
 
         try {
-            const res: AxiosResponse = await djangoAxiosInstance.post(
+            const res: AxiosResponse = await springAxiosInstance.post(
                 "/interview_result/end-interview",
                 transformedPayload
             );
