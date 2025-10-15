@@ -8,10 +8,12 @@ type Props = {
 };
 
 export default function AddScheduleModal({ onClose, onSubmit }: Props) {
-    const [form, setForm] = useState<UserScheduleRequest>({
+    const [form, setForm] = useState({
         title: "",
         description: "",
+        startDate: "",
         startTime: "",
+        endDate: "",
         endTime: "",
         location: "",
         allDay: false,
@@ -73,11 +75,18 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
             return;
         }
 
-        // allDay일 경우 start/end null로 전송
+        // 날짜와 시간 합치기
+        const startTime = form.allDay
+            ? null
+            : `${form.startDate}T${form.startTime || "00:00"}:00`;
+        const endTime = form.allDay
+            ? null
+            : `${form.endDate}T${form.endTime || "23:59"}:00`;
+
         const data: UserScheduleRequest = {
             ...form,
-            startTime: form.allDay ? null : form.startTime + ":00",
-            endTime: form.allDay ? null : form.endTime + ":00",
+            startTime,
+            endTime,
         };
 
         await onSubmit(data);
@@ -116,30 +125,72 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
                         />
                     </label>
 
-                    <TimeRow>
-                        <label>
-                            시작
-                            <input
-                                type="datetime-local"
-                                name="startTime"
-                                value={form.startTime || ""}
-                                onChange={handleChange}
-                                required
-                                disabled={form.allDay} // 종일 일정이면 비활성화
-                            />
-                        </label>
-                        <label>
-                            종료
-                            <input
-                                type="datetime-local"
-                                name="endTime"
-                                value={form.endTime || ""}
-                                onChange={handleChange}
-                                required
-                                disabled={form.allDay}
-                            />
-                        </label>
-                    </TimeRow>
+                    {/* 시작/종료 날짜 + 시간 입력 */}
+                    <TimeGroup>
+                        <TimeRow>
+                            <label>
+                                시작 날짜
+                                <input
+                                    type="date"
+                                    name="startDate"
+                                    value={form.startDate}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </label>
+                            <label>
+                                시작 시간
+                                <input
+                                    type="time"
+                                    name="startTime"
+                                    value={form.startTime}
+                                    onChange={handleChange}
+                                    required
+                                    disabled={form.allDay}
+                                />
+                            </label>
+                        </TimeRow>
+
+                        <TimeRow>
+                            <label>
+                                종료 날짜
+                                <input
+                                    type="date"
+                                    name="endDate"
+                                    value={form.endDate}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </label>
+                            <label>
+                                종료 시간
+                                <input
+                                    type="time"
+                                    name="endTime"
+                                    value={form.endTime}
+                                    onChange={handleChange}
+                                    required
+                                    disabled={form.allDay}
+                                />
+                            </label>
+                        </TimeRow>
+
+                        {/* 시간 바로 아래 종일 일정 배치 */}
+                        <AllDayRow>
+                            <label>
+                                하루 종일
+                                <ToggleSwitch
+                                    type="button"
+                                    checked={form.allDay}
+                                    onClick={() =>
+                                        setForm((prev) => ({ ...prev, allDay: !prev.allDay }))
+                                    }
+                                >
+                                    <span>{form.allDay ? "종일" : "시간 지정"}</span>
+                                </ToggleSwitch>
+                            </label>
+                        </AllDayRow>
+                    </TimeGroup>
 
                     <label>
                         장소
@@ -152,16 +203,6 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
                     </label>
 
                     <OptionRow>
-                        <label>
-                            <input
-                                type="checkbox"
-                                name="allDay"
-                                checked={form.allDay}
-                                onChange={handleChange}
-                            />
-                            종일 일정
-                        </label>
-
                         <label>
                             색상
                             <input
@@ -256,7 +297,7 @@ const Form = styled.form`
         padding: 8px 10px;
         font-size: 14px;
         outline: none;
-        width: 100%; /* ✅ input이 삐죽 안나오게 */
+        width: 100%; /* input이 삐죽 안나오게 */
         box-sizing: border-box;
         &:focus {
             border-color: #3b82f6;
@@ -264,14 +305,77 @@ const Form = styled.form`
     }
 `;
 
-const TimeRow = styled.div`
+const TimeGroup = styled.div`
     display: flex;
-    justify-content: space-between;
-    gap: 12px;
+    flex-direction: column;
+    gap: 8px;
+`;
+
+const TimeRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+
+  label {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+    gap: 4px;
+  }
+
+  input {
+    padding: 6px 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    &:focus {
+      border-color: #3b82f6;
+    }
+  }
+`;
+
+const AllDayRow = styled.div`
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 4px;
 
     label {
-        flex: 1;
-        min-width: 0; /* ✅ overflow 방지 */
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #374151;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+`;
+
+const ToggleSwitch = styled.button<{ checked: boolean }>`
+    width: 70px;
+    height: 28px;
+    border-radius: 20px;
+    background: ${({ checked }) => (checked ? "#60a5fa" : "#d1d5db")}; /* ✅ 파랑→하늘색 */
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.25s ease;
+
+    span {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+        letter-spacing: -0.2px;
+    }
+
+    &:hover {
+        background: ${({ checked }) => (checked ? "#3b82f6" : "#cbd5e1")};
     }
 `;
 
