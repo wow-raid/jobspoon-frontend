@@ -183,7 +183,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import landingImage from '../../assets/images/fixed/imsi.png'
+import landingImage from '../../assets/images/fixed/imsi4.png'
 import landingImage2 from '../../assets/images/fixed/imsi3.png'
 
 const currentUrl = process.env.CURRENT_URL;
@@ -317,7 +317,7 @@ const leftImageStyle = {
   transition: 'transform 0.3s ease',
   objectFit: 'contain',
   position: 'relative',
-  marginLeft: '20px',
+  marginLeft: '-100px',
   zIndex: 1
 };
 const leftImageStyle2 = {
