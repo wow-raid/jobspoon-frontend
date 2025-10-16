@@ -12,7 +12,7 @@ import { fetchUserFolders, patchReorderFolders } from "./api/userWordbook";
 import WordbookFolderPage from "./pages/WordbookFolderPage";
 import FavoriteTermsPage from "./pages/FavoriteTermsPage";
 import HeroBanner from "./components/HeroBanner";
-import QuizPlayPage from "./pages/QuizPlayPage.tsx";
+import QuizPlayPage from "./pages/QuizPlayPage";
 
 import { PageContainerFlushTop, NarrowLeft } from "./styles/layout";
 import { goToAccountLogin } from "./utils/auth";
