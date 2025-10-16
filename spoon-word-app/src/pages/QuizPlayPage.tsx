@@ -233,9 +233,11 @@ type SessionItem = {
 function emphasizeNot(text: string) {
     return text.replace(/(않는|아닌|NOT)/gi, (m) => `<em>${m}</em>`);
 }
-
 /* ===================== ResultView ===================== */
 function ResultView({ title, summary, items, answers, sessionId, onClose }: any) {
+    const nav = useNavigate();
+    const loc = useLocation();
+    const [retrying, setRetrying] = React.useState(false);
     const [reviewDetails, setReviewDetails] = React.useState<any[] | null>(null);
 
     if (!summary) {
@@ -319,6 +321,37 @@ function ResultView({ title, summary, items, answers, sessionId, onClose }: any)
             if (k != null) return k;
         }
         return null;
+    };
+
+    const handleRetryWrong = async () => {
+        if (!sessionId || retrying) return;
+        setRetrying(true);
+        try {
+            const res = await http.post(
+                `/me/quiz/sessions/${sessionId}/retry-wrong`,
+                {},
+                { headers: { ...authHeader() }, withCredentials: true }
+            );
+            const data = (res && (res as any).data) ? (res as any).data : res;
+            // 응답 바디에서 숫자로 안전 파싱
+            const newSessionId = Number(
+                data?.sessionId ?? data?.id ?? data?.session?.id
+            );
+            if (!Number.isFinite(newSessionId)) {
+                throw new Error("세션 생성에 실패했습니다. (sessionId 없음)");
+            }
+
+            const prefix = loc.pathname.startsWith("/spoon-word/") ? "/spoon-word" : "";
+            nav(`${prefix}/spoon-quiz`, {
+                state: { sessionId: newSessionId, title: title ?? "스푼퀴즈", source: "retry" },
+                replace: true,
+            });
+        } catch (e: any) {
+            const msg = e?.response?.data?.message ?? e?.message ?? "오답 세션 생성 중 오류가 발생했습니다.";
+            alert(msg);
+        } finally {
+            setRetrying(false);
+        }
     };
 
     return (
@@ -423,6 +456,19 @@ function ResultView({ title, summary, items, answers, sessionId, onClose }: any)
 
             <Footer>
                 <Ghost type="button" onClick={onClose}>닫기</Ghost>
+                {(() => {
+                    const wrongCount = Math.max(0, Number(summary.total) - Number(summary.correct));
+                    return(
+                        <Primary
+                            type="button"
+                            onClick={handleRetryWrong}
+                            disabled={retrying || wrongCount === 0}
+                            style={{ pointerEvents: retrying ? "none" : undefined }}
+                            >
+                            {retrying ? "다시 시작 중..." : "틀린 문제 다시 풀기"}
+                        </Primary>
+                    );
+                })()}
             </Footer>
         </div>
     );
@@ -449,7 +495,6 @@ export default function QuizPlayPage() {
         loc.pathname.endsWith("/spoon-quiz/result") ||
         loc.pathname.endsWith("/spoon-word/spoon-quiz/result");
 
-    // 문제 로딩 (결과 경로일 땐 로딩 스킵)
     React.useEffect(() => {
         if (isResultRoute) return;
 
@@ -460,10 +505,7 @@ export default function QuizPlayPage() {
             setLoading(true);
             setErr(null);
             try {
-                if (!sid) {
-                    setErr("세션 ID가 없습니다.");
-                    return;
-                }
+                if (!sid) { setErr("세션 ID가 없습니다."); return; }
                 const res = await http.get(`/me/quiz/sessions/${sid}/items`, {
                     params: { offset: 0, limit: 200, includeAnswers: true },
                     headers: { ...authHeader() },
@@ -477,13 +519,7 @@ export default function QuizPlayPage() {
                         id: Number(c.id ?? c.choiceId),
                         text: String(c.text ?? c.choiceText ?? ""),
                         isAnswer: truthy(
-                            c.isAnswer ??
-                            c.is_answer ??
-                            c.answer ??
-                            c.correct ??
-                            c.isRight ??
-                            c.right ??
-                            c.solution
+                            c.isAnswer ?? c.is_answer ?? c.answer ?? c.correct ?? c.isRight ?? c.right ?? c.solution
                         ),
                     })),
                 }));
@@ -524,7 +560,13 @@ export default function QuizPlayPage() {
 
             const prefix = loc.pathname.startsWith("/spoon-word/") ? "/spoon-word" : "";
             nav(`${prefix}/spoon-quiz/result`, {
-                state: { sessionId: payload.sessionId, title: payload.title ?? "스푼퀴즈", summary, items, answers, },
+                state: {
+                    sessionId: payload.sessionId,
+                    title: payload.title ?? "스푼퀴즈",
+                    summary,
+                    items,
+                    answers
+                },
                 replace: true,
             });
         } catch (e: any) {

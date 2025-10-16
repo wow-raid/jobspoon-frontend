@@ -59,13 +59,16 @@ function AppLayout() {
     const nav = useNavigate();
     const location = useLocation();
 
-    const isQuizRoute =
-        location.pathname.includes("/spoon-quiz/") ||
-        location.pathname.includes("/spoon-word/spoon-quiz/");
+    const under = (base: string) =>
+        location.pathname === base || location.pathname.startsWith(base + "/");
 
+    // 퀴즈 경로: 슬래시 유무/하위 경로 모두 커버
+    const isQuizRoute =
+        under("/spoon-quiz") || under("/spoon-word/spoon-quiz");
+
+    // 폴더 경로: 원래 의미대로 되돌리기
     const isFolderRoute =
-        location.pathname.startsWith("/spoon-word/folders") ||
-        location.pathname.startsWith("/folders/");
+        under("/spoon-word/folders") || under("/folders");
 
     const [q, setQ] = React.useState("");
 
