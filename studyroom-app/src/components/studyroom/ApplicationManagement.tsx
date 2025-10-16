@@ -160,8 +160,9 @@ const ApplicationManagement: React.FC = () => {
             await axiosInstance.patch(`/study-applications/${applicationId}/process`, { status });
             alert(`신청을 ${action}했습니다.`);
             fetchApplications(); // 목록 새로고침
-        } catch (error) {
-            alert("처리 중 오류가 발생했습니다.");
+        } catch (error: any) {
+            const errorMessage = error.response?.data || "처리 중 오류가 발생했습니다.";
+            alert(errorMessage);
         }
     };
 
