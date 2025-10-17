@@ -73,6 +73,22 @@ const HeroWrap = styled.section`
     }
 `;
 
+/* 전면 오버레이 링크 */
+const OverlayLink = styled.a`
+  position: absolute;
+  inset: 0;            /* 전체 영역 커버 */
+  z-index: 10;         /* 텍스트/아이콘 위에 */
+  display: block;
+  pointer-events: auto;
+  cursor: pointer;
+
+  /* 접근성: 키보드 포커스 링 */
+  &:focus-visible {
+    outline: 3px solid rgba(79,118,241,.5);
+    outline-offset: -2px;
+  }
+`;
+
 /* 네비 Inner 라인에 맞춘 인셋 + 원하는 만큼 좌우 오프셋 */
 const Inset = styled.div`
   --hero-left-offset: 0px;
@@ -173,6 +189,10 @@ export default function SpoonNoteHeroBanner({
                 srcs={[ICON_SRC]}
                 assetHost={assetHost}
                 {...(iconProps ?? {})}
+            />
+            <OverlayLink
+                href="http://localhost/spoon-word/notes"
+                aria-label="스푼노트로 이동"
             />
         </HeroWrap>
     );
