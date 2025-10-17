@@ -1,7 +1,10 @@
 import React, { useLayoutEffect } from "react";
-import { Routes, Route, useNavigate, useLocation, Outlet, useSearchParams } from "react-router-dom";
-import { matchPath } from "react-router-dom";
+import {
+    Routes, Route, useNavigate, useLocation, Outlet,
+    useSearchParams, Navigate, NavLink
+} from "react-router-dom";
 
+import SpoonWordLayout from "./layouts/SpoonWordLayout";
 import SearchBar from "./components/SearchBar";
 import ExploreFilterBar, { FilterSelection } from "./components/ExploreFilterBar";
 import SearchPage from "./pages/SearchPage";
@@ -11,17 +14,37 @@ import http from "./utils/http";
 import { fetchUserFolders, patchReorderFolders } from "./api/userWordbook";
 import WordbookFolderPage from "./pages/WordbookFolderPage";
 import FavoriteTermsPage from "./pages/FavoriteTermsPage";
-import HeroBanner from "./components/HeroBanner";
+import SpoonWordHeroBanner from "./components/SpoonWordHeroBanner.tsx";
 import QuizPlayPage from "./pages/QuizPlayPage";
+import SpoonNoteHomePage from "./pages/SpoonNoteHomePage.tsx";
 
 import { PageContainerFlushTop, NarrowLeft } from "./styles/layout";
 import { goToAccountLogin } from "./utils/auth";
+
+// notes 전용 로그인 가드
+function NotesGuard() {
+    const location = useLocation();
+    const loggedIn = !!localStorage.getItem("isLoggedIn");
+
+    React.useEffect(() => {
+        if (!loggedIn) {
+            // 로그인 후 돌아올 경로 유지
+            goToAccountLogin(location.pathname + location.search);
+        }
+    }, [loggedIn, location.pathname, location.search]);
+
+    if (!loggedIn) {
+        return <div style={{ padding: 24 }}>로그인 페이지로 이동 중…</div>;
+    }
+    // 로그인 상태라면 내 단어장 페이지 렌더
+    return <WordbookFolderPage />;
+}
 
 /* == 유틸 == */
 function extractTermIdFromArticle(el: HTMLElement | null): number | null {
     const article = el?.closest("article");
     if (!article) return null;
-    const labelled = article.getAttribute("aria-labelledby"); // "term-<id>"
+    const labelled = article.getAttribute("aria-labelledby");
     if (!labelled) return null;
     const m = /^term-(\d+)$/.exec(labelled);
     if (!m) return null;
@@ -44,7 +67,7 @@ function AutoContent() {
     return null;
 }
 
-/* == 서버 로그인 호환 라우트: 누군가가 내부에서 /login 으로 네비게이트하더라도 서버 로그인으로 보내줌 == */
+/* == 서버 로그인 호환 라우트 == */
 function RedirectToAccountLogin() {
     const location = useLocation();
     React.useEffect(() => {
@@ -52,6 +75,21 @@ function RedirectToAccountLogin() {
         goToAccountLogin(backTo);
     }, [location.pathname, location.search]);
     return <div style={{ padding: 24 }}>로그인 페이지로 이동 중…</div>;
+}
+
+/* 디버그/랜딩: /spoon-word 첫 화면 */
+function SpoonWordIndex() {
+    return (
+        <div style={{ padding: 24 }}>
+            <h2 style={{ marginTop: 0 }}>스푼워드</h2>
+            <p>좌측 사이드바에서 페이지를 선택하세요.</p>
+            <ul>
+                <li><NavLink to="/spoon-word/notes">스푼노트</NavLink></li>
+                <li><NavLink to="/spoon-word/quiz">스푼퀴즈</NavLink></li>
+                <li><NavLink to="/spoon-word/book">스푼북</NavLink></li>
+            </ul>
+        </div>
+    );
 }
 
 /* == 공통 레이아웃 == */
@@ -62,13 +100,10 @@ function AppLayout() {
     const under = (base: string) =>
         location.pathname === base || location.pathname.startsWith(base + "/");
 
-    // 퀴즈 경로: 슬래시 유무/하위 경로 모두 커버
-    const isQuizRoute =
-        under("/spoon-quiz") || under("/spoon-word/spoon-quiz");
-
-    // 폴더 경로: 원래 의미대로 되돌리기
-    const isFolderRoute =
-        under("/spoon-word/folders") || under("/folders");
+    // 스푼워드 구간 감지
+    const isSpoonWordRoute = under("/spoon-word");
+    const isQuizRoute = under("/spoon-quiz") || under("/spoon-word/quiz");
+    const isFolderRoute = under("/spoon-word/folders") || under("/folders");
 
     const [q, setQ] = React.useState("");
 
@@ -77,7 +112,6 @@ function AppLayout() {
     const [selectedTermId, setSelectedTermId] = React.useState<number | null>(null);
     const [notebooks, setNotebooks] = React.useState<{ id: string; name: string }[]>([]);
 
-    // 폴더 순서 저장
     const handleReorder = React.useCallback(async (orderedIds: string[]) => {
         let serverOk = true;
         try {
@@ -102,7 +136,6 @@ function AppLayout() {
         if (serverOk) console.debug("[reorder] 서버 저장 완료", orderedIds);
     }, []);
 
-    // 모달 열릴 때 폴더 로드
     React.useEffect(() => {
         if (!modalOpen) return;
         if (notebooks.length > 0) return;
@@ -116,9 +149,7 @@ function AppLayout() {
                 console.warn("[folders] 목록 조회 실패", e);
             }
         })();
-        return () => {
-            aborted = true;
-        };
+        return () => { aborted = true; };
     }, [modalOpen, notebooks.length]);
 
     const closeModal = React.useCallback(() => {
@@ -126,7 +157,6 @@ function AppLayout() {
         setSelectedTermId(null);
     }, []);
 
-    // 서버 연동: 새 폴더 생성 (모달 닫지 않음)
     const handleCreateNotebook = React.useCallback(
         async (name: string) => {
             const raw = name;
@@ -153,11 +183,9 @@ function AppLayout() {
         [notebooks]
     );
 
-    // 서버 연동: 용어를 폴더에 저장(attach)
     const handleSaveToNotebook = React.useCallback(
         async (notebookId: string) => {
             if (!selectedTermId) return;
-
             try {
                 await http.post(`/me/folders/${notebookId}/terms`, { termId: selectedTermId });
                 console.debug("[attach] term", selectedTermId, "-> folder", notebookId, "OK");
@@ -166,7 +194,6 @@ function AppLayout() {
                 const status = err?.response?.status;
                 if (status === 401) {
                     closeModal();
-                    // ★ 서버 로그인으로 풀 리디렉트
                     goToAccountLogin(location.pathname + location.search);
                 } else {
                     console.error("[attach] 폴더에 용어 추가 실패:", err);
@@ -181,8 +208,7 @@ function AppLayout() {
         const params = new URLSearchParams(location.search);
         const qp = (params.get("q") ?? "").trim();
         if (qp !== q) setQ(qp);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [location.search]);
+    }, [location.search]); // eslint-disable-line
 
     React.useEffect(() => {
         function onDocClick(e: MouseEvent) {
@@ -194,7 +220,6 @@ function AppLayout() {
             if (!addBtn) return;
             if (modalOpen) return;
 
-            // 미로그인이라면 모달 열지 않음
             const loggedIn = !!localStorage.getItem("isLoggedIn");
             if (!loggedIn) return;
 
@@ -217,7 +242,7 @@ function AppLayout() {
         sp.delete("page");
         sp.delete("tag");
         console.debug("[search] -> /search?q=%s", t);
-        nav({ pathname: "search", search: `?${sp.toString()}` });
+        nav({ pathname: "search", search: `?${sp.toString()}` }); // 훅 재호출 금지, nav 사용
     };
 
     const handleFilterChange = (sel: FilterSelection) => {
@@ -241,19 +266,6 @@ function AppLayout() {
         if (symbol) return { mode: "symbol", value: symbol };
         return null;
     }, [location.search]);
-
-    const handleGoToFolder = React.useCallback(
-        (folderId: string, name?: string) => {
-            console.debug("[goToFolder] id=", folderId, "name=", name, "from", location.pathname);
-            closeModal();
-            if (location.pathname.startsWith("/spoon-word")) {
-                nav(`/spoon-word/folders/${folderId}`, { state: { folderName: name } });
-            } else {
-                nav(`/folders/${folderId}`, { state: { folderName: name } });
-            }
-        },
-        [closeModal, nav, location.pathname]
-    );
 
     useLayoutEffect(() => {
         const setShellInsets = () => {
@@ -280,55 +292,48 @@ function AppLayout() {
 
     return (
         <PageContainerFlushTop>
-            {!isQuizRoute && (
-                <HeroBanner
-                    align="left"
-                    narrow
-                    floatingIcons={[
-                        "http://localhost:3006/hero/icon-1.png",
-                        "http://localhost:3006/hero/icon-2.png",
-                        "http://localhost:3006/hero/icon-3.png",
-                    ]}
-                    assetHost={process.env.MFE_PUBLIC_SERVICE || "http://localhost:3006"}
-                    iconProps={{
-                        width: "360px",
-                        height: "240px",
-                        top: "28px",
-                        rightOffset: 0,
-                        positions: [
-                            { left: 20, top: 30 }, // icon-1
-                            { left: 66, top: 12 }, // icon-2
-                            { left: 45, top: 62 }, // icon-3
-                        ],
-                        maxIconWidthPercent: 38,
-                        withShadow: false,
-                    }}
-                />
-            )}
+            {/* 스푼워드에서는 상단 요소(히어로/서치/필터) 렌더 안함
+          → 스푼워드 레이아웃(Main) 칼럼에서 렌더하도록 이동 */}
+            {!isQuizRoute && !isSpoonWordRoute && (
+                <>
+                    <SpoonWordHeroBanner
+                        align="left"
+                        narrow
+                        floatingIcons={[
+                            "http://localhost:3006/hero/icon-1.png",
+                            "http://localhost:3006/hero/icon-2.png",
+                            "http://localhost:3006/hero/icon-3.png",
+                        ]}
+                        assetHost={process.env.MFE_PUBLIC_SERVICE || "http://localhost:3006"}
+                        iconProps={{
+                            width: "360px",
+                            height: "240px",
+                            top: "28px",
+                            rightOffset: 0,
+                            positions: [
+                                { left: 20, top: 30 },
+                                { left: 66, top: 12 },
+                                { left: 45, top: 62 },
+                            ],
+                            maxIconWidthPercent: 38,
+                            withShadow: false,
+                        }}
+                    />
 
-            {!isFolderRoute && !isQuizRoute && (
-                <NarrowLeft>
-                    <SearchBar value={q} onChange={setQ} onSearch={handleSearch} />
-                </NarrowLeft>
-            )}
+                    {!isFolderRoute && (
+                        <NarrowLeft>
+                            <SearchBar value={q} onChange={setQ} onSearch={handleSearch} />
+                        </NarrowLeft>
+                    )}
 
-            {!isFolderRoute && !isQuizRoute && (
-                <NarrowLeft>
-                    <ExploreFilterBar value={currentSelection} onChange={handleFilterChange} />
-                </NarrowLeft>
+                    {!isFolderRoute && (
+                        <NarrowLeft>
+                            <ExploreFilterBar value={currentSelection} onChange={handleFilterChange} />
+                        </NarrowLeft>
+                    )}
+                </>
             )}
-
             <Outlet />
-
-            <SpoonNoteModal
-                open={modalOpen}
-                notebooks={notebooks}
-                onClose={closeModal}
-                onCreate={handleCreateNotebook}
-                onSave={handleSaveToNotebook}
-                onReorder={handleReorder}
-                onGoToFolder={handleGoToFolder}
-            />
         </PageContainerFlushTop>
     );
 }
@@ -342,29 +347,22 @@ function HomePage() {
 export default function App() {
     return (
         <Routes>
+            {/* 공통 레이아웃 */}
             <Route element={<AppLayout />}>
-                <Route index element={<HomePage />} />
-                <Route path="search" element={<SearchPage />} />
-                <Route path="terms/by-tag" element={<TermListPage />} />
-
-                {/* 폴더 상세 */}
-                <Route path="spoon-word/folders/:folderId" element={<WordbookFolderPage />} />
-                <Route path="folders/:folderId" element={<WordbookFolderPage />} />
-                <Route path="favorites" element={<FavoriteTermsPage />} />
-
-                {/* ✅ 퀴즈 시작 테스트: 루트/베이스 둘 다 수신 */}
-                <Route path="spoon-quiz/start" element={<QuizPlayPage />} />
-                <Route path="spoon-word">
-                    <Route path="spoon-quiz/start" element={<QuizPlayPage />} />
+                {/* 이 마이크로앱은 호스트가 /spoon-word/*에 마운트함 → 내부는 상대경로 "/*"로 베이스를 씌움 */}
+                <Route path="/*" element={<SpoonWordLayout />}>
+                    {/* /spoon-word 첫 진입 시 words로 */}
+                    <Route index element={<Navigate to="words" replace />} />
+                    <Route path="words" element={<TermListPage />} />
+                    <Route path="notes" element={<SpoonNoteHomePage />} />
+                    <Route path="search" element={<SearchPage />} />
+                    <Route path="quiz/*" element={<QuizPlayPage />} />
+                    <Route path="book" element={<FavoriteTermsPage />} />
+                    <Route path="folders/:folderId" element={<WordbookFolderPage />} />
                 </Route>
-                {/* 여유로 */}
-                <Route path="spoon-quiz/*" element={<QuizPlayPage />} />
-                <Route path="spoon-word/spoon-quiz/*" element={<QuizPlayPage />} />
 
-                {/* 호환: 누군가 내부에서 /login 으로 이동해도 서버 로그인으로 넘김 */}
+                {/* 기타 경로들 */}
                 <Route path="login" element={<RedirectToAccountLogin />} />
-
-                {/* 항상 마지막 */}
                 <Route path="*" element={<AutoContent />} />
             </Route>
         </Routes>
