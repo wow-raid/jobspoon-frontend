@@ -20,6 +20,7 @@ export const LOCATION = [
 ];
 
 export const DEV_JOBS = [
+    '전체',
     '프론트엔드', '백엔드', '풀스택', '모바일', 'iOS',
     '안드로이드', 'AI/ML', '데이터', 'DevOps', 'QA', '보안', 'PM', '디자이너'
 ];

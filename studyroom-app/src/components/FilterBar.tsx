@@ -116,12 +116,14 @@ const FilterBar: React.FC<FilterBarProps> = ({
             onChange={(e) => handleValueChange("location", e.target.value)}
             aria-label="지역 선택"
         >
-        {LOCATION.map((region) => (
-          <option key={region.value} value={region.value}>
-            {region.value === "전체" ? "지역 (전체)" : region.label}
-          </option>
-        ))}
-      </Select>
+            <option value="전체">지역 (전체)</option>
+
+            {LOCATION.map((region) => (
+                <option key={region.value} value={region.label}>
+                    {region.label}
+                </option>
+            ))}
+        </Select>
 
         <Select
             value={filters.job}
@@ -129,7 +131,9 @@ const FilterBar: React.FC<FilterBarProps> = ({
             aria-label="직군 선택"
         >
             {DEV_JOBS.map((j) => (
-                <option key={j} value={j}>{j}</option>
+                <option key={j} value={j}>
+                    {j === "전체" ? "직군 (전체)" : j}
+                </option>
             ))}
         </Select>
 

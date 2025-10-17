@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import {useEffect, useState} from "react";
+import {useEffect, useState, useRef} from "react";
 import axiosInstance from "../../api/axiosInstance";
 import axios from "axios";
 
@@ -91,6 +91,23 @@ const SubmitButton = styled(BaseButton)`
   }
 `;
 
+const FileButton = styled.div`
+  font-size: 14px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.subtle};
+  padding: 8px 12px;
+  border: 1px dashed ${({ theme }) => theme.border};
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  
+  &:hover {
+    background-color: ${({ theme }) => theme.surfaceHover};
+    border-color: ${({ theme }) => theme.accent};
+  }
+`;
+
 // 파일 첨부 영역 스타일
 const FileAttachment = styled.div`
   display: flex;
@@ -141,6 +158,11 @@ const ParticipantsReportModal: React.FC<ParticipantsReportModalProps> = ({ study
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
 
+    // 숨겨진 input 요소에 직접 접근하기 위한 ref 생성
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const fileDialogOpenRef = useRef(false);
+
     // 모달이 새로 열릴 때 모든 상태를 초기화합니다.
     useEffect(() => {
         setCategory('');
@@ -149,23 +171,48 @@ const ParticipantsReportModal: React.FC<ParticipantsReportModalProps> = ({ study
         setUploadStatus('idle');
     }, [reportedMember]);
 
-    if (!reportedMember) {
-        return null;
-    }
+    const handleFileButtonClick = (e: React.MouseEvent) => {
+        e.stopPropagation(); // 만약을 위한 이벤트 차단
+
+        // 1. '자물쇠'를 잠급니다. (파일 창이 열릴 것임을 표시)
+        fileDialogOpenRef.current = true;
+
+        // 2. 숨겨진 파일 입력을 클릭합니다.
+        fileInputRef.current?.click();
+
+        // 3. '파일 선택 창'이 닫히면 브라우저 창이 다시 '포커스'를 얻습니다.
+        //    이때 '자물쇠'를 풀어주는 리스너를 딱 한 번만 실행되도록 등록합니다.
+        const onFocusBack = () => {
+            // Chrome 브라우저는 focus 이벤트가 너무 빨리 발생하므로, 아주 약간의 지연을 줍니다.
+            setTimeout(() => {
+                fileDialogOpenRef.current = false;
+            }, 300); // 0.3초의 안전한 지연
+            window.removeEventListener("focus", onFocusBack);
+        };
+        window.addEventListener("focus", onFocusBack);
+    };
+
+    const handleOverlayClick = (e: React.MouseEvent) => {
+        // '자물쇠'가 잠겨있다면 (파일 창이 열려있다면) 아무것도 하지 않고 즉시 종료합니다.
+        if (fileDialogOpenRef.current) return;
+
+        // 자물쇠가 풀려있고, 배경 자신을 클릭했을 때만 모달을 닫습니다.
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
 
     // 파일 선택 시 state를 업데이트하는 핸들러
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
             setSelectedFile(event.target.files[0]);
-            setUploadStatus('idle'); // 새 파일 선택 시 업로드 상태 초기화
+            setUploadStatus('idle');
         }
     };
 
     const handleSubmit = async () => {
-        if (!category) {
-            alert('신고 분류를 선택해주세요.');
-            return;
-        }
+        if (!reportedMember) { alert("신고 대상 정보가 없습니다."); return; }
+        if (!category) { alert('신고 분류를 선택해주세요.'); return; }
 
         let attachmentS3Key = null;
 
@@ -214,9 +261,13 @@ const ParticipantsReportModal: React.FC<ParticipantsReportModalProps> = ({ study
         }
     };
 
+    if (!reportedMember) {
+        return null;
+    }
+
     return (
-        <ModalOverlay onClick={onClose}>
-            <ModalContent onClick={(e) => e.stopPropagation()}>
+        <ModalOverlay onClick={handleOverlayClick}>
+            <ModalContent>
                 <h3> {reportedMember.nickname} <span>님 신고하기</span></h3>
 
                 <select value={category} onChange={(e) => setCategory(e.target.value)}>
@@ -235,10 +286,18 @@ const ParticipantsReportModal: React.FC<ParticipantsReportModalProps> = ({ study
                 />
 
                 <FileAttachment>
-                    <label htmlFor="report-file-input">
+                    <FileButton onClick={handleFileButtonClick}>
                         📎 증거 파일 첨부 (선택사항)
-                    </label>
-                    <input id="report-file-input" type="file" onChange={handleFileChange} />
+                    </FileButton>
+
+                    <input
+                        ref={fileInputRef}
+                        id="report-file-input"
+                        type="file"
+                        onChange={handleFileChange}
+                        style={{ display: 'none' }}
+                    />
+
                     {selectedFile && (
                         <div className="file-info">
                             선택된 파일: {selectedFile.name}
@@ -261,35 +320,3 @@ const ParticipantsReportModal: React.FC<ParticipantsReportModalProps> = ({ study
 };
 
 export default ParticipantsReportModal;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

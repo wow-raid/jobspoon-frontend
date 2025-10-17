@@ -1,5 +1,5 @@
 // JoinedStudyRoom.tsx
-import React, { useEffect, useState } from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import { Outlet, useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { StudyRoom } from "../types/study";
@@ -78,30 +78,35 @@ const ContentArea = styled.section`
 const JoinedStudyRoom: React.FC = () => {
     const { id: studyId } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { currentUserId } = useAuth();
+    // const { currentUserId } = useAuth();
     const [study, setStudy] = useState<StudyRoom | null>(null);
     const [loading, setLoading] = useState(true);
     const [userRole, setUserRole] = useState<"LEADER" | "MEMBER">("MEMBER");
 
-    useEffect(() => {
+    const fetchStudyDetails = useCallback(async () => {
         if (!studyId) return;
-        const fetchStudyDetails = async () => {
-            setLoading(true);
-            try {
-                const [studyResponse, roleResponse] = await Promise.all([
-                    axiosInstance.get<StudyRoom>(`/study-rooms/${studyId}`),
-                    axiosInstance.get<string>(`/study-rooms/${studyId}/role`)
-                ]);
-                setStudy(studyResponse.data);
-                setUserRole(roleResponse.data as "LEADER" | "MEMBER");
-            } catch (error) {
-                // ...
-            } finally {
-                setLoading(false);
-            }
-        };
+        setLoading(true);
+        try {
+            const [studyResponse, roleResponse] = await Promise.all([
+                axiosInstance.get<StudyRoom>(`/study-rooms/${studyId}`),
+                axiosInstance.get<string>(`/study-rooms/${studyId}/role`)
+            ]);
+            setStudy(studyResponse.data);
+            setUserRole(roleResponse.data as "LEADER" | "MEMBER");
+        } catch (error) {
+            console.error("스터디 상세 정보 로딩 실패:", error);
+            // 에러 처리 (예: 없는 스터디일 경우 목록으로 이동)
+        } finally {
+            setLoading(false);
+        }
+    }, [studyId]); // studyId가 바뀔 때만 이 함수를 새로 만듭니다.
+
+    // 페이지가 처음 로딩될 때 데이터를 불러옵니다.
+    useEffect(() => {
         fetchStudyDetails();
-    }, [studyId, navigate]);
+    }, [fetchStudyDetails]);
+
+    // 페이지(탭)가 다시 활성화될 때 데이터를 새로고침하는 로직
 
     const handleLeaveOrClose = async () => {
         if (userRole === 'LEADER') {
