@@ -75,6 +75,21 @@ const HeroWrap = styled.section`
     }
 `;
 
+/* 히어로 전체를 클릭 영역으로 만드는 오버레이 링크 */
+const OverlayLink = styled.a`
+  position: absolute;
+  inset: 0;        /* 전체 영역 커버 */
+  z-index: 10;     /* 텍스트/아이콘 위에 */
+  display: block;
+  pointer-events: auto;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid rgba(79,118,241,.5);
+    outline-offset: -2px;
+  }
+`;
+
 /* 네비 Inner 라인에 맞춘 인셋 + 원하는 만큼 좌우 오프셋 */
 const Inset = styled.div`
     --hero-left-offset: 0px;
@@ -164,6 +179,12 @@ export default function SpoonWordHeroBanner({
                     assetHost={assetHost}
                 />
             )}
+
+            {/* 배너 전체 클릭 → /spoon-word/words 이동 */}
+            <OverlayLink
+                href="http://localhost/spoon-word/words"
+                aria-label="스푼워드 단어 목록으로 이동"
+            />
         </HeroWrap>
     );
 }
