@@ -30,13 +30,48 @@ const HeroWrap = styled.section`
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
     margin-bottom: 12px;
-    padding-block: clamp(24px, 6vw, 64px);
-    background: linear-gradient(90deg, #e8f0fb 0%, #e7f2ea 100%);
+
+    /* SpoonNote와 높이 맞춤 */
+    padding-block: clamp(26px, 6.5vw, 72px);
     position: relative;
     isolation: isolate;
 
+    /* ===== light: 스푼워드 톤(스카이블루↔민트)으로 부드러운 블롭 두 개 ===== */
+    --blob-sky: 168 198 255;   /* rgb(하늘 파랑) */
+    --blob-mint: 196 236 220;  /* rgb(연한 민트) */
+
+    background:
+        /* 좌하단: 스카이블루 블롭 */
+            radial-gradient(900px 600px at 20% 72%,
+            rgba(var(--blob-sky) / 0.55) 0%,
+            rgba(var(--blob-sky) / 0.28) 24%,
+            rgba(var(--blob-sky) / 0.10) 40%,
+            rgba(var(--blob-sky) / 0.00) 64%),
+                /* 우상단: 민트 블롭 */
+            radial-gradient(720px 620px at 76% 30%,
+            rgba(var(--blob-mint) / 0.60) 0%,
+            rgba(var(--blob-mint) / 0.26) 34%,
+            rgba(var(--blob-mint) / 0.08) 54%,
+            rgba(var(--blob-mint) / 0.00) 68%),
+                /* 전체를 아주 살짝 밝게 */
+            linear-gradient(180deg, #f7fbff 0%, #f9fffb 100%);
+    background-repeat: no-repeat;
+
     @media (prefers-color-scheme: dark) {
-        background: linear-gradient(90deg, #0f172a 0%, #0b2a26 100%);
+        /* ===== dark: 네이비 베이스 + 시안/민트 블롭 ===== */
+        --blob-sky: 120 170 255;
+        --blob-mint: 120 230 210;
+
+        background:
+                radial-gradient(900px 600px at 20% 72%,
+                rgba(var(--blob-sky) / 0.38) 0%,
+                rgba(var(--blob-sky) / 0.18) 30%,
+                rgba(var(--blob-sky) / 0.00) 62%),
+                radial-gradient(720px 620px at 76% 30%,
+                rgba(var(--blob-mint) / 0.36) 0%,
+                rgba(var(--blob-mint) / 0.16) 36%,
+                rgba(var(--blob-mint) / 0.00) 62%),
+                linear-gradient(180deg, #0b1222 0%, #0a141d 100%);
     }
 `;
 
@@ -90,7 +125,7 @@ const TextWrap = styled.div`
     z-index: 2; /* 아이콘 레이어(1) 위로 */
 `;
 
-export default function HeroBanner({
+export default function SpoonWordHeroBanner({
                                        title = "스푼워드",
                                        subtitle = "잡스푼과 함께, 기술 용어를 나만의 언어로 만들어 보세요.",
                                        className,
