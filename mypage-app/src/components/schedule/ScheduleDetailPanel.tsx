@@ -82,7 +82,7 @@ export default function ScheduleDetailPanel({ schedule, onClose, onRefresh }: Pr
     }, [onClose]);
 
     if (!schedule) return null;
-    
+
     const isStudy = schedule.type === "study"; // 타입 구분 추가
 
     return (
@@ -157,7 +157,6 @@ export default function ScheduleDetailPanel({ schedule, onClose, onRefresh }: Pr
                             onSubmit={async (data) => {
                                 try {
                                     await updateUserSchedule(schedule.id, data);
-                                    alert("일정이 수정되었습니다.");
                                     setIsEditModalOpen(false);
                                     onClose();
                                     await onRefresh();
@@ -166,16 +165,14 @@ export default function ScheduleDetailPanel({ schedule, onClose, onRefresh }: Pr
                                     alert("수정 중 오류가 발생했습니다.");
                                 }
                             }}
-                            defaultValue={{
-                                ...schedule,
-                                startTime:
-                                    schedule.start instanceof Date
-                                        ? schedule.start.toISOString()
-                                        : schedule.startTime,
-                                endTime:
-                                    schedule.end instanceof Date
-                                        ? schedule.end.toISOString()
-                                        : schedule.endTime,
+                            initialData={{
+                                title: schedule.title,
+                                description: schedule.description,
+                                startTime: schedule.startTime || schedule.start, // react-big-calendar에서 오는 필드명 대응
+                                endTime: schedule.endTime || schedule.end,
+                                location: schedule.location,
+                                allDay: schedule.allDay,
+                                color: schedule.color,
                             }}
                         />
                     )}

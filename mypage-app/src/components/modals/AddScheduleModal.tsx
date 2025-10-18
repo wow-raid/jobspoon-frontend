@@ -5,9 +5,12 @@ import { UserScheduleRequest } from "../../api/userScheduleApi.ts";
 type Props = {
     onClose: () => void;
     onSubmit: (data: UserScheduleRequest) => Promise<void>;
+    initialData?: any; // 수정용 데이터
 };
 
-export default function AddScheduleModal({ onClose, onSubmit }: Props) {
+export default function AddScheduleModal({ onClose, onSubmit, initialData }: Props) {
+    const isEditMode = !!initialData; // 수정 모드 여부
+
     const [form, setForm] = useState({
         title: "",
         description: "",
@@ -20,29 +23,45 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
         color: "#3b82f6",
     });
 
-    /** 모달 열릴 때 기본 날짜/시간 자동 설정 */
+    /** 초기값 설정 */
     useEffect(() => {
-        const now = new Date();
+        if (isEditMode) {
+            const start = new Date(initialData.startTime);
+            const end = new Date(initialData.endTime);
+            const formatDate = (d: Date) => d.toISOString().split("T")[0];
+            const formatTime = (d: Date) => d.toTimeString().slice(0, 5);
 
-        // 현재 시간을 30분 단위로 반올림 (예: 18:37 → 19:00)
-        const roundedStart = new Date(now);
-        roundedStart.setMinutes(now.getMinutes() < 30 ? 30 : 0);
-        if (now.getMinutes() >= 30) roundedStart.setHours(now.getHours() + 1);
+            setForm({
+                title: initialData.title || "",
+                description: initialData.description || "",
+                startDate: formatDate(start),
+                startTime: initialData.allDay ? "" : formatTime(start),
+                endDate: formatDate(end),
+                endTime: initialData.allDay ? "" : formatTime(end),
+                location: initialData.location || "",
+                allDay: initialData.allDay || false,
+                color: initialData.color || "#3b82f6",
+            });
+        } else {
+            // 기존 "신규 등록" 기본값 로직 그대로 유지
+            const now = new Date();
+            const roundedStart = new Date(now);
+            roundedStart.setMinutes(now.getMinutes() < 30 ? 30 : 0);
+            if (now.getMinutes() >= 30) roundedStart.setHours(now.getHours() + 1);
+            const roundedEnd = new Date(roundedStart);
+            roundedEnd.setHours(roundedStart.getHours() + 1);
+            const formatDate = (d: Date) => d.toISOString().split("T")[0];
+            const formatTime = (d: Date) => d.toTimeString().slice(0, 5);
 
-        const roundedEnd = new Date(roundedStart);
-        roundedEnd.setHours(roundedStart.getHours() + 1); // +1시간
-
-        const formatDate = (date: Date) => date.toISOString().split("T")[0];
-        const formatTime = (date: Date) => date.toTimeString().slice(0, 5); // "HH:mm"
-
-        setForm((prev) => ({
-            ...prev,
-            startDate: formatDate(roundedStart),
-            startTime: formatTime(roundedStart),
-            endDate: formatDate(roundedEnd),
-            endTime: formatTime(roundedEnd),
-        }));
-    }, []); // 최초 한 번만 실행
+            setForm((prev) => ({
+                ...prev,
+                startDate: formatDate(roundedStart),
+                startTime: formatTime(roundedStart),
+                endDate: formatDate(roundedEnd),
+                endTime: formatTime(roundedEnd),
+            }));
+        }
+    }, [initialData]);
 
     /** ESC 키로 닫기 */
     useEffect(() => {
@@ -211,7 +230,12 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
         };
 
         await onSubmit(data);
-        alert("일정이 등록되었습니다!");
+
+        if (initialData) {
+            alert("일정이 수정되었습니다!");
+        } else {
+            alert("일정이 추가되었습니다!");
+        }
     };
 
 
@@ -219,7 +243,7 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
         <Backdrop onClick={onClose}>
             <Modal onClick={(e) => e.stopPropagation()}>
                 <Header>
-                    <h3>일정 추가</h3>
+                    <h3>{isEditMode ? "일정 수정" : "일정 추가"}</h3>
                     <CloseBtn onClick={onClose}>×</CloseBtn>
                 </Header>
 
@@ -347,7 +371,9 @@ export default function AddScheduleModal({ onClose, onSubmit }: Props) {
                         </ColorPalette>
                     </ColorSelectRow>
 
-                    <SubmitBtn type="submit">등록하기</SubmitBtn>
+                    <SubmitBtn type="submit">
+                        {isEditMode ? "수정하기" : "등록하기"}
+                    </SubmitBtn>
                 </Form>
             </Modal>
         </Backdrop>
