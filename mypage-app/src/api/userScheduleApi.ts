@@ -7,8 +7,8 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 export interface UserScheduleRequest {
     title: string;
     description?: string;
-    startTime: string;
-    endTime: string;
+    startTime: string | null;
+    endTime: string | null;
     location?: string;
     allDay: boolean;
     color?: string;

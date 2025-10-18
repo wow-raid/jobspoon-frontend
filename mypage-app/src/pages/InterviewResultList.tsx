@@ -84,8 +84,6 @@ export default function InterviewResultList() {
 
     return (
         <>
-            <NoticeBanner>🚧 서비스 준비 중입니다</NoticeBanner>
-
             <Section>
                 <Title>면접 기록 보관함</Title>
 
@@ -431,15 +429,4 @@ const Select = styled.select`
         box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
         background-color: #fff;
     }
-`;
-
-const NoticeBanner = styled.div`
-  background: #fef3c7; /* 연한 노랑 */
-  color: #92400e;      /* 진한 주황/갈색 */
-  font-size: 18px;     /* 글자 크게 */
-  font-weight: 700;
-  text-align: center;
-  padding: 20px 12px;  /* 상하 넓게 */
-  border-radius: 8px;
-  margin: 24px 0;      /* 위아래 간격 */
 `;

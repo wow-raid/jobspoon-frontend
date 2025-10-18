@@ -8,7 +8,8 @@ import {
     FaFolderOpen,
     FaCrown,
     FaSignOutAlt,
-    FaChartLine
+    FaExclamationTriangle,
+    FaQuestionCircle
 } from "react-icons/fa";
 import { MdArticle } from "react-icons/md";
 import styled from "styled-components";
@@ -28,15 +29,37 @@ export default function SideBar() {
                     <li>
                         <StyledNavLink to="account/edit">
                             <FaUser className="icon" />
-                            회원정보 수정
+                            회원정보
+                        </StyledNavLink>
+                    </li>
+
+                    {/*<li>*/}
+                    {/*    <StyledNavLink to="user/history">*/}
+                    {/*        <FaChartLine className="icon" />*/}
+                    {/*        이력 관리*/}
+                    {/*    </StyledNavLink>*/}
+                    {/*</li>*/}
+
+                    <li>
+                        <StyledNavLink to="interview/history">
+                            <FaFolderOpen className="icon" />
+                            면접기록
                         </StyledNavLink>
                     </li>
 
                     <li>
-                        <StyledNavLink to="user/history">
-                            <FaChartLine className="icon" />
-                            이력 관리
+                        <StyledNavLink to="schedule">
+                            <FaCalendarAlt className="icon" />
+                            일정관리
+                            <Badge>4</Badge>
                         </StyledNavLink>
+                    </li>
+
+                    <li>
+                        <NavButton onClick={handleOpenModal}>
+                            <FaExclamationTriangle className="icon" />
+                            신고내역
+                        </NavButton>
                     </li>
 
                     <li>
@@ -47,28 +70,20 @@ export default function SideBar() {
                     </li>
 
                     <li>
-                        <StyledNavLink to="interview/history">
-                            <FaFolderOpen className="icon" />
-                            면접 기록 보관함
-                        </StyledNavLink>
-                    </li>
-
-                    <li>
                         <StyledNavLink to="my-posts">
                             <MdArticle className="icon" />
                             작성한 글
                         </StyledNavLink>
                     </li>
 
-                    <li>
-                        <StyledNavLink to="schedule">
-                            <FaCalendarAlt className="icon" />
-                            일정
-                            <Badge>4</Badge>
-                        </StyledNavLink>
-                    </li>
-
                     <Divider />
+
+                    <li>
+                        <NavButton onClick={handleOpenModal}>
+                            <FaQuestionCircle className="icon" />
+                            문의하기
+                        </NavButton>
+                    </li>
 
                     <li>
                         <StyledNavLink to="withdrawal">
