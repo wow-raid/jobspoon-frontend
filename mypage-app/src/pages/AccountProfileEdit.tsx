@@ -263,7 +263,15 @@ export default function AccountProfileEdit() {
                 </InfoCard>
             </Section>
 
-            {/* 프로필 공개 여부 */}
+
+            {/*
+            ===============================
+            ❌ 나머지 섹션 전부 주석 처리
+            ===============================
+            */}
+
+            {/*
+            프로필 공개 여부
             <Section>
                 <SectionTitle>프로필 공개 설정</SectionTitle>
                 <ConsentCard>
@@ -309,7 +317,7 @@ export default function AccountProfileEdit() {
                 </ConsentCard>
             </Section>
 
-            {/* 프로모션 정보수신 동의 */}
+            프로모션 정보수신 동의
             <Section>
                 <SectionTitle>프로모션 정보수신 동의</SectionTitle>
                 <ConsentCard>
@@ -327,7 +335,7 @@ export default function AccountProfileEdit() {
                 </ConsentCard>
             </Section>
 
-            {/* 보안 관리 */}
+            보안 관리
             <Section>
                 <SectionTitle>보안 관리</SectionTitle>
                 <Card>
@@ -340,11 +348,12 @@ export default function AccountProfileEdit() {
                 </Card>
             </Section>
 
-            {/* 모달 */}
+            모달
             <ServiceModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
             />
+            */}
         </Wrapper>
     );
 }
