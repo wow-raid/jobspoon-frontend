@@ -63,5 +63,6 @@ const NoticeBanner = styled.div`
 const SectionDesc = styled.p`
     font-size: 14px;
     color: rgb(107, 114, 128);
-    line-height: 1.6;
+    line-height: 1.8;
+    white-space: pre-line; /* 줄바꿈 유지 */
 `;
