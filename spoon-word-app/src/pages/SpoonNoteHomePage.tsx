@@ -2,7 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
 import http from "../utils/http";
-import { fetchUserFolders } from "../api/userWordbook";
+import { fetchUserFoldersWithStats } from "../api/userWordbook";
 import { goToAccountLogin } from "../utils/auth";
 import { NarrowLeft } from "../styles/layout";
 
@@ -361,7 +361,7 @@ export default function SpoonNoteHomePage() {
         let cancel = false;
         (async () => {
             try {
-                const list = await fetchUserFolders();
+                const list = await fetchUserFoldersWithStats();
                 if (cancel) return;
 
                 const todayIso = new Date().toISOString();
