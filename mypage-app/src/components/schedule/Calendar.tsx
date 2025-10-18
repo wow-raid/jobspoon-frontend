@@ -54,6 +54,7 @@ const CustomToolbar = ({ label, onNavigate, onView, view }: any) => {
 
 export default function Calendar({ schedules, onEventClick }: Props) {
     const events = schedules.map((s) => ({
+        id: s.id,
         title:
             s.type === "study"
                 ? `${s.studyRoomTitle || ""} - ${s.title}`
@@ -74,7 +75,6 @@ export default function Calendar({ schedules, onEventClick }: Props) {
         type: s.type,
         studyRoomId: s.studyRoomId,
     }));
-
 
     const CustomEvent = ({ event }: any) => (
         <div style={{ whiteSpace: "normal", fontSize: 13 }}>{event.title}</div>

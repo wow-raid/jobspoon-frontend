@@ -2,22 +2,47 @@ import { motion, AnimatePresence } from "framer-motion";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
+import { deleteUserSchedule, updateUserSchedule } from "../../api/userScheduleApi.ts";
+import AddScheduleModal from "../modals/AddScheduleModal.tsx"
 
 type Props = {
     schedule: any | null;
     onClose: () => void;
+    onRefresh: () => Promise<void>;
 };
-
-export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
+export default function ScheduleDetailPanel({ schedule, onClose, onRefresh }: Props) {
     const navigate = useNavigate();
     const [width, setWidth] = useState(400);
     const resizing = useRef(false);
 
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+    /* ========== 삭제 버튼 ========== */
+    const handleDelete = async () => {
+        if (!window.confirm("정말 삭제하시겠습니까?")) return;
+        try {
+            await deleteUserSchedule(schedule.id);
+            alert("일정이 삭제되었습니다.");
+            onClose();
+            await onRefresh();
+        } catch (error) {
+            console.error(error);
+            alert("삭제 중 오류가 발생했습니다.");
+        }
+    };
+
+    /* ========== 수정 버튼 ========== */
+    const handleEdit = () => {
+        setIsEditModalOpen(true);
+    };
+
+    /* ========== 이동 버튼 ========== */
     const handleMoveToStudyRoom = () => {
         if (!schedule?.studyRoomId) return;
         navigate(`/studyroom/${schedule.studyRoomId}`);
     };
 
+    /* ========== 크기 조절 로직 ========== */
     const handleMouseDown = () => {
         resizing.current = true;
         document.body.style.cursor = "ew-resize";
@@ -47,6 +72,7 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
         };
     }, []);
 
+    /* ========== ESC로 닫기 ========== */
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
             if (e.key === "Escape") onClose();
@@ -55,8 +81,8 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
         return () => window.removeEventListener("keydown", handleEsc);
     }, [onClose]);
 
-    if (!schedule) return null; // (안전 가드 추가)
-
+    if (!schedule) return null;
+    
     const isStudy = schedule.type === "study"; // 타입 구분 추가
 
     return (
@@ -115,14 +141,44 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
                                 </MoveButton>
                             ) : (
                                 <>
-                                    <MoveButton>수정</MoveButton>
-                                    <DeleteButton>삭제</DeleteButton>
+                                    <MoveButton onClick={handleEdit}>수정</MoveButton>
+                                    <DeleteButton onClick={handleDelete}>삭제</DeleteButton>
                                 </>
                             )}
                         </ButtonArea>
 
                         <ResizeHandle onMouseDown={handleMouseDown} />
                     </Panel>
+
+                    {/* 수정 모달 */}
+                    {isEditModalOpen && (
+                        <AddScheduleModal
+                            onClose={() => setIsEditModalOpen(false)}
+                            onSubmit={async (data) => {
+                                try {
+                                    await updateUserSchedule(schedule.id, data);
+                                    alert("일정이 수정되었습니다.");
+                                    setIsEditModalOpen(false);
+                                    onClose();
+                                    await onRefresh();
+                                } catch (e) {
+                                    console.error(e);
+                                    alert("수정 중 오류가 발생했습니다.");
+                                }
+                            }}
+                            defaultValue={{
+                                ...schedule,
+                                startTime:
+                                    schedule.start instanceof Date
+                                        ? schedule.start.toISOString()
+                                        : schedule.startTime,
+                                endTime:
+                                    schedule.end instanceof Date
+                                        ? schedule.end.toISOString()
+                                        : schedule.endTime,
+                            }}
+                        />
+                    )}
                 </>
             )}
         </AnimatePresence>

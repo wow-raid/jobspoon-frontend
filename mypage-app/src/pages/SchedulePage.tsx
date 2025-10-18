@@ -41,7 +41,7 @@ export default function SchedulePage() {
                 ...study.map((s) => ({ ...s, type: "study" as const })),
             ];
 
-            setAllSchedules(merged);
+            setAllSchedules([...merged]); //
         } catch (err) {
             console.error("일정 불러오기 실패:", err);
         }
@@ -108,6 +108,7 @@ export default function SchedulePage() {
             {/* 달력 */}
             {/* view, date 상태를 제어하도록 변경 */}
             <Calendar
+                key={allSchedules.length} // 일정 개수 변화 시 강제 리렌더
                 schedules={filteredSchedules}
                 view={calendarView}
                 date={calendarDate}
@@ -120,6 +121,7 @@ export default function SchedulePage() {
             <ScheduleDetailPanel
                 schedule={selected}
                 onClose={() => setSelected(null)}
+                onRefresh={loadSchedules}
             />
 
             {/* 일정 추가 모달 */}
