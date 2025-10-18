@@ -13,7 +13,7 @@ export default function MembershipPage() {
 
                 <MembershipInfo>
                     <span className="emoji">💎</span> JobSpoon 멤버십은 학습, 면접, 스터디 등 <br />
-                    다양한 기능을 자유롭게 이용할 수 있는 구독형 서비스예요! <br />
+                    다양한 기능을 자유롭게 이용할 수 있는 <strong>구독형 서비스</strong>예요! <br />
                     <span className="emoji">🚀</span> 현재 서비스 준비 중이며, 더 많은 혜택과 함께 곧 찾아올게요 <span className="emoji">💙</span>
                 </MembershipInfo>
             </Section>
