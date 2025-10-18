@@ -51,3 +51,50 @@ export async function patchReorderFolders(orderedIds: Array<string | number>) {
         }
     }
 }
+
+export type UserFolder = {
+    id: string;
+    name: string;
+    termCount?: number;
+    learnedCount?: number;
+    updatedAt?: string | null;
+};
+
+// 이름/ID 전용 (이동/퀴즈 모달에서 사용)
+export async function fetchUserFolders(): Promise<Array<{ id: string; name: string }>> {
+    const res = await http.get("/me/folders", { headers: { ...authHeader() }, withCredentials: true });
+    const data = res?.data;
+    const arr =
+        (Array.isArray(data) && data) ||
+        data?.items || data?.data || data?.folders || data?.result || data?.content || data?.list || [];
+    return arr.map((it: any) => ({
+        id: String(it.id),
+        name: it.folderName ?? it.name ?? it.title ?? "",
+    }));
+}
+
+// 통계 포함 (폴더 목록 화면에서 사용)
+export async function fetchUserFoldersWithStats(): Promise<UserFolder[]> {
+    const call = (url: string) =>
+        http.get(url, {
+            headers: { ...authHeader() },
+            withCredentials: true,
+            validateStatus: () => true,
+        });
+
+    let res = await call("/me/wordbook/folders:stats");
+    if (res.status === 404 || res.status === 405) {
+        res = await call("/api/me/wordbook/folders:stats");
+    }
+    if (res.status === 401) throw new Error("UNAUTHORIZED");
+    if (res.status < 200 || res.status >= 300) throw new Error(`HTTP ${res.status}`);
+
+    const list = Array.isArray(res.data?.folders) ? res.data.folders : Array.isArray(res.data) ? res.data : [];
+    return list.map((f: any) => ({
+        id: String(f.id),
+        name: f.name ?? f.folderName ?? f.title ?? "이름없음",
+        termCount: Number(f.termCount ?? 0),
+        learnedCount: Number(f.learnedCount ?? 0),
+        updatedAt: f.updatedAt ?? null,
+    }));
+}

@@ -308,14 +308,14 @@ const TermListPage: React.FC = () => {
 
     return (
         <Root>
-            {tag ? (
+            {/*{tag ? (
                 <InfoRow aria-live="polite">
                     <Chip>#{tag}</Chip>
                     <span>에 대한 <StrongNum>{total}</StrongNum>개의 용어가 검색되었습니다.</span>
                 </InfoRow>
             ) : (
                 <InfoRow>해시태그를 선택하면 해당 태그의 용어를 보여드립니다.</InfoRow>
-            )}
+            )}*/}
 
             {loading && <LoadingMsg>불러오는 중...</LoadingMsg>}
             {error && <ErrorMsg>{error}</ErrorMsg>}
@@ -347,9 +347,9 @@ const TermListPage: React.FC = () => {
                 <EmptyMsg>해당 태그로 등록된 용어가 없습니다.</EmptyMsg>
             )}
 
-            {!loading && !error && !tag && (
+           {/* {!loading && !error && !tag && (
                 <EmptyMsg>용어 카드를 열고 해시태그를 눌러보세요.</EmptyMsg>
-            )}
+            )}*/}
 
             {/* 폴더 선택/관리 모달 */}
             <SpoonNoteModal

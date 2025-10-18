@@ -1,4 +1,3 @@
-// src/components/SearchBar.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import RecentSearchList from "./RecentSearchList";
@@ -91,8 +90,8 @@ const SearchBtn = styled.button`
     border-radius: 999px;
     padding: ${TOKENS.btnPadY}px ${TOKENS.btnPadX}px;
     font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 0.01em;
+    font-weight: 600;
+    letter-spacing: -0.06em;
 
     appearance: none;
     color: ${TOKENS.colors.btnText} !important;
