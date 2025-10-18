@@ -27,6 +27,8 @@ const AdminLayout = () => import("@/administrator/pages/adminPage/AdminLayout.vu
 const AdminUsers = () => import("@/administrator/pages/adminPage/AdminUsers.vue");
 const AdminStudyRoomReport=() => import("@/administrator/pages/adminPage/AdminStudyRoomReport.vue");
 const AdminAwsCostExplorer=() => import("@/administrator/pages/adminPage/AdminAwsCostExplorer.vue");
+const AdminOpenAiCostView=() => import("@/administrator/pages/adminPage/AdminOpenAiCostExplorer.vue");
+
 const routes: Array<RouteRecordRaw> = [
   { path: "/account/login", name: "VueAccountLogin", component: AccountLogin },
   { path: "/account/privacy", component: PrivacyAgreement },
@@ -92,6 +94,12 @@ const routes: Array<RouteRecordRaw> = [
         component: AdminAwsCostExplorer,
         meta: {section: "ADMIN_APP",requiresAdmin: true}
       },
+        {
+            path:"openaiCost",
+            name:"AdminOpenAiCostView",
+            component:AdminOpenAiCostView,
+            meta: {section: "ADMIN_APP",requiresAdmin: true}
+        }
     ],
   },
   // 소셜/게스트 인증 콜백
