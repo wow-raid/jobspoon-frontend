@@ -16,13 +16,13 @@ type Props = {
     onDateChange: (d: Date) => void;
 };
 
-// 커스텀 Toolbar
+// 기능 그대로: Custom Toolbar
 const CustomToolbar = ({ label, onNavigate, onView, view }: any) => {
     const goToBack = () => onNavigate("PREV");
     const goToNext = () => onNavigate("NEXT");
     const goToToday = () => onNavigate("TODAY");
 
-    // label이 "10월 2025" 형태로 들어올 때 "2025년 10월"로 변환
+    // label이 "10월 2025" → "2025년 10월" 변환
     const formattedLabel = (() => {
         const match = label.match(/(\d{1,2})월\s?(\d{4})/);
         if (match) {
@@ -35,23 +35,23 @@ const CustomToolbar = ({ label, onNavigate, onView, view }: any) => {
     return (
         <ToolbarWrapper>
             <div className="nav-buttons">
-                <button onClick={goToBack}>이전</button>
+                <button onClick={goToBack}>‹ 이전</button>
                 <button onClick={goToToday}>오늘</button>
-                <button onClick={goToNext}>다음</button>
+                <button onClick={goToNext}>다음 ›</button>
             </div>
 
             <div className="label">{formattedLabel}</div>
 
-            {/* 여기 핵심 — onViewChange 대신 onView 사용 */}
             {view !== "month" && (
                 <BackToMonthBtn onClick={() => onView("month")}>
-                    ← 월간 보기
+                    뒤로 가기
                 </BackToMonthBtn>
             )}
         </ToolbarWrapper>
     );
 };
 
+// 기능 그대로: Calendar 본체
 export default function Calendar({ schedules, onEventClick }: Props) {
     const events = schedules.map((s) => ({
         id: s.id,
@@ -63,15 +63,13 @@ export default function Calendar({ schedules, onEventClick }: Props) {
         end: new Date(s.endTime),
         allDay: s.allDay,
         description: s.description || "",
-        location: s.location || "",         // 개인 일정용
-
-        // 개인 일정은 백엔드 color 값 사용, 없으면 fallback
-        // 스터디 일정은 프론트 고정 색상 사용
+        location: s.location || "",
         color:
             s.type === "study"
-                ? "#10b981" // 스터디 일정 (초록색)
-                : s.color || "#3b82f6", // 개인 일정 (백엔드 색 or 기본 파랑)
-
+                ? "rgba(52,211,153,0.9)" // 💚 Mint Green (스터디)
+                : s.color
+                    ? s.color
+                    : "rgba(0,122,255,0.9)", // 💙 Apple-style 블루 (개인)
         type: s.type,
         studyRoomId: s.studyRoomId,
     }));
@@ -95,10 +93,13 @@ export default function Calendar({ schedules, onEventClick }: Props) {
                 defaultView="month"
                 eventPropGetter={(event) => ({
                     style: {
-                        backgroundColor: event.color,
-                        borderRadius: "6px",
+                        background: event.color,
+                        borderRadius: "8px",
                         border: "none",
-                        color: "white",
+                        color: "#fff",
+                        fontWeight: 500,
+                        fontSize: "13px",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.1)", // subtle
                     },
                 })}
                 messages={{
@@ -116,51 +117,274 @@ export default function Calendar({ schedules, onEventClick }: Props) {
 
 /* ================== styled-components ================== */
 const CalendarWrapper = styled.div`
-    height: 650px;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    height: 680px;
+    background: #fff;
     border-radius: 12px;
-    background: #ffffff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: none;
+    border: none;
     overflow: hidden;
-    font-family: "Noto Sans KR", sans-serif;
+    padding: 1.2rem 1.6rem;
+    font-family: "SF Pro Text", "Noto Sans KR", sans-serif;
+    transition: all 0.2s ease;
+
+    /* ✅ 캘린더 외곽 테두리 제거 */
+    .rbc-month-view {
+        border: none !important;
+    }
+
+    /* ✅ 요일(일~토) 사이 세로 구분선 제거 */
+    .rbc-header {
+        border-left: none !important;
+        border-right: none !important;
+    }
+
+    .rbc-calendar {
+        border: none !important;
+        background: transparent !important;
+    }
+
+    .rbc-toolbar {
+        margin-bottom: 0.5rem !important;
+    }
+
+    .rbc-month-view {
+        padding: 0.4rem;
+    }
+
+    .rbc-date-cell {
+        padding: 7px 5px;
+        font-size: 13px;
+        font-weight: 400;
+        color: #444;
+    }
+
+    .rbc-today {
+        background: #f0f7ff !important;
+        border-radius: 6px;
+    }
+
+    /* ✅ 주말 텍스트 (요일 헤더 + 날짜 숫자 둘 다) */
+    && {
+        /* === 일요일 === */
+        .rbc-month-view .rbc-header:first-child,
+        .rbc-month-row .rbc-row > .rbc-date-cell:first-child .rbc-button-link {
+            color: #ff3b30 !important; /* 🍎 Apple Red */
+            font-weight: 400 !important;
+        }
+
+        /* === 토요일 === */
+        .rbc-month-view .rbc-header:last-child,
+        .rbc-month-row .rbc-row > .rbc-date-cell:last-child .rbc-button-link {
+            color: #007aff !important; /* 💙 Apple Blue */
+            font-weight: 400 !important;
+        }
+
+        /* === 기본 요일 === */
+        .rbc-header {
+            color: #1c1c1e !important;
+            font-weight: 400;
+        }
+    }
+
+    /* ✅ [수정됨] 오늘 날짜 강조 + 주말 분기 + hover 인터랙션 */
+    && {
+        /* 오늘 날짜 셀 기본 설정 */
+        .rbc-month-view .rbc-date-cell.rbc-now {
+            background: none !important; /* 배경 제거 */
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 오늘 날짜 버튼 공통 스타일 */
+        .rbc-month-view .rbc-date-cell.rbc-now button.rbc-button-link {
+            background-color: #007aff !important; /* 💙 기본 Apple Blue */
+            color: #ffffff !important; /* ✅ 흰색 숫자 */
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13.5px;
+            font-weight: 600;
+            line-height: 1;
+            border: none !important;
+            box-shadow: 0 1px 4px rgba(0, 122, 255, 0.25);
+            transition: all 0.25s ease;
+            transform: scale(1);
+        }
+
+        /* 💫 hover 시 밝은 파랑 + 확대 */
+        .rbc-month-view .rbc-date-cell.rbc-now button.rbc-button-link:hover {
+            background-color: #0a84ff !important;
+            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.35);
+            transform: scale(1.08);
+        }
+
+        /* 🫧 클릭 시 줄어듦 */
+        .rbc-month-view .rbc-date-cell.rbc-now button.rbc-button-link:active {
+            transform: scale(0.96);
+            box-shadow: 0 1px 3px rgba(0, 122, 255, 0.2);
+        }
+
+        /* 🩵 오늘이 토요일일 때 (덮어쓰기) */
+        .rbc-month-view .rbc-date-cell.rbc-now:last-child button.rbc-button-link {
+            background-color: #007aff !important; /* Blue 유지 */
+            color: #ffffff !important;
+        }
+
+        /* ❤️ 오늘이 일요일일 때 (덮어쓰기) */
+        .rbc-month-view .rbc-date-cell.rbc-now:first-child button.rbc-button-link {
+            background-color: #ff3b30 !important; /* Apple Red */
+            color: #ffffff !important;
+            box-shadow: 0 1px 4px rgba(255, 59, 48, 0.25);
+        }
+
+        /* ❤️ hover 시 (일요일용 밝은 레드) */
+        .rbc-month-view .rbc-date-cell.rbc-now:first-child button.rbc-button-link:hover {
+            background-color: #ff453a !important;
+            box-shadow: 0 2px 8px rgba(255, 59, 48, 0.35);
+        }
+    }
+
+    @media (max-width: 1200px) {
+        height: 620px;
+        max-width: 95%;
+    }
+
+    @media (max-width: 768px) {
+        height: auto;
+        padding: 1rem;
+    }
+
+    /* ==================== 🕒 Day / Week View 스타일 ==================== */
+    .rbc-time-view {
+        border: none !important;
+        background: #ffffff !important;
+        border-radius: 10px;
+    }
+
+    .rbc-time-header-gutter {
+        background: transparent !important;
+        border: none !important;
+        color: #6b7280 !important;
+        font-size: 12.5px !important;
+        font-weight: 400;
+    }
+
+    .rbc-time-header {
+        background: rgba(255, 255, 255, 0.7) !important;
+        backdrop-filter: blur(8px);
+        border: none !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        font-weight: 500;
+        color: #111;
+    }
+
+    .rbc-time-content > * + * > * {
+        border-top: 1px solid rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .rbc-time-content > * {
+        border-left: none !important;
+    }
+
+    .rbc-timeslot-group {
+        min-height: 52px;
+        background: #fcfcfd;
+    }
+
+    .rbc-current-time-indicator {
+        background: #ff3b30 !important;
+        height: 2px;
+        box-shadow: 0 0 4px rgba(255, 59, 48, 0.3);
+    }
+
+    .rbc-event {
+        border: none;
+        border-radius: 10px;
+        background: linear-gradient(145deg, #34c759, #30d158);
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        padding: 6px 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.15s ease;
+    }
+    .rbc-event:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .rbc-time-content::-webkit-scrollbar {
+        display: none;
+    }
+
+    .rbc-today {
+        background: #f8fbff !important;
+    }
 `;
 
 const ToolbarWrapper = styled.div`
-    position: relative; /* 제목을 absolute로 중앙 배치하기 위함 */
+    position: relative;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #f9fafb;
-    border-bottom: 1px solid #e5e7eb;
-    padding: 8px 16px;
+    padding: 4px 12px 6px; /* ✅ 상하 패딩 줄임 (10px → 4px) */
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 8px; /* ✅ 조금 더 compact하게 */
+    margin-bottom: 0.5rem; /* ✅ 툴바-캘린더 간격 축소 */
+
+    .nav-buttons {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
 
     .nav-buttons button {
-        background: #f3f4f6;
-        border: none;
-        border-radius: 8px;
-        padding: 6px 10px;
-        font-size: 13px;
-        color: #374151;
+        background: rgba(255, 255, 255, 0.6);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 6px; /* ✅ 작게 조정 */
+        padding: 3px 8px; /* ✅ 버튼 세로 높이 감소 */
+        font-size: 12.5px;
+        color: #111;
         cursor: pointer;
-        margin-right: 6px;
+        transition: all 0.2s ease;
+    }
+
+    .nav-buttons button:hover {
+        background: rgba(0, 122, 255, 0.1);
+        color: #007aff;
+        border-color: rgba(0, 122, 255, 0.2);
     }
 
     .label {
         position: absolute;
-        left: 50%;                 /* 가운데 정렬 기준 */
-        transform: translateX(-50%); /* 완전 중앙으로 이동 */
-        font-weight: 600;
-        color: #111827;
-        font-size: 15px;
-        white-space: nowrap;       /* 줄바꿈 방지 */
+        left: 50%;
+        transform: translateX(-50%);
+        font-weight: 500;
+        color: #111;
+        font-size: 14.5px;
     }
 `;
 
 const BackToMonthBtn = styled.button`
-    background: #3b82f6;
-    color: white;
-    border: none;
+    background: rgba(0, 122, 255, 0.1);
+    color: #007aff;
+    border: 1px solid rgba(0, 122, 255, 0.25);
     border-radius: 8px;
-    padding: 6px 10px;
+    padding: 5px 10px;
     font-size: 13px;
     cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background: rgba(0, 122, 255, 0.15);
+        border-color: rgba(0, 122, 255, 0.4);
+    }
 `;
