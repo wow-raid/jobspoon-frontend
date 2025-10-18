@@ -28,16 +28,16 @@ export default function SideBar() {
                     <li>
                         <StyledNavLink to="account/edit">
                             <FaUser className="icon" />
-                            회원정보 수정
+                            회원정보
                         </StyledNavLink>
                     </li>
 
-                    <li>
-                        <StyledNavLink to="user/history">
-                            <FaChartLine className="icon" />
-                            이력 관리
-                        </StyledNavLink>
-                    </li>
+                    {/*<li>*/}
+                    {/*    <StyledNavLink to="user/history">*/}
+                    {/*        <FaChartLine className="icon" />*/}
+                    {/*        이력 관리*/}
+                    {/*    </StyledNavLink>*/}
+                    {/*</li>*/}
 
                     <li>
                         <StyledNavLink to="membership">
