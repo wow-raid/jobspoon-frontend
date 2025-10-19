@@ -100,9 +100,14 @@ const StudyDetailPage: React.FC = () => {
             if (!id) return;
             setLoading(true);
             try {
+                const studyPromise = axiosInstance.get(`/study-rooms/${id}`);
+                const applicationPromise = isLoggedIn
+                    ? axiosInstance.get(`/study-rooms/${id}/my-status`)
+                    : Promise.resolve({ data: { status: 'NOT_APPLIED' } });
+
                 const [studyResponse, applicationResponse] = await Promise.all([
-                    axiosInstance.get(`/study-rooms/${id}`),
-                    axiosInstance.get(`/study-rooms/${id}/my-application`)
+                    studyPromise,
+                    applicationPromise
                 ]);
                 setStudy(studyResponse.data);
                 setApplication(applicationResponse.data);
@@ -114,7 +119,7 @@ const StudyDetailPage: React.FC = () => {
             }
         };
         fetchAllData();
-    }, [id]);
+    }, [id, isLoggedIn]);
 
     useEffect(() => {
         if (study) {

@@ -135,10 +135,15 @@ const CreateStudyForm: React.FC<CreateStudyFormProps> = ({
 
     useEffect(() => {
         if (isEditMode && initialData) {
+            // 한글 지역 이름(label)을 영문 Enum 값(value)으로 변환하는 로직
+            const locationValue = LOCATION_OPTIONS.find(
+                option => option.label === initialData.location
+            )?.value ?? initialData.location; // 만약 일치하는 값을 못 찾으면 원래 값 사용
+
             setFormData({
                 title: initialData.title,
                 description: initialData.description,
-                location: initialData.location,
+                location: locationValue, // ⬅️ "SEOUL"과 같은 영문 값으로 상태를 초기화
                 studyLevel: initialData.studyLevel,
                 maxMembers: initialData.maxMembers,
                 recruitingRoles: initialData.recruitingRoles,
