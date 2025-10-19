@@ -1,7 +1,10 @@
-import React, {useLayoutEffect} from "react";
-import { Routes, Route, useNavigate, useLocation, Outlet, useSearchParams } from "react-router-dom";
-import { matchPath } from "react-router-dom";
+import React, { useLayoutEffect } from "react";
+import {
+    Routes, Route, useNavigate, useLocation, Outlet,
+    useSearchParams, Navigate, NavLink
+} from "react-router-dom";
 
+import SpoonWordLayout from "./layouts/SpoonWordLayout";
 import SearchBar from "./components/SearchBar";
 import ExploreFilterBar, { FilterSelection } from "./components/ExploreFilterBar";
 import SearchPage from "./pages/SearchPage";
@@ -10,30 +13,49 @@ import SpoonNoteModal from "./components/SpoonNoteModal";
 import http from "./utils/http";
 import { fetchUserFolders, patchReorderFolders } from "./api/userWordbook";
 import WordbookFolderPage from "./pages/WordbookFolderPage";
-import FavoriteTermsPage from "./pages/FavoriteTermsPage.tsx";
-import HeroBanner from "./components/HeroBanner";
+import FavoriteTermsPage from "./pages/FavoriteTermsPage";
+import SpoonWordHeroBanner from "./components/SpoonWordHeroBanner.tsx";
+import QuizPlayPage from "./pages/QuizPlayPage";
+import SpoonNoteHomePage from "./pages/SpoonNoteHomePage.tsx";
 
-// 상단 패딩 0인 컨테이너만 사용
-import { PageContainerFlushTop } from "./styles/layout";
-import { NarrowLeft } from "./styles/layout";
+import { PageContainerFlushTop, NarrowLeft } from "./styles/layout";
+import { goToAccountLogin } from "./utils/auth";
 
+// notes 전용 로그인 가드
+function NotesGuard() {
+    const location = useLocation();
+    const loggedIn = !!localStorage.getItem("isLoggedIn");
+
+    React.useEffect(() => {
+        if (!loggedIn) {
+            // 로그인 후 돌아올 경로 유지
+            goToAccountLogin(location.pathname + location.search);
+        }
+    }, [loggedIn, location.pathname, location.search]);
+
+    if (!loggedIn) {
+        return <div style={{ padding: 24 }}>로그인 페이지로 이동 중…</div>;
+    }
+    // 로그인 상태라면 내 단어장 페이지 렌더
+    return <WordbookFolderPage />;
+}
+
+/* == 유틸 == */
 function extractTermIdFromArticle(el: HTMLElement | null): number | null {
     const article = el?.closest("article");
     if (!article) return null;
-    const labelled = article.getAttribute("aria-labelledby"); // "term-<id>"
+    const labelled = article.getAttribute("aria-labelledby");
     if (!labelled) return null;
     const m = /^term-(\d+)$/.exec(labelled);
     if (!m) return null;
     const idNum = Number(m[1]);
     return Number.isFinite(idNum) ? idNum : null;
 }
-
-/** 폴더 정규화 (프론트 로컬 중복 체크용) */
 function normalizeName(s: string) {
     return (s ?? "").trim().replace(/\s+/g, " ").toLowerCase();
 }
 
-/** 라우트가 매칭되지 않을 때 자동으로 적절한 페이지를 보여주는 fallback */
+/* == 라우트 미매칭 fallback == */
 function AutoContent() {
     const [params] = useSearchParams();
     const q = (params.get("q") ?? "").trim();
@@ -45,20 +67,43 @@ function AutoContent() {
     return null;
 }
 
-/** 공통 레이아웃 */
+/* == 서버 로그인 호환 라우트 == */
+function RedirectToAccountLogin() {
+    const location = useLocation();
+    React.useEffect(() => {
+        const backTo = location.pathname + location.search;
+        goToAccountLogin(backTo);
+    }, [location.pathname, location.search]);
+    return <div style={{ padding: 24 }}>로그인 페이지로 이동 중…</div>;
+}
+
+/* 디버그/랜딩: /spoon-word 첫 화면 */
+function SpoonWordIndex() {
+    return (
+        <div style={{ padding: 24 }}>
+            <h2 style={{ marginTop: 0 }}>스푼워드</h2>
+            <p>좌측 사이드바에서 페이지를 선택하세요.</p>
+            <ul>
+                <li><NavLink to="/spoon-word/notes">스푼노트</NavLink></li>
+                <li><NavLink to="/spoon-word/quiz">스푼퀴즈</NavLink></li>
+                <li><NavLink to="/spoon-word/book">스푼북</NavLink></li>
+            </ul>
+        </div>
+    );
+}
+
+/* == 공통 레이아웃 == */
 function AppLayout() {
     const nav = useNavigate();
     const location = useLocation();
-    const hideSearchOnThisRoute =
-        !!matchPath("/spoon-word/folders/:folderId/*", location.pathname) ||
-        !!matchPath("/spoon-word/folders/:folderId", location.pathname);
-    console.debug("[AppLayout] pathname =", location.pathname);
 
+    const under = (base: string) =>
+        location.pathname === base || location.pathname.startsWith(base + "/");
 
-
-    const isFolderRoute =
-        location.pathname.startsWith("/spoon-word/folders") ||
-        location.pathname.startsWith("/folders/");
+    // 스푼워드 구간 감지
+    const isSpoonWordRoute = under("/spoon-word");
+    const isQuizRoute = under("/spoon-quiz") || under("/spoon-word/quiz");
+    const isFolderRoute = under("/spoon-word/folders") || under("/folders");
 
     const [q, setQ] = React.useState("");
 
@@ -67,7 +112,6 @@ function AppLayout() {
     const [selectedTermId, setSelectedTermId] = React.useState<number | null>(null);
     const [notebooks, setNotebooks] = React.useState<{ id: string; name: string }[]>([]);
 
-    // 폴더 순서 저장
     const handleReorder = React.useCallback(async (orderedIds: string[]) => {
         let serverOk = true;
         try {
@@ -92,7 +136,6 @@ function AppLayout() {
         if (serverOk) console.debug("[reorder] 서버 저장 완료", orderedIds);
     }, []);
 
-    // 모달 열릴 때 폴더 로드
     React.useEffect(() => {
         if (!modalOpen) return;
         if (notebooks.length > 0) return;
@@ -106,9 +149,7 @@ function AppLayout() {
                 console.warn("[folders] 목록 조회 실패", e);
             }
         })();
-        return () => {
-            aborted = true;
-        };
+        return () => { aborted = true; };
     }, [modalOpen, notebooks.length]);
 
     const closeModal = React.useCallback(() => {
@@ -116,7 +157,6 @@ function AppLayout() {
         setSelectedTermId(null);
     }, []);
 
-    // 서버 연동: 새 폴더 생성 (모달 닫지 않음)
     const handleCreateNotebook = React.useCallback(
         async (name: string) => {
             const raw = name;
@@ -143,11 +183,9 @@ function AppLayout() {
         [notebooks]
     );
 
-    // 서버 연동: 용어를 폴더에 저장(attach)
     const handleSaveToNotebook = React.useCallback(
         async (notebookId: string) => {
             if (!selectedTermId) return;
-
             try {
                 await http.post(`/me/folders/${notebookId}/terms`, { termId: selectedTermId });
                 console.debug("[attach] term", selectedTermId, "-> folder", notebookId, "OK");
@@ -156,13 +194,13 @@ function AppLayout() {
                 const status = err?.response?.status;
                 if (status === 401) {
                     closeModal();
-                    nav("/login", { state: { from: `/spoon-word/folders/${notebookId}` } });
+                    goToAccountLogin(location.pathname + location.search);
                 } else {
                     console.error("[attach] 폴더에 용어 추가 실패:", err);
                 }
             }
         },
-        [selectedTermId, closeModal, nav]
+        [selectedTermId, closeModal, location.pathname, location.search]
     );
 
     // URL ?q= ↔ 입력값 동기화
@@ -170,23 +208,18 @@ function AppLayout() {
         const params = new URLSearchParams(location.search);
         const qp = (params.get("q") ?? "").trim();
         if (qp !== q) setQ(qp);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [location.search]);
+    }, [location.search]); // eslint-disable-line
 
     React.useEffect(() => {
         function onDocClick(e: MouseEvent) {
-            // 버튼 측에서 preventDefault() 했으면 무시
             if (e.defaultPrevented) return;
-
             const target = e.target as HTMLElement | null;
             if (!target) return;
 
-            // TermCard의 + 버튼(aria-label 고정 사용)
             const addBtn = target.closest('button[aria-label="내 단어장에 추가"]') as HTMLElement | null;
             if (!addBtn) return;
             if (modalOpen) return;
 
-            // 미로그인이라면 모달 열지 않음
             const loggedIn = !!localStorage.getItem("isLoggedIn");
             if (!loggedIn) return;
 
@@ -197,7 +230,6 @@ function AppLayout() {
             setModalOpen(true);
         }
 
-        // 버블 단계로 변경 (false) — 버튼의 stopPropagation()이 유효해짐
         document.addEventListener("click", onDocClick, false);
         return () => document.removeEventListener("click", onDocClick, false);
     }, [modalOpen]);
@@ -210,7 +242,7 @@ function AppLayout() {
         sp.delete("page");
         sp.delete("tag");
         console.debug("[search] -> /search?q=%s", t);
-        nav({ pathname: "search", search: `?${sp.toString()}` });
+        nav({ pathname: "search", search: `?${sp.toString()}` }); // 훅 재호출 금지, nav 사용
     };
 
     const handleFilterChange = (sel: FilterSelection) => {
@@ -235,26 +267,10 @@ function AppLayout() {
         return null;
     }, [location.search]);
 
-    const handleGoToFolder = React.useCallback(
-        (folderId: string, name?: string) => {
-            console.debug("[goToFolder] id=", folderId, "name=", name, "from", location.pathname);
-            closeModal();
-            // 호스트가 /spoon-word/* 또는 루트에 마운트되어도 안전하게
-            if (location.pathname.startsWith("/spoon-word")) {
-                nav(`/spoon-word/folders/${folderId}`, { state: { folderName: name } });
-            } else {
-                nav(`/folders/${folderId}`, { state: { folderName: name } });
-            }
-        },
-        [closeModal, nav, location.pathname]
-    );
-
     useLayoutEffect(() => {
         const setShellInsets = () => {
-            // 헤더 안쪽 래퍼(Inner) 잡기
             const brand = document.querySelector('header a[aria-label="JobSpoon 홈"]') as HTMLElement | null;
-            const inner = brand?.closest('div') as HTMLElement | null; // styled Inner
-
+            const inner = brand?.closest('div') as HTMLElement | null;
             if (!inner) return;
 
             const rect = inner.getBoundingClientRect();
@@ -262,10 +278,10 @@ function AppLayout() {
             const padL = parseFloat(cs.paddingLeft) || 0;
             const padR = parseFloat(cs.paddingRight) || 0;
 
-            const left  = Math.max(0, Math.round(rect.left  + padL));
+            const left = Math.max(0, Math.round(rect.left + padL));
             const right = Math.max(0, Math.round(window.innerWidth - rect.right + padR));
 
-            document.documentElement.style.setProperty("--shell-left",  `${left}px`);
+            document.documentElement.style.setProperty("--shell-left", `${left}px`);
             document.documentElement.style.setProperty("--shell-right", `${right}px`);
         };
 
@@ -276,83 +292,77 @@ function AppLayout() {
 
     return (
         <PageContainerFlushTop>
-            <HeroBanner
-                align="left"
-                narrow
-                floatingIcons={[
-                    "http://localhost:3006/hero/icon-1.png",
-                    "http://localhost:3006/hero/icon-2.png",
-                    "http://localhost:3006/hero/icon-3.png",
-                ]}
-                assetHost={process.env.MFE_PUBLIC_SERVICE || "http://localhost:3006"}
-                iconProps={{
-                    // 전체 박스 크기/위치 (원하면 같이 조절)
-                    width:  "360px",
-                    height: "240px",
-                    top: "28px",
-                    rightOffset: 0,
+            {/* 스푼워드에서는 상단 요소(히어로/서치/필터) 렌더 안함
+          → 스푼워드 레이아웃(Main) 칼럼에서 렌더하도록 이동 */}
+            {!isQuizRoute && !isSpoonWordRoute && (
+                <>
+                    <SpoonWordHeroBanner
+                        align="left"
+                        narrow
+                        floatingIcons={[
+                            "http://localhost:3006/hero/icon-1.png",
+                            "http://localhost:3006/hero/icon-2.png",
+                            "http://localhost:3006/hero/icon-3.png",
+                        ]}
+                        assetHost={process.env.MFE_PUBLIC_SERVICE || "http://localhost:3006"}
+                        iconProps={{
+                            width: "360px",
+                            height: "240px",
+                            top: "28px",
+                            rightOffset: 0,
+                            positions: [
+                                { left: 20, top: 30 },
+                                { left: 66, top: 12 },
+                                { left: 45, top: 62 },
+                            ],
+                            maxIconWidthPercent: 38,
+                            withShadow: false,
+                        }}
+                    />
 
-                    // ✨ 각 아이콘 개별 위치(%)
-                    positions: [
-                        { left: 20, top: 30 }, // icon-1
-                        { left: 66, top: 12 }, // icon-2
-                        { left: 45, top: 62 }, // icon-3
-                    ],
+                    {!isFolderRoute && (
+                        <NarrowLeft>
+                            <SearchBar value={q} onChange={setQ} onSearch={handleSearch} />
+                        </NarrowLeft>
+                    )}
 
-                    // 필요시 크기·그림자
-                    maxIconWidthPercent: 38,
-                    withShadow: false,
-                    // scales: [1.0, 0.9, 0.95], // 개별 스케일도 가능
-                }}
-            />
-
-            {!isFolderRoute && (
-                <NarrowLeft>
-                    <SearchBar value={q} onChange={setQ} onSearch={handleSearch} />
-                </NarrowLeft>
+                    {!isFolderRoute && (
+                        <NarrowLeft>
+                            <ExploreFilterBar value={currentSelection} onChange={handleFilterChange} />
+                        </NarrowLeft>
+                    )}
+                </>
             )}
-
-            {!isFolderRoute && (
-                <NarrowLeft>
-                    <ExploreFilterBar value={currentSelection} onChange={handleFilterChange} />
-                </NarrowLeft>
-            )}
-
             <Outlet />
-
-            <SpoonNoteModal
-                open={modalOpen}
-                notebooks={notebooks}
-                onClose={closeModal}
-                onCreate={handleCreateNotebook}
-                onSave={handleSaveToNotebook}
-                onReorder={handleReorder}
-                onGoToFolder={handleGoToFolder}
-            />
         </PageContainerFlushTop>
     );
 }
 
-/** 홈(빈 본문 허용) */
+/* == 홈(빈 본문 허용) == */
 function HomePage() {
     return null;
 }
 
-/** 라우트 구성 — 폴더 라우트를 캐치올보다 먼저(+ 경로 2가지 모두 지원) */
+/* == 라우트 구성 == */
 export default function App() {
     return (
         <Routes>
+            {/* 공통 레이아웃 */}
             <Route element={<AppLayout />}>
-                <Route index element={<HomePage />} />
-                <Route path="search" element={<SearchPage />} />
-                <Route path="terms/by-tag" element={<TermListPage />} />
+                {/* 이 마이크로앱은 호스트가 /spoon-word/*에 마운트함 → 내부는 상대경로 "/*"로 베이스를 씌움 */}
+                <Route path="/*" element={<SpoonWordLayout />}>
+                    {/* /spoon-word 첫 진입 시 words로 */}
+                    <Route index element={<Navigate to="words" replace />} />
+                    <Route path="words" element={<TermListPage />} />
+                    <Route path="notes" element={<SpoonNoteHomePage />} />
+                    <Route path="search" element={<SearchPage />} />
+                    <Route path="quiz/*" element={<QuizPlayPage />} />
+                    <Route path="book" element={<FavoriteTermsPage />} />
+                    <Route path="folders/:folderId" element={<WordbookFolderPage />} />
+                </Route>
 
-                {/* 폴더 상세: 두 경로 모두 지원 */}
-                <Route path="spoon-word/folders/:folderId" element={<WordbookFolderPage />} />
-                <Route path="folders/:folderId" element={<WordbookFolderPage />} />
-                <Route path="favorites" element={<FavoriteTermsPage />} />
-
-                {/* 캐치올은 맨 마지막 */}
+                {/* 기타 경로들 */}
+                <Route path="login" element={<RedirectToAccountLogin />} />
                 <Route path="*" element={<AutoContent />} />
             </Route>
         </Routes>

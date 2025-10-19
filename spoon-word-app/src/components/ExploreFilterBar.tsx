@@ -94,8 +94,8 @@ const CapsuleTab = styled.button<{ $active?: boolean }>`
     border: 0;
     color: ${TOKENS.color.white};
     font-size: 14px;
-    font-weight: ${({ $active }) => ($active ? 800 : 600)};
-    letter-spacing: -0.01em;
+    font-weight: ${({ $active }) => ($active ? 750 : 600)};
+    letter-spacing: -0.06em;
     cursor: pointer;
     padding: ${TOKENS.space(6)} ${TOKENS.space(8)};
     line-height: 1;
@@ -181,7 +181,7 @@ const ChipButton = styled.button<{ $active: boolean }>`
     transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
     font-size: 14px;
     color: ${({ $active }) => ($active ? TOKENS.color.blueStrong : TOKENS.color.text)};
-    font-weight: ${({ $active }) => ($active ? 700 : 500)};
+    font-weight: ${({ $active }) => ($active ? 600 : 500)};
     outline: none;
 
     &:not([data-active="true"]):hover { background: ${TOKENS.color.chipHover}; }
