@@ -2,22 +2,47 @@ import { motion, AnimatePresence } from "framer-motion";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
+import { deleteUserSchedule, updateUserSchedule } from "../../api/userScheduleApi.ts";
+import AddScheduleModal from "../modals/AddScheduleModal.tsx"
 
 type Props = {
     schedule: any | null;
     onClose: () => void;
+    onRefresh: () => Promise<void>;
 };
-
-export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
+export default function ScheduleDetailPanel({ schedule, onClose, onRefresh }: Props) {
     const navigate = useNavigate();
     const [width, setWidth] = useState(400);
     const resizing = useRef(false);
 
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+    /* ========== 삭제 버튼 ========== */
+    const handleDelete = async () => {
+        if (!window.confirm("정말 삭제하시겠습니까?")) return;
+        try {
+            await deleteUserSchedule(schedule.id);
+            alert("일정이 삭제되었습니다.");
+            onClose();
+            await onRefresh();
+        } catch (error) {
+            console.error(error);
+            alert("삭제 중 오류가 발생했습니다.");
+        }
+    };
+
+    /* ========== 수정 버튼 ========== */
+    const handleEdit = () => {
+        setIsEditModalOpen(true);
+    };
+
+    /* ========== 이동 버튼 ========== */
     const handleMoveToStudyRoom = () => {
         if (!schedule?.studyRoomId) return;
         navigate(`/studyroom/${schedule.studyRoomId}`);
     };
 
+    /* ========== 크기 조절 로직 ========== */
     const handleMouseDown = () => {
         resizing.current = true;
         document.body.style.cursor = "ew-resize";
@@ -47,6 +72,7 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
         };
     }, []);
 
+    /* ========== ESC로 닫기 ========== */
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
             if (e.key === "Escape") onClose();
@@ -54,6 +80,10 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
         window.addEventListener("keydown", handleEsc);
         return () => window.removeEventListener("keydown", handleEsc);
     }, [onClose]);
+
+    if (!schedule) return null;
+
+    const isStudy = schedule.type === "study"; // 타입 구분 추가
 
     return (
         <AnimatePresence>
@@ -68,14 +98,18 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
                         transition={{ type: "spring", stiffness: 70, damping: 15 }}
                         style={{ width }}
                     >
-                        <Header>
-                            <h3>{schedule.type === "study" ? schedule.studyRoomTitle : "개인 일정"}</h3>
+                        <Header $type={schedule.type}>
+                            <h3>
+                                {schedule.title}
+                            </h3>
                             <CloseBtn onClick={onClose}>×</CloseBtn>
                         </Header>
 
                         <Content>
-                            <h2>{schedule.title}</h2>
-                            <p>{schedule.description}</p>
+                            {schedule.description && (
+                                <p className="desc">{schedule.description}</p>
+                            )}
+
                             <Time>
                                 🕒{" "}
                                 {new Date(schedule.start).toLocaleString("ko-KR", {
@@ -84,8 +118,8 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
                                     weekday: "short",
                                     hour: "2-digit",
                                     minute: "2-digit",
-                                })}
-                                <br />~{" "}
+                                })}{" "}
+                                ~{" "}
                                 {new Date(schedule.end).toLocaleString("ko-KR", {
                                     month: "long",
                                     day: "numeric",
@@ -94,23 +128,54 @@ export default function ScheduleDetailPanel({ schedule, onClose }: Props) {
                                     minute: "2-digit",
                                 })}
                             </Time>
+
+                            {!isStudy && schedule.location && (
+                                <Location>📍 {schedule.location}</Location>
+                            )}
                         </Content>
 
                         <ButtonArea>
-                            {schedule.type === "personal" ? (
-                                <>
-                                    <MoveButton>수정</MoveButton>
-                                    <DeleteButton>삭제</DeleteButton>
-                                </>
-                            ) : (
+                            {isStudy ? (
                                 <MoveButton onClick={handleMoveToStudyRoom}>
                                     스터디룸으로 이동하기 →
                                 </MoveButton>
+                            ) : (
+                                <>
+                                    <MoveButton onClick={handleEdit}>수정</MoveButton>
+                                    <DeleteButton onClick={handleDelete}>삭제</DeleteButton>
+                                </>
                             )}
                         </ButtonArea>
 
                         <ResizeHandle onMouseDown={handleMouseDown} />
                     </Panel>
+
+                    {/* 수정 모달 */}
+                    {isEditModalOpen && (
+                        <AddScheduleModal
+                            onClose={() => setIsEditModalOpen(false)}
+                            onSubmit={async (data) => {
+                                try {
+                                    await updateUserSchedule(schedule.id, data);
+                                    setIsEditModalOpen(false);
+                                    onClose();
+                                    await onRefresh();
+                                } catch (e) {
+                                    console.error(e);
+                                    alert("수정 중 오류가 발생했습니다.");
+                                }
+                            }}
+                            initialData={{
+                                title: schedule.title,
+                                description: schedule.description,
+                                startTime: schedule.startTime || schedule.start, // react-big-calendar에서 오는 필드명 대응
+                                endTime: schedule.endTime || schedule.end,
+                                location: schedule.location,
+                                allDay: schedule.allDay,
+                                color: schedule.color,
+                            }}
+                        />
+                    )}
                 </>
             )}
         </AnimatePresence>
@@ -140,12 +205,19 @@ const Panel = styled(motion.div)`
     z-index: 25;
 `;
 
-const Header = styled.div`
+/* ✅ Header에 타입별 색상 분기 추가 */
+const Header = styled.div<{ $type?: string }>`
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #e5e7eb;
     padding-bottom: 12px;
+    h3 {
+        font-size: 17px;
+        font-weight: 700;
+        color: ${({ $type }) =>
+                $type === "study" ? "#047857" : "#1d4ed8"};
+    }
 `;
 
 const CloseBtn = styled.button`
@@ -168,21 +240,24 @@ const Content = styled.div`
     margin-top: 16px;
     flex: 1;
     overflow-y: auto;
-    h2 {
-        font-size: 18px;
-        font-weight: 700;
-        color: #1f2937;
-        margin-bottom: 8px;
-    }
-    p {
+
+    /* ✅ 설명 스타일 추가 */
+    .desc {
         font-size: 14px;
-        line-height: 1.5;
+        line-height: 1.6;
         color: #374151;
-        margin-bottom: 12px;
+        margin-bottom: 16px;
     }
 `;
 
 const Time = styled.div`
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 8px;
+`;
+
+/* ✅ 장소 스타일 추가 */
+const Location = styled.div`
     font-size: 13px;
     color: #6b7280;
 `;
