@@ -98,18 +98,19 @@ function EmptyState() {
                 <Desc>내가 신고한 사용자와 진행 상태를 확인할 수 있습니다.</Desc>
             </Header>
 
-            <EmptyContainer>
-                <EmptyIcon>📭</EmptyIcon>
-                <h3>신고 내역이 없습니다</h3>
-                <p>
-                    아직 신고하신 내역이 없어요.
-                    <br /> 불편사항이 있다면 언제든 알려주세요.
-                </p>
-            </EmptyContainer>
+            <EmptyCard>
+                <IconBox>📭</IconBox>
+                <CardTitle>신고 내역이 없습니다</CardTitle>
+                <CardBody>
+                    <p>
+                        아직 신고하신 내역이 없어요.
+                        <br /> 불편사항이 있다면 언제든 알려주세요.
+                    </p>
+                </CardBody>
+            </EmptyCard>
         </Section>
     );
 }
-
 /* ====================== Styled Components ====================== */
 
 const Section = styled.section`
@@ -211,28 +212,42 @@ const StateBox = styled.div<{ color?: string }>`
     font-size: 14px;
 `;
 
-const EmptyContainer = styled.div`
-    background: #f9fafb;
+/* ====================== Empty 스타일 ====================== */
+const EmptyCard = styled.div`
     border: 1px solid #e5e7eb;
     border-radius: 16px;
-    padding: 80px 16px;
+    padding: 60px 32px;
+    background: linear-gradient(180deg, #f9fafb 0%, #ffffff 100%);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
     text-align: center;
+    animation: fadeUp 0.6s ease both;
+    transition: all 0.3s ease;
 
-    h3 {
-        margin-top: 12px;
-        font-size: 16px;
-        color: #111827;
-        font-weight: 600;
-    }
-
-    p {
-        font-size: 14px;
-        color: #6b7280;
-        margin-top: 4px;
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.08);
     }
 `;
 
-const EmptyIcon = styled.div`
-    font-size: 40px;
-    opacity: 0.7;
+const IconBox = styled.div`
+    font-size: 42px;
+    opacity: 0.85;
+    margin-bottom: 12px;
+`;
+
+const CardTitle = styled.h3`
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e3a8a;
+    margin-bottom: 8px;
+`;
+
+const CardBody = styled.div`
+    font-size: 15px;
+    line-height: 1.8;
+    color: #374151;
+
+    p {
+        margin: 0;
+    }
 `;
