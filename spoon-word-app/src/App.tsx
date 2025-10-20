@@ -17,6 +17,7 @@ import FavoriteTermsPage from "./pages/FavoriteTermsPage";
 import SpoonWordHeroBanner from "./components/SpoonWordHeroBanner.tsx";
 import QuizPlayPage from "./pages/QuizPlayPage";
 import SpoonNoteHomePage from "./pages/SpoonNoteHomePage.tsx";
+import {SpoonDialogProvider} from "./components/SpoonDialog.tsx";
 
 import { PageContainerFlushTop, NarrowLeft } from "./styles/layout";
 import { goToAccountLogin } from "./utils/auth";
@@ -346,6 +347,7 @@ function HomePage() {
 /* == 라우트 구성 == */
 export default function App() {
     return (
+        <SpoonDialogProvider>
         <Routes>
             {/* 공통 레이아웃 */}
             <Route element={<AppLayout />}>
@@ -366,5 +368,6 @@ export default function App() {
                 <Route path="*" element={<AutoContent />} />
             </Route>
         </Routes>
+        </SpoonDialogProvider>
     );
 }

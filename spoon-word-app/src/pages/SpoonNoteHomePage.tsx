@@ -5,6 +5,7 @@ import http, { authHeader } from "../utils/http";
 import { fetchMyFoldersWithStats } from "../api/folderStats";
 import { goToAccountLogin } from "../utils/auth";
 import { NarrowLeft } from "../styles/layout";
+import { useSpoonDialog } from "../components/SpoonDialog";
 
 /* ===== UI tokens (WordbookFolderPage와 일치) ===== */
 const UI = {
@@ -486,6 +487,8 @@ export default function SpoonNoteHomePage() {
     const nav = useNavigate();
     const location = useLocation();
 
+    const dialogs = useSpoonDialog();
+
     // 로그인 가드
     React.useEffect(() => {
         const loggedIn = !!localStorage.getItem("isLoggedIn");
@@ -539,7 +542,22 @@ export default function SpoonNoteHomePage() {
     };
 
     const createFolder = async () => {
-        const name = window.prompt("새 폴더 이름을 입력하세요.");
+        const name = await dialogs.prompt({
+            title: "새 폴더 만들기",
+            label: "폴더 이름",
+            placeholder: "새 폴더 이름을 입력하세요",
+            okText: "생성하기",
+            validator: (v) => {
+                const raw = v.trim();
+                if (!raw) return "공백만 입력할 수 없어요.";
+                if (raw.length > 60) return "폴더 이름은 최대 60자입니다.";
+                // 중복 방지(현재 페이지 목록 기준)
+                const normalized = raw.replace(/\s+/g, " ").toLowerCase();
+                const dup = all.some(f => (f.name ?? "").trim().replace(/\s+/g, " ").toLowerCase() === normalized);
+                if (dup) return "동일한 이름의 폴더가 이미 존재합니다.";
+                return;
+            },
+        });
         if (!name) return;
         try {
             const { data } = await http.post("/me/folders", { folderName: name }, { headers: { ...authHeader() } });
@@ -549,7 +567,11 @@ export default function SpoonNoteHomePage() {
             ]);
             setTotal((t) => (typeof t === "number" ? (t || 0) + 1 : 1)); // ⚡ 추가
         } catch (e: any) {
-            alert(e?.response?.data?.message || "폴더 생성에 실패했습니다.");
+            await dialogs.alert({
+                title: "폴더 생성에 실패했습니다.",
+                description: e?.response?.data?.message || "잠시 후 다시 시도해 주세요.",
+                okText: "확인",
+            });
         }
     };
 
@@ -703,7 +725,24 @@ export default function SpoonNoteHomePage() {
     // 이름 변경
     async function handleRename(folder: Folder) {
         closeMenu();
-        const next = window.prompt("스푼노트 새 이름을 입력하세요.", folder.name);
+        const next = await dialogs.prompt({
+            title: "스푼노트 이름 변경",
+            label: "새로운 이름",
+            initialValue: folder.name,
+            okText: "저장",
+            validator: (v) => {
+                const raw = v.trim();
+                if (!raw) return "공백만 입력할 수 없어요.";
+                if (raw.length > 60) return "폴더 이름은 최대 60자입니다.";
+                const normalized = raw.replace(/\s+/g, " ").toLowerCase();
+                const dup = all.some(f =>
+                    f.id !== folder.id &&
+                    (f.name ?? "").trim().replace(/\s+/g, " ").toLowerCase() === normalized
+                );
+                if (dup) return "동일한 이름의 폴더가 이미 존재합니다.";
+                return;
+            },
+        });
         const name = (next ?? "").trim();
         if (!name || name === folder.name) return;
 
@@ -726,14 +765,28 @@ export default function SpoonNoteHomePage() {
                     return;
                 } catch {}
             }
-            alert(e?.response?.data?.message || "이름 변경에 실패했습니다.");
+            await dialogs.alert({
+                title: "이름 변경 실패",
+                description: e?.response?.data?.message || "잠시 후 다시 시도해 주세요.",
+            });
         }
     }
 
     // 삭제
     async function handleDelete(folder: Folder) {
         closeMenu();
-        const ok = window.confirm(`'${folder.name}' 스푼노트를 삭제할까요? 이 작업은 되돌릴 수 없습니다.`);
+        const ok = await dialogs.confirm({
+            title: "스푼노트를 삭제할까요?",
+            description: (
+                <>
+                    <div style={{marginBottom:8}}>'{folder.name}' 폴더가 영구 삭제됩니다.</div>
+                    <div style={{fontSize:12, color:"#6b7280"}}>이 작업은 되돌릴 수 없습니다.</div>
+                </>
+            ),
+            okText: "영구 삭제",
+            cancelText: "취소",
+            danger: true,
+        });
         if (!ok) return;
 
         try {
@@ -744,7 +797,10 @@ export default function SpoonNoteHomePage() {
             setAll(prev => prev.filter(f => f.id !== folder.id));
             setTotal(t => Math.max(0, (t || 0) - 1));
         } catch (e: any) {
-            alert(e?.response?.data?.message || "삭제에 실패했습니다.");
+            await dialogs.alert({
+                title: "삭제 실패",
+                description: e?.reseponse?.data?.message || "잠시 후 다시 시도해 주세요.",
+            });
         }
     }
 
