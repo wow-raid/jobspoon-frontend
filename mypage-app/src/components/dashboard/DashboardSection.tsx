@@ -142,7 +142,7 @@ export default function DashboardSection() {
                     <DonutChart value={attendance.attendanceRate} label="이번 달 출석률" unit="%" max={100}/>
                     <DonutChart value={interview.interviewMonthlyCount} label="이번 달 모의면접" unit="회" max={10}/>
                     <DonutChart value={quiz.quizMonthlyCount} label="이번 달 문제풀이" unit="개" max={20}/>
-                    <DonutChart value={trust.totalScore} label="신뢰 점수" unit="점" max={100}
+                    <DonutChart value={trust.totalScore} label="활동 점수" unit="점" max={100}
                                 onDetailClick={() => setTrustModalOpen(true)}/>
                 </DonutGrid>
             </Section>

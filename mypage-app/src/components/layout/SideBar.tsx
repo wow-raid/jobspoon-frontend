@@ -51,7 +51,6 @@ export default function SideBar() {
                         <StyledNavLink to="schedule">
                             <FaCalendarAlt className="icon" />
                             일정관리
-                            <Badge>4</Badge>
                         </StyledNavLink>
                     </li>
 

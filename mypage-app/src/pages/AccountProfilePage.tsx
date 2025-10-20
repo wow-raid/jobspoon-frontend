@@ -314,7 +314,7 @@ export default function AccountProfilePage() {
                     <HistoryHeader>
                         <HeaderLeft>
                             <Icon>🛡️</Icon>
-                            <h3>신뢰점수</h3>
+                            <h3>활동 점수</h3>
                         </HeaderLeft>
                         <ToggleButton onClick={() => setShowTrustCriteria(!showTrustCriteria)}>
                             {showTrustCriteria ? "숨기기" : "산정 기준"}
