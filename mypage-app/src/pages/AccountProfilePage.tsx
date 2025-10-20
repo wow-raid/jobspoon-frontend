@@ -7,7 +7,7 @@ import { useOutletContext } from "react-router-dom";
 import defaultProfile from "../assets/default_profile.png";
 import ServiceModal from "../components/modals/ServiceModal.tsx";
 import TitleGuideModal from "../components/modals/TitleGuideModal.tsx";
-import TrustScoreCriteria from "../components/history/TrustScoreCriteria.tsx";
+import TrustScoreCriteriaModal from "../components/modals/TrustScoreCriteriaModal.tsx";
 import { ProfileAppearanceResponse, uploadProfilePhoto } from "../api/profileAppearanceApi.ts";
 import { updateNickname } from "../api/accountProfileApi.ts";
 // import {
@@ -53,7 +53,8 @@ export default function AccountProfilePage() {
     const [trustStatus, setTrustStatus] = useState<Status>("loading");
     // const [levelStatus, setLevelStatus] = useState<Status>("loading");
 
-    const [showTrustCriteria, setShowTrustCriteria] = useState(false);
+    // const [showTrustCriteria, setShowTrustCriteria] = useState(false);
+    const [isTrustCriteriaOpen, setIsTrustCriteriaOpen] = useState(false);
     const [isTitleGuideOpen, setIsTitleGuideOpen] = useState(false);
     // const [isLevelOpen, setIsLevelOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -316,8 +317,8 @@ export default function AccountProfilePage() {
                             <Icon>🛡️</Icon>
                             <h3>활동 점수</h3>
                         </HeaderLeft>
-                        <ToggleButton onClick={() => setShowTrustCriteria(!showTrustCriteria)}>
-                            {showTrustCriteria ? "숨기기" : "산정 기준"}
+                        <ToggleButton onClick={() => setIsTrustCriteriaOpen(true)}>
+                            산정 기준
                         </ToggleButton>
                     </HistoryHeader>
                     {trustStatus === "loading" ? (
@@ -401,7 +402,6 @@ export default function AccountProfilePage() {
                             </TrustContent>
                         </>
                     )}
-                    {showTrustCriteria && <TrustScoreCriteria />}
                 </Card>
 
                 {/* 레벨 */}
@@ -493,6 +493,11 @@ export default function AccountProfilePage() {
             <TitleGuideModal
                 isOpen={isTitleGuideOpen}
                 onClose={() => setIsTitleGuideOpen(false)}
+            />
+
+            <TrustScoreCriteriaModal
+                isOpen={isTrustCriteriaOpen}
+                onClose={() => setIsTrustCriteriaOpen(false)}
             />
 
             {/*
