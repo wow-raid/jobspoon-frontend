@@ -184,7 +184,10 @@ export default function UserHistoryPage() {
                             </TrustContent>
                         </>
                     )}
-                    {showTrustCriteria && <TrustScoreCriteriaModal />}
+                    <TrustScoreCriteriaModal
+                        isOpen={showTrustCriteria}
+                        onClose={() => setShowTrustCriteria(false)}
+                    />
                 </Card>
 
                 {/* 레벨 */}

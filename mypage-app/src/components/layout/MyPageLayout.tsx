@@ -7,7 +7,7 @@ import ProfileAppearanceCard from "../profile/ProfileAppearanceCard.tsx";
 import styled from "styled-components";
 import { FaHome } from "react-icons/fa";
 import { fetchMyProfile, ProfileAppearanceResponse } from "../../api/profileAppearanceApi.ts";
-import { fetchUserLevel, UserLevelResponse } from "../../api/userLevelApi.ts";
+// import { fetchUserLevel, UserLevelResponse } from "../../api/userLevelApi.ts";
 import { fetchMyTitles, UserTitleResponse } from "../../api/userTitleApi.ts";
 
 export default function MyPageLayout() {
@@ -16,7 +16,7 @@ export default function MyPageLayout() {
 
     {/* 프로필 외형 */}
     const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
-    const [userLevel, setUserLevel] = useState<UserLevelResponse | null>(null);
+    // const [userLevel, setUserLevel] = useState<UserLevelResponse | null>(null);
     const [titles, setTitles] = useState<UserTitleResponse[]>([]);
 
     //최신 프로필 불러오기
@@ -27,13 +27,11 @@ export default function MyPageLayout() {
             return;
         }
         try {
-            const [p, l, t] = await Promise.all([
+            const [p, t] = await Promise.all([
                 fetchMyProfile(),
-                fetchUserLevel(),
                 fetchMyTitles(),
             ]);
             setProfile(p);
-            setUserLevel(l);
             setTitles(t);
         } catch (error) {
             console.error("❌ 데이터 갱신 실패:", error);
@@ -63,7 +61,7 @@ export default function MyPageLayout() {
                 {profile && (
                     <ProfileAppearanceCard
                         profile={profile}
-                        userLevel={userLevel}
+                        // userLevel={userLevel}
                         titles={titles}
                     />
                 )}
@@ -75,7 +73,7 @@ export default function MyPageLayout() {
             {/* 메인 컨텐츠 */}
             <Main>
                 {/* OutletContext에 profile+userLevel+titles+refreshAll 전달 */}
-                <Outlet context={{ profile, userLevel, titles, refreshAll }} />
+                <Outlet context={{ profile, /* userLevel, */ titles, refreshAll }} />
             </Main>
         </LayoutContainer>
     );
