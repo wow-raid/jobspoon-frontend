@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { ProfileAppearanceResponse } from "../../api/profileAppearanceApi.ts";
-import { UserLevelResponse } from "../../api/userLevelApi.ts";
+// import { UserLevelResponse } from "../../api/userLevelApi.ts";
 import { UserTitleResponse } from "../../api/userTitleApi.ts";
 import styled from "styled-components";
 import defaultProfile from "../../assets/default_profile.png";
@@ -10,11 +10,12 @@ import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 type Props = {
     profile: ProfileAppearanceResponse;
-    userLevel?: UserLevelResponse | null;
+    // userLevel?: UserLevelResponse | null;
     titles?: UserTitleResponse[];
 };
 
-export default function ProfileAppearanceCard({ profile, userLevel, titles }: Props) {
+// export default function ProfileAppearanceCard({ profile, userLevel, titles }: Props) {
+export default function ProfileAppearanceCard({ profile, titles }: Props) {
     const [isOpen, setIsOpen] = useState(true);
 
     if (!profile) {
@@ -49,16 +50,16 @@ export default function ProfileAppearanceCard({ profile, userLevel, titles }: Pr
 
                     <InfoTable>
                         <tbody>
-                        <tr>
-                            <LabelCell>레벨</LabelCell> {/* 등급 → 레벨 */}
-                            <Separator>|</Separator>
-                            <ValueCell>
-                                {/* 수정: profile.userLevel → userLevel prop으로 변경 */}
-                                {userLevel
-                                    ? `Lv.${userLevel.level} (Exp ${userLevel.exp}/${userLevel.totalExp})`
-                                    : "레벨 정보 없음"}
-                            </ValueCell>
-                        </tr>
+                        {/*<tr>*/}
+                        {/*    <LabelCell>레벨</LabelCell> /!* 등급 → 레벨 *!/*/}
+                        {/*    <Separator>|</Separator>*/}
+                        {/*    <ValueCell>*/}
+                        {/*        /!* 수정: profile.userLevel → userLevel prop으로 변경 *!/*/}
+                        {/*        {userLevel*/}
+                        {/*            ? `Lv.${userLevel.level} (Exp ${userLevel.exp}/${userLevel.totalExp})`*/}
+                        {/*            : "레벨 정보 없음"}*/}
+                        {/*    </ValueCell>*/}
+                        {/*</tr>*/}
                         <tr>
                             <LabelCell>칭호</LabelCell>
                             <Separator>|</Separator>
