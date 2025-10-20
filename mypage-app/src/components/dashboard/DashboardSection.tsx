@@ -12,7 +12,7 @@ import {
 import { fetchTrustScore, TrustScoreResponse } from "../../api/userTrustScoreApi.ts";
 import {PieChart, Pie, Cell, ResponsiveContainer} from "recharts";
 import styled from "styled-components";
-import LevelSection from "./LevelSection.tsx";
+// import LevelSection from "./LevelSection.tsx";
 import TitleSection from "./TitleSection.tsx";
 import TrustScoreModal from "../modals/TrustScoreModal.tsx";
 import WritingModal from "../modals/WritingModal.tsx";
