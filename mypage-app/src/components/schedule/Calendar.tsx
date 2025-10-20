@@ -24,11 +24,24 @@ const CustomToolbar = ({ label, onNavigate, onView, view }: any) => {
 
     // label이 "10월 2025" → "2025년 10월" 변환
     const formattedLabel = (() => {
+        if (view === "day") {
+            // "월요일 10월 20" 같은 기본 label 대신 직접 날짜 포맷팅
+            const today = new Date(label); // label이 날짜 객체로 안 넘어올 수도 있으니 안전하게 처리
+            try {
+                return format(today, "yyyy년 M월 d일 (EEE)", { locale: ko });
+            } catch {
+                // 혹시 label이 문자열일 경우 강제 파싱
+                return format(new Date(), "yyyy년 M월 d일 (EEE)", { locale: ko });
+            }
+        }
+
+        // 기존 월간/주간용 포맷 유지
         const match = label.match(/(\d{1,2})월\s?(\d{4})/);
         if (match) {
             const [_, month, year] = match;
             return `${year}년 ${month}월`;
         }
+
         return label;
     })();
 
