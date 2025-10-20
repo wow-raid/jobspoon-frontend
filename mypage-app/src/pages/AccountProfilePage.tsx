@@ -265,7 +265,7 @@ export default function AccountProfilePage() {
                                 </NicknameMessage>
                             )}
 
-                            <Email>{profile.email}</Email>
+                            {/*<Email>{profile.email}</Email>*/}
                         </InfoText>
 
                         <ButtonGroup>
@@ -295,7 +295,7 @@ export default function AccountProfilePage() {
                     <BottomRow>
                         <InfoItem>
                             <FaEnvelope style={{ color: "#6b7280", marginRight: "8px" }} />
-                            <span>정보 1</span>
+                            <span>{profile.email}</span>
                         </InfoItem>
                         <InfoItem>
                             <FaLock style={{ color: "#6b7280", marginRight: "8px" }} />
@@ -626,7 +626,7 @@ const InfoCard = styled.div`
 
 const TopRow = styled.div`
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
 `;
 
