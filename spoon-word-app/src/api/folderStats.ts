@@ -32,14 +32,27 @@ export async function fetchMyFoldersWithStats(params: {
     }
 
     const isPaged = page != null;
-    const total =
-        (isPaged && Number(res.headers["x-total-count"])) ||
-        (isPaged ? 0 : ((res.data?.folders ?? res.data ?? []).length || 0));
 
-    // page 모드면 바디 = 배열, non-page 모드면 { folders: [...] }
+    // 1) 헤더 total 시도
+    const rawHeader =
+        res.headers?.["x-total-count"] ?? res.headers?.["X-Total-Count"];
+    const headerTotal = Number(rawHeader);
+    const headerOk = Number.isFinite(headerTotal);
+
+    // 2) items 파싱
     const items: FolderSummary[] = isPaged
-        ? (res.data as any[] ?? [])
-        : ((res.data?.folders as any[]) ?? []);
+        ? (Array.isArray(res.data) ? (res.data as any[]) : [])
+        : (Array.isArray(res.data?.folders) ? (res.data.folders as any[]) : []);
 
-    return { items, total, page: page ?? 0, perPage: isPaged ? perPage : items.length };
+    // 3) total 계산: 헤더가 없으면 "현재 페이지 길이"로 fallback
+    const total = isPaged
+        ? (headerOk ? headerTotal : items.length)
+        : items.length;
+
+    return {
+        items,
+        total,
+        page: page ?? 0,
+        perPage: isPaged ? perPage : items.length,
+    };
 }

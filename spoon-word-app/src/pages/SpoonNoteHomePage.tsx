@@ -82,29 +82,31 @@ const SortInlineWrap = styled.span`
   isolation: isolate;
 `;
 const SortInlineBtn = styled.button`
-  position: relative;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font-size: ${UI.font.body};
-  font-weight: 400;
-  letter-spacing: -0.02em;
-  color: ${UI.color.muted};
-  cursor: pointer;
-  line-height: 1;
-  border-radius: ${UI.radius.pill}px;
-  -webkit-tap-highlight-color: transparent;
+    position: relative;
+    z-index: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-size: ${UI.font.body};
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    color: ${UI.color.muted};
+    cursor: pointer;
+    line-height: 1;
+    border-radius: ${UI.radius.pill}px;
+    -webkit-tap-highlight-color: transparent;
 
-  &::after{
-    content:"";
-    position:absolute; inset:-6px -10px;
-    background:#fafafa; border-radius:10px; opacity:0;
-    transition:opacity .12s ease; pointer-events:none;
-  }
-  &:hover::after,
-  &:focus-visible::after,
-  &[aria-expanded="true"]::after { opacity:1; }
-  &:focus-visible { outline:none; box-shadow:0 0 0 3px rgba(79,118,241,.25); }
+    &::after{
+        content:"";
+        position:absolute; inset:-6px -10px;
+        background:#fafafa; border-radius:10px; opacity:0;
+        transition:opacity .12s ease; pointer-events:none;
+        z-index: -1;
+    }
+    &:hover::after,
+    &:focus-visible::after,
+    &[aria-expanded="true"]::after { opacity:1; }
+    &:focus-visible { outline:none; box-shadow:0 0 0 3px rgba(79,118,241,.25); }
 `;
 const SortPopup = styled.div`
   position: absolute;
@@ -365,6 +367,9 @@ const Pagination: React.FC<PaginationProps> = ({ page, size, total, onChange }) 
 };
 
 function pickTotal(x: any): number {
+    const headersTotal = Number(x?.headers?.["x-total-count"] ?? x?.headers?.["X-Total-Count"]);
+    if (Number.isFinite(headersTotal)) return headersTotal;
+
     const cands = [
         x?.total,
         x?.totalItems,
@@ -372,8 +377,8 @@ function pickTotal(x: any): number {
         x?.totalCount,
         x?.page?.totalElements,
         x?.pagination?.total,
-        x?.meta?.totalItems,  // 추가
-        x?.meta?.total,       // 추가
+        x?.meta?.totalItems,
+        x?.meta?.total,
     ];
     for (const n of cands) if (typeof n === "number" && n >= 0) return n;
     return 0;
@@ -390,6 +395,51 @@ const CenterStack = styled.div`
     justify-items: stretch;   
     text-align: center;
 `;
+
+/* ===== 케밥 메뉴 ===== */
+const CellAction = styled.div`
+    position: relative;
+    text-align: right;
+    overflow: visible;
+`;
+
+const MenuPopup = styled.div`
+  position: absolute;
+  top: 28px;
+  right: 0;
+  min-width: 220px;
+  background: #fff;
+  border: 1px solid ${UI.color.line};
+  border-radius: 12px;
+  box-shadow: ${UI.shadow.menu};
+  padding: 6px;
+  z-index: 8;
+`;
+
+const MenuItemBtn = styled.button`
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: ${UI.font.body};
+  color: ${UI.color.text};
+  display: flex; align-items: center; gap: 10px;
+  &:hover { background: #f9fafb; }
+`;
+
+const DangerItemBtn = styled(MenuItemBtn)`
+  color: #ef4444;
+`;
+
+const GlobalOverlay = styled.div`
+  position: fixed; inset: 0;
+  background: transparent;
+  z-index: 7;
+`;
+
 
 /* ===== Types ===== */
 type Folder = {
@@ -497,6 +547,7 @@ export default function SpoonNoteHomePage() {
                 { id: data.id, name: data.folderName ?? name, termCount: 0, learnedCount: 0, updatedAt: new Date().toISOString() },
                 ...prev,
             ]);
+            setTotal((t) => (typeof t === "number" ? (t || 0) + 1 : 1)); // ⚡ 추가
         } catch (e: any) {
             alert(e?.response?.data?.message || "폴더 생성에 실패했습니다.");
         }
@@ -541,27 +592,68 @@ export default function SpoonNoteHomePage() {
                     });
 
                 // 1) 호출
-                const res: unknown = await call(page);
+                const res: any = await call(page);
                 if (cancel) return;
+
+                // 헤더 기반 총개수 우선 파싱 (Axios 응답일 때)
+                let headerTotal: number | undefined;
+                if (res?.headers) {
+                    const h = res.headers;
+                    const raw = h["x-total-count"] ?? h["X-Total-Count"];
+                    const n = Number(raw);
+                    headerTotal = Number.isFinite(n) ? n : undefined;
+                }
 
                 // 2) 타입 가드로 items/total 파싱
                 let items: any[] = [];
-                if (hasItems<any>(res)) items = res.items;
+
+                // Axios 응답의 data가 배열인 경우
+                if (Array.isArray(res?.data)) {
+                    items = res.data;
+                }
+                // 기존 포맷들
+                else if (hasItems<any>(res)) items = res.items;
                 else if (hasContent<any>(res)) items = res.content;
                 else if (hasNestedData<any>(res)) items = res.data.items;
                 else if (hasList<any>(res)) items = res.list;
+                // API 래퍼가 바로 배열을 리턴하는 경우
+                else if (Array.isArray(res)) {
+                    items = res;
+                }
 
-                let tt = pickTotal(res as any);
+                let tt = pickTotal(res);
 
-                // 3) 1-base 백엔드일 수 있어 비어있으면 보정 재시도
+                // 헤더 total이 있으면 우선 사용
+                if ((!tt || tt === 0) && typeof headerTotal === "number") {
+                    tt = headerTotal;
+                }
+
+                // 3) 1-base 백엔드일 수 있어 비어있으면 보정 재시도 (기존 유지)
                 if (items.length === 0 && page > 0) {
-                    const retry: unknown = await call(page + 1);
+                    const retry: any = await call(page + 1);
                     if (!cancel) {
-                        if (hasItems<any>(retry)) items = retry.items;
-                        else if (hasContent<any>(retry)) items = retry.content;
-                        else if (hasNestedData<any>(retry)) items = retry.data.items;
-                        else if (hasList<any>(retry)) items = retry.list;
+                        let retryItems: any[] = [];
+                        if (Array.isArray(retry?.data)) retryItems = retry.data;
+                        else if (hasItems<any>(retry)) retryItems = retry.items;
+                        else if (hasContent<any>(retry)) retryItems = retry.content;
+                        else if (hasNestedData<any>(retry)) retryItems = retry.data.items;
+                        else if (hasList<any>(retry)) retryItems = retry.list;
+                        else if (Array.isArray(retry)) retryItems = retry;
+
+                        items = retryItems;
+
+                        // 재시도 응답에서도 헤더 total 체크
+                        let retryHeaderTotal: number | undefined;
+                        if (retry?.headers) {
+                            const hh = retry.headers;
+                            const raw2 = hh["x-total-count"] ?? hh["X-Total-Count"];
+                            const n2 = Number(raw2);
+                            retryHeaderTotal = Number.isFinite(n2) ? n2 : undefined;
+                        }
                         tt = pickTotal(retry as any) || tt;
+                        if ((!tt || tt === 0) && typeof retryHeaderTotal === "number") {
+                            tt = retryHeaderTotal;
+                        }
                     }
                 }
 
@@ -596,6 +688,65 @@ export default function SpoonNoteHomePage() {
             ? (page + 2) * perPage
             : page * perPage + all.length);
     const showPager = total > 0 || page > 0 || all.length === perPage;
+
+    // 케밥 메뉴 오픈 대상 id (행 단위로 1개만 열림)
+    const [menuFor, setMenuFor] = React.useState<string | number | null>(null);
+    const closeMenu = () => setMenuFor(null);
+
+    // ESC로 닫기
+    React.useEffect(() => {
+        const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeMenu(); };
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, []);
+
+    // 이름 변경
+    async function handleRename(folder: Folder) {
+        closeMenu();
+        const next = window.prompt("스푼노트 새 이름을 입력하세요.", folder.name);
+        const name = (next ?? "").trim();
+        if (!name || name === folder.name) return;
+
+        try {
+            const headers = { ...authHeader() };
+            const { data } = await http.patch(`/me/folders/${folder.id}`, { folderName: name }, { headers });
+            setAll(prev => prev.map(f => f.id === folder.id
+                ? { ...f, name: data?.folderName ?? name, updatedAt: new Date().toISOString() }
+                : f
+            ));
+        } catch (e: any) {
+            // 혹시 서버가 다른 필드를 요구하면 한 번 더 시도
+            if (e?.response?.status === 400) {
+                try {
+                    const { data } = await http.patch(`/me/folders/${folder.id}`, { newName: name }, { headers: { ...authHeader() } });
+                    setAll(prev => prev.map(f => f.id === folder.id
+                        ? { ...f, name: data?.folderName ?? name, updatedAt: new Date().toISOString() }
+                        : f
+                    ));
+                    return;
+                } catch {}
+            }
+            alert(e?.response?.data?.message || "이름 변경에 실패했습니다.");
+        }
+    }
+
+    // 삭제
+    async function handleDelete(folder: Folder) {
+        closeMenu();
+        const ok = window.confirm(`'${folder.name}' 스푼노트를 삭제할까요? 이 작업은 되돌릴 수 없습니다.`);
+        if (!ok) return;
+
+        try {
+            await http.delete(`/me/folders/${folder.id}`, {
+                params: { mode: "purge" }, // 기본 purge 명시
+                headers: { ...authHeader() },
+            });
+            setAll(prev => prev.filter(f => f.id !== folder.id));
+            setTotal(t => Math.max(0, (t || 0) - 1));
+        } catch (e: any) {
+            alert(e?.response?.data?.message || "삭제에 실패했습니다.");
+        }
+    }
 
     return (
         <NarrowLeft style={{ padding: "8px 0 24px" }}>
@@ -714,9 +865,26 @@ export default function SpoonNoteHomePage() {
                             {/* 최근 업데이트 */}
                             <CellCenter>{formatKR(f.updatedAt)}</CellCenter>
 
-                            <Cell style={{ textAlign: "right" }}>
-                                <Kebab aria-label="더보기">⋯</Kebab>
-                            </Cell>
+                            <CellAction>
+                                <Kebab
+                                    aria-label="더보기"
+                                    aria-haspopup="menu"
+                                    aria-expanded={menuFor === f.id}
+                                    onClick={() => {
+                                        setSortOpen(false); // 정렬 팝업 닫기
+                                        setMenuFor(prev => (prev === f.id ? null : f.id));
+                                    }}
+                                >
+                                    ⋯
+                                </Kebab>
+
+                                {menuFor === f.id && (
+                                    <MenuPopup role="menu" aria-label="폴더 메뉴">
+                                        <MenuItemBtn onClick={() => handleRename(f)}>스푼노트 이름 변경하기</MenuItemBtn>
+                                        <DangerItemBtn onClick={() => handleDelete(f)}>스푼노트 삭제하기</DangerItemBtn>
+                                    </MenuPopup>
+                                )}
+                            </CellAction>
                         </Row>
                     );
                 })}
@@ -729,6 +897,7 @@ export default function SpoonNoteHomePage() {
                     onChange={handlePageChange}
                 />
             )}
+            {menuFor !== null && <GlobalOverlay onClick={closeMenu} />}
         </NarrowLeft>
     );
 }
