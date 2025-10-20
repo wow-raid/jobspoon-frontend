@@ -39,7 +39,7 @@ export default function ScheduleDetailPanel({ schedule, onClose, onRefresh }: Pr
     /* ========== 이동 버튼 ========== */
     const handleMoveToStudyRoom = () => {
         if (!schedule?.studyRoomId) return;
-        navigate(`/studyroom/${schedule.studyRoomId}`);
+        navigate(`/studies/joined-study/${schedule.studyRoomId}/schedule`);
     };
 
     /* ========== 크기 조절 로직 ========== */
