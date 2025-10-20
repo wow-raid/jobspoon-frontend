@@ -1,0 +1,238 @@
+import React, { useEffect, useState } from "react";
+import styled from "styled-components";
+import { fetchMyReports, CreateReportResponse } from "../api/reportApi";
+
+/* ====================== 메인 컴포넌트 ====================== */
+export default function MyReportsPage() {
+    const [reports, setReports] = useState<CreateReportResponse[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const loadReports = async () => {
+            try {
+                const data = await fetchMyReports();
+                setReports(data);
+            } catch (err) {
+                console.error(err);
+                setError("신고 내역을 불러오는 중 오류가 발생했습니다.");
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadReports();
+    }, []);
+
+    if (loading) return <StateBox>불러오는 중...</StateBox>;
+    if (error) return <StateBox color="#EF4444">{error}</StateBox>;
+    if (reports.length === 0) return <EmptyState />;
+
+    return (
+        <Section>
+            <Header>
+                <Title>신고 내역</Title>
+                <Desc>내가 신고한 사용자와 진행 상태를 확인할 수 있습니다.</Desc>
+            </Header>
+
+            <ReportTable>
+                <TableHeader>
+                    <div>신고 대상</div>
+                    <div>사유</div>
+                    <div>상태</div>
+                    <div style={{ textAlign: "right" }}>신고일</div>
+                </TableHeader>
+
+                {reports.map((r) => (
+                    <TableRow key={r.id}>
+                        <Cell>{r.reportedUserNickname}</Cell>
+                        <Category>{translateCategory(r.category)}</Category>
+                        <Status color={statusColor(r.status)}>
+                            {statusLabel(r.status)}
+                        </Status>
+                        <DateCell>
+                            {new Date(r.createdAt).toLocaleDateString("ko-KR")}
+                        </DateCell>
+                    </TableRow>
+                ))}
+            </ReportTable>
+        </Section>
+    );
+}
+
+/* ====================== Helper 함수 ====================== */
+function statusLabel(status: string) {
+    const map: Record<string, string> = {
+        PENDING: "처리 대기",
+        IN_PROGRESS: "검토 중",
+        RESOLVED: "완료",
+    };
+    return map[status] || status;
+}
+
+function statusColor(status: string) {
+    const colors: Record<string, string> = {
+        PENDING: "#A1A1AA",
+        IN_PROGRESS: "#2563EB",
+        RESOLVED: "#10B981",
+    };
+    return colors[status] || "#9CA3AF";
+}
+
+function translateCategory(category: string) {
+    const map: Record<string, string> = {
+        SPAM: "스팸/광고",
+        HARASSMENT: "욕설/비방",
+        INAPPROPRIATE_CONTENT: "부적절한 콘텐츠",
+        OFF_TOPIC: "스터디 목적 외 활동",
+        ETC: "기타",
+    };
+    return map[category] || category;
+}
+
+/* ====================== Empty 상태 ====================== */
+function EmptyState() {
+    return (
+        <Section>
+            <Header>
+                <Title>신고 내역</Title>
+                <Desc>내가 신고한 사용자와 진행 상태를 확인할 수 있습니다.</Desc>
+            </Header>
+
+            <EmptyContainer>
+                <EmptyIcon>📭</EmptyIcon>
+                <h3>신고 내역이 없습니다</h3>
+                <p>
+                    아직 신고하신 내역이 없어요.
+                    <br /> 불편사항이 있다면 언제든 신고해주세요.
+                </p>
+            </EmptyContainer>
+        </Section>
+    );
+}
+
+/* ====================== Styled Components ====================== */
+
+const Section = styled.section`
+    padding: 24px;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 20px;
+`;
+
+const Header = styled.div`
+    margin-bottom: 8px;
+`;
+
+const Title = styled.h2`
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+`;
+
+const Desc = styled.p`
+    font-size: 14px;
+    color: #6b7280;
+    margin-top: 4px;
+`;
+
+const ReportTable = styled.div`
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+    margin-top: 12px;
+`;
+
+const TableHeader = styled.div`
+    display: grid;
+    grid-template-columns: 1.2fr 1.2fr 1fr 1fr;
+    align-items: center; /* ✅ 세로 중앙정렬 */
+    text-align: center; /* ✅ 수평 중앙정렬 */
+    padding: 18px 24px;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    font-weight: 600;
+    font-size: 14px;
+    color: #374151;
+`;
+
+const TableRow = styled.div`
+    display: grid;
+    grid-template-columns: 1.2fr 1.2fr 1fr 1fr;
+    align-items: center; /* ✅ 세로 중앙정렬 */
+    text-align: center; /* ✅ 수평 중앙정렬 */
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f3f5;
+    transition: background 0.15s ease;
+
+    &:hover {
+        background: #f9fafb;
+    }
+
+    &:last-child {
+        border-bottom: none;
+    }
+`;
+
+const Cell = styled.div`
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.6;
+`;
+
+const Category = styled(Cell)`
+    color: #2563eb;
+    font-weight: 500;
+`;
+
+const Status = styled.span<{ color: string }>`
+    font-size: 13px;
+    font-weight: 600;
+    color: ${({ color }) => color};
+    background: ${({ color }) => `${color}15`};
+    border-radius: 8px;
+    padding: 5px 10px;
+`;
+
+const DateCell = styled(Cell)`
+    color: #9ca3af;
+    font-size: 13px;
+    text-align: right; /* ✅ 날짜만 오른쪽 정렬 유지 */
+`;
+
+const StateBox = styled.div<{ color?: string }>`
+    text-align: center;
+    padding: 60px 0;
+    color: ${({ color }) => color || "#6b7280"};
+    font-size: 14px;
+`;
+
+const EmptyContainer = styled.div`
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 80px 16px;
+    text-align: center;
+
+    h3 {
+        margin-top: 12px;
+        font-size: 16px;
+        color: #111827;
+        font-weight: 600;
+    }
+
+    p {
+        font-size: 14px;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+`;
+
+const EmptyIcon = styled.div`
+    font-size: 40px;
+    opacity: 0.7;
+`;

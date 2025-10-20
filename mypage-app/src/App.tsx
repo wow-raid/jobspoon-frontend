@@ -11,6 +11,7 @@ import UserHistoryPage from "./pages/UserHistoryPage.tsx";
 import SchedulePage from "./pages/SchedulePage.tsx";
 import MyPostsPage from "./pages/MyPostsPage.tsx";
 import InquiryPage from "./pages/InquiryPage.tsx";
+import MyReportsPage from "./pages/MyReportsPage";
 
 import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
 import { getTheme, onThemeChange, type Theme as BridgeTheme } from '@jobspoon/theme-bridge';
@@ -96,6 +97,8 @@ export default function App() {
                         <Route path="schedule" element={<SchedulePage />} />
                         {/* 문의 */}
                         <Route path="inquiry" element={<InquiryPage />} />
+                        {/* 신고 */}
+                        <Route path="my-reports" element={<MyReportsPage />} />
                     </Route>
                 </Routes>
             </AppShell>

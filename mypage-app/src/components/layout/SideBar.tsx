@@ -55,10 +55,10 @@ export default function SideBar() {
                     </li>
 
                     <li>
-                        <NavButton onClick={handleOpenModal}>
+                        <StyledNavLink to="my-reports">
                             <FaExclamationTriangle className="icon" />
                             신고내역
-                        </NavButton>
+                        </StyledNavLink>
                     </li>
 
                     <li>
