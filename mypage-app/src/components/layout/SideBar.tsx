@@ -78,10 +78,10 @@ export default function SideBar() {
                     <Divider />
 
                     <li>
-                        <NavButton onClick={handleOpenModal}>
+                        <StyledNavLink to="inquiry">
                             <FaQuestionCircle className="icon" />
                             문의하기
-                        </NavButton>
+                        </StyledNavLink>
                     </li>
 
                     <li>

@@ -10,6 +10,7 @@ import MembershipPage from "./pages/MemebershipPage.tsx";
 import UserHistoryPage from "./pages/UserHistoryPage.tsx";
 import SchedulePage from "./pages/SchedulePage.tsx";
 import MyPostsPage from "./pages/MyPostsPage.tsx";
+import InquiryPage from "./pages/InquiryPage.tsx";
 
 import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
 import { getTheme, onThemeChange, type Theme as BridgeTheme } from '@jobspoon/theme-bridge';
@@ -93,6 +94,8 @@ export default function App() {
                         <Route path="my-posts" element={<MyPostsPage />} />
                         {/* 일정 */}
                         <Route path="schedule" element={<SchedulePage />} />
+                        {/* 문의 */}
+                        <Route path="inquiry" element={<InquiryPage />} />
                     </Route>
                 </Routes>
             </AppShell>
