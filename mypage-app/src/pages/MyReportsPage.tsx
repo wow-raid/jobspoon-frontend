@@ -103,7 +103,7 @@ function EmptyState() {
                 <h3>신고 내역이 없습니다</h3>
                 <p>
                     아직 신고하신 내역이 없어요.
-                    <br /> 불편사항이 있다면 언제든 신고해주세요.
+                    <br /> 불편사항이 있다면 언제든 알려주세요.
                 </p>
             </EmptyContainer>
         </Section>
