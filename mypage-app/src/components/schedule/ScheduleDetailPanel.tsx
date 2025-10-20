@@ -205,18 +205,17 @@ const Panel = styled(motion.div)`
     z-index: 25;
 `;
 
-/* ✅ Header에 타입별 색상 분기 추가 */
-const Header = styled.div<{ $type?: string }>`
+const Header = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #e5e7eb;
     padding-bottom: 12px;
+
     h3 {
         font-size: 17px;
         font-weight: 700;
-        color: ${({ $type }) =>
-                $type === "study" ? "#047857" : "#1d4ed8"};
+        color: #111827; /* 일정 타입과 무관하게 동일한 색 */
     }
 `;
 

@@ -300,7 +300,7 @@ export default function AccountProfilePage() {
                         </InfoItem>
                         <InfoItem>
                             <FaLock style={{ color: "#6b7280", marginRight: "8px" }} />
-                            <span>정보 2</span>
+                            <span>가입일 : </span>
                         </InfoItem>
                     </BottomRow>
                 </InfoCard>
