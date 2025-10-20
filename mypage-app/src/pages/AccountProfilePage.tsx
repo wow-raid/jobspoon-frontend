@@ -36,7 +36,7 @@ import {
 
 type OutletContextType = {
     profile: ProfileAppearanceResponse | null;
-    userLevel: UserLevelResponse | null;
+    // userLevel: UserLevelResponse | null;
     titles: UserTitleResponse[];
     refreshAll: () => Promise<void>;
 };
