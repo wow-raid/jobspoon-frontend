@@ -1,8 +1,8 @@
 import React from "react";
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
-import http from "../utils/http";
-import { fetchUserFoldersWithStats } from "../api/userWordbook";
+import http, { authHeader } from "../utils/http";
+import { fetchMyFoldersWithStats } from "../api/folderStats";
 import { goToAccountLogin } from "../utils/auth";
 import { NarrowLeft } from "../styles/layout";
 
@@ -304,6 +304,81 @@ const Kebab = styled.button`
   font-size: 22px; line-height: 1; cursor: pointer; color: ${UI.color.muted};
 `;
 
+/* ---------- Pagination (WordbookFolderPage 스타일) ---------- */
+type PaginationProps = {
+    page: number; size: number; total: number;
+    onChange: (nextPageZeroBased: number) => void;
+};
+
+const PaginationNav = styled.nav`
+  margin-top: 16px;
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; user-select: none;
+`;
+
+const PageNumBtn = styled.button<{ $active: boolean }>`
+  min-width: 34px; height: 34px; padding: 0 10px; border-radius: 999px;
+  border: 1px solid ${({ $active }) => ($active ? UI.color.primary : UI.color.line)};
+  background: ${({ $active }) => ($active ? UI.color.primary : "#fff")};
+  color: ${({ $active }) => ($active ? "#fff" : UI.color.text)};
+  font-weight: ${({ $active }) => ($active ? 700 : 600)};
+  cursor: pointer;
+`;
+
+const NavBtn = styled.button<{ $disabled: boolean }>`
+  width: 34px; height: 34px; border-radius: 999px; border: 1px solid ${UI.color.line};
+  background: #fff; color: ${({ $disabled }) => ($disabled ? "#c7c7c7" : UI.color.text)};
+  cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "pointer")};
+  display: inline-flex; align-items: center; justify-content: center;
+`;
+
+const Pagination: React.FC<PaginationProps> = ({ page, size, total, onChange }) => {
+    const totalPages = Math.max(1, Math.ceil((total || 0) / (size || 1)));
+    const current = page + 1; // 1-base
+    const maxNumbers = 10;
+
+    let start = Math.max(1, current - Math.floor(maxNumbers / 2));
+    let end = Math.min(totalPages, start + maxNumbers - 1);
+    start = Math.max(1, end - maxNumbers + 1);
+
+    const nums: number[] = [];
+    for (let i = start; i <= end; i++) nums.push(i);
+
+    const go = (p1: number) => {
+        if (p1 < 1 || p1 > totalPages || p1 === current) return;
+        onChange(p1 - 1);
+    };
+
+    return (
+        <PaginationNav aria-label="페이지네이션">
+            <NavBtn aria-label="처음" onClick={() => go(1)} disabled={current === 1} $disabled={current === 1}>«</NavBtn>
+            <NavBtn aria-label="이전" onClick={() => go(current - 1)} disabled={current === 1} $disabled={current === 1}>‹</NavBtn>
+            {nums.map((n) => (
+                <PageNumBtn key={n} onClick={() => go(n)} aria-current={n === current ? "page" : undefined} $active={n === current}>
+                    {n}
+                </PageNumBtn>
+            ))}
+            <NavBtn aria-label="다음" onClick={() => go(current + 1)} disabled={current === totalPages} $disabled={current === totalPages}>›</NavBtn>
+            <NavBtn aria-label="마지막" onClick={() => go(totalPages)} disabled={current === totalPages} $disabled={current === totalPages}>»</NavBtn>
+        </PaginationNav>
+    );
+};
+
+function pickTotal(x: any): number {
+    const cands = [
+        x?.total,
+        x?.totalItems,
+        x?.totalElements,
+        x?.totalCount,
+        x?.page?.totalElements,
+        x?.pagination?.total,
+        x?.meta?.totalItems,  // 추가
+        x?.meta?.total,       // 추가
+    ];
+    for (const n of cands) if (typeof n === "number" && n >= 0) return n;
+    return 0;
+}
+
 // 가운데 정렬 셀 + 진행률 열용 스택 추가
 const CellCenter = styled(Cell)`
   text-align: center;
@@ -324,6 +399,24 @@ type Folder = {
     learnedCount?: number;
     updatedAt?: string;
 };
+
+type PlainItems<T> = { items: T[] };
+type SpringPage<T> = { content: T[]; totalElements?: number };
+type NestedData<T> = { data: { items: T[]; total?: number } };
+type LegacyList<T> = { list: T[]; pagination?: { total: number } };
+
+function hasItems<T>(x: unknown): x is PlainItems<T> {
+    return Array.isArray((x as any)?.items);
+}
+function hasContent<T>(x: unknown): x is SpringPage<T> {
+    return Array.isArray((x as any)?.content);
+}
+function hasNestedData<T>(x: unknown): x is NestedData<T> {
+    return Array.isArray((x as any)?.data?.items);
+}
+function hasList<T>(x: unknown): x is LegacyList<T> {
+    return Array.isArray((x as any)?.list);
+}
 
 /* ===== Utils ===== */
 function formatKR(dateIso?: string) {
@@ -356,53 +449,22 @@ export default function SpoonNoteHomePage() {
     const [q, setQ] = React.useState("");
     const [sortKey, setSortKey] = React.useState<SortKey>("updated_desc");
     const [sortOpen, setSortOpen] = React.useState(false);
+    const [page, setPage] = React.useState(0);
+    const [perPage, setPerPage] = React.useState(20);
+    const [total, setTotal] = React.useState(0);
 
-    React.useEffect(() => {
-        let cancel = false;
-        (async () => {
-            try {
-                const list = await fetchUserFoldersWithStats();
-                if (cancel) return;
-
-                const todayIso = new Date().toISOString();
-                const normalized: Folder[] = (list || []).map((f: any) => ({
-                    id: f.id,
-                    name: f.name ?? f.folderName ?? "이름없음",
-                    termCount: f.termCount ?? 0,
-                    learnedCount: f.learnedCount ?? 0,
-                    updatedAt: f.updatedAt ?? todayIso,
-                }));
-                setAll(normalized);
-            } catch (e) {
-                console.warn("[notes] fetchUserFolders 실패:", e);
-                setAll([]);
-            }
-        })();
-        return () => { cancel = true; };
-    }, []);
-
-    const filtered = React.useMemo(() => {
-        const key = q.trim().toLowerCase();
-        if (!key) return all;
-        return all.filter((f) => (f.name || "").toLowerCase().includes(key));
-    }, [all, q]);
-
-    const display = React.useMemo(() => {
-        const arr = [...filtered];
-        const byTitle = (a: Folder, b: Folder) => (a.name || "").localeCompare(b.name || "", "ko");
-        const byUpdated = (a: Folder, b: Folder) => Date.parse(b.updatedAt || "") - Date.parse(a.updatedAt || "");
-        const byTerms = (a: Folder, b: Folder) => (b.termCount || 0) - (a.termCount || 0);
-
-        switch (sortKey) {
-            case "title_asc":    arr.sort(byTitle); break;
-            case "updated_asc":  arr.sort((a,b)=>-byUpdated(a,b)); break;
-            case "terms_desc":   arr.sort(byTerms); break;
-            case "terms_asc":    arr.sort((a,b)=>-byTerms(a,b)); break;
+    const sortToServer = (k: SortKey) => {
+        switch (k) {
+            case "title_asc":   return "name,asc";
+            case "updated_asc": return "updatedAt,asc";
+            case "terms_desc":  return "termCount,desc";
+            case "terms_asc":   return "termCount,asc";
             case "updated_desc":
-            default:             arr.sort(byUpdated);
+            default:            return "updatedAt,desc";
         }
-        return arr;
-    }, [filtered, sortKey]);
+    };
+
+    const display = all;
 
     // 선택(체크박스)
     const [selected, setSelected] = React.useState<Set<string | number>>(new Set());
@@ -430,7 +492,7 @@ export default function SpoonNoteHomePage() {
         const name = window.prompt("새 폴더 이름을 입력하세요.");
         if (!name) return;
         try {
-            const { data } = await http.post("/me/folders", { folderName: name });
+            const { data } = await http.post("/me/folders", { folderName: name }, { headers: { ...authHeader() } });
             setAll((prev) => [
                 { id: data.id, name: data.folderName ?? name, termCount: 0, learnedCount: 0, updatedAt: new Date().toISOString() },
                 ...prev,
@@ -451,6 +513,90 @@ export default function SpoonNoteHomePage() {
         }
     }, [sortKey]);
 
+    const handlePageChange = (nextZeroBased: number) => {
+        setPage(nextZeroBased);
+        requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+    };
+
+
+
+    React.useEffect(() => {
+        let cancel = false;
+
+        const run = async () => {
+            try {
+                const qStr = q.trim() || undefined;
+                const call = (p: number) =>
+                    fetchMyFoldersWithStats({
+                        // page index 다양한 명칭 동시 지원
+                        page: p,
+                        pageIndex: p,
+                        pageNo: p + 1,
+                        // page size 다양한 명칭 동시 지원
+                        size: perPage,
+                        limit: perPage,
+                        perPage,
+                        sort: sortToServer(sortKey),
+                        q: qStr,
+                    });
+
+                // 1) 호출
+                const res: unknown = await call(page);
+                if (cancel) return;
+
+                // 2) 타입 가드로 items/total 파싱
+                let items: any[] = [];
+                if (hasItems<any>(res)) items = res.items;
+                else if (hasContent<any>(res)) items = res.content;
+                else if (hasNestedData<any>(res)) items = res.data.items;
+                else if (hasList<any>(res)) items = res.list;
+
+                let tt = pickTotal(res as any);
+
+                // 3) 1-base 백엔드일 수 있어 비어있으면 보정 재시도
+                if (items.length === 0 && page > 0) {
+                    const retry: unknown = await call(page + 1);
+                    if (!cancel) {
+                        if (hasItems<any>(retry)) items = retry.items;
+                        else if (hasContent<any>(retry)) items = retry.content;
+                        else if (hasNestedData<any>(retry)) items = retry.data.items;
+                        else if (hasList<any>(retry)) items = retry.list;
+                        tt = pickTotal(retry as any) || tt;
+                    }
+                }
+
+                // 4) 정규화
+                const todayIso = new Date().toISOString();
+                const normalized: Folder[] = (items || []).map((f: any) => ({
+                    id: f.id,
+                    name: f.name ?? f.folderName ?? "이름없음",
+                    termCount: f.termCount ?? 0,
+                    learnedCount: f.learnedCount ?? 0,
+                    updatedAt: f.updatedAt ?? todayIso,
+                }));
+
+                setAll(normalized);
+                setTotal(tt || 0);
+            } catch (e) {
+                console.warn("[notes] fetch folders(paged) 실패:", e);
+                setAll([]);
+                setTotal(0);
+            }
+        };
+
+        const t = setTimeout(run, 250);
+        return () => { cancel = true; clearTimeout(t); };
+    }, [page, perPage, sortKey, q]);
+
+    React.useEffect(() => { setPage(0); }, [q, sortKey, perPage]);
+
+    const pagerTotal =
+        total ||
+        (all.length === perPage
+            ? (page + 2) * perPage
+            : page * perPage + all.length);
+    const showPager = total > 0 || page > 0 || all.length === perPage;
+
     return (
         <NarrowLeft style={{ padding: "8px 0 24px" }}>
             {/* 상단 툴바 */}
@@ -459,7 +605,7 @@ export default function SpoonNoteHomePage() {
                     <BackBtn onClick={() => nav(-1)} aria-label="뒤로 가기">←</BackBtn>
 
                     <Title>내 스푼노트</Title>
-                    <Count>{display.length}개</Count>
+                    <Count>{total}개</Count>
 
                     <Sep aria-hidden>|</Sep>
 
@@ -575,6 +721,14 @@ export default function SpoonNoteHomePage() {
                     );
                 })}
             </Panel>
+            {showPager && (
+                <Pagination
+                    page={page}
+                    size={perPage}
+                    total={pagerTotal}
+                    onChange={handlePageChange}
+                />
+            )}
         </NarrowLeft>
     );
 }
