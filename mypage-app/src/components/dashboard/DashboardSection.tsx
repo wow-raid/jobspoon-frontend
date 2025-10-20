@@ -162,9 +162,9 @@ export default function DashboardSection() {
             />
 
             {/* 나의 레벨 현황 */}
-            <Section>
-                <LevelSection/>
-            </Section>
+            {/*<Section>*/}
+            {/*    <LevelSection/>*/}
+            {/*</Section>*/}
 
             {/* 나의 칭호 현황 */}
             <Section>
