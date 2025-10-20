@@ -70,7 +70,7 @@ function DonutChart({
             <DonutLabel>{label}</DonutLabel>
 
             {/* 신뢰 점수일 때만 버튼 */}
-            {label === "신뢰 점수" && (
+            {label === "활동 점수" && (
                 <DetailButton onClick={onDetailClick}>자세히 보기</DetailButton>
             )}
         </DonutCard>
