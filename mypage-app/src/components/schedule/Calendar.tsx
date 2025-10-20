@@ -131,15 +131,15 @@ export default function Calendar({ schedules, onEventClick }: Props) {
 /* ================== styled-components ================== */
 const CalendarWrapper = styled.div`
     width: 100%;
-    max-width: 1100px;
-    margin: 0 auto;
-    height: 680px;
+    max-width: none;
+    margin: 0;
+    height: calc(100vh - 250px);
     background: #fff;
     border-radius: 12px;
     box-shadow: none;
     border: none;
     overflow: hidden;
-    padding: 1.2rem 1.6rem;
+    padding: 0;
     font-family: "SF Pro Text", "Noto Sans KR", sans-serif;
     transition: all 0.2s ease;
 
