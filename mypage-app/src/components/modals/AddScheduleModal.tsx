@@ -25,43 +25,44 @@ export default function AddScheduleModal({ onClose, onSubmit, initialData }: Pro
 
     /** 초기값 설정 */
     useEffect(() => {
+        const formatDate = (d: Date) => d.toLocaleDateString("en-CA"); // ✅ 수정
+        const formatTime = (d: Date) => d.toTimeString().slice(0, 5);
+
         if (isEditMode) {
             const start = new Date(initialData.startTime);
             const end = new Date(initialData.endTime);
-            const formatDate = (d: Date) => d.toISOString().split("T")[0];
-            const formatTime = (d: Date) => d.toTimeString().slice(0, 5);
 
             setForm({
                 title: initialData.title || "",
                 description: initialData.description || "",
-                startDate: formatDate(start),
+                startDate: formatDate(start), // ✅ 수정됨
                 startTime: initialData.allDay ? "" : formatTime(start),
-                endDate: formatDate(end),
+                endDate: formatDate(end),     // ✅ 수정됨
                 endTime: initialData.allDay ? "" : formatTime(end),
                 location: initialData.location || "",
                 allDay: initialData.allDay || false,
                 color: initialData.color || "#3b82f6",
             });
         } else {
-            // 기존 "신규 등록" 기본값 로직 그대로 유지
+            // 신규 등록 기본값
             const now = new Date();
             const roundedStart = new Date(now);
             roundedStart.setMinutes(now.getMinutes() < 30 ? 30 : 0);
             if (now.getMinutes() >= 30) roundedStart.setHours(now.getHours() + 1);
+
             const roundedEnd = new Date(roundedStart);
             roundedEnd.setHours(roundedStart.getHours() + 1);
-            const formatDate = (d: Date) => d.toISOString().split("T")[0];
-            const formatTime = (d: Date) => d.toTimeString().slice(0, 5);
 
             setForm((prev) => ({
                 ...prev,
-                startDate: formatDate(roundedStart),
+                startDate: formatDate(roundedStart), // ✅ 수정됨
                 startTime: formatTime(roundedStart),
-                endDate: formatDate(roundedEnd),
+                endDate: formatDate(roundedEnd),     // ✅ 수정됨
                 endTime: formatTime(roundedEnd),
             }));
         }
     }, [initialData]);
+
 
     /** ESC 키로 닫기 */
     useEffect(() => {
