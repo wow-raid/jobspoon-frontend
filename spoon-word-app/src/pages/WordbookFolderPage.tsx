@@ -267,6 +267,9 @@ const Hollow = styled.span`
     display: block;
 `;
 
+const MEMO_FILL = "#f2f8ff";  // 도형 내부
+const MEMO_LINE = "#c7ddff";  // 윤곽선
+
 /** 암기 상태 칩도 동일 톤으로 */
 const StatusBtn = styled.button<{ $done?: boolean }>`
     position: absolute;
@@ -277,34 +280,24 @@ const StatusBtn = styled.button<{ $done?: boolean }>`
     height: 28px;
     padding: 0 12px;
     border-radius: ${UI.radius.pill}px;
-    border: 1px solid ${({ $done }) => ($done ? UI.color.indigo200 : UI.color.line)};
-    background: ${({ $done }) => ($done ? UI.color.indigo50 : "#fff")};
+
+    border: 1px solid ${MEMO_LINE};
+    background: ${({ $done }) => ($done ? MEMO_FILL : "#fff")};
     color: ${({ $done }) => ($done ? UI.color.primaryStrong : UI.color.muted)};
 
     font-size: ${UI.font.tiny};
-    font-weight: 700;
-    letter-spacing: -0.06em;
+    font-weight: 600;
+    letter-spacing: -0.07em;
     cursor: pointer;
 
-    box-shadow: none; /* 이전 인셋 글로시 제거 */
-    transition:
-            background-color 140ms ease,
-            border-color 140ms ease,
-            color 140ms ease,
-            transform 80ms ease;
+    transition: background-color .14s ease, border-color .14s ease, color .14s ease, transform .08s ease;
 
     &:hover {
-        background: ${({ $done }) => ($done ? "#e6edff" : "#fafafa")};
+        background: ${({ $done }) => ($done ? "#ECF4FF" : "#f9fafb")};
     }
-    &:active { transform: scale(0.97); }
-    &:focus-visible {
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(79,118,241,0.25);
-    }
-    &:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-    }
+    &:active { transform: scale(.97); }
+    &:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(79,118,241,.25); }
+    &:disabled { opacity: .7; cursor: not-allowed; }
 `;
 
 const LearnRow = styled.div`
@@ -2603,7 +2596,7 @@ export default function WordbookFolderPage() {
                                             return;
                                         }
 
-                                        navigate(`${basePath}/spoon-quiz/play`, {
+                                        navigate(`${basePath}/quiz/play`, {
                                             state: { sessionId: sid, title: norm.title || folderName, questionIds: qids },
                                         });
                                         setQuizOpen(false);
@@ -2695,6 +2688,7 @@ export default function WordbookFolderPage() {
                                     </SelectToggle>
 
                                     <StatusBtn
+                                        $done={done}
                                         disabled={isSaving || !it.termId}
                                         title={!it.termId ? "이 항목은 termId가 없어 암기 상태를 저장할 수 없어요." : undefined}
                                         onClick={async (e) => {
