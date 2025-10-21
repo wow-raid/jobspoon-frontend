@@ -2,15 +2,72 @@ import styled from "styled-components";
 import { useEffect, useState } from "react";
 import { UserScheduleRequest } from "../../api/userScheduleApi.ts";
 
-type Props = {
+/* 🕐 TimePicker (오전/오후 + 시 + 분) */
+function TimePicker({ label, name, value, onChange, disabled }: {
+    label: string;
+    name: string;
+    value: string;
+    onChange: (name: string, value: string) => void;
+    disabled?: boolean;
+}) {
+    const [ampm, setAmpm] = useState("AM");
+    const [hour, setHour] = useState("01");
+    const [minute, setMinute] = useState("00");
+
+    useEffect(() => {
+        if (!value) return;
+        const [h, m] = value.split(":").map(Number);
+        if (h >= 12) {
+            setAmpm("PM");
+            setHour((h === 12 ? 12 : h - 12).toString().padStart(2, "0"));
+        } else {
+            setAmpm("AM");
+            setHour((h === 0 ? 12 : h).toString().padStart(2, "0"));
+        }
+        setMinute(m.toString().padStart(2, "0"));
+    }, [value]);
+
+    useEffect(() => {
+        let realHour = Number(hour);
+        if (ampm === "PM" && realHour !== 12) realHour += 12;
+        if (ampm === "AM" && realHour === 12) realHour = 0;
+        const formatted = `${realHour.toString().padStart(2, "0")}:${minute}`;
+        onChange(name, formatted);
+    }, [ampm, hour, minute]);
+
+    return (
+        <TimePickerWrapper>
+            <label>{label}</label>
+            <PickerRow>
+                <select value={ampm} onChange={(e) => setAmpm(e.target.value)} disabled={disabled}>
+                    <option value="AM">오전</option>
+                    <option value="PM">오후</option>
+                </select>
+                <select value={hour} onChange={(e) => setHour(e.target.value)} disabled={disabled}>
+                    {Array.from({ length: 12 }, (_, i) => {
+                        const val = (i + 1).toString().padStart(2, "0");
+                        return <option key={val} value={val}>{val}</option>;
+                    })}
+                </select>
+                <span>:</span>
+                <select value={minute} onChange={(e) => setMinute(e.target.value)} disabled={disabled}>
+                    {[0,5,10,15,20,25,30,35,40,45,50,55].map((m) => {
+                        const val = m.toString().padStart(2, "0");
+                        return <option key={val} value={val}>{val}</option>;
+                    })}
+                </select>
+            </PickerRow>
+        </TimePickerWrapper>
+    );
+}
+
+/* 📅 AddScheduleModal */
+export default function AddScheduleModal({ onClose, onSubmit, initialData }: {
     onClose: () => void;
     onSubmit: (data: UserScheduleRequest) => Promise<void>;
-    initialData?: any; // 수정용 데이터
-};
-
-export default function AddScheduleModal({ onClose, onSubmit, initialData }: Props) {
-    const isEditMode = !!initialData; // 수정 모드 여부
-
+    initialData?: any;
+}) {
+    const isEditMode = !!initialData;
     const [form, setForm] = useState({
         title: "",
         description: "",
@@ -23,222 +80,57 @@ export default function AddScheduleModal({ onClose, onSubmit, initialData }: Pro
         color: "#3b82f6",
     });
 
-    /** 초기값 설정 */
+    const handleTimeChange = (name: string, value: string) => {
+        setForm((prev) => ({ ...prev, [name]: value }));
+    };
+
     useEffect(() => {
-        const formatDate = (d: Date) => d.toLocaleDateString("en-CA"); // ✅ 수정
+        const formatDate = (d: Date) => d.toLocaleDateString("en-CA");
         const formatTime = (d: Date) => d.toTimeString().slice(0, 5);
 
         if (isEditMode) {
             const start = new Date(initialData.startTime);
             const end = new Date(initialData.endTime);
-
             setForm({
-                title: initialData.title || "",
-                description: initialData.description || "",
-                startDate: formatDate(start), // ✅ 수정됨
-                startTime: initialData.allDay ? "" : formatTime(start),
-                endDate: formatDate(end),     // ✅ 수정됨
-                endTime: initialData.allDay ? "" : formatTime(end),
-                location: initialData.location || "",
-                allDay: initialData.allDay || false,
-                color: initialData.color || "#3b82f6",
+                ...initialData,
+                startDate: formatDate(start),
+                startTime: formatTime(start),
+                endDate: formatDate(end),
+                endTime: formatTime(end),
             });
         } else {
-            // 신규 등록 기본값
             const now = new Date();
             const roundedStart = new Date(now);
-            roundedStart.setMinutes(now.getMinutes() < 30 ? 30 : 0);
-            if (now.getMinutes() >= 30) roundedStart.setHours(now.getHours() + 1);
-
+            const roundedMinutes = Math.ceil(now.getMinutes() / 5) * 5;
+            if (roundedMinutes === 60) roundedStart.setHours(now.getHours() + 1, 0, 0, 0);
+            else roundedStart.setMinutes(roundedMinutes, 0, 0);
             const roundedEnd = new Date(roundedStart);
             roundedEnd.setHours(roundedStart.getHours() + 1);
-
-            setForm((prev) => ({
-                ...prev,
-                startDate: formatDate(roundedStart), // ✅ 수정됨
+            setForm((p) => ({
+                ...p,
+                startDate: formatDate(roundedStart),
                 startTime: formatTime(roundedStart),
-                endDate: formatDate(roundedEnd),     // ✅ 수정됨
+                endDate: formatDate(roundedEnd),
                 endTime: formatTime(roundedEnd),
             }));
         }
     }, [initialData]);
 
-
-    /** ESC 키로 닫기 */
-    useEffect(() => {
-        const handleKey = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
-        };
-        window.addEventListener("keydown", handleKey);
-        return () => window.removeEventListener("keydown", handleKey);
-    }, [onClose]);
-
-    /** 입력 핸들러 */
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const target = e.target;
-
-        // ✅ 하루종일 토글 시 기존 날짜 유지 + react-big-calendar 인식 가능한 형태로 보정
-        if (target instanceof HTMLInputElement && target.type === "checkbox" && target.name === "allDay") {
-            const checked = target.checked;
-
-            const now = new Date();
-            const roundedStart = new Date(now);
-            roundedStart.setMinutes(now.getMinutes() < 30 ? 30 : 0);
-            if (now.getMinutes() >= 30) roundedStart.setHours(now.getHours() + 1);
-
-            const roundedEnd = new Date(roundedStart);
-            roundedEnd.setHours(roundedStart.getHours() + 1);
-            const formatTime = (d: Date) => d.toTimeString().slice(0, 5);
-
-            setForm((prev) => {
-                const startDate = prev.startDate || new Date().toISOString().split("T")[0];
-                const endDate = prev.endDate || startDate;
-
-                if (!checked) {
-                    // ✅ 하루종일 해제 시 → 현재 시각 기준 시간 자동 채우기
-                    return {
-                        ...prev,
-                        allDay: false,
-                        startDate,
-                        endDate,
-                        startTime: formatTime(roundedStart),
-                        endTime: formatTime(roundedEnd),
-                    };
-                }
-
-                // ✅ 하루종일 켜질 때 → 시간 비움
-                return {
-                    ...prev,
-                    allDay: true,
-                    startDate,
-                    endDate,
-                    startTime: "",
-                    endTime: "",
-                };
-            });
-            return;
-        }
-
-        // ✅ 일반 input / textarea 입력 처리
-        if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
-            const { name, value } = target;
-
-            setForm((prev) => {
-                const updated = { ...prev, [name]: value };
-
-                /** ✅ 시작 날짜 변경 시 → 종료 날짜/시간 자동 보정 */
-                if (name === "startDate" && value) {
-                    const startDate = new Date(value);
-                    const endDate = new Date(prev.endDate);
-
-                    if (!prev.endDate || startDate > endDate) {
-                        updated.endDate = value; // 종료일이 시작일보다 과거면 동기화
-                    }
-
-                    // 종료 시간이 비어있거나 시작보다 빠르면 +1시간 보정
-                    if (prev.startTime && (!prev.endTime || prev.startTime >= prev.endTime)) {
-                        const [h, m] = prev.startTime.split(":").map(Number);
-                        const endTime = new Date();
-                        endTime.setHours(h + 1, m);
-                        updated.endTime = endTime.toTimeString().slice(0, 5);
-                    }
-                }
-
-                /** ✅ 시작 시간 변경 시 → 종료 시간 +1시간 보정 */
-                if (name === "startTime" && value) {
-                    const [h, m] = value.split(":").map(Number);
-                    const endTime = new Date();
-                    endTime.setHours(h + 1, m);
-
-                    // ✅ 기존 종료일을 기준으로 계산 (덮어쓰지 않음)
-                    const currentEndDate = new Date(prev.endDate || prev.startDate);
-                    const newEndDate = new Date(currentEndDate);
-
-                    // ✅ 자정을 넘는 경우만 다음날로 이동
-                    if (endTime.getHours() < h) {
-                        newEndDate.setDate(newEndDate.getDate() + 1);
-                    }
-
-                    updated.startTime = value;
-                    updated.endTime = endTime.toTimeString().slice(0, 5);
-                    updated.endDate = newEndDate.toISOString().split("T")[0];
-                }
-
-                /** ✅ 종료 날짜 변경 시 → 시작 날짜/시간 자동 보정 */
-                if (name === "endDate" && value) {
-                    const startDate = new Date(prev.startDate);
-                    const endDate = new Date(value);
-
-                    if (!prev.startDate || endDate < startDate) {
-                        updated.startDate = value; // 종료일이 더 앞이면 시작일 맞춰줌
-                    }
-
-                    // 시작 시간이 종료보다 느리면 -1시간 보정
-                    if (prev.endTime && (!prev.startTime || prev.startTime >= prev.endTime)) {
-                        const [h, m] = prev.endTime.split(":").map(Number);
-                        const startTime = new Date();
-                        startTime.setHours(h - 1, m);
-                        updated.startTime = startTime.toTimeString().slice(0, 5);
-                    }
-                }
-
-                /** ✅ 종료 시간 변경 시 → 시작 시간 -1시간 보정 */
-                if (name === "endTime" && value) {
-                    const [endH, endM] = value.split(":").map(Number);
-                    const startTime = new Date();
-                    startTime.setHours(endH - 1, endM);
-
-                    // ✅ 기존 시작일을 기준으로 계산 (덮어쓰지 않음)
-                    const currentStartDate = new Date(prev.startDate || prev.endDate);
-                    const newStartDate = new Date(currentStartDate);
-
-                    // ✅ 자정을 지나 전날로 이동하는 경우만 하루 빼기
-                    if (startTime.getHours() > endH) {
-                        newStartDate.setDate(newStartDate.getDate() - 1);
-                    }
-
-                    updated.endTime = value;
-                    updated.startTime = startTime.toTimeString().slice(0, 5);
-                    updated.startDate = newStartDate.toISOString().split("T")[0];
-                }
-
-                return updated;
-            });
-        }
-    };
-
-    /** 제출 핸들러 */
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (!form.title) {
-            alert("제목을 입력해주세요.");
-            return;
-        }
+        if (!form.title) return alert("제목을 입력해주세요.");
 
         const startTime = form.allDay
-            ? `${form.startDate}T00:00:00` // ✅ null → 명시적 00:00
-            : `${form.startDate}T${form.startTime || "00:00"}:00`;
-
+            ? `${form.startDate}T00:00:00`
+            : `${form.startDate}T${form.startTime}`;
         const endTime = form.allDay
-            ? `${form.endDate}T23:59:59` // ✅ null → 명시적 23:59:59
-            : `${form.endDate}T${form.endTime || "23:59"}:00`;
+            ? `${form.endDate}T23:59:59`
+            : `${form.endDate}T${form.endTime}`;
 
-        const data: UserScheduleRequest = {
-            ...form,
-            startTime,
-            endTime,
-        };
-
+        const data: UserScheduleRequest = { ...form, startTime, endTime };
         await onSubmit(data);
-
-        if (initialData) {
-            alert("일정이 수정되었습니다!");
-        } else {
-            alert("일정이 추가되었습니다!");
-        }
+        alert(isEditMode ? "일정이 수정되었습니다!" : "일정이 추가되었습니다!");
     };
-
 
     return (
         <Backdrop onClick={onClose}>
@@ -254,9 +146,9 @@ export default function AddScheduleModal({ onClose, onSubmit, initialData }: Pro
                         <input
                             name="title"
                             value={form.title}
-                            onChange={handleChange}
-                            required
+                            onChange={(e) => setForm({ ...form, title: e.target.value })}
                             placeholder="일정 제목을 입력하세요"
+                            required
                         />
                     </label>
 
@@ -265,13 +157,12 @@ export default function AddScheduleModal({ onClose, onSubmit, initialData }: Pro
                         <textarea
                             name="description"
                             value={form.description}
-                            onChange={handleChange}
+                            onChange={(e) => setForm({ ...form, description: e.target.value })}
                             rows={3}
                             placeholder="일정 설명을 입력하세요 (선택)"
                         />
                     </label>
 
-                    {/* 시작/종료 날짜 + 시간 입력 */}
                     <TimeGroup>
                         <TimeRow>
                             <label>
@@ -280,21 +171,17 @@ export default function AddScheduleModal({ onClose, onSubmit, initialData }: Pro
                                     type="date"
                                     name="startDate"
                                     value={form.startDate}
-                                    onChange={handleChange}
+                                    onChange={(e) => setForm({ ...form, startDate: e.target.value })}
                                     required
                                 />
                             </label>
-                            <label>
-                                시작 시간
-                                <input
-                                    type="time"
-                                    name="startTime"
-                                    value={form.startTime}
-                                    onChange={handleChange}
-                                    required
-                                    disabled={form.allDay}
-                                />
-                            </label>
+                            <TimePicker
+                                label="시작 시간"
+                                name="startTime"
+                                value={form.startTime}
+                                onChange={handleTimeChange}
+                                disabled={form.allDay}
+                            />
                         </TimeRow>
 
                         <TimeRow>
@@ -304,47 +191,29 @@ export default function AddScheduleModal({ onClose, onSubmit, initialData }: Pro
                                     type="date"
                                     name="endDate"
                                     value={form.endDate}
-                                    onChange={handleChange}
+                                    onChange={(e) => setForm({ ...form, endDate: e.target.value })}
                                     required
                                 />
                             </label>
-                            <label>
-                                종료 시간
-                                <input
-                                    type="time"
-                                    name="endTime"
-                                    value={form.endTime}
-                                    onChange={handleChange}
-                                    required
-                                    disabled={form.allDay}
-                                />
-                            </label>
+                            <TimePicker
+                                label="종료 시간"
+                                name="endTime"
+                                value={form.endTime}
+                                onChange={handleTimeChange}
+                                disabled={form.allDay}
+                            />
                         </TimeRow>
 
-                        {/* 시간 바로 아래 종일 일정 배치 */}
                         <AllDayRow>
-                            <label style={{ cursor: "pointer" }}>
-                                하루 종일
-                                {/* 실제 체크박스는 숨김 */}
-                                <input
+                            <span>하루 종일</span>
+                            <SwitchWrapper>
+                                <SwitchInput
                                     type="checkbox"
-                                    name="allDay"
                                     checked={form.allDay}
-                                    onChange={handleChange}
-                                    style={{ display: "none" }}
-                                    id="allDayToggle"
+                                    onChange={() => setForm({ ...form, allDay: !form.allDay })}
                                 />
-                                {/* 시각적 토글 버튼 */}
-                                <ToggleSwitch
-                                    checked={form.allDay}
-                                    onClick={() => {
-                                        const input = document.getElementById("allDayToggle") as HTMLInputElement;
-                                        if (input) input.click(); // ✅ 실제 input 클릭 이벤트 트리거
-                                    }}
-                                >
-                                    <span>{form.allDay ? "종일" : "시간 지정"}</span>
-                                </ToggleSwitch>
-                            </label>
+                                <SwitchSlider checked={form.allDay} />
+                            </SwitchWrapper>
                         </AllDayRow>
                     </TimeGroup>
 
@@ -353,7 +222,7 @@ export default function AddScheduleModal({ onClose, onSubmit, initialData }: Pro
                         <input
                             name="location"
                             value={form.location}
-                            onChange={handleChange}
+                            onChange={(e) => setForm({ ...form, location: e.target.value })}
                             placeholder="예: 강남 카페, 스터디룸 등"
                         />
                     </label>
@@ -361,225 +230,217 @@ export default function AddScheduleModal({ onClose, onSubmit, initialData }: Pro
                     <ColorSelectRow>
                         <span>색상</span>
                         <ColorPalette>
-                            {["#A5D8FF", "#B2F2BB", "#FFD6A5", "#D0BFFF", "#FFADAD", "#FDFFB6", "#C8E7FF", "#E8C2FF"].map((c) => (
+                            {["#A5D8FF","#B2F2BB","#FFD6A5","#D0BFFF","#FFADAD","#FDFFB6","#C8E7FF","#E8C2FF"].map((c) => (
                                 <ColorCircle
                                     key={c}
                                     color={c}
                                     selected={form.color === c}
-                                    onClick={() => setForm((prev) => ({ ...prev, color: c }))}
+                                    onClick={() => setForm({ ...form, color: c })}
                                 />
                             ))}
                         </ColorPalette>
                     </ColorSelectRow>
 
-                    <SubmitBtn type="submit">
-                        {isEditMode ? "수정하기" : "등록하기"}
-                    </SubmitBtn>
+                    <SubmitBtn type="submit">{isEditMode ? "수정하기" : "등록하기"}</SubmitBtn>
                 </Form>
             </Modal>
         </Backdrop>
     );
 }
 
-/* ================== styled-components ================== */
+/* ========== 🍏 Styled ========== */
 const Backdrop = styled.div`
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(0,0,0,0.35);
     display: flex;
     justify-content: center;
-    align-items: center; /* 중앙 정렬로 변경 */
-    overflow-y: auto;
+    align-items: center;
     z-index: 999;
 `;
 
 const Modal = styled.div`
-    background: #fff;
-    border-radius: 12px;
-    padding: 24px;
-    width: 420px;
-    max-width: 90vw; /* 작은 화면 대응 */
-    max-height: 90vh; /* 스크롤 생기게 */
-    overflow-y: auto;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-    animation: fadeIn 0.25s ease;
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 28px 26px;
+    width: 440px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Noto Sans KR", sans-serif;
 `;
 
 const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-
-  h3 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #111827;
-  }
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #111;
+    }
 `;
 
 const CloseBtn = styled.button`
-  border: none;
-  background: none;
-  font-size: 22px;
-  color: #6b7280;
-  cursor: pointer;
+    border: none;
+    background: none;
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+    transition: color 0.2s;
+    &:hover { color: #444; }
 `;
 
 const Form = styled.form`
     display: flex;
     flex-direction: column;
-    gap: 14px;
-
+    gap: 18px;
     label {
         display: flex;
         flex-direction: column;
+        gap: 6px;
         font-size: 14px;
-        color: #374151;
-        gap: 4px;
+        color: #333;
     }
-
-    input,
-    textarea {
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
+    input, textarea, select {
+        border: 1px solid #ddd;
+        border-radius: 10px;
         padding: 8px 10px;
         font-size: 14px;
-        outline: none;
-        width: 100%; /* input이 삐죽 안나오게 */
-        box-sizing: border-box;
+        background: #fafafa;
+        transition: all 0.2s;
         &:focus {
-            border-color: #3b82f6;
+            border-color: #007aff;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
+            outline: none;
         }
     }
+    textarea { resize: none; }
 `;
 
 const TimeGroup = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
 `;
 
 const TimeRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-
-  label {
-    flex: 1;
     display: flex;
-    flex-direction: column;
-    font-size: 14px;
-    gap: 4px;
-  }
-
-  input {
-    padding: 6px 8px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 14px;
-    &:focus {
-      border-color: #3b82f6;
-    }
-  }
+    justify-content: space-between;
+    gap: 12px;
 `;
 
+const TimePickerWrapper = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 14px;
+`;
+
+const PickerRow = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    select {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 6px 10px;
+        background: #fafafa;
+        &:focus {
+            border-color: #007aff;
+            background: #fff;
+        }
+    }
+    span { color: #666; }
+`;
+
+/* ✅ 하루 종일 토글 (Apple Switch) */
 const AllDayRow = styled.div`
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    margin-top: 4px;
-
-    label {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        gap: 8px;
-        font-size: 14px;
-        color: #374151;
-        white-space: nowrap;
-        cursor: pointer;
-    }
+    gap: 10px;
+    font-size: 14px;
+    color: #333;
 `;
 
-const ToggleSwitch = styled.button.attrs({ type: "button" })<{ checked: boolean }>`
-    width: 70px;
-    height: 28px;
-    border-radius: 20px;
-    background: ${({ checked }) => (checked ? "#60a5fa" : "#d1d5db")};
-    border: none;
-    cursor: pointer;
-    position: relative;
-    transition: background 0.25s ease;
-
-    span {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 12px;
-        font-weight: 600;
-        color: white;
-        letter-spacing: -0.2px;
-    }
-
-    &:hover {
-        background: ${({ checked }) => (checked ? "#3b82f6" : "#cbd5e1")};
-    }
+const SwitchWrapper = styled.label`
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 26px;
 `;
 
-const SubmitBtn = styled.button`
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 0;
-  font-size: 15px;
-  font-weight: 500;
+const SwitchInput = styled.input.attrs({ type: "checkbox" })`
+  opacity: 0;
+  width: 0;
+  height: 0;
+`;
+
+const SwitchSlider = styled.span<{ checked: boolean }>`
+  position: absolute;
   cursor: pointer;
-  margin-top: 8px;
-  transition: background 0.2s;
-  &:hover {
-    background: #2563eb;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: ${({ checked }) => (checked ? "#007AFF" : "#d6d6d6")};
+  transition: all 0.3s ease;
+  border-radius: 26px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+  
+  &::before {
+    content: "";
+    position: absolute;
+    height: 22px;
+    width: 22px;
+    left: ${({ checked }) => (checked ? "20px" : "2px")};
+    bottom: 2px;
+    background-color: white;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   }
 `;
 
+
 const ColorSelectRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 6px;
-  font-size: 14px;
-  color: #374151;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
 `;
 
 const ColorPalette = styled.div`
-  display: flex;
-  gap: 8px;
+    display: flex;
+    gap: 10px;
 `;
 
 const ColorCircle = styled.button.attrs({ type: "button" })<{ color: string; selected: boolean }>`
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    border: ${({ selected }) => (selected ? "2px solid #334155" : "1px solid #d1d5db")};
+    border: ${({ selected }) => (selected ? "2px solid #007aff" : "1px solid #ccc")};
     background-color: ${({ color }) => color};
     cursor: pointer;
-    transition: transform 0.15s ease, border 0.15s ease;
-
+    transition: all 0.2s;
     &:hover {
         transform: scale(1.15);
-        border-color: #3b82f6;
+        box-shadow: 0 0 6px rgba(0,122,255,0.25);
     }
+`;
+
+const SubmitBtn = styled.button`
+    background: linear-gradient(90deg, #007aff 0%, #0a84ff 100%);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 0;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(0,122,255,0.25);
+    transition: all 0.25s;
+    &:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,122,255,0.35); }
+    &:active { transform: translateY(0); box-shadow: 0 3px 6px rgba(0,122,255,0.2); }
 `;
