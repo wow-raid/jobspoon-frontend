@@ -205,7 +205,7 @@ const Panel = styled(motion.div)`
     z-index: 25;
 `;
 
-const Header = styled.div`
+const Header = styled.div<{ $type?: string }>`
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -215,7 +215,7 @@ const Header = styled.div`
     h3 {
         font-size: 17px;
         font-weight: 700;
-        color: #111827; /* 일정 타입과 무관하게 동일한 색 */
+        color: #111827;
     }
 `;
 
