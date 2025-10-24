@@ -2710,7 +2710,7 @@ export default function WordbookFolderPage() {
                                             }
                                         }}
                                     >
-                                        {done ? "암기 완료" : "미암기"}
+                                        {done ? "학습 완료" : "학습 중"}
                                     </StatusBtn>
 
                                     <HideTermCardAdd $hideTitle={titleHidden} $hideDesc={descHidden}>

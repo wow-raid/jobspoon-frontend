@@ -449,6 +449,7 @@ type Folder = {
     termCount?: number;
     learnedCount?: number;
     updatedAt?: string;
+    lastStudiedAt?: string | null;
 };
 
 type PlainItems<T> = { items: T[] };
@@ -473,7 +474,8 @@ function hasList<T>(x: unknown): x is LegacyList<T> {
 function formatKR(dateIso?: string) {
     if (!dateIso) return "-";
     try {
-        const d = new Date(dateIso);
+        const normalized = dateIso.replace(/(\.\d{3})\d+$/, "$1");
+        const d = new Date(normalized);
         return `${d.getMonth() + 1}월 ${d.getDate()}일`;
     } catch {
         return "-";
@@ -481,7 +483,7 @@ function formatKR(dateIso?: string) {
 }
 
 /* ===== Page ===== */
-type SortKey = "title_asc" | "updated_desc" | "updated_asc" | "terms_desc" | "terms_asc";
+type SortKey = "title_asc" | "updated_desc" | "updated_asc" | "terms_desc" | "terms_asc" | "studied_desc";
 
 export default function SpoonNoteHomePage() {
     const nav = useNavigate();
@@ -512,6 +514,7 @@ export default function SpoonNoteHomePage() {
             case "updated_asc": return "updatedAt,asc";
             case "terms_desc":  return "termCount,desc";
             case "terms_asc":   return "termCount,asc";
+            case "studied_desc":return "lastStudiedAt,desc";
             case "updated_desc":
             default:            return "updatedAt,desc";
         }
@@ -581,6 +584,7 @@ export default function SpoonNoteHomePage() {
             case "updated_asc": return "오래된 업데이트";
             case "terms_desc": return "단어 수 많은순";
             case "terms_asc": return "단어 수 적은순";
+            case "studied_desc": return "최근 학습";
             case "updated_desc":
             default: return "최근 업데이트";
         }
@@ -611,10 +615,12 @@ export default function SpoonNoteHomePage() {
                         perPage,
                         sort: sortToServer(sortKey),
                         q: qStr,
+                        _ts: Date.now()
                     });
 
                 // 1) 호출
                 const res: any = await call(page);
+                console.log('[folders:stats raw]', res?.data ?? res);
                 if (cancel) return;
 
                 // 헤더 기반 총개수 우선 파싱 (Axios 응답일 때)
@@ -679,6 +685,8 @@ export default function SpoonNoteHomePage() {
                     }
                 }
 
+                console.log('[folders:stats items][0]', Array.isArray(items) ? items[0] : items);
+
                 // 4) 정규화
                 const todayIso = new Date().toISOString();
                 const normalized: Folder[] = (items || []).map((f: any) => ({
@@ -687,6 +695,7 @@ export default function SpoonNoteHomePage() {
                     termCount: f.termCount ?? 0,
                     learnedCount: f.learnedCount ?? 0,
                     updatedAt: f.updatedAt ?? todayIso,
+                    lastStudiedAt: f.lastStudiedAt ?? null,
                 }));
 
                 setAll(normalized);
@@ -843,6 +852,9 @@ export default function SpoonNoteHomePage() {
                                 <RadioItem $checked={sortKey === "terms_asc"} onClick={() => { setSortKey("terms_asc"); setSortOpen(false); }}>
                                     <span /> 단어 수 적은순
                                 </RadioItem>
+                                <RadioItem $checked={sortKey === "studied_desc"} onClick={() => { setSortKey("studied_desc"); setSortOpen(false); }}>
+                                    <span /> 최근 학습
+                                </RadioItem>
                             </SortPopup>
                         )}
                     </SortInlineWrap>
@@ -874,7 +886,7 @@ export default function SpoonNoteHomePage() {
                     <Cell>선택 항목</Cell>
                     <CellCenter>단어 수</CellCenter>
                     <CellCenter>학습 완료율</CellCenter>
-                    <CellCenter>최근 업데이트</CellCenter>
+                    <CellCenter>최근 학습일</CellCenter>
                     <Cell />
                 </HeadRow>
 
@@ -918,8 +930,8 @@ export default function SpoonNoteHomePage() {
                                 </CenterStack>
                             </CellCenter>
 
-                            {/* 최근 업데이트 */}
-                            <CellCenter>{formatKR(f.updatedAt)}</CellCenter>
+                            {/* 최근 학습일(없으면 최근 업데이트로 폴백) */}
+                            <CellCenter>{formatKR(f.lastStudiedAt || f.updatedAt)}</CellCenter>
 
                             <CellAction>
                                 <Kebab
