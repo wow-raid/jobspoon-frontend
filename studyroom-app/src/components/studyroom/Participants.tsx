@@ -5,6 +5,7 @@ import { NavLink, useOutletContext, useParams } from 'react-router-dom';
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../hooks/useAuth";
 import ParticipantsReportModal from "./ParticipantsReportModal";
+import TransferLeadershipModal from "./TransferLeadershipModal.tsx";
 
 interface Member {
     id: number;
@@ -84,6 +85,7 @@ const Footer = styled.footer`
   display: flex;
   justify-content: flex-end;
   margin-top: 24px;
+  gap: 12px;
 `;
 
 const LeaveButton = styled.button`
@@ -197,6 +199,14 @@ const KickButton = styled.button`
   }
 `;
 
+const TransferButton = styled(LeaveButton)`
+    background-color: ${({ theme }) => theme.accent ?? theme.primary};
+
+    &:hover:not(:disabled) {
+        background-color: ${({ theme }) => theme.accentHover ?? theme.primaryHover};
+    }
+`;
+
 const ReportButton = styled(KickButton)`
     color: $f59e0b;
     border-color: $f59e0b;
@@ -209,6 +219,7 @@ const Participants: React.FC = () => {
     const { nickname: currentUserNickname } = useAuth();
     const [members, setMembers] = useState<Member[]>([]);
     const [reportingMember, setReportingMember] = useState<Member | null>(null);
+    const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 
     const fetchMembers = useCallback(async () => {
         if (!studyId) return;
@@ -311,6 +322,12 @@ const Participants: React.FC = () => {
             </Section>
             </ContentWrapper>
             <Footer>
+                {userRole === 'LEADER' && (
+                    <TransferButton onClick={() => setIsTransferModalOpen(true)} style={{marginRight: '12px'}}>
+                        👑 리더 위임하기
+                    </TransferButton>
+                )}
+
                 <LeaveButton onClick={onLeaveOrClose} disabled={studyStatus === 'CLOSED'}>
                     {userRole === 'LEADER' ? '☠️스터디 폐쇄하기☠️' : '☠️탈퇴하기☠️'}
                 </LeaveButton>
@@ -319,6 +336,12 @@ const Participants: React.FC = () => {
                 studyId={studyId}
                 reportedMember={reportingMember}
                 onClose={() => setReportingMember(null)}
+            />
+            <TransferLeadershipModal
+                isOpen={isTransferModalOpen}
+                onClose={() => setIsTransferModalOpen(false)}
+                studyId={studyId}
+                participants={participants}
             />
         </Container>
     );
