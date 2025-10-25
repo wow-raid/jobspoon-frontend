@@ -267,6 +267,9 @@ const Hollow = styled.span`
     display: block;
 `;
 
+const MEMO_FILL = "#f2f8ff";  // 도형 내부
+const MEMO_LINE = "#c7ddff";  // 윤곽선
+
 /** 암기 상태 칩도 동일 톤으로 */
 const StatusBtn = styled.button<{ $done?: boolean }>`
     position: absolute;
@@ -277,34 +280,24 @@ const StatusBtn = styled.button<{ $done?: boolean }>`
     height: 28px;
     padding: 0 12px;
     border-radius: ${UI.radius.pill}px;
-    border: 1px solid ${({ $done }) => ($done ? UI.color.indigo200 : UI.color.line)};
-    background: ${({ $done }) => ($done ? UI.color.indigo50 : "#fff")};
+
+    border: 1px solid ${MEMO_LINE};
+    background: ${({ $done }) => ($done ? MEMO_FILL : "#fff")};
     color: ${({ $done }) => ($done ? UI.color.primaryStrong : UI.color.muted)};
 
     font-size: ${UI.font.tiny};
-    font-weight: 700;
-    letter-spacing: -0.06em;
+    font-weight: 600;
+    letter-spacing: -0.07em;
     cursor: pointer;
 
-    box-shadow: none; /* 이전 인셋 글로시 제거 */
-    transition:
-            background-color 140ms ease,
-            border-color 140ms ease,
-            color 140ms ease,
-            transform 80ms ease;
+    transition: background-color .14s ease, border-color .14s ease, color .14s ease, transform .08s ease;
 
     &:hover {
-        background: ${({ $done }) => ($done ? "#e6edff" : "#fafafa")};
+        background: ${({ $done }) => ($done ? "#ECF4FF" : "#f9fafb")};
     }
-    &:active { transform: scale(0.97); }
-    &:focus-visible {
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(79,118,241,0.25);
-    }
-    &:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-    }
+    &:active { transform: scale(.97); }
+    &:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(79,118,241,.25); }
+    &:disabled { opacity: .7; cursor: not-allowed; }
 `;
 
 const LearnRow = styled.div`
@@ -2603,7 +2596,7 @@ export default function WordbookFolderPage() {
                                             return;
                                         }
 
-                                        navigate(`${basePath}/spoon-quiz/play`, {
+                                        navigate(`${basePath}/quiz/play`, {
                                             state: { sessionId: sid, title: norm.title || folderName, questionIds: qids },
                                         });
                                         setQuizOpen(false);
@@ -2696,47 +2689,28 @@ export default function WordbookFolderPage() {
 
                                     <StatusBtn
                                         $done={done}
-                                        disabled={isSaving}
-                                        aria-busy={isSaving}
-                                        aria-pressed={done}
-                                        aria-label={
-                                            done
-                                                ? "암기 완료로 표시됨, 클릭하면 미암기로 전환"
-                                                : "미암기로 표시됨, 클릭하면 암기 완료로 전환"
-                                        }
+                                        disabled={isSaving || !it.termId}
+                                        title={!it.termId ? "이 항목은 termId가 없어 암기 상태를 저장할 수 없어요." : undefined}
                                         onClick={async (e) => {
                                             e.stopPropagation();
-                                            if (isSaving) return;
-
+                                            if (isSaving || !it.termId) return;
                                             const prev = learn[it.uwtId] ?? "unmemorized";
                                             const nextLocal = prev === "memorized" ? "unmemorized" : "memorized";
-
                                             setLearn((m) => ({ ...m, [it.uwtId]: nextLocal }));
                                             setSaving((m) => ({ ...m, [it.uwtId]: true }));
                                             try {
                                                 await setMemorization({
-                                                    termId: it.termId ?? undefined,
-                                                    userTermId: it.uwtId,
+                                                    termId: it.termId,
                                                     done: nextLocal === "memorized",
                                                 });
-                                            } catch (err: any) {
+                                            } catch (err) {
                                                 setLearn((m) => ({ ...m, [it.uwtId]: prev }));
-                                                const s = err?.response?.status;
-                                                if (s === 401) {
-                                                    alert("로그인이 필요합니다.");
-                                                    goToAccountLogin(location.pathname + location.search);
-                                                } else if (s === 404) {
-                                                    alert("용어를 찾을 수 없습니다.");
-                                                } else {
-                                                    alert("저장에 실패했어요. 잠시 후 다시 시도해 주세요.");
-                                                    console.error("[memorization:toggle] failed:", err);
-                                                }
                                             } finally {
                                                 setSaving((m) => ({ ...m, [it.uwtId]: false }));
                                             }
                                         }}
                                     >
-                                        {done ? "암기 완료" : "미암기"}
+                                        {done ? "학습 완료" : "학습 중"}
                                     </StatusBtn>
 
                                     <HideTermCardAdd $hideTitle={titleHidden} $hideDesc={descHidden}>

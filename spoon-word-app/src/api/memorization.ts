@@ -10,34 +10,24 @@ export async function patchTermMemorization(
     return http.patch(
         `/me/terms/${termId}/memorization`,
         { status },
-        { headers: { ...authHeader() } }
-    );
-}
-/** userTermId 기준으로 암기 상태 변경 (필요 시 사용) */
-export async function patchUserTermMemorization(
-    userTermId: number | string,
-    status: MemorizationStatus
-) {
-    return http.patch(
-        `/me/terms/${userTermId}/memorization`,
-        { status },
-        { headers: { ...authHeader() } }
+        { headers: { ...authHeader() }, withCredentials: true }
     );
 }
 
-/** 내부에서 알아서 경로 선택 (termId 있으면 우선 사용) */
 export async function setMemorization(opts: {
     termId?: number | string;
-    userTermId?: number | string;
     done: boolean;
 }) {
     const status: MemorizationStatus = opts.done ? "MEMORIZED" : "LEARNING";
-    if (opts.termId != null) return patchTermMemorization(opts.termId, status);
-    if (opts.userTermId != null) return patchUserTermMemorization(opts.userTermId, status);
-    throw new Error("setMemorization: termId/userTermId 둘 다 없습니다.");
+    if (opts.termId == null) {
+        throw new Error(
+            "setMemorization: server only accepts termId. (userTermId unsupported)"
+        );
+    }
+    return patchTermMemorization(opts.termId, status);
 }
 
-/** 새로고침 시 초기 암기 상태 일괄 조회 */
+/** 일괄 조회도 쿠키 필요 */
 export async function fetchMemorizationStatuses(termIds: Array<number | string>) {
     const ids = termIds.join(",");
     const { data } = await http.get<Record<string, MemorizationStatus>>(
@@ -45,6 +35,7 @@ export async function fetchMemorizationStatuses(termIds: Array<number | string>)
         {
             params: { ids },
             headers: { ...authHeader() },
+            withCredentials: true,
         }
     );
     return data;

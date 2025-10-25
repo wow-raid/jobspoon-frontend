@@ -31,8 +31,9 @@ const Side = styled.nav`
     border-radius: 14px;
     padding: 14px;
     position: sticky;
-    top: 20px;
+    top: var(--side-top, 20px);
     align-self: start;
+    margin-top: var(--side-mt, 0px);
 `;
 
 const TitleLink = styled(NavLink)`
@@ -183,7 +184,15 @@ export default function SpoonWordLayout() {
             )}
 
             {/* 히어로 아래 레이아웃 */}
-            <Shell data-testid="spoonword-shell">
+            <Shell
+                data-testid="spoonword-shell"
+                style={{
+                    // 헤더(네비바) 높이가 110px이라고 가정 + 추가 간격 16px
+                    ['--side-top' as any]: hideGlobalHero ? 'calc(110px + 16px)' : '20px',
+                    // 초기 배치 여백도 살짝 더
+                    ['--side-mt'  as any]: hideGlobalHero ? '12px' : '0px',
+                }}
+            >
                 <Side aria-label="스푼워드 네비게이션">
                     <TitleLink to="/spoon-word" end aria-label="스푼워드 홈으로">스푼워드</TitleLink>
                     <List>
