@@ -10,6 +10,7 @@ import TitleGuideModal from "../components/modals/TitleGuideModal.tsx";
 import TrustScoreCriteriaModal from "../components/modals/TrustScoreCriteriaModal.tsx";
 import { ProfileAppearanceResponse, uploadProfilePhoto } from "../api/profileAppearanceApi.ts";
 import { updateNickname } from "../api/accountProfileApi.ts";
+import TrustScoreHistoryGraph from "../components/history/TrustScoreHistoryGraph.tsx";
 // import {
 //     fetchUserLevelHistory,
 //     UserLevelResponse,
@@ -403,6 +404,18 @@ export default function AccountProfilePage() {
                         </>
                     )}
                 </Card>
+
+                {/* 활동점수 변화 그래프 */}
+                <Card>
+                    <HistoryHeader>
+                        <HeaderLeft>
+                            <Icon>📈</Icon>
+                            <h3>활동 점수 변화 추이</h3>
+                        </HeaderLeft>
+                    </HistoryHeader>
+                    <TrustScoreHistoryGraph />
+                </Card>
+
 
                 {/* 레벨 */}
                 {/*<Card>*/}
