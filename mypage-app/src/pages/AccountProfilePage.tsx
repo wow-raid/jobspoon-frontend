@@ -405,7 +405,7 @@ export default function AccountProfilePage() {
                     )}
                 </Card>
 
-                {/* 활동점수 변화 그래프 */}
+                {/* 활동 점수 변화 그래프 */}
                 <Card>
                     <HistoryHeader>
                         <HeaderLeft>
@@ -413,6 +413,28 @@ export default function AccountProfilePage() {
                             <h3>활동 점수 변화 추이</h3>
                         </HeaderLeft>
                     </HistoryHeader>
+
+                    {/* 안내 문구 (자동 월 계산) */}
+                    {(() => {
+                        const now = new Date();
+                        const monthNames = [
+                            "1월", "2월", "3월", "4월", "5월", "6월",
+                            "7월", "8월", "9월", "10월", "11월", "12월"
+                        ];
+
+                        // 지난달 / 이번달 계산
+                        const lastMonth = monthNames[(now.getMonth() + 11) % 12];
+                        const thisMonth = monthNames[now.getMonth()];
+
+                        return (
+                            <GraphNotice>
+                                현재 그래프는 <strong>{lastMonth}</strong>까지의 기록이며,{" "}
+                                <strong>{thisMonth}</strong> 점수는 실시간으로 반영 중입니다.
+                            </GraphNotice>
+                        );
+                    })()}
+
+                    {/* 그래프 본문 */}
                     <TrustScoreHistoryGraph />
                 </Card>
 
@@ -1019,4 +1041,15 @@ const DividerThin = styled.hr`
   border: none;
   border-top: 1px solid #e5e7eb;
   margin: 16px 0;
+`;
+
+const GraphNotice = styled.p`
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  margin-left: 2px;
+  strong {
+    color: #6b7280;
+  }
 `;
