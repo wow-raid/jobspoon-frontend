@@ -1,36 +1,31 @@
-{/* 마이페이지 전체 레이아웃(좌, 우만 담당) */}
+{/* 마이페이지 전체 레이아웃(좌: 프로필+사이드바 / 우: 메인 컨텐츠) */}
 
 import React, { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
+import styled, { createGlobalStyle } from "styled-components";
+import { FaHome } from "react-icons/fa";
+
 import SideBar from "./SideBar";
 import ProfileAppearanceCard from "../profile/ProfileAppearanceCard.tsx";
-import styled from "styled-components";
-import { FaHome } from "react-icons/fa";
 import { fetchMyProfile, ProfileAppearanceResponse } from "../../api/profileAppearanceApi.ts";
-// import { fetchUserLevel, UserLevelResponse } from "../../api/userLevelApi.ts";
 import { fetchMyTitles, UserTitleResponse } from "../../api/userTitleApi.ts";
 
 export default function MyPageLayout() {
-
     const navigate = useNavigate();
 
-    {/* 프로필 외형 */}
     const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
-    // const [userLevel, setUserLevel] = useState<UserLevelResponse | null>(null);
     const [titles, setTitles] = useState<UserTitleResponse[]>([]);
 
-    //최신 프로필 불러오기
+    /** 최신 프로필/칭호 불러오기 */
     const refreshAll = async () => {
         const isLoggedIn = localStorage.getItem("isLoggedIn");
         if (!isLoggedIn) {
             console.error("로그인이 필요합니다.");
             return;
         }
+
         try {
-            const [p, t] = await Promise.all([
-                fetchMyProfile(),
-                fetchMyTitles(),
-            ]);
+            const [p, t] = await Promise.all([fetchMyProfile(), fetchMyTitles()]);
             setProfile(p);
             setTitles(t);
         } catch (error) {
@@ -39,105 +34,129 @@ export default function MyPageLayout() {
     };
 
     useEffect(() => {
-        refreshAll()
-            .catch((err) =>
-                console.error("초기 데이터 로드 실패:", err));
+        refreshAll().catch((err) =>
+            console.error("초기 데이터 로드 실패:", err)
+        );
     }, []);
 
     return (
-        <LayoutContainer>
-            {/* 좌측 사이드 영역 (프로필 + 메뉴) */}
-            <Aside>
+        <>
+            {/* ✅ 전역 Footer z-index 적용 */}
+            <GlobalFooterStyle />
 
-                {/* 홈 버튼 */}
-                <HomeButton onClick={() => navigate("/mypage")}>
-                    <HomeIcon>
-                        <FaHome />
-                    </HomeIcon>
-                    <HomeLabel>마이페이지</HomeLabel>
-                </HomeButton>
+            <LayoutContainer>
+                {/* 좌측 고정 사이드바 */}
+                <FixedAside>
+                    <HomeButton onClick={() => navigate("/mypage")}>
+                        <HomeIcon>
+                            <FaHome />
+                        </HomeIcon>
+                        <HomeLabel>마이페이지</HomeLabel>
+                    </HomeButton>
 
-                {/* 프로필 카드 : ProfileAppearanceCard에 userLevel, titles도 전달 가능 */}
-                {profile && (
-                    <ProfileAppearanceCard
-                        profile={profile}
-                        // userLevel={userLevel}
-                        titles={titles}
-                    />
-                )}
+                    {profile && (
+                        <ProfileAppearanceCard profile={profile} titles={titles} />
+                    )}
 
-                {/* 메뉴 */}
-                <SideBar />
-            </Aside>
+                    <SideBar />
+                </FixedAside>
 
-            {/* 메인 컨텐츠 */}
-            <Main>
-                {/* OutletContext에 profile+userLevel+titles+refreshAll 전달 */}
-                <Outlet context={{ profile, /* userLevel, */ titles, refreshAll }} />
-            </Main>
-        </LayoutContainer>
+                {/* 메인 영역 */}
+                <Main>
+                    <Outlet context={{ profile, titles, refreshAll }} />
+                </Main>
+            </LayoutContainer>
+        </>
     );
 }
 
 /* ================== styled-components ================== */
 
-// 레이아웃 전체 컨테이너
-const LayoutContainer = styled.div`
-    display: flex;
-    min-height: 100vh;
-    width: 100%;
+/** ✅ Footer가 사이드바 위로 올라오게 하는 전역 스타일 */
+const GlobalFooterStyle = createGlobalStyle`
+    footer {
+        position: relative;
+        z-index: 20; /* 사이드바보다 위 */
+    }
 `;
 
-const Aside = styled.aside`
-    width: 240px; /* 여기서만 사이드바 폭 조정 */
+/** 전체 컨테이너 */
+const LayoutContainer = styled.div`
+    display: flex;
+    width: 80%;
+    margin: 0 auto;
+    position: relative;
+    padding-bottom: 400px; /* Footer 높이(약 392px)에 맞춰 조정 */
+`;
+
+/** ✅ 완전 고정 사이드바 */
+const FixedAside = styled.aside`
+    position: fixed;
+    top: 79px; /* 네브바 높이 아래 */
+    left: calc(10%); /* 80% 중앙 정렬 기준의 왼쪽 */
+    width: 240px;
+    height: calc(100vh - 79px);
+    overflow-y: auto;
     border-right: 1px solid rgb(229, 231, 235);
-    flex-shrink: 0;
+    background-color: white;
     display: flex;
     flex-direction: column;
     gap: 16px;
     padding: 12px;
+    z-index: 10;
 
     @media (min-width: 1024px) {
-        width:300px; /* 큰 화면에서는 조금 넓게 */
+        width: 300px;
     }
 `;
 
-// 메인 컨텐츠
+/** ✅ 메인 콘텐츠 영역 */
 const Main = styled.main`
     flex: 1;
     padding: 24px;
+    margin-left: 260px;
+
     display: flex;
     flex-direction: column;
     gap: 24px;
+
+    @media (min-width: 1024px) {
+        margin-left: 320px;
+    }
+
+    @media (max-width: 768px) {
+        padding: 16px;
+        margin-left: 0;
+    }
 `;
 
-/* === 홈 버튼 === */
+/** 홈 버튼 */
 const HomeButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 16px;
-  font-weight: 600;
-  color: rgb(17, 24, 39);
-  cursor: pointer;
-  border: none;
-  background: transparent;
-  outline: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    color: rgb(17, 24, 39);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    outline: none;
 `;
 
 const HomeIcon = styled.span`
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgb(59, 130, 246);
-  color: white;
-  border-radius: 6px;
-  font-size: 14px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgb(59, 130, 246);
+    color: white;
+    border-radius: 6px;
+    font-size: 14px;
 `;
 
 const HomeLabel = styled.span`
-  padding: 2px 6px;
-  border-radius: 4px;
+    padding: 2px 6px;
+    border-radius: 4px;
 `;
