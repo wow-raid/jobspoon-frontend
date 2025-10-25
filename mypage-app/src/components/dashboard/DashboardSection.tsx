@@ -12,7 +12,7 @@ import {
 import { fetchTrustScore, TrustScoreResponse } from "../../api/userTrustScoreApi.ts";
 import {PieChart, Pie, Cell, ResponsiveContainer} from "recharts";
 import styled from "styled-components";
-import LevelSection from "./LevelSection.tsx";
+// import LevelSection from "./LevelSection.tsx";
 import TitleSection from "./TitleSection.tsx";
 import TrustScoreModal from "../modals/TrustScoreModal.tsx";
 import WritingModal from "../modals/WritingModal.tsx";
@@ -70,7 +70,7 @@ function DonutChart({
             <DonutLabel>{label}</DonutLabel>
 
             {/* 신뢰 점수일 때만 버튼 */}
-            {label === "신뢰 점수" && (
+            {label === "활동 점수" && (
                 <DetailButton onClick={onDetailClick}>자세히 보기</DetailButton>
             )}
         </DonutCard>
@@ -142,7 +142,7 @@ export default function DashboardSection() {
                     <DonutChart value={attendance.attendanceRate} label="이번 달 출석률" unit="%" max={100}/>
                     <DonutChart value={interview.interviewMonthlyCount} label="이번 달 모의면접" unit="회" max={10}/>
                     <DonutChart value={quiz.quizMonthlyCount} label="이번 달 문제풀이" unit="개" max={20}/>
-                    <DonutChart value={trust.totalScore} label="신뢰 점수" unit="점" max={100}
+                    <DonutChart value={trust.totalScore} label="활동 점수" unit="점" max={100}
                                 onDetailClick={() => setTrustModalOpen(true)}/>
                 </DonutGrid>
             </Section>
@@ -162,9 +162,9 @@ export default function DashboardSection() {
             />
 
             {/* 나의 레벨 현황 */}
-            <Section>
-                <LevelSection/>
-            </Section>
+            {/*<Section>*/}
+            {/*    <LevelSection/>*/}
+            {/*</Section>*/}
 
             {/* 나의 칭호 현황 */}
             <Section>

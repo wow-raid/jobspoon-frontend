@@ -40,7 +40,7 @@ export default function TrustScoreModal({ isOpen, onClose, trust }: Props) {
         <Overlay isOpen={isOpen}>
             <Modal isOpen={isOpen}>
                 <Header>
-                    <h2>신뢰 점수 산정 기준</h2>
+                    <h2>활동 점수 산정 기준</h2>
                     <CloseButton onClick={onClose}>×</CloseButton>
                 </Header>
 

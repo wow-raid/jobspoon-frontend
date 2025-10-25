@@ -51,15 +51,14 @@ export default function SideBar() {
                         <StyledNavLink to="schedule">
                             <FaCalendarAlt className="icon" />
                             일정관리
-                            <Badge>4</Badge>
                         </StyledNavLink>
                     </li>
 
                     <li>
-                        <NavButton onClick={handleOpenModal}>
+                        <StyledNavLink to="my-reports">
                             <FaExclamationTriangle className="icon" />
                             신고내역
-                        </NavButton>
+                        </StyledNavLink>
                     </li>
 
                     <li>
@@ -79,10 +78,10 @@ export default function SideBar() {
                     <Divider />
 
                     <li>
-                        <NavButton onClick={handleOpenModal}>
+                        <StyledNavLink to="inquiry">
                             <FaQuestionCircle className="icon" />
                             문의하기
-                        </NavButton>
+                        </StyledNavLink>
                     </li>
 
                     <li>
