@@ -28,15 +28,21 @@
           link
       />
       <v-list-item
-          prepend-icon="mdi-chair-school"
-          title="스터디룸 관리"
+          prepend-icon="mdi-chair-rolling"
+          title="스터디룸 신고 관리"
           :to="{ name: 'AdminStudyRoomReport' }"
           link
       />
       <v-list-item
-          prepend-icon="mdi-chair-school"
+          prepend-icon="mdi-aws"
           title="Aws 비용 관리"
           :to="{ name: 'AdminAwsCostExplorer' }"
+          link
+      />
+      <v-list-item
+          prepend-icon="mdi-robot-confused"
+          title="OpenAi 비용 관리"
+          :to="{ name: 'AdminOpenAiCostView' }"
           link
       />
     </v-list>
