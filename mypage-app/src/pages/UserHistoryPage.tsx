@@ -27,7 +27,7 @@ import {
     calcCommentScore,
     calcTotalScore
 } from "../utils/trustScoreUtils";
-import TrustScoreCriteria from "../components/history/TrustScoreCriteria";
+import TrustScoreCriteriaModal from "../components/modals/TrustScoreCriteriaModal.tsx";
 import TitleGuideModal from "../components/modals/TitleGuideModal";
 import { useOutletContext } from "react-router-dom";
 import { FaChevronUp, FaChevronDown } from "react-icons/fa";
@@ -184,7 +184,10 @@ export default function UserHistoryPage() {
                             </TrustContent>
                         </>
                     )}
-                    {showTrustCriteria && <TrustScoreCriteria />}
+                    <TrustScoreCriteriaModal
+                        isOpen={showTrustCriteria}
+                        onClose={() => setShowTrustCriteria(false)}
+                    />
                 </Card>
 
                 {/* 레벨 */}

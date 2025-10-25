@@ -15,8 +15,10 @@ import { fetchUserFolders, patchReorderFolders } from "./api/userWordbook";
 import WordbookFolderPage from "./pages/WordbookFolderPage";
 import FavoriteTermsPage from "./pages/FavoriteTermsPage";
 import SpoonWordHeroBanner from "./components/SpoonWordHeroBanner.tsx";
+import QuizHomePage from "./pages/QuizHomePage.tsx";
 import QuizPlayPage from "./pages/QuizPlayPage";
 import SpoonNoteHomePage from "./pages/SpoonNoteHomePage.tsx";
+import {SpoonDialogProvider} from "./components/SpoonDialog.tsx";
 
 import { PageContainerFlushTop, NarrowLeft } from "./styles/layout";
 import { goToAccountLogin } from "./utils/auth";
@@ -102,7 +104,8 @@ function AppLayout() {
 
     // 스푼워드 구간 감지
     const isSpoonWordRoute = under("/spoon-word");
-    const isQuizRoute = under("/spoon-quiz") || under("/spoon-word/quiz");
+    const isQuizRoute =
+        under("/spoon-word/quiz") || under("/spoon-quiz");
     const isFolderRoute = under("/spoon-word/folders") || under("/folders");
 
     const [q, setQ] = React.useState("");
@@ -346,6 +349,7 @@ function HomePage() {
 /* == 라우트 구성 == */
 export default function App() {
     return (
+        <SpoonDialogProvider>
         <Routes>
             {/* 공통 레이아웃 */}
             <Route element={<AppLayout />}>
@@ -356,7 +360,11 @@ export default function App() {
                     <Route path="words" element={<TermListPage />} />
                     <Route path="notes" element={<SpoonNoteHomePage />} />
                     <Route path="search" element={<SearchPage />} />
-                    <Route path="quiz/*" element={<QuizPlayPage />} />
+                    <Route path="quiz">
+                        <Route index element={<QuizHomePage />} />
+                        <Route path="play" element={<QuizPlayPage />} />
+                        <Route path="result" element={<QuizPlayPage />} />
+                    </Route>
                     <Route path="book" element={<FavoriteTermsPage />} />
                     <Route path="folders/:folderId" element={<WordbookFolderPage />} />
                 </Route>
@@ -366,5 +374,6 @@ export default function App() {
                 <Route path="*" element={<AutoContent />} />
             </Route>
         </Routes>
+        </SpoonDialogProvider>
     );
 }
