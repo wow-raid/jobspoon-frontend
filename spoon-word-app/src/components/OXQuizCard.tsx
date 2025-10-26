@@ -118,7 +118,6 @@ const Stage = styled.div`
     position: relative;
     isolation: isolate;
     width: 100%;
-    min-height: calc(100dvh - 120px);
     display: grid;
     place-items: center;
     padding: clamp(12px, 2vw, 24px);
@@ -126,10 +125,12 @@ const Stage = styled.div`
 
 const Shell = styled.div`
   width: min(100%, 1100px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;      /* 가운데 */
-  gap: 12px;                /* 카드 ↔ 결과 간격 */
+  min-height: calc(100dvh - var(--ox-offset, 0px));
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  margin: 0 auto;
+  transform: translateY(var(--raise, 0px));
 `;
 
 const Card = styled.section`
@@ -741,7 +742,12 @@ export default function OXQuizCard({
         <Stage aria-live="polite">
             <SoftBlobsBackground />
             <GhanaFont />
-            <Shell>
+            <Shell
+                style={{
+                    ['--ox-offset' as any]: '110px',
+                    ['--raise' as any]: '-40px',
+                }}
+            >
                 <Card data-showresult={showResult}>
                     <Header>
                         <QBox>

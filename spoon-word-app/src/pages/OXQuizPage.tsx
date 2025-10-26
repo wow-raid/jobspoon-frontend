@@ -7,6 +7,7 @@ const Stage = styled.div`
     min-height: calc(100dvh - 110px);
     display: grid;
     place-items: center;
+    place-content: center;
     padding: clamp(12px, 2vw, 24px);
 
     background:
