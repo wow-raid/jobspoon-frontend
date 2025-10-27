@@ -91,80 +91,75 @@ export default function TitleSection() {
 
     return (
         <>
-            <SectionContainer>
-                <SectionHeader>
-                    <SectionTitle>나의 칭호 현황</SectionTitle>
-                    <GuideButton onClick={() => setIsGuideOpen(true)}>칭호 가이드</GuideButton>
-                </SectionHeader>
+            <ContentGrid>
+                {/* 🎖 현재 장착 칭호 */}
+                <CurrentTitleCard>
+                    {equippedTitle ? (
+                        <>
+                            <Badge>현재 장착 중</Badge>
+                            <img src={defaultTitle} alt={equippedTitle.displayName} />
+                            <h3>{equippedTitle.displayName}</h3>
+                            <p>나의 대표 칭호</p>
+                        </>
+                    ) : (
+                        <>
+                            <img src={defaultTitle} alt="no title" />
+                            <h3>대표 칭호 없음</h3>
+                            <p>아직 장착된 칭호가 없습니다.</p>
+                        </>
+                    )}
+                </CurrentTitleCard>
 
-                <ContentGrid>
-                    {/* 🎖 현재 장착 칭호 */}
-                    <CurrentTitleCard>
-                        {equippedTitle ? (
-                            <>
-                                <Badge>현재 장착 중</Badge>
-                                <img src={defaultTitle} alt={equippedTitle.displayName} />
-                                <h3>{equippedTitle.displayName}</h3>
-                                <p>나의 대표 칭호</p>
-                            </>
-                        ) : (
-                            <>
-                                <img src={defaultTitle} alt="no title" />
-                                <h3>대표 칭호 없음</h3>
-                                <p>아직 장착된 칭호가 없습니다.</p>
-                            </>
-                        )}
-                    </CurrentTitleCard>
+                {/* 🏅 획득 칭호 리스트 */}
+                <TitleListCard>
+                    <TitleListHeader>
+                        <span>획득 개수 {titles.length}개</span>
+                    </TitleListHeader>
 
-                    {/* 🏅 획득 칭호 리스트 */}
-                    <TitleListCard>
-                        <TitleListHeader>
-                            <span>획득 개수 {titles.length}개</span>
-                        </TitleListHeader>
+                    {titles.length === 0 ? (
+                        <EmptyWrapper>
+                            <Empty>아직 획득한 칭호가 없습니다.</Empty>
+                        </EmptyWrapper>
+                    ) : (
+                        <PreviewWrapper>
+                            <NavButton position="left" onClick={handlePrev} disabled={currentIndex === 0}>
+                                {"<"}
+                            </NavButton>
 
-                        {titles.length === 0 ? (
-                            <EmptyWrapper>
-                                <Empty>아직 획득한 칭호가 없습니다.</Empty>
-                            </EmptyWrapper>
-                        ) : (
-                            <PreviewWrapper>
-                                <NavButton position="left" onClick={handlePrev} disabled={currentIndex === 0}>
-                                    {"<"}
-                                </NavButton>
+                            <TitleList>
+                                {titles.slice(currentIndex, currentIndex + visibleCount).map((title) => (
+                                    <MotionTitleItem
+                                        key={title.id}
+                                        isEquipped={title.equipped}
+                                        whileHover={{ scale: 1.05, y: -4 }}
+                                        transition={{ type: "spring", stiffness: 250, damping: 15 }}
+                                    >
+                                        <div className="iconWrapper">
+                                            <img src={defaultTitle} alt={title.displayName} />
+                                            {title.equipped && <EquippedBadge>장착</EquippedBadge>}
+                                        </div>
+                                        <h4>{title.displayName}</h4>
+                                        <p>{new Date(title.acquiredAt).toLocaleDateString()}</p>
+                                        <Tooltip className="tooltip">{title.description}</Tooltip>
+                                    </MotionTitleItem>
+                                ))}
+                            </TitleList>
 
-                                <TitleList>
-                                    {titles.slice(currentIndex, currentIndex + visibleCount).map((title) => (
-                                        <MotionTitleItem
-                                            key={title.id}
-                                            isEquipped={title.equipped}
-                                            whileHover={{ scale: 1.05, y: -4 }} // 💫 hover 시 확대 및 위로 살짝 이동
-                                            transition={{ type: "spring", stiffness: 250, damping: 15 }}
-                                        >
-                                            <div className="iconWrapper">
-                                                <img src={defaultTitle} alt={title.displayName} />
-                                                {title.equipped && <EquippedBadge>장착</EquippedBadge>}
-                                            </div>
-                                            <h4>{title.displayName}</h4>
-                                            <p>{new Date(title.acquiredAt).toLocaleDateString()}</p>
+                            <NavButton
+                                position="right"
+                                onClick={handleNext}
+                                disabled={currentIndex >= titles.length - visibleCount}
+                            >
+                                {">"}
+                            </NavButton>
+                        </PreviewWrapper>
+                    )}
+                </TitleListCard>
+            </ContentGrid>
 
-                                            {/* ✨ Tooltip (hover 시 위로 부드럽게 등장) */}
-                                            <Tooltip className="tooltip">{title.description}</Tooltip>
-                                        </MotionTitleItem>
-                                    ))}
-                                </TitleList>
-
-                                <NavButton
-                                    position="right"
-                                    onClick={handleNext}
-                                    disabled={currentIndex >= titles.length - visibleCount}
-                                >
-                                    {">"}
-                                </NavButton>
-                            </PreviewWrapper>
-                        )}
-                    </TitleListCard>
-                </ContentGrid>
-            </SectionContainer>
+            <SectionHeader>
+                <GuideButton onClick={() => setIsGuideOpen(true)}>칭호 가이드</GuideButton>
+            </SectionHeader>
 
             {/* 📘 칭호 가이드 모달 */}
             <TitleGuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
@@ -173,27 +168,10 @@ export default function TitleSection() {
 }
 
 /* ========================== styled-components ========================== */
-
-const SectionContainer = styled.section`
-    background: ${theme.color.bgWhite};
-    border-radius: ${theme.radius.section};
-    box-shadow: ${theme.shadow.section};
-    padding: ${theme.spacing.sectionPadding};
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-`;
-
 const SectionHeader = styled.div`
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;  /* ✅ 오른쪽 정렬 */
     align-items: center;
-`;
-
-const SectionTitle = styled.h2`
-    font-size: ${theme.font.title};
-    font-weight: 700;
-    color: ${theme.color.text};
 `;
 
 const GuideButton = styled.button`

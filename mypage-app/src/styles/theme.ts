@@ -27,4 +27,13 @@ export const theme = {
         sectionPadding: "28px",
         cardPadding: "20px",
     },
+    mixin: {
+        sectionTitle: `
+            font-size: 19px;
+            font-weight: 700;
+            color: #111827;
+            letter-spacing: -0.2px;
+            margin-bottom: 8px;
+        `,
+    },
 };

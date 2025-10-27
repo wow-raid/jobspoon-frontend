@@ -164,6 +164,7 @@ export default function DashboardSection() {
 
             {/* 칭호 섹션 */}
             <Section>
+                <SectionTitle>나의 칭호 현황</SectionTitle>
                 <TitleSection />
             </Section>
         </>
@@ -184,10 +185,7 @@ const Section = styled.section`
 `;
 
 const SectionTitle = styled.h2`
-    font-size: ${theme.font.title};
-    font-weight: 700;
-    color: ${theme.color.text};
-    letter-spacing: -0.2px;
+    ${theme.mixin.sectionTitle}
 `;
 
 const TopCardGrid = styled.div`
