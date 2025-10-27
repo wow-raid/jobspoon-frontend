@@ -305,7 +305,7 @@ export default function AccountProfilePage() {
                                 </TrustGrid>
                                 <Divider />
                                 <TotalScore>
-                                    총점: {calcTotalScore(trustScore!).toFixed(1)} / 100점
+                                    총점: {trustScore?.totalScore?.toFixed(1) ?? "0.0"} / 100점
                                 </TotalScore>
                             </TrustContent>
                         </>

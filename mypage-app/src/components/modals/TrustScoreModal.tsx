@@ -27,15 +27,6 @@ export default function TrustScoreModal({ isOpen, onClose, trust }: Props) {
     const studyroomScore = calcStudyroomScore(trust.monthlyStudyrooms);
     const commentScore = calcCommentScore(trust.monthlyComments);
 
-    const totalScore = calcTotalScore({
-        attendanceRate: trust.attendanceRate,
-        monthlyInterviews: trust.monthlyInterviews,
-        monthlyProblems: trust.monthlyProblems,
-        monthlyPosts: trust.monthlyPosts,
-        monthlyStudyrooms: trust.monthlyStudyrooms,
-        monthlyComments: trust.monthlyComments
-    });
-
     // ✅ ESC 키로 닫기
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
@@ -65,7 +56,7 @@ export default function TrustScoreModal({ isOpen, onClose, trust }: Props) {
                     </ul>
                     <Divider />
                     <TotalScore>
-                        총점: {totalScore.toFixed(1)} / 100점
+                        총점: {trust.totalScore?.toFixed(1) ?? "0.0"} / 100점
                     </TotalScore>
                 </Content>
 
