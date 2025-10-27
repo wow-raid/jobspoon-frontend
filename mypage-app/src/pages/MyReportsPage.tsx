@@ -17,15 +17,10 @@ export default function MyReportsPage() {
         try {
             const data = await fetchMyReports();
             setReports(data);
-            if (data.length > 0) {
-                notifySuccess("신고 내역이 업데이트되었습니다 ✅");
-            } else {
-                notifyInfo("신고 내역이 없습니다 📭");
-            }
         } catch (err) {
             console.error(err);
             setError("신고 내역을 불러오는 중 오류가 발생했습니다.");
-            notifyError("신고 내역 불러오기 실패 ❌");
+            notifyError("신고 내역 불러오기 실패 ❌"); // ✅ 에러일 때만 알림
         } finally {
             setLoading(false);
         }

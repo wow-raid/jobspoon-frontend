@@ -45,7 +45,6 @@ export default function SchedulePage() {
             ];
 
             setAllSchedules(merged);
-            if (showToast) notifySuccess("일정이 업데이트되었습니다 ✅");
         } catch (err) {
             console.error("일정 불러오기 실패:", err);
             notifyError("일정 데이터를 불러오지 못했습니다 ❌");
