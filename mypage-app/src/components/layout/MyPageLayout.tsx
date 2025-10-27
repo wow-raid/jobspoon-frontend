@@ -29,7 +29,7 @@ export default function MyPageLayout() {
         }
 
         try {
-            await new Promise((r) => setTimeout(r, 2000)); // ✅ 테스트용 지연
+            // await new Promise((r) => setTimeout(r, 2000)); // ✅ 테스트용 지연
             const [p, t] = await Promise.all([fetchMyProfile(), fetchMyTitles()]);
             setProfile(p);
             setTitles(t);
