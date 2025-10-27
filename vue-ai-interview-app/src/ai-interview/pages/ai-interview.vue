@@ -94,8 +94,6 @@
                 rounded
                 @click="playRecording"
                 :disabled="!recordedBlob"
-              >
-                다시듣기
               </v-btn>
             </template>
           </div>
@@ -105,36 +103,34 @@
   </v-container>
 
   <v-container v-else fluid :style="interviewActiveContainerStyle">
-    <!-- 메인 화면: 면접관 이미지 (전체 높이) -->
-    <div :style="interviewMainScreenStyle">
-      <!-- 면접관 이미지 -->
-      <img :src="hhImage" alt="면접관" :style="interviewerMainImageStyle" />
-      
-      <!-- 우측 상단: 사용자 비디오 (작은 화면) -->
-      <div :style="userVideoSmallContainerStyle">
-        <video
-          ref="userVideo"
-          v-show="start"
-          autoplay
-          playsinline
-          muted
-          :style="userVideoSmallStyle"
-        ></video>
-        <div v-if="recognizing" :style="recordingBadgeSmallStyle">
-          <v-icon size="12" color="white">mdi-circle</v-icon>
-          <span>녹음중</span>
+    <div :style="interviewStartWrapperStyle">
+      <!-- 큰 이미지 화면 (카메라 자리) -->
+      <div :style="mainCameraContainerStyle">
+        <!-- 면접관 이미지 -->
+        <img :src="hhImage" alt="면접관" :style="interviewerImageInCameraStyle" />
+        
+        <!-- 우측 상단: 사용자 비디오 (작은 화면) -->
+        <div :style="smallPreviewStyle">
+          <video
+            ref="userVideo"
+            v-show="start"
+            autoplay
+            playsinline
+            muted
+            :style="smallVideoStyle"
+          ></video>
+        </div>
+        
+        <!-- 좌측 상단: 타이머 -->
+        <div :style="topLeftBadgeStyle">
+          <v-icon size="16" color="white">mdi-clock-outline</v-icon>
+          <span>{{ Math.floor(remainingTime / 60) }}:{{ (remainingTime % 60).toString().padStart(2, "0") }}</span>
         </div>
       </div>
-      
-      <!-- 좌측 상단: 타이머 -->
-      <div :style="interviewTimerBadgeStyle">
-        <v-icon size="16" color="white">mdi-clock-outline</v-icon>
-        <span>{{ Math.floor(remainingTime / 60) }}:{{ (remainingTime % 60).toString().padStart(2, "0") }}</span>
-      </div>
-      
-      <!-- 하단: 질문 박스 + 답변 버튼 (오버레이) -->
-      <v-card :style="interviewBottomCardStyle" class="interview-card">
-      <v-card-text :style="interviewBottomCardTextStyle">
+
+      <!-- 하단 컨트롤 카드 (질문 + 버튼) -->
+      <v-card :style="bottomControlCardStyle" class="interview-card">
+      <v-card-text :style="controlCardTextStyle">
         <!-- 질문 표시 -->
         <div v-if="visible" :style="questionLoadingBoxStyle">
           <v-icon size="32" color="primary">mdi-loading mdi-spin</v-icon>
@@ -143,8 +139,8 @@
         
         <div v-else :style="questionBoxStyle">
           <div :style="questionBoxHeaderStyle">
-            <div :style="questionNumberBadgeStyle">Q{{ currentQuestionId + 1 }}</div>
-            <div :style="questionProgressTextStyle">{{ currentQuestionId + 1 }} / 6</div>
+            <div :style="questionNumberBadgeStyle">Q{{ interviewSequence + 1 }}</div>
+            <div :style="questionProgressTextStyle">{{ interviewSequence + 1 }} / 6</div>
           </div>
           <p :style="questionBoxTextStyle" v-html="formattedAIMessage"></p>
         </div>
@@ -155,6 +151,34 @@
           <div v-if="sttLog !== ''" :style="sttPreviewStyle">
             <v-icon size="16" color="#3b82f6">mdi-text-to-speech</v-icon>
             <span :style="sttPreviewTextStyle">{{ sttLog.substring(0, 50) }}{{ sttLog.length > 50 ? '...' : '' }}</span>
+          </div>
+
+          <!-- 답변 버튼 영역 -->
+          <div v-if="!visible" :style="answerButtonAreaStyle">
+            <!-- 텍스트 입력 필드 추가 -->
+            <div :style="textInputContainerStyle">
+              <v-textarea
+                  v-model="textAnswer"
+                  :style="textInputFieldStyle"
+                  placeholder="음성 인식이 어려운 경우 여기에 직접 입력하세요"
+                  rows="2"
+                  outlined
+                  dense
+                  hide-details
+                  :disabled="recognizing"
+              ></v-textarea>
+            </div>
+
+            <!-- STT 결과 미리보기 (간단하게) -->
+            <div v-if="sttLog !== ''" :style="sttPreviewStyle">
+              <v-icon size="16" color="#3b82f6">mdi-text-to-speech</v-icon>
+              <span :style="sttPreviewTextStyle">{{ sttLog.substring(0, 50) }}{{ sttLog.length > 50 ? '...' : '' }}</span>
+            </div>
+
+            <!-- 버튼 그룹 -->
+            <div :style="interviewActionButtonsStyle">
+              <!-- 기존 버튼들... -->
+            </div>
           </div>
           
           <!-- 버튼 그룹 -->
@@ -196,14 +220,14 @@
             >
               <v-icon>mdi-volume-high</v-icon>
             </v-btn>
-            
-            <v-btn 
-              color="success" 
-              :style="completeBtnStyle" 
-              elevation="0" 
-              rounded
-              @click="onAnswerComplete"
-              :disabled="isGenerating || sttLog === ''"
+
+            <v-btn
+                color="success"
+                :style="completeBtnStyle"
+                elevation="0"
+                rounded
+                @click="onAnswerComplete"
+                :disabled="isGenerating || (sttLog === '' && textAnswer === '')"
             >
               <v-icon left size="18">{{ isGenerating ? 'mdi-loading mdi-spin' : 'mdi-check-circle' }}</v-icon>
               {{ isGenerating ? '처리중...' : '답변 완료' }}
@@ -233,7 +257,7 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { useAiInterviewStore } from "../stores/aiInterviewStore";
 import { useRouter, onBeforeRouteLeave } from "vue-router";
 import "@mdi/font/css/materialdesignicons.css";
-import hhImage from "@/assets/images/fixed/al3.png";
+import hhImage from "@/assets/images/fixed/aiai.png";
 import { useHead } from '@vueuse/head'
 
 useHead({
@@ -253,6 +277,8 @@ useHead({
 // ======= script 로직 (전부) =======
 const router = useRouter();
 const aiInterviewStore = useAiInterviewStore();
+
+const textAnswer = ref(""); // 텍스트 입력용 변수 추가
 
 const start = ref(false);
 const visible = ref(true);
@@ -542,6 +568,7 @@ const stopRecordingAuto = () => {
     console.log("녹화 종료");
   }
 };
+
 const handleStartInterview = async () => {
   const info = JSON.parse(localStorage.getItem("interviewInfo") || "{}");
   const processedCompanyName = mapCompanyName(info.company);
@@ -550,7 +577,7 @@ const handleStartInterview = async () => {
 
 
 
-  if (!info.tech || !info.exp) {
+  if (!info.job || !info.career) {
     alert("면접 정보를 찾을 수 없습니다. 처음으로 돌아갑니다.");
     router.push("/ai-interview");
     return;
@@ -561,18 +588,10 @@ const handleStartInterview = async () => {
   showWarning.value = false;
   speakStartMessage();
 
-  const res = await aiInterviewStore.requestCreateInterviewToDjango({
-    userToken: localStorage.getItem("userToken"),
-    jobCategory: info.tech,
-    experienceLevel: info.exp,
-    academicBackground: info.academic,
-    projectExperience: info.project,
-    interviewTechStack: info.skills,
-    companyName: processedCompanyName,
-  });
-  currentInterviewId.value = Number(res.interviewId);
-  currentQuestionId.value = 1;
-  currentAIMessage.value = res.question;
+  // 첫 번째 질문을 고정으로 설정
+  interviewSequence.value = 1; // 1번은 자기소개 질문
+  currentAIMessage.value = "안녕하세요 자기소개 부탁드립니다.";
+
   const utterance = new SpeechSynthesisUtterance(
       "AI 모의 면접이 곧 시작됩니다. 면접 질문이 화면에 표시되며, 자동으로 음성으로 읽어드립니다."
   );
@@ -586,27 +605,53 @@ const handleStartInterview = async () => {
   }
 };
 
+
+
 const onAnswerComplete = async () => {
   isGenerating.value = true;
+
 
   clearInterval(timer.value);
   if (recognition && recognizing.value) recognition.stop();
 
-  if (!sttLog.value.trim()) {
-    alert("음성 인식 결과가 없습니다.");
-    isGenerating.value = false;
-    return;
-  }
-  if (currentQuestionId.value >= maxQuestionId.value) {
+  // if (!sttLog.value.trim()) {
+  //   alert("음성 인식 결과가 없습니다.");
+  //   isGenerating.value = false;
+  //   return;
+  // }
+  if (interviewSequence.value >= 7) {
     alert("모든 면접이 완료되었습니다");
     finished.value = true;
     isGenerating.value = true;
     return;
   }
 
+  const finalAnswer = (sttLog.value + " " + textAnswer.value).trim();
+
+  if (!finalAnswer) {
+    alert("답변 내용이 없습니다. 음성 또는 텍스트로 답변을 입력해주세요.");
+    isGenerating.value = false;
+    return;
+  }
+
+  const info = JSON.parse(localStorage.getItem("interviewInfo") || "{}");
+  const processedCompanyName = mapCompanyName(info.company);
+
   // 첫 번째 질문(자기소개)에 대한 답변인 경우
-  if (interviewSequence === 1) {
+  if (interviewSequence.value === 1) {
     // 면접 생성 API 호출 (자기소개 답변 포함)
+    console.log("=== 면접 생성 요청 데이터 ===");
+    console.log("interviewType:", info.interviewType);
+    console.log("company:", info.company);
+    console.log("major:", info.major);
+    console.log("career:", info.career);
+    console.log("projectExp:", info.projectExp);
+    console.log("job:", info.job);
+    console.log("interviewAccountProjectRequests:", info.interviewAccountProjectRequests);
+    console.log("techStacks:", info.techStacks);
+    console.log("firstQuestion:", "안녕하세요 자기소개 부탁드립니다.");
+    console.log("firstAnswer:", finalAnswer);
+    
     const res = await aiInterviewStore.requestCreateInterviewToSpring({
       interviewType: info.interviewType,
       company: info.company || "",
@@ -617,88 +662,75 @@ const onAnswerComplete = async () => {
       interviewAccountProjectRequests: info.interviewAccountProjectRequests || [],
       techStacks: info.techStacks,
       firstQuestion: "안녕하세요 자기소개 부탁드립니다.",
-      firstAnswer: sttLog.value,
+      firstAnswer: finalAnswer,
     });
 
     currentInterviewId.value = Number(res.interviewId);
     currentQuestionId.value = res.interviewQAId;
     currentAIMessage.value = res.interviewQuestion;
+    
+    // localStorage에 interviewId 저장 (결과 페이지에서 사용)
+    localStorage.setItem("currentInterviewId", String(res.interviewId));
 
     sttLog.value = "";
+    textAnswer.value = "";
     isGenerating.value = false;
     remainingTime.value = 90;
     startTimer();
     replayQuestion();
-    return;
 
-  }
+  } else{
+    // 이후 질문들에 대한 처리
+    console.log("=== 답변 진행 요청 데이터 ===");
+    console.log("interviewId:", currentInterviewId.value);
+    console.log("interviewQAId:", currentQuestionId.value);
+    console.log("answer:", finalAnswer);
+    console.log("interviewType:", info.interviewType);
+    console.log("interviewSequence:", interviewSequence.value);
 
-  const info = JSON.parse(localStorage.getItem("interviewInfo") || "{}");
-  const processedCompanyName = mapCompanyName(info.company);
-  const payload = {
-    userToken: localStorage.getItem("userToken"),
-    interviewId: currentInterviewId.value,
-    questionId: currentQuestionId.value,
-    answerText: sttLog.value,
-    jobCategory: info.tech,
-    experienceLevel: info.exp,
-    academicBackground: info.academic,
-    projectExperience: info.project,
-    interviewTechStack: info.skills,
-    companyName: processedCompanyName,
-  };
-  await aiInterviewStore.requestCreateAnswerToDjango(payload);
+    // 6번째 질문이면 면접 종료 페이지로 이동
+    if(interviewSequence.value === 6){
+      // 면접 종료 데이터 저장
+      localStorage.setItem("interviewEndData", JSON.stringify({
+        interviewId: currentInterviewId.value,
+        interviewQAId: currentQuestionId.value,
+        lastAnswer: finalAnswer
+      }));
+      
+      // 종료 페이지로 이동
+      router.push("/ai-interview/end");
+      return;
+    }
+    
+    const payload = {
+      interviewId: currentInterviewId.value,
+      interviewQAId: currentQuestionId.value,
+      answer: finalAnswer,
+      interviewType: info.interviewType,
+      interviewSequence: interviewSequence.value
+    };
 
-  let nextQuestion = null;
-  let nextQuestionId = null;
-  if (currentQuestionId.value === 1) {
-    const followUp = await aiInterviewStore.requestFollowUpQuestionToDjango(
-        payload
-    );
-    nextQuestion = followUp?.questions?.[0];
-    nextQuestionId = followUp?.questionIds?.[0];
-  } else if (currentQuestionId.value === 2) {
-    const projectMain =
-        await aiInterviewStore.requestProjectCreateInterviewToDjango(payload);
-    nextQuestion = projectMain?.question?.[0];
-    nextQuestionId = projectMain?.questionId;
-  } else if (currentQuestionId.value === 3 || currentQuestionId.value === 4) {
-    const projectFollowUp =
-        await aiInterviewStore.requestProjectFollowUpQuestionToDjango(payload);
-    nextQuestion = projectFollowUp?.questions?.[0];
-    nextQuestionId = projectFollowUp?.questionIds?.[0];
-  } else if (currentQuestionId.value === 5) {
-    const techFollowUp =
-        await aiInterviewStore.requestTechFollowUpQuestionToDjango(payload);
-    nextQuestion = techFollowUp?.questions?.[0];
-    nextQuestionId = techFollowUp?.questionIds?.[0];
-  } else {
-    finished.value = true;
-    await nextTick();
-    isGenerating.value = true;
-    await nextTick();
-    alert("모든 면접 질문이 완료되었습니다.");
-    clearInterval(timer.value);
-    stopRecordingAuto();
-    await aiInterviewStore.requestEndInterviewToDjango(payload);
-    await aiInterviewStore.requestGetScoreResultListToDjango(payload);
-    router.push("/ai-interview/result");
-    return;
-  }
+    const questionRes = await aiInterviewStore.requestCreateAnswerToSpring(payload);
 
-  if (!nextQuestion || !nextQuestionId) {
-    alert("다음 질문을 불러오지 못했습니다.");
+
+    if (!questionRes.interviewQuestion || !questionRes.interviewQAId) {
+      alert("다음 질문을 불러오지 못했습니다.");
+      isGenerating.value = false;
+      return;
+    }
+
+    currentQuestionId.value = questionRes.interviewQAId;
+    currentAIMessage.value = questionRes.interviewQuestion;
+    sttLog.value = "";
+    textAnswer.value = "";
+    speakCurrentMessage();
+
     isGenerating.value = false;
-    return;
   }
+  interviewSequence.value = interviewSequence.value + 1;
 
-  currentQuestionId.value = nextQuestionId;
-  currentAIMessage.value = nextQuestion;
-  sttLog.value = "";
-  speakCurrentMessage();
+}
 
-  isGenerating.value = false;
-};
 
 onBeforeUnmount(() => {
   if (
@@ -1569,8 +1601,7 @@ const interviewActiveContainerStyle = {
   margin: "0",
   maxWidth: "100%",
   background: "linear-gradient(180deg, #ffffff 0%, #f0f9ff 40%, #e0f2fe 100%)",
-  minHeight: "100vh",
-  maxHeight: "100vh",
+  height: "100vh",
   position: "relative",
   overflow: "hidden",
   display: "flex",
@@ -1600,7 +1631,7 @@ const interviewHeaderContentStyle = {
 
 // 우측 상단 사용자 비디오 (작은 화면)
 const userVideoSmallContainerStyle = {
-  position: "absolute",
+  position: "fixed",
   top: "20px",
   right: "20px",
   width: "200px",
@@ -1609,7 +1640,8 @@ const userVideoSmallContainerStyle = {
   overflow: "hidden",
   border: "3px solid rgba(255, 255, 255, 0.3)",
   boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
-  background: "#000"
+  background: "#000",
+  zIndex: 100
 };
 
 const interviewHeaderTitleStyle = {
@@ -1932,27 +1964,8 @@ const devTextFieldStyle = {
 
 // ===== 새로운 면접 진행 화면 스타일 =====
 
-// 메인 화면 (면접관 이미지)
-const interviewMainScreenStyle = {
-  position: "relative",
-  width: "100%",
-  maxWidth: "1200px",
-  height: "90vh",
-  background: "linear-gradient(135deg, #1e293b 0%, #334155 100%)",
-  borderRadius: "24px",
-  overflow: "visible",
-  boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
-  border: "3px solid rgba(59, 130, 246, 0.2)",
-  display: "flex",
-  alignItems: "flex-end",
-  justifyContent: "center",
-  padding: "0 20px 20px"
-};
-
-const interviewerMainImageStyle = {
-  position: "absolute",
-  top: "0",
-  left: "0",
+// 카메라 자리에 들어갈 이미지 스타일
+const interviewerImageInCameraStyle = {
   width: "100%",
   height: "100%",
   objectFit: "cover",
@@ -1965,41 +1978,6 @@ const userVideoSmallStyle = {
   objectFit: "cover"
 };
 
-const interviewTimerBadgeStyle = {
-  position: "absolute",
-  top: "20px",
-  left: "20px",
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-  padding: "10px 18px",
-  background: "rgba(0, 0, 0, 0.7)",
-  borderRadius: "20px",
-  color: "white",
-  fontSize: "15px",
-  fontWeight: "700",
-  backdropFilter: "blur(10px)",
-  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)"
-};
-
-// 하단 질문 카드
-const interviewBottomCardStyle = {
-  position: "relative",
-  width: "100%",
-  maxWidth: "100%",
-  borderRadius: "24px",
-  overflow: "visible",
-  boxShadow: "0 -10px 40px rgba(0, 0, 0, 0.2), 0 10px 40px rgba(59, 130, 246, 0.15)",
-  border: "2px solid rgba(59, 130, 246, 0.2)",
-  background: "linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 255, 0.98))",
-  backdropFilter: "blur(20px)",
-  WebkitBackdropFilter: "blur(20px)",
-  zIndex: 10
-};
-
-const interviewBottomCardTextStyle = {
-  padding: "2.5vh 3vw"
-};
 
 // 질문 로딩 박스
 const questionLoadingBoxStyle = {
@@ -2020,14 +1998,14 @@ const questionLoadingTextStyle = {
 
 // 질문 박스
 const questionBoxStyle = {
-  marginBottom: "2vh"
+  marginBottom: "12px"
 };
 
 const questionBoxHeaderStyle = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  marginBottom: "16px"
+  marginBottom: "12px"
 };
 
 const questionNumberBadgeStyle = {
@@ -2050,10 +2028,10 @@ const questionProgressTextStyle = {
 };
 
 const questionBoxTextStyle = {
-  fontSize: "18px",
+  fontSize: "17px",
   color: "#1e293b",
-  fontWeight: "500",
-  lineHeight: "1.7",
+  fontWeight: "600",
+  lineHeight: "1.6",
   margin: "0"
 };
 
@@ -2061,17 +2039,17 @@ const questionBoxTextStyle = {
 const answerButtonAreaStyle = {
   display: "flex",
   flexDirection: "column",
-  gap: "16px"
+  gap: "10px"
 };
 
 // STT 미리보기
 const sttPreviewStyle = {
   display: "flex",
   alignItems: "center",
-  gap: "12px",
-  padding: "12px 16px",
+  gap: "10px",
+  padding: "10px 14px",
   background: "rgba(59, 130, 246, 0.05)",
-  borderRadius: "12px",
+  borderRadius: "10px",
   border: "1px solid rgba(59, 130, 246, 0.1)"
 };
 
@@ -2164,6 +2142,18 @@ const scrollTopBtnStyle = {
   boxShadow: "0 8px 24px rgba(59, 130, 246, 0.4)",
   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
   cursor: "pointer"
+};
+// 텍스트 입력 컨테이너
+const textInputContainerStyle = {
+  width: "100%",
+  marginBottom: "0"
+};
+
+const textInputFieldStyle = {
+  width: "100%",
+  fontSize: "13px",
+  backgroundColor: "white",
+  borderRadius: "10px"
 };
 
 
