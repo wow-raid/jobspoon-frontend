@@ -5,6 +5,7 @@ import { fetchMyProfile, ProfileAppearanceResponse } from "../../api/profileAppe
 import { fetchUserLevel, UserLevelResponse } from "../../api/userLevelApi.ts";
 import styled from "styled-components";
 import LevelGuideModal from "../modals/LevelGuideModal.tsx";
+import { notifyError } from "../../utils/toast";
 
 export default function LevelSection() {
     const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
@@ -15,17 +16,25 @@ export default function LevelSection() {
     useEffect(() => {
         const isLoggedIn = localStorage.getItem("isLoggedIn");
         if (!isLoggedIn) {
-            console.error("로그인이 필요합니다.");
+            notifyError("로그인이 필요합니다.");
             setLoading(false);
             return;
         }
 
-        Promise.all([fetchMyProfile(), fetchUserLevel()])
-            .then(([profileData, levelData]) => {
-                setProfile(profileData);
-                setUserLevel(levelData);
+        Promise.allSettled([fetchMyProfile(), fetchUserLevel()])
+            .then(([profileRes, levelRes]) => {
+                if (profileRes.status === "fulfilled") {
+                    setProfile(profileRes.value);
+                } else {
+                    notifyError("프로필 정보를 불러오지 못했습니다.");
+                }
+
+                if (levelRes.status === "fulfilled") {
+                    setUserLevel(levelRes.value);
+                } else {
+                    notifyError("레벨 정보를 불러오지 못했습니다.");
+                }
             })
-            .catch(console.error)
             .finally(() => setLoading(false));
     }, []);
 

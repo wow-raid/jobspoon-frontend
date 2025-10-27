@@ -15,6 +15,7 @@ import {
     TrustScoreResponse,
     TrustScoreHistoryResponse,
 } from "../../api/userTrustScoreApi";
+import { notifyError } from "../../utils/toast";
 
 /**
  * 📊 활동 점수 변화 추이 (제목 제거 버전)
@@ -45,6 +46,7 @@ export default function TrustScoreHistoryGraph() {
                 setStatus(sorted.length ? "loaded" : "empty");
             } catch (err) {
                 console.error(err);
+                notifyError("활동 점수 데이터를 불러오지 못했습니다.");
                 setStatus("empty");
             }
         };

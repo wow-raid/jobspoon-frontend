@@ -9,6 +9,7 @@ import SideBar from "./SideBar";
 import ProfileAppearanceCard from "../profile/ProfileAppearanceCard.tsx";
 import { fetchMyProfile, ProfileAppearanceResponse } from "../../api/profileAppearanceApi.ts";
 import { fetchMyTitles, UserTitleResponse } from "../../api/userTitleApi.ts";
+import { notifyError } from "../../utils/toast";
 
 export default function MyPageLayout() {
     const navigate = useNavigate();
@@ -20,7 +21,8 @@ export default function MyPageLayout() {
     const refreshAll = async () => {
         const isLoggedIn = localStorage.getItem("isLoggedIn");
         if (!isLoggedIn) {
-            console.error("로그인이 필요합니다.");
+            notifyError("로그인이 필요합니다.");
+            navigate("/login");
             return;
         }
 
@@ -30,6 +32,7 @@ export default function MyPageLayout() {
             setTitles(t);
         } catch (error) {
             console.error("❌ 데이터 갱신 실패:", error);
+            notifyError("프로필 정보를 불러오지 못했습니다."); // ✅ 추가
         }
     };
 

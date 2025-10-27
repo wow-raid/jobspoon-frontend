@@ -6,6 +6,7 @@ import { fetchMyTitles, UserTitleResponse } from "../../api/userTitleApi.ts";
 import styled from "styled-components";
 import defaultTitle from "../../assets/default_rank.png"; // 👉 임시 아이콘
 import TitleGuideModal from "../modals/TitleGuideModal.tsx";
+import { notifyError } from "../../utils/toast";
 
 export default function TitleSection() {
     const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
@@ -30,18 +31,26 @@ export default function TitleSection() {
     useEffect(() => {
         const isLoggedIn = localStorage.getItem("isLoggedIn");
         if (!isLoggedIn) {
-            console.error("로그인이 필요합니다.");
+            notifyError("로그인이 필요합니다."); // ✅ alert 대신 토스트
             setLoading(false);
             return;
         }
 
         // 프로필은 profileAppearanceApi, 칭호는 userTitleApi에서 불러오기
-        Promise.all([fetchMyProfile(), fetchMyTitles()])
-            .then(([profileData, titlesData]) => {
-                setProfile(profileData);
-                setTitles(titlesData);
+        Promise.allSettled([fetchMyProfile(), fetchMyTitles()])
+            .then(([profileRes, titlesRes]) => {
+                if (profileRes.status === "fulfilled") {
+                    setProfile(profileRes.value);
+                } else {
+                    notifyError("프로필 정보를 불러오지 못했습니다.");
+                }
+
+                if (titlesRes.status === "fulfilled") {
+                    setTitles(titlesRes.value);
+                } else {
+                    notifyError("칭호 정보를 불러오지 못했습니다.");
+                }
             })
-            .catch(console.error)
             .finally(() => setLoading(false));
     }, []);
 

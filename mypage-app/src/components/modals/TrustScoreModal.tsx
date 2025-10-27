@@ -1,6 +1,6 @@
 {/* 신뢰점수 안내 모달 */}
 
-import React from "react";
+import React, {useEffect} from "react";
 import styled from "styled-components";
 import { TrustScoreResponse } from "../../api/userTrustScoreApi.ts";
 import {
@@ -35,6 +35,15 @@ export default function TrustScoreModal({ isOpen, onClose, trust }: Props) {
         monthlyStudyrooms: trust.monthlyStudyrooms,
         monthlyComments: trust.monthlyComments
     });
+
+    // ✅ ESC 키로 닫기
+    useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+        };
+        window.addEventListener("keydown", handleEsc);
+        return () => window.removeEventListener("keydown", handleEsc);
+    }, [onClose]);
 
     return (
         <Overlay isOpen={isOpen}>

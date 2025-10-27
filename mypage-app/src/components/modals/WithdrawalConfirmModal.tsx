@@ -1,6 +1,6 @@
 {/* 회원탈퇴 확인 모달 */}
 
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 import styled from "styled-components";
 
 interface WithdrawalConfirmModalProps {
@@ -18,6 +18,15 @@ export default function WithdrawalConfirmModal({
     const nickname = localStorage.getItem("nickname") ?? "사용자";
     const requiredPhrase = nickname + " 회원 탈퇴";
     const isMatch = inputValue.trim() === requiredPhrase;
+
+    // ✅ ESC 키로 닫기
+    useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+        };
+        window.addEventListener("keydown", handleEsc);
+        return () => window.removeEventListener("keydown", handleEsc);
+    }, [onClose]);
 
     return (
         <Overlay isOpen={isOpen}>

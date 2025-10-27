@@ -3,6 +3,8 @@ import { Calendar as BigCalendar, dateFnsLocalizer } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { ko } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import { useEffect } from "react";
+import { notifyInfo } from "../../utils/toast";
 
 const locales = { ko };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
@@ -91,6 +93,14 @@ export default function Calendar({ schedules, onEventClick }: Props) {
         <div style={{ whiteSpace: "normal", fontSize: 13 }}>{event.title}</div>
     );
 
+    useEffect(() => {
+        if (schedules.length === 0) {
+            // 첫 렌더에 한 번만 띄우고 싶으면:
+            const timer = setTimeout(() => notifyInfo("등록된 일정이 없습니다 📭"), 400);
+            return () => clearTimeout(timer);
+        }
+    }, [schedules]);
+
     return (
         <CalendarWrapper>
             <BigCalendar
@@ -98,7 +108,10 @@ export default function Calendar({ schedules, onEventClick }: Props) {
                 events={events}
                 startAccessor="start"
                 endAccessor="end"
-                onSelectEvent={onEventClick}
+                onSelectEvent={(event) => {
+                    if (onEventClick) onEventClick(event);
+                    else notifyInfo("일정 정보를 불러오는 중입니다 🗓️");
+                }}
                 culture="ko"
                 style={{ height: "100%" }}
                 components={{ event: CustomEvent, toolbar: CustomToolbar }}

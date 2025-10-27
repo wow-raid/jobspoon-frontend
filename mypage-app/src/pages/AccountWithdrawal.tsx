@@ -5,6 +5,7 @@ import { FaRegHandshake } from "react-icons/fa"; // 🤝 따뜻한 작별 아이
 import WithdrawalConfirmModal from "../components/modals/WithdrawalConfirmModal.tsx";
 import ServiceModal from "../components/modals/ServiceModal.tsx";
 import { withdrawAccount } from "../api/profileAppearanceApi.ts";
+import { notifySuccess, notifyError, notifyInfo } from "../utils/toast";
 
 export default function AccountWithdrawal() {
     const [reason, setReason] = useState("");
@@ -18,7 +19,7 @@ export default function AccountWithdrawal() {
 
     const handleWithdrawalClick = () => {
         if (!reason.trim()) {
-            alert("탈퇴 사유를 선택하거나 입력해주세요.");
+            notifyInfo("탈퇴 사유를 선택하거나 입력해주세요 📝");
             return;
         }
         setShowConfirm(true);
@@ -27,13 +28,18 @@ export default function AccountWithdrawal() {
     const handleConfirm = async () => {
         try {
             await withdrawAccount();
+            localStorage.removeItem("isLoggedIn");
+            notifySuccess("회원 탈퇴가 완료되었습니다 🙏 감사합니다");
+            setShowConfirm(false);
+
+            // 1.5초 후 홈으로 이동 (UX 완화)
+            setTimeout(() => {
+                navigate("/");
+            }, 1500);
         } catch (error) {
             console.error(error);
+            notifyError("탈퇴 처리 중 오류가 발생했습니다 ❌");
         }
-        setShowConfirm(false);
-        localStorage.removeItem("isLoggedIn");
-        alert("회원 탈퇴가 완료되었습니다. 이용해주셔서 감사합니다 🙏");
-        window.location.href = "/";
     };
 
     return (

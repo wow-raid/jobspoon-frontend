@@ -34,6 +34,7 @@ import {
     calcCommentScore,
     calcTotalScore
 } from "../utils/trustScoreUtils";
+import { notifySuccess, notifyError, notifyInfo } from "../utils/toast";
 
 type OutletContextType = {
     profile: ProfileAppearanceResponse | null;
@@ -132,21 +133,19 @@ export default function AccountProfilePage() {
 
     /** 닉네임 저장 */
     const handleSaveNickname = async () => {
-        const isLoggedIn = localStorage.getItem("isLoggedIn"); // ✅ 로그인 여부만 확인
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
         if (!isLoggedIn) {
-            setNicknameError("로그인이 필요합니다.");
+            notifyInfo("로그인이 필요합니다 🔒");
             return;
         }
 
         try {
-            await updateNickname(tempNickname); // ✅ token 인자 제거
+            await updateNickname(tempNickname);
             await refreshAll();
             setIsEditingNickname(false);
-            setNicknameError(null);
-            setNicknameSuccess("닉네임이 성공적으로 변경되었습니다.");
+            notifySuccess("닉네임이 성공적으로 변경되었습니다 ✨");
         } catch (err: any) {
-            setNicknameError(err.message || "닉네임 수정 실패");
-            setNicknameSuccess(null);
+            notifyError(err.message || "닉네임 수정 실패 ❌");
         }
     };
 
@@ -167,21 +166,19 @@ export default function AccountProfilePage() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const isLoggedIn = localStorage.getItem("isLoggedIn"); // ✅ 로그인 여부만 확인
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
         if (!isLoggedIn) {
-            setPhotoError("로그인이 필요합니다.");
+            notifyInfo("로그인이 필요합니다 🔒");
             return;
         }
 
         try {
             setIsUploading(true);
-            await uploadProfilePhoto(file); // ✅ token 인자 제거
+            await uploadProfilePhoto(file);
             await refreshAll();
-            setPhotoError(null);
-            setPhotoSuccess("사진 업로드 성공");
+            notifySuccess("프로필 사진이 변경되었습니다 📸");
         } catch (err: any) {
-            setPhotoError(err.message || "사진 업로드 실패");
-            setPhotoSuccess(null);
+            notifyError(err.message || "사진 업로드 실패 ❌");
         } finally {
             setIsUploading(false);
         }
@@ -194,14 +191,14 @@ export default function AccountProfilePage() {
             if (target?.equipped) {
                 await unequipTitle();
                 await refreshAll();
-                alert("칭호가 해제되었습니다.");
+                notifyInfo("칭호가 해제되었습니다 💤");
             } else {
                 const updated = await equipTitle(titleId);
                 await refreshAll();
-                alert(`${updated.displayName} 칭호가 장착되었습니다.`);
+                notifySuccess(`"${updated.displayName}" 칭호가 장착되었습니다 🏅`);
             }
         } catch (error: any) {
-            alert(error.message || "칭호 장착/해제 실패");
+            notifyError(error.message || "칭호 장착/해제 실패 ❌");
         }
     };
 

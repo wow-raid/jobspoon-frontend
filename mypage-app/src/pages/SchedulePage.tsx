@@ -13,6 +13,7 @@ import {
 import Calendar from "../components/schedule/Calendar.tsx";
 import ScheduleDetailPanel from "../components/schedule/ScheduleDetailPanel.tsx";
 import AddScheduleModal from "../components/modals/AddScheduleModal.tsx";
+import { notifyError, notifySuccess, notifyInfo } from "../utils/toast";
 
 type UnifiedSchedule = (UserScheduleResponse | UserStudySchedule) & {
     type: "personal" | "study";
@@ -23,13 +24,15 @@ export default function SchedulePage() {
     const [viewMode, setViewMode] = useState<"all" | "personal" | "study">("all");
     const [selected, setSelected] = useState<UnifiedSchedule | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     // 추가: 월간/주간/일간 뷰 상태 관리
     const [calendarView, setCalendarView] = useState<"month" | "week" | "day">("month");
     const [calendarDate, setCalendarDate] = useState<Date>(new Date());
 
     // 일정 불러오기 (개인 + 스터디)
-    async function loadSchedules() {
+    async function loadSchedules(showToast = false) {
+        setLoading(true);
         try {
             const [personal, study] = await Promise.all([
                 fetchUserSchedules(),
@@ -41,9 +44,13 @@ export default function SchedulePage() {
                 ...study.map((s) => ({ ...s, type: "study" as const })),
             ];
 
-            setAllSchedules([...merged]); //
+            setAllSchedules(merged);
+            if (showToast) notifySuccess("일정이 업데이트되었습니다 ✅");
         } catch (err) {
             console.error("일정 불러오기 실패:", err);
+            notifyError("일정 데이터를 불러오지 못했습니다 ❌");
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -55,10 +62,12 @@ export default function SchedulePage() {
     async function handleCreateSchedule(formData: UserScheduleRequest) {
         try {
             await createUserSchedule(formData);
-            await loadSchedules(); // 일정 목록 갱신
-            setIsAddModalOpen(false);
+            notifySuccess("일정이 추가되었습니다 ✅");
+            await loadSchedules();
+            setTimeout(() => setIsAddModalOpen(false), 200); // UX적 자연스러움
         } catch (err) {
             console.error("일정 등록 실패:", err);
+            notifyError("일정 등록 중 오류가 발생했습니다 ❌");
         }
     }
 

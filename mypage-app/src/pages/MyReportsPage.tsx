@@ -1,31 +1,44 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { fetchMyReports, CreateReportResponse } from "../api/reportApi";
+import { notifyError, notifySuccess, notifyInfo } from "../utils/toast";
+import { useNavigate } from "react-router-dom";
 
 /* ====================== 메인 컴포넌트 ====================== */
 export default function MyReportsPage() {
     const [reports, setReports] = useState<CreateReportResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const navigate = useNavigate();
+
+    /* ===== 신고 내역 불러오기 ===== */
+    const loadReports = async () => {
+        setLoading(true);
+        try {
+            const data = await fetchMyReports();
+            setReports(data);
+            if (data.length > 0) {
+                notifySuccess("신고 내역이 업데이트되었습니다 ✅");
+            } else {
+                notifyInfo("신고 내역이 없습니다 📭");
+            }
+        } catch (err) {
+            console.error(err);
+            setError("신고 내역을 불러오는 중 오류가 발생했습니다.");
+            notifyError("신고 내역 불러오기 실패 ❌");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const loadReports = async () => {
-            try {
-                const data = await fetchMyReports();
-                setReports(data);
-            } catch (err) {
-                console.error(err);
-                setError("신고 내역을 불러오는 중 오류가 발생했습니다.");
-            } finally {
-                setLoading(false);
-            }
-        };
         loadReports();
     }, []);
 
+    /* ===== 상태 분기 ===== */
     if (loading) return <StateBox>불러오는 중...</StateBox>;
     if (error) return <StateBox color="#EF4444">{error}</StateBox>;
-    if (reports.length === 0) return <EmptyState />;
+    if (reports.length === 0) return <EmptyState onGoContact={() => navigate("/mypage/inquiry")} />;
 
     return (
         <Section>
@@ -90,7 +103,7 @@ function translateCategory(category: string) {
 }
 
 /* ====================== Empty 상태 ====================== */
-function EmptyState() {
+function EmptyState({ onGoContact }: { onGoContact: () => void }) {
     return (
         <Section>
             <Header>
@@ -106,6 +119,7 @@ function EmptyState() {
                         아직 신고하신 내역이 없어요.
                         <br /> 불편사항이 있다면 언제든 알려주세요.
                     </p>
+                    <ContactButton onClick={onGoContact}>문의하기로 이동</ContactButton>
                 </CardBody>
             </EmptyCard>
         </Section>
@@ -246,8 +260,25 @@ const CardBody = styled.div`
     font-size: 15px;
     line-height: 1.8;
     color: #374151;
+    text-align: center;
 
     p {
-        margin: 0;
+        margin: 0 0 20px 0; /* ✅ 문단과 버튼 사이 여백 확보 */
+    }
+`;
+
+const ContactButton = styled.button`
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    margin-top: 20px; /* ✅ 4 → 20 으로 변경 (Membership spacing 맞춤) */
+    &:hover {
+        background: #1d4ed8;
     }
 `;

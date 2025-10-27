@@ -7,6 +7,7 @@ import { UserTitleResponse } from "../../api/userTitleApi.ts";
 import styled from "styled-components";
 import defaultProfile from "../../assets/default_profile.png";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { notifyError } from "../../utils/toast";
 
 type Props = {
     profile: ProfileAppearanceResponse;
@@ -17,6 +18,7 @@ type Props = {
 // export default function ProfileAppearanceCard({ profile, userLevel, titles }: Props) {
 export default function ProfileAppearanceCard({ profile, titles }: Props) {
     const [isOpen, setIsOpen] = useState(true);
+    const [hasErrorNotified, setHasErrorNotified] = useState(false);
 
     if (!profile) {
         return <p>불러오는 중...</p>;
@@ -43,7 +45,14 @@ export default function ProfileAppearanceCard({ profile, titles }: Props) {
                             src={profile.photoUrl || defaultProfile}
                             alt="profile"
                             onError={(e) => {
-                                (e.target as HTMLImageElement).src = defaultProfile;
+                                const img = e.target as HTMLImageElement;
+                                img.src = defaultProfile;
+
+                                // localStorage 기반: 세션 동안 한 번만 알림
+                                if (!localStorage.getItem("profileImgErrorNotified")) {
+                                    notifyError("프로필 이미지를 불러오지 못했습니다. 기본 이미지로 변경됩니다.");
+                                    localStorage.setItem("profileImgErrorNotified", "true");
+                                }
                             }}
                         />
                     </ImageWrapper>
