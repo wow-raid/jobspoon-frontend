@@ -8,7 +8,6 @@ import InterviewResultList from "./pages/InterviewResultList.tsx";
 import InterviewResultDetail from "./pages/InterviewResultDetail.tsx";
 import AccountWithdrawal from "./pages/AccountWithdrawal.tsx";
 import MembershipPage from "./pages/MemebershipPage.tsx";
-import UserHistoryPage from "./pages/UserHistoryPage.tsx";
 import SchedulePage from "./pages/SchedulePage.tsx";
 import MyPostsPage from "./pages/MyPostsPage.tsx";
 import InquiryPage from "./pages/InquiryPage.tsx";
@@ -139,8 +138,6 @@ export default function App() {
                         <Route path="withdrawal" element={<AccountWithdrawal />} />
                         {/* 멤버십 */}
                         <Route path="membership" element={<MembershipPage />} />
-                        {/* 이력 관리 */}
-                        <Route path="user/history" element={<UserHistoryPage />} />
                         {/* 작성한 글 */}
                         <Route path="my-posts" element={<MyPostsPage />} />
                         {/* 일정 */}
