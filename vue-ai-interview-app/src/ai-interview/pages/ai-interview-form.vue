@@ -558,6 +558,33 @@ const skills = ref([
   "Angular", "Bootstrap", "Node.js", "jQuery", "PHP", "JSP", "GraphQL", "HTML5",
 ]);
 const skillsMap = Object.fromEntries(skills.value.map((s, i) => [s, i + 1]));
+
+// displayName을 enum 이름으로 매핑
+const techStackDisplayToEnum = {
+  "풀스택": "FULLSTACK",
+  "백엔드/서버개발": "BACKEND",
+  "프론트엔드": "FRONTEND",
+  "웹개발": "WEB",
+  "Flutter": "FLUTTER",
+  "Java": "JAVA",
+  "JavaScript": "JAVASCRIPT",
+  "Python": "PYTHON",
+  "Vue.js": "VUEJS",
+  "API": "API",
+  "MYSQL": "MYSQL",
+  "AWS": "AWS",
+  "ReactJS": "REACTJS",
+  "ASP": "ASP",
+  "Angular": "ANGULAR",
+  "Bootstrap": "BOOTSTRAP",
+  "Node.js": "NODEJS",
+  "jQuery": "JQUERY",
+  "PHP": "PHP",
+  "JSP": "JSP",
+  "GraphQL": "GRAPHQL",
+  "HTML5": "HTML5"
+};
+
 const selectedTechSkills = ref([]);
 
 // 면접 준비도
@@ -612,7 +639,7 @@ const startInterview = () => {
     interviewAccountProjectRequests: selectedProjectExperience.value === "있음" 
       ? projectList.value.filter(p => p.projectName.trim() && p.projectDescription.trim())
       : [],
-    techStacks: selectedTechSkills.value,
+    techStacks: selectedTechSkills.value.map(skill => techStackDisplayToEnum[skill] || skill),
     firstQuestion: "",
     firstAnswer: ""
   };
