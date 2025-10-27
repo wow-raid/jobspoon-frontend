@@ -898,13 +898,7 @@ const MoreBtn = styled.button`
 /* 직무별 퀴즈 섹션 배경 */
 const JobsSurface = styled.div`
   /* 이미지처럼 아주 은은한 수직 그라데이션 */
-  background: linear-gradient(
-    180deg,
-    #EEF5FF 0%,
-    #EAF2FF 35%,
-    #E5EFFF 70%,
-    #DFECFF 100%
-  );
+  background: #f4f8ff;
   border-radius: 18px;      /* 모서리 둥글게 */
   padding: clamp(16px, 2.6vw, 24px);
   overflow: hidden;         /* 라운드 밖 내용 숨김 */
