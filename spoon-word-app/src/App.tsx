@@ -25,6 +25,7 @@ import { goToAccountLogin } from "./utils/auth";
 import OXQuizPage from "./pages/OXQuizPage.tsx";
 import {GlobalFonts} from "./styles/GlobalFonts.tsx";
 import InitialsQuizPage from "./pages/InitialsQuizPage.tsx";
+import QuizResultRoute from "./routes/QuizResultRoute.tsx";
 
 // notes 전용 로그인 가드
 function NotesGuard() {
@@ -370,7 +371,7 @@ export default function App() {
                                 <Route path="play" element={<QuizPlayPage />} />
                                 <Route path="ox" element={<OXQuizPage />} />
                                 <Route path="initials" element={<InitialsQuizPage />} />
-                                <Route path="result" element={<QuizPlayPage />} />
+                                <Route path="result" element={<QuizResultRoute />} />
                             </Route>
                             <Route path="book" element={<FavoriteTermsPage />} />
                             <Route path="folders/:folderId" element={<WordbookFolderPage />} />
