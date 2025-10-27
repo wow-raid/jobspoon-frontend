@@ -8,6 +8,7 @@ import AiInterviewLandingpage from "@/ai-interview/pages/ai-interview-landingpag
 import AiInterviewSelect from "@/ai-interview/pages/ai-interview-select.vue";
 import AiInterviewDetail from "@/ai-interview/pages/ai-interview-detail.vue";
 import AiInterviewForm from "@/ai-interview/pages/ai-interview-form.vue";
+import AiInterviewEnd from "@/ai-interview/pages/ai-interview-end.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -42,6 +43,11 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/ai-interview/result',
         component: AiInterviewAnswerResult,
+    },
+    {
+        path: '/ai-interview/end',
+        name: 'ai-interview-end',
+        component: AiInterviewEnd,
     },
     // 필요하다면 기타 라우트 추가
     { path: "/", redirect: "/ai-interview/select" },

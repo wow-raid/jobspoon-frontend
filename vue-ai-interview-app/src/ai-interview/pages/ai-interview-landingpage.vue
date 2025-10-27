@@ -1,1115 +1,778 @@
 <template>
-<div>
+<div :style="pageStyle">
   <!-- 히어로 섹션 -->
-  <section :style="heroSectionStyle" class="hero-section">
-    <div class="animated-background">
-      <div class="wave wave1"></div>
-      <div class="wave wave2"></div>
-      <div class="wave wave3"></div>
-      <div class="wave wave4"></div>
+  <section :style="heroSectionStyle">
+    <!-- 왼쪽 이미지 -->
+    <div :style="leftImageContainerStyle">
+      <img :src="landingImage" alt="AI 면접 플랫폼" :style="leftImageStyle" />
+      <img :src="landingImage2" alt="AI 면접 플랫폼" :style="leftImageStyle2" />
     </div>
 
-    <div :style="heroContentStyle" class="animate-on-scroll">
-      <div class="logo-container animate-on-scroll">
-        <h1 :style="logoStyle">JobSpoon AI 인터뷰</h1>
+    <!-- 오른쪽 텍스트 -->
+    <div :style="rightContentStyle">
+      <h1 :style="mainTitleStyle">
+        빠르고<br />
+        확실하게<br />
+        <span :style="gradientTextStyle">준비하세요</span>
+      </h1>
+      
+      <div :style="descriptionBoxStyle">
+        <p :style="descriptionTitleStyle">면접 준비</p>
+        <p :style="descriptionSubtitleStyle">어떻게 하고 있나요?</p>
+        <p :style="descriptionTextStyle">
+          Job-Spoon의 AI 모의면접으로<br />
+          편하지만 확실하게 준비 해보세요
+        </p>
       </div>
-      <h1 :style="heroTitleStyle" class="animate-on-scroll delay-100">AI로 완성하는<br /><span class="gradient-text">완벽한 면접 준비</span></h1>
-      <p :style="heroSubtitleStyle" class="animate-on-scroll delay-200">
-        JobSpoon의 AI 인터뷰 시스템으로 실전과 같은 면접 경험을 쌓고
-        자신감을 키워보세요. 실시간 피드백과 맞춤형 질문으로 여러분의 취업 성공률을 높입니다.
-      </p>
-      <div :style="buttonGroupStyle" class="animate-on-scroll delay-300">
-        <button :style="primaryButtonStyle" class="btn-hover-effect pulse-animation primary-btn" @click="goAiInterview" >시작하기</button>
-        <button :style="secondaryButtonStyle" class="btn-hover-effect secondary-btn">더 알아보기</button>
+
+      <div :style="buttonGroupStyle">
+        <button :style="primaryButtonStyle" @click="goAiInterview">
+          AI 면접 시작하기 →
+        </button>
+        <button :style="secondaryButtonStyle" @click="scrollToFeatures">
+          더 알아보기
+        </button>
       </div>
     </div>
-
-    <div :style="landingImageBox">
-      <img :src="landingImage" alt="ai_logo" :style="ladingImageStyle">
-    </div>
-
-
-
   </section>
 
   <!-- 특징 섹션 -->
-  <section :style="featureSectionStyle">
-    <h2 :style="sectionTitleStyle" class="animate-on-scroll">주요 특징</h2>
-    <div :style="featureContainerStyle">
-      <div :style="featureCardStyle" class="animate-on-scroll feature-card">
-        <div class="feature-icon-wrapper">
-          <div :style="featureIconStyle" class="mdi mdi-robot"></div>
-        </div>
-        <h3 :style="featureTitleStyle">AI 기반 면접 시뮬레이션</h3>
-        <p :style="featureDescriptionStyle">실제 면접과 유사한 환경에서 AI가 다양한 질문을 제시하고 답변을 분석합니다.</p>
-        <div class="feature-hover-effect"></div>
+  <section :style="featuresSectionStyle">
+    <h2 :style="sectionTitleStyle" data-section-title>
+      왜 <span :style="highlightTextStyle">Job-Spoon AI 면접</span>인가요?
+    </h2>
+    <p :style="sectionSubtitleStyle">
+      실전 같은 연습으로 면접 합격률을 높이세요
+    </p>
+
+    <!-- 특징 카드 그리드 -->
+    <div :style="featuresGridStyle">
+      <div :style="getFeatureCardStyle(featureVisibility[0], 0)" data-feature="0">
+        <div :style="featureIconStyle">🎯</div>
+        <h3 :style="featureTitleStyle">맞춤형 질문</h3>
+        <p :style="featureDescStyle">
+          직무와 경력에 맞춘<br />
+          AI 생성 면접 질문
+        </p>
       </div>
 
-      <div :style="featureCardStyle" class="animate-on-scroll delay-100 feature-card">
-        <div class="feature-icon-wrapper">
-          <div :style="featureIconStyle" class="mdi mdi-chart-line"></div>
-        </div>
-        <h3 :style="featureTitleStyle">상세한 피드백 제공</h3>
-        <p :style="featureDescriptionStyle">답변의 강점과 약점을 분석하여 개선점을 제시하고 더 나은 답변 방향을 안내합니다.</p>
-        <div class="feature-hover-effect"></div>
+      <div :style="getFeatureCardStyle(featureVisibility[1], 1)" data-feature="1">
+        <div :style="featureIconStyle">🎤</div>
+        <h3 :style="featureTitleStyle">실시간 음성 인식</h3>
+        <p :style="featureDescStyle">
+          자연스러운 대화형<br />
+          면접 시뮬레이션
+        </p>
       </div>
 
-      <div :style="featureCardStyle" class="animate-on-scroll delay-200 feature-card">
-        <div class="feature-icon-wrapper">
-          <div :style="featureIconStyle" class="mdi mdi-account-group"></div>
-        </div>
-        <h3 :style="featureTitleStyle">맞춤형 질문 생성</h3>
-        <p :style="featureDescriptionStyle">지원 직무와 경력에 맞는 맞춤형 질문을 생성하여 실전 면접에 대비할 수 있습니다.</p>
-        <div class="feature-hover-effect"></div>
+      <div :style="getFeatureCardStyle(featureVisibility[2], 2)" data-feature="2">
+        <div :style="featureIconStyle">📊</div>
+        <h3 :style="featureTitleStyle">즉각적인 피드백</h3>
+        <p :style="featureDescStyle">
+          답변 분석과 함께<br />
+          개선점 제시
+        </p>
+      </div>
+
+      <div :style="getFeatureCardStyle(featureVisibility[3], 3)" data-feature="3">
+        <div :style="featureIconStyle">📈</div>
+        <h3 :style="featureTitleStyle">성장 추적</h3>
+        <p :style="featureDescStyle">
+          연습 기록과 점수로<br />
+          실력 향상 확인
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 상세 기능 섹션 -->
+  <section :style="detailSectionStyle">
+    <!-- 기능 1 -->
+    <div :style="getDetailRowStyle(false, detailVisibility[0])" data-detail="0">
+      <div :style="getDetailContentStyle(false, detailVisibility[0])">
+        <div :style="featureBadgeStyle">FEATURE 01</div>
+        <h3 :style="detailTitleStyle">
+          실전처럼 연습하고<br />
+          <span :style="highlightTextStyle">자신감을 키우세요</span>
+        </h3>
+        <p :style="detailDescStyle">
+          실제 면접과 동일한 환경에서 AI와 대화하며<br />
+          답변을 연습하고 개선할 수 있습니다.
+        </p>
+        <ul :style="detailListStyle">
+          <li :style="detailListItemStyle">실시간 STT 음성 인식</li>
+          <li :style="detailListItemStyle">자연스러운 대화 흐름</li>
+          <li :style="detailListItemStyle">무제한 연습 가능</li>
+        </ul>
+      </div>
+      <div :style="getDetailImageBoxStyle(false, detailVisibility[0])">
+        <div :style="imagePlaceholderStyle">면접 화면 이미지</div>
+      </div>
+    </div>
+
+    <!-- 기능 2 -->
+    <div :style="getDetailRowStyle(true, detailVisibility[1])" data-detail="1">
+      <div :style="getDetailContentStyle(true, detailVisibility[1])">
+        <div :style="featureBadgeStyle">FEATURE 02</div>
+        <h3 :style="detailTitleStyle">
+          AI가 분석하는<br />
+          <span :style="highlightTextStyle">상세한 피드백</span>
+        </h3>
+        <p :style="detailDescStyle">
+          답변의 논리성, 명확성, 전문성을 분석하고<br />
+          구체적인 개선 방향을 제시합니다.
+        </p>
+        <ul :style="detailListStyle">
+          <li :style="detailListItemStyle">답변 품질 점수화</li>
+          <li :style="detailListItemStyle">개선점 상세 분석</li>
+          <li :style="detailListItemStyle">모범 답변 예시 제공</li>
+        </ul>
+      </div>
+      <div :style="getDetailImageBoxStyle(true, detailVisibility[1])">
+        <div :style="imagePlaceholderStyle">피드백 화면 이미지</div>
+      </div>
+    </div>
+
+    <!-- 기능 3 -->
+    <div :style="getDetailRowStyle(false, detailVisibility[2])" data-detail="2">
+      <div :style="getDetailContentStyle(false, detailVisibility[2])">
+        <div :style="featureBadgeStyle">FEATURE 03</div>
+        <h3 :style="detailTitleStyle">
+          나만의 속도로<br />
+          <span :style="highlightTextStyle">꾸준히 성장하세요</span>
+        </h3>
+        <p :style="detailDescStyle">
+          시간과 장소에 구애받지 않고<br />
+          언제든지 면접 연습을 시작할 수 있습니다.
+        </p>
+        <ul :style="detailListStyle">
+          <li :style="detailListItemStyle">24시간 이용 가능</li>
+          <li :style="detailListItemStyle">연습 기록 자동 저장</li>
+          <li :style="detailListItemStyle">진행 상황 시각화</li>
+        </ul>
+      </div>
+      <div :style="getDetailImageBoxStyle(false, detailVisibility[2])">
+        <div :style="imagePlaceholderStyle">진행 상황 이미지</div>
       </div>
     </div>
   </section>
 
   <!-- CTA 섹션 -->
-  <section :style="ctaSectionStyle" class="animate-on-scroll">
-    <h2 :style="ctaTitleStyle">지금 바로 AI 면접을 시작하세요</h2>
-    <p :style="ctaDescriptionStyle">
-      JobSpoon의 AI 인터뷰 시스템으로 면접 준비를 완벽하게 마치고 자신감 있게 실전에 임하세요.
+  <section :style="ctaSectionStyle">
+    <div :style="ctaIconStyle">🚀</div>
+    <h2 :style="ctaTitleStyle">
+      지금 바로 시작하고<br />
+      <span :style="ctaHighlightStyle">면접 합격률</span>을 높이세요
+    </h2>
+    <p :style="ctaDescStyle">
+      무료로 시작하고, 언제든지 연습할 수 있습니다.<br />
+      수천 명의 취업 준비생이 이미 Job-Spoon과 함께하고 있습니다.
     </p>
-    <button :style="ctaButtonStyle" class="btn-hover-effect">무료로 시작하기</button>
+    <button :style="ctaButtonStyle" @click="goAiInterview">
+      무료로 시작하기 →
+    </button>
   </section>
+
+  <!-- 스크롤 탑 버튼 -->
+  <button :style="scrollTopButtonStyle" @click="scrollToTop" aria-label="맨 위로">
+    ↑
+  </button>
 </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import landingImage from '../../assets/images/fixed/landinImge.jpg'
+import landingImage from '../../assets/images/fixed/imsi4.png'
+import landingImage2 from '../../assets/images/fixed/imsi3.png'
 
 const currentUrl = process.env.CURRENT_URL;
 const router = useRouter();
 
-const goAiInterview = () =>{
+// 반응형 상태 관리
+const isBackgroundVisible = ref(true);
+const featureVisibility = ref([false, false, false, false]);
+const detailVisibility = ref([false, false, false]);
+
+// 네비게이션 함수
+const goAiInterview = () => {
   window.location.href = `${currentUrl}/vue-ai-interview/ai-interview/select`
 }
 
-
-// 모바일 메뉴 상태 관리
-const mobileMenuOpen = ref(false);
-
-const toggleMobileMenu = () => {
-  mobileMenuOpen.value = !mobileMenuOpen.value;
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-const closeMobileMenu = () => {
-  mobileMenuOpen.value = false;
-};
-
-// 인라인 스타일 객체 정의
-// 헤더 스타일
-const headerStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  padding: '1rem 2rem',
-  backgroundColor: '#ffffff',
-  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-  position: 'sticky',
-  top: 0,
-  zIndex: 100
-};
-
-const landingImageBox = {
-  flex: 1,
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  position: 'relative',
-  zIndex: 3,
-  '@media (max-width: 768px)': {
-    marginLeft: '0',
-    marginTop: '1rem'
+const scrollToFeatures = () => {
+  const featuresSection = document.querySelector('[data-section-title]');
+  if (featuresSection) {
+    featuresSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 };
 
-const ladingImageStyle = {
-  width: '100%',
-  height: '100%',
-  maxWidth: '700px',
-  objectFit: 'contain',
-  filter: 'drop-shadow(0 20px 30px rgba(0, 0, 0, 0.15))',
-  transform: 'translateZ(0)',
-  animation: 'floatImage 6s ease-in-out infinite',
-  transition: 'all 0.5s ease'
+// 스크롤 애니메이션 핸들러
+const handleScroll = () => {
+  // 배경 텍스트 숨김 처리
+  const sectionTitle = document.querySelector('[data-section-title]');
+  if (sectionTitle) {
+    const rect = sectionTitle.getBoundingClientRect();
+    isBackgroundVisible.value = rect.top > 200;
+  }
+
+  // 특징 카드 애니메이션
+  const featureCards = document.querySelectorAll('[data-feature]');
+  featureCards.forEach((card, index) => {
+    const rect = card.getBoundingClientRect();
+    if (rect.top < window.innerHeight * 0.8 && rect.bottom > 0) {
+      featureVisibility.value[index] = true;
+    }
+  });
+
+  // 상세 기능 애니메이션
+  const detailRows = document.querySelectorAll('[data-detail]');
+  detailRows.forEach((row, index) => {
+    const rect = row.getBoundingClientRect();
+    if (rect.top < window.innerHeight * 0.85 && rect.bottom > 0) {
+      detailVisibility.value[index] = true;
+    }
+  });
 };
 
-const navMenuStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '1.5rem'
-};
+onMounted(() => {
+  handleScroll();
+  window.addEventListener('scroll', handleScroll);
+});
 
-const navItemStyle = {
-  color: '#333333',
-  textDecoration: 'none',
-  fontWeight: '500',
-  cursor: 'pointer',
-  transition: 'color 0.3s ease'
-};
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll);
+});
 
-const navButtonStyle = {
-  backgroundColor: '#3b82f6',
-  color: '#ffffff',
-  border: 'none',
-  borderRadius: '0.5rem',
-  padding: '0.75rem 1.5rem',
-  fontWeight: '500',
-  fontSize: '1rem',
-  cursor: 'pointer',
-  transition: 'background-color 0.3s ease'
-};
+// ========== 스타일 정의 ==========
 
-// 히어로 섹션 스타일
-const heroSectionStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '0 4rem',
-  background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-  gap: '1rem',
-  maxWidth: '100%',
-  minHeight: '90vh',
+const pageStyle = {
+  minHeight: '100vh',
+  background: 'linear-gradient(180deg, #ffffff 0%, #f0f9ff 40%, #e0f2fe 100%)',
   position: 'relative',
   overflow: 'hidden',
-  '@media (max-width: 768px)': {
-    flexDirection: 'column',
-    textAlign: 'center',
-    gap: '0.5rem',
-    padding: '2rem 1rem'
-  }
+  padding: '0'
 };
 
-const heroContentStyle = {
-  flex: '1',
-  maxWidth: '800px',
-  padding: '2rem',
-  marginLeft: '2rem',
-  marginRight: '0.5rem',
-  gap: '0.25rem',
-  '@media (max-width: 768px)': {
-    marginBottom: '1rem',
-    marginRight: '0',
-    textAlign: 'center'
-  }
+const backgroundTextContainerStyle = {
+  position: 'fixed',
+  top: '65%',
+  left: '0',
+  width: '100%',
+  transform: 'translateY(-50%)',
+  pointerEvents: 'none',
+  zIndex: 0,
+  overflow: 'hidden'
 };
 
-const heroTitleStyle = {
-  fontSize: '3.8rem',
-  fontWeight: '800',
-  color: '#1e293b',
-  marginBottom: '1rem',
-  lineHeight: '1.1',
-  textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-  '@media (max-width: 768px)': {
-    fontSize: '2.5rem'
-  },
-  background: 'linear-gradient(90deg, #1e40af 0%, #3b82f6 100%)',
+const backgroundTextStyle = (isVisible) => ({
+  display: 'flex',
+  whiteSpace: 'nowrap',
+  fontSize: 'clamp(70px, 10vw, 120px)',
+  fontWeight: '900',
+  color: 'rgba(200, 230, 255, 0.35)',
+  letterSpacing: '0.1em',
+  opacity: isVisible ? 1 : 0,
+  transition: 'opacity 0.3s ease',
+  animation: 'scrollLeft 30s linear infinite'
+});
+
+const heroSectionStyle = {
+  maxWidth: '100%',
+  width: '100%',
+  minHeight: '100vh',
+  margin: '0',
+  display: 'flex',
+  flexDirection: 'row',
+  gap: '0',
+  alignItems: 'center',
+  background: 'transparent',
+  borderRadius: '0',
+  padding: '0',
+  boxShadow: 'none',
+  position: 'relative',
+  zIndex: 1
+};
+
+const leftImageContainerStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'flex-start',
+  paddingLeft: '0',
+  paddingRight: '0',
+  height: '100vh',
+  flex: '0 0 60%',
+  width: '60%',
+  position: 'relative'
+};
+
+const leftImageStyle = {
+  width: 'auto',
+  height: '60vh',
+  borderRadius: '0',
+  boxShadow: 'none',
+  transition: 'transform 0.3s ease',
+  objectFit: 'contain',
+  position: 'relative',
+  marginLeft: '-100px',
+  zIndex: 1
+};
+const leftImageStyle2 = {
+  width: 'auto',
+  height: '40vh',
+  borderRadius: '0',
+  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
+  transition: 'transform 0.3s ease',
+  objectFit: 'contain',
+  position: 'absolute',
+  right: '20px',
+  top: '10%',
+  zIndex: 2
+};
+
+const rightContentStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '24px',
+  padding: '80px 100px 60px 80px',
+  justifyContent: 'center',
+  alignItems: 'flex-start',
+  flex: '1'
+};
+
+const heroTagStyle = {
+  display: 'inline-block',
+  padding: '10px 22px',
+  background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15))',
+  color: '#6366f1',
+  borderRadius: '30px',
+  fontSize: '14px',
+  fontWeight: '700',
+  letterSpacing: '0.03em',
+  border: '1px solid rgba(99, 102, 241, 0.25)',
+  width: 'fit-content',
+  marginBottom: '12px'
+};
+
+const mainTitleStyle = {
+  fontSize: 'clamp(56px, 6.5vw, 80px)',
+  fontWeight: '900',
+  lineHeight: '1.05',
+  margin: '0',
+  color: '#0f172a',
+  letterSpacing: '-0.05em'
+};
+
+const gradientTextStyle = {
+  background: 'linear-gradient(135deg, #4F9CF9 0%, #10B981 100%)',
   WebkitBackgroundClip: 'text',
   WebkitTextFillColor: 'transparent',
   backgroundClip: 'text',
-  letterSpacing: '-0.02em',
-  transform: 'translateZ(0)',
-  animation: 'textGlow 3s ease-in-out infinite alternate'
+  display: 'inline-block'
 };
 
-const heroSubtitleStyle = {
-  fontSize: '1.2rem',
+const descriptionBoxStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '8px',
+  marginTop: '0',
+  padding: '0'
+};
+
+const descriptionTitleStyle = {
+  fontSize: '24px',
+  fontWeight: '700',
+  color: '#1e293b',
+  margin: '0',
+  lineHeight: '1.4'
+};
+
+const descriptionSubtitleStyle = {
+  fontSize: '24px',
+  fontWeight: '700',
+  color: '#1e293b',
+  margin: '0',
+  lineHeight: '1.4'
+};
+
+const descriptionTextStyle = {
+  fontSize: '17px',
+  fontWeight: '400',
   color: '#64748b',
-  marginBottom: '1.5rem',
-  lineHeight: '1.5',
-  maxWidth: '90%',
-  '@media (max-width: 768px)': {
-    fontSize: '1.1rem',
-    maxWidth: '100%'
-  }
+  margin: '0',
+  marginTop: '12px',
+  lineHeight: '1.7'
 };
 
 const buttonGroupStyle = {
   display: 'flex',
-  gap: '1rem',
-  '@media (max-width: 480px)': {
-    flexDirection: 'column'
-  }
+  flexDirection: 'row',
+  gap: '12px',
+  marginTop: '4px'
 };
 
 const primaryButtonStyle = {
-  backgroundColor: '#3b82f6',
-  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-  color: '#ffffff',
-  border: 'none',
-  borderRadius: '0.75rem',
-  padding: '1.25rem 2.5rem',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '8px',
+  padding: '16px 30px',
+  fontSize: '16px',
   fontWeight: '700',
-  fontSize: '1.1rem',
+  color: '#fff',
+  background: 'linear-gradient(135deg, #4F9CF9 0%, #10B981 100%)',
+  border: 'none',
+  borderRadius: '50px',
   cursor: 'pointer',
-  transition: 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-  boxShadow: '0 10px 20px rgba(59, 130, 246, 0.3), 0 0 0 2px rgba(59, 130, 246, 0.05), inset 0 -3px 0 rgba(0, 0, 0, 0.1)',
-  transform: 'translateY(-2px)',
-  position: 'relative',
-  overflow: 'hidden',
-  '&:hover': {
-    transform: 'translateY(-4px) scale(1.02)',
-    boxShadow: '0 15px 25px rgba(59, 130, 246, 0.4), 0 0 0 3px rgba(59, 130, 246, 0.15), inset 0 -3px 0 rgba(0, 0, 0, 0.15)'
-  },
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: '-50%',
-    left: '-50%',
-    width: '200%',
-    height: '200%',
-    background: 'radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%)',
-    transform: 'rotate(45deg)',
-    opacity: 0,
-    transition: 'opacity 0.3s ease'
-  },
-  '&:hover::before': {
-    opacity: 1,
-    animation: 'buttonGlow 2s infinite'
-  }
+  transition: 'all 0.3s ease',
+  boxShadow: '0 8px 24px rgba(79, 156, 249, 0.4)',
+  whiteSpace: 'nowrap'
 };
 
 const secondaryButtonStyle = {
-  backgroundColor: 'transparent',
-  color: '#3b82f6',
-  border: '2px solid #3b82f6',
-  borderRadius: '0.75rem',
-  padding: '1.25rem 2.5rem',
-  fontWeight: '700',
-  fontSize: '1.1rem',
-  cursor: 'pointer',
-  transition: 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-  boxShadow: '0 4px 10px rgba(0, 0, 0, 0.05)',
-  transform: 'translateY(-2px)',
-  position: 'relative',
-  overflow: 'hidden',
-  '&:hover': {
-    backgroundColor: 'rgba(59, 130, 246, 0.08)',
-    transform: 'translateY(-4px) scale(1.02)',
-    boxShadow: '0 8px 15px rgba(0, 0, 0, 0.08)',
-    borderColor: '#2563eb'
-  },
-  '&::after': {
-    content: '""',
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    width: '100%',
-    height: '0%',
-    background: 'linear-gradient(to top, rgba(59, 130, 246, 0.1), transparent)',
-    transition: 'height 0.3s ease',
-    zIndex: -1
-  },
-  '&:hover::after': {
-    height: '100%',
-    animation: 'buttonFill 1s forwards'
-  }
-};
-
-const heroImageContainerStyle = {
-  flex: '1',
-  display: 'flex',
-  justifyContent: 'center',
+  display: 'inline-flex',
   alignItems: 'center',
-  position: 'relative',
-  zIndex: 2,
-  marginLeft: '-1rem',
-  '@media (max-width: 768px)': {
-    marginLeft: '0',
-    marginTop: '1rem'
-  }
-};
-
-const logoStyle = {
-  fontSize: '1.4rem',
+  justifyContent: 'center',
+  gap: '8px',
+  padding: '16px 30px',
+  fontSize: '16px',
   fontWeight: '700',
-  color: '#3b82f6',
-  marginBottom: '1rem',
-  letterSpacing: '0.02em',
-  display: 'inline-block',
-  position: 'relative',
-  '&::after': {
-    content: '""',
-    position: 'absolute',
-    bottom: '-5px',
-    left: '0',
-    width: '40px',
-    height: '3px',
-    background: 'linear-gradient(90deg, #3b82f6 0%, rgba(59, 130, 246, 0.3) 100%)',
-    borderRadius: '2px'
-  }
+  color: '#4F9CF9',
+  background: '#ffffff',
+  border: '2px solid rgba(79, 156, 249, 0.3)',
+  borderRadius: '50px',
+  cursor: 'pointer',
+  transition: 'all 0.3s ease',
+  boxShadow: '0 4px 12px rgba(79, 156, 249, 0.15)',
+  whiteSpace: 'nowrap'
 };
 
-// 특징 섹션 스타일
-const featureSectionStyle = {
-  padding: '6rem 2rem',
-  backgroundColor: '#f8fafc',
+const featuresSectionStyle = {
+  maxWidth: '1200px',
+  width: '100%',
+  margin: '0 auto 120px',
+  padding: '0 100px',
+  position: 'relative',
+  zIndex: 1,
   textAlign: 'center'
 };
 
 const sectionTitleStyle = {
-  fontSize: '2.5rem',
-  fontWeight: '700',
-  color: '#1e293b',
-  marginBottom: '3rem',
-  textAlign: 'center',
-  position: 'relative',
-  display: 'inline-block',
-  '&::after': {
-    content: '""',
-    position: 'absolute',
-    bottom: '-10px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    width: '80px',
-    height: '4px',
-    backgroundColor: '#3b82f6',
-    borderRadius: '2px'
-  }
+  fontSize: 'clamp(32px, 5vw, 48px)',
+  fontWeight: '900',
+  color: '#0f172a',
+  marginBottom: '16px',
+  letterSpacing: '-0.03em'
 };
 
-const featureContainerStyle = {
+const sectionSubtitleStyle = {
+  fontSize: 'clamp(16px, 2vw, 18px)',
+  color: '#64748b',
+  marginBottom: '60px',
+  fontWeight: '500'
+};
+
+const highlightTextStyle = {
+  background: 'linear-gradient(135deg, #4F9CF9 0%, #10B981 100%)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  backgroundClip: 'text',
+  display: 'inline-block'
+};
+
+const featuresGridStyle = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-  gap: '2rem',
-  maxWidth: '1200px',
-  margin: '0 auto'
+  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+  gap: '32px'
 };
 
-const featureCardStyle = {
-  backgroundColor: 'rgba(255, 255, 255, 0.9)',
-  backdropFilter: 'blur(15px)',
-  borderRadius: '1.5rem',
-  padding: '3rem 2rem',
-  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(255, 255, 255, 0.5) inset',
-  transition: 'all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-  position: 'relative',
-  overflow: 'hidden',
-  border: '1px solid rgba(255, 255, 255, 0.3)',
-  transform: 'translateZ(0)',
-  zIndex: 2,
-  '&:hover': {
-    transform: 'translateY(-15px) scale(1.02)',
-    boxShadow: '0 30px 60px rgba(59, 130, 246, 0.15), 0 0 0 2px rgba(59, 130, 246, 0.1) inset'
-  },
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%)',
-    opacity: 0,
-    transition: 'opacity 0.5s ease',
-    zIndex: -1
-  },
-  '&:hover::before': {
-    opacity: 1
-  }
-};
+const getFeatureCardStyle = (isVisible, index) => ({
+  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 249, 255, 0.95) 100%)',
+  borderRadius: '20px',
+  padding: '40px 28px',
+  boxShadow: '0 10px 40px rgba(79, 156, 249, 0.15)',
+  border: '2px solid rgba(79, 156, 249, 0.15)',
+  transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+  opacity: isVisible ? 1 : 0,
+  transform: isVisible ? 'translateY(0)' : 'translateY(40px)',
+  transitionDelay: `${index * 0.1}s`,
+  cursor: 'pointer',
+  textAlign: 'center'
+});
 
 const featureIconStyle = {
-  fontSize: '2.5rem',
-  color: '#3b82f6',
-  marginBottom: '1.5rem'
+  fontSize: '64px',
+  marginBottom: '20px',
+  filter: 'drop-shadow(0 4px 16px rgba(79, 156, 249, 0.3))'
 };
 
 const featureTitleStyle = {
-  fontSize: '1.5rem',
-  fontWeight: '600',
+  fontSize: 'clamp(20px, 2.5vw, 24px)',
+  fontWeight: '800',
   color: '#1e293b',
-  marginBottom: '1rem'
+  marginBottom: '12px',
+  letterSpacing: '-0.02em'
 };
 
-const featureDescriptionStyle = {
-  fontSize: '1.1rem',
+const featureDescStyle = {
+  fontSize: 'clamp(14px, 1.8vw, 16px)',
   color: '#64748b',
   lineHeight: '1.6'
 };
 
-// CTA 섹션 스타일
-const ctaSectionStyle = {
-  padding: '10rem 2rem',
-  backgroundColor: '#1e293b',
-  textAlign: 'center',
-  backgroundImage: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+const detailSectionStyle = {
+  maxWidth: '1200px',
+  width: '100%',
+  margin: '0 auto 120px',
+  position: 'relative',
+  zIndex: 1
+};
+
+const getDetailRowStyle = (reverse, isVisible) => ({
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: reverse ? '100px' : '60px',
+  alignItems: 'center',
+  marginBottom: '180px',
+  opacity: isVisible ? 1 : 0,
+  transform: isVisible ? 'translateY(0)' : 'translateY(60px)',
+  transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)'
+});
+
+const getDetailContentStyle = (reverse, isVisible) => ({
+  order: reverse ? 2 : 1,
+  paddingLeft: reverse ? '40px' : '0',
+  opacity: isVisible ? 1 : 0,
+  transform: isVisible ? 'translateX(0)' : `translateX(${reverse ? '40px' : '-40px'})`,
+  transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s'
+});
+
+const getDetailImageBoxStyle = (reverse, isVisible) => ({
+  order: reverse ? 1 : 2,
+  background: 'linear-gradient(135deg, #f1f5f9, #e2e8f0)',
+  borderRadius: '24px',
+  padding: '60px 40px',
+  minHeight: '400px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.1)',
+  border: '2px solid rgba(148, 163, 184, 0.2)',
   position: 'relative',
   overflow: 'hidden',
+  opacity: isVisible ? 1 : 0,
+  transform: isVisible ? 'translateX(0) scale(1)' : `translateX(${reverse ? '-40px' : '40px'}) scale(0.95)`,
+  transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.4s'
+});
+
+const featureBadgeStyle = {
+  display: 'inline-block',
+  padding: '8px 20px',
+  background: 'linear-gradient(135deg, rgba(79, 156, 249, 0.1), rgba(16, 185, 129, 0.1))',
+  color: '#4F9CF9',
+  borderRadius: '24px',
+  fontSize: '14px',
+  fontWeight: '700',
+  marginBottom: '20px',
+  letterSpacing: '0.02em'
+};
+
+const detailTitleStyle = {
+  fontSize: 'clamp(28px, 4vw, 42px)',
+  fontWeight: '900',
+  color: '#1e293b',
+  marginBottom: '20px',
+  letterSpacing: '-0.03em',
+  lineHeight: '1.3'
+};
+
+const detailDescStyle = {
+  fontSize: 'clamp(16px, 2vw, 19px)',
+  color: '#64748b',
+  lineHeight: '1.8',
+  marginBottom: '24px'
+};
+
+const detailListStyle = {
+  listStyle: 'none',
+  padding: '0',
+  margin: '24px 0'
+};
+
+const detailListItemStyle = {
+  fontSize: 'clamp(15px, 2vw, 17px)',
+  color: '#475569',
+  padding: '12px 0',
+  paddingLeft: '32px',
+  position: 'relative',
   '&::before': {
-    content: '""',
+    content: '"✓"',
     position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    background: 'radial-gradient(circle at center, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0) 70%)',
-    zIndex: 1,
-    animation: 'pulseBg 8s infinite'
-  },
-  '&::after': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    background: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z\' fill=\'%233b82f6\' fill-opacity=\'0.05\' fill-rule=\'evenodd\'/%3E%3C/svg%3E")',
-    opacity: 0.5,
-    zIndex: 0
+    left: '0',
+    color: '#10b981',
+    fontWeight: '900',
+    fontSize: '20px'
   }
+};
+
+const imagePlaceholderStyle = {
+  color: '#94a3b8',
+  fontSize: '18px',
+  fontWeight: '600',
+  textAlign: 'center',
+  zIndex: 1
+};
+
+const ctaSectionStyle = {
+  maxWidth: '900px',
+  width: '100%',
+  margin: '0 auto',
+  padding: '100px 40px',
+  textAlign: 'center',
+  background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+  borderRadius: '24px',
+  position: 'relative',
+  overflow: 'hidden',
+  zIndex: 1
+};
+
+const ctaIconStyle = {
+  fontSize: '80px',
+  marginBottom: '32px',
+  filter: 'drop-shadow(0 8px 24px rgba(59, 130, 246, 0.4))'
 };
 
 const ctaTitleStyle = {
-  fontSize: '2.5rem',
-  fontWeight: '700',
+  fontSize: 'clamp(32px, 5vw, 48px)',
+  fontWeight: '900',
   color: '#ffffff',
-  marginBottom: '1.5rem',
-  position: 'relative',
-  zIndex: 2
+  marginBottom: '24px',
+  letterSpacing: '-0.03em',
+  lineHeight: '1.2'
 };
 
-const ctaDescriptionStyle = {
-  fontSize: '1.25rem',
+const ctaHighlightStyle = {
+  background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  backgroundClip: 'text'
+};
+
+const ctaDescStyle = {
+  fontSize: 'clamp(16px, 2vw, 19px)',
   color: '#94a3b8',
-  marginBottom: '2.5rem',
-  maxWidth: '800px',
-  margin: '0 auto 2.5rem',
-  position: 'relative',
-  zIndex: 2
+  lineHeight: '1.8',
+  marginBottom: '40px'
 };
 
 const ctaButtonStyle = {
-  backgroundColor: '#3b82f6',
   background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-  color: '#ffffff',
+  color: 'white',
   border: 'none',
-  borderRadius: '0.5rem',
-  padding: '1.25rem 2.5rem',
-  fontWeight: '600',
-  fontSize: '1.1rem',
+  borderRadius: '12px',
+  padding: '18px 40px',
+  fontSize: '18px',
+  fontWeight: '700',
   cursor: 'pointer',
   transition: 'all 0.3s ease',
-  boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)',
-  position: 'relative',
-  zIndex: 2,
-  '&:hover': {
-    transform: 'translateY(-2px)',
-    boxShadow: '0 8px 20px rgba(59, 130, 246, 0.5)'
-  }
+  boxShadow: '0 12px 40px rgba(59, 130, 246, 0.45)'
 };
 
-// 애니메이션 효과 적용
-onMounted(() => {
-  const animateElements = document.querySelectorAll('.animate-on-scroll');
-  
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-      }
-    });
-  }, { threshold: 0.1 });
-  
-  animateElements.forEach(element => {
-    observer.observe(element);
-  });
-});
+const scrollTopButtonStyle = {
+  position: 'fixed',
+  bottom: '70px',
+  right: '24px',
+  width: '56px',
+  height: '56px',
+  borderRadius: '50%',
+  background: 'white',
+  color: '#3b82f6',
+  border: '2px solid #e2e8f0',
+  fontSize: '20px',
+  fontWeight: '700',
+  cursor: 'pointer',
+  boxShadow: '0 8px 20px rgba(59, 130, 246, 0.4)',
+  transition: 'all 0.3s ease',
+  zIndex: 100
+};
 </script>
 
 <style scoped>
-/* 애니메이션 효과 */
-.animate-on-scroll {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+/* 배경 텍스트 애니메이션 */
+@keyframes scrollLeft {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
-.animate-on-scroll.visible {
-  opacity: 1;
+/* 버튼 호버 효과 */
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+}
+
+button:active {
   transform: translateY(0);
 }
 
-.delay-100 {
-  transition-delay: 0.1s;
+/* 이미지 호버 효과 */
+img:hover {
+  transform: scale(1.02);
 }
 
-.delay-200 {
-  transition-delay: 0.2s;
+/* 특징 카드 호버 효과 */
+[data-feature]:hover {
+  transform: translateY(-8px) !important;
+  box-shadow: 0 20px 60px rgba(59, 130, 246, 0.25) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
 }
 
-.delay-300 {
-  transition-delay: 0.3s;
-}
-
-/* 히어로 섹션 애니메이션 */
-.hero-section {
-  gap: 1rem;
+/* 리스트 아이템 체크 마크 */
+ul li {
   position: relative;
-  overflow: hidden;
+  padding-left: 32px;
 }
 
-.animated-background {
+ul li::before {
+  content: '✓';
   position: absolute;
-  top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  overflow: hidden;
+  color: #10b981;
+  font-weight: 900;
+  font-size: 20px;
 }
 
-.wave {
-  position: absolute;
-  width: 200%;
-  height: 200%;
-  border-radius: 40%;
-  opacity: 0.3;
-}
-
-.wave1 {
-  background: linear-gradient(90deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.2) 100%);
-  bottom: -80%;
-  left: -50%;
-  animation: wave 20s linear infinite;
-}
-
-.wave2 {
-  background: linear-gradient(90deg, rgba(99, 102, 241, 0.15) 0%, rgba(79, 70, 229, 0.15) 100%);
-  bottom: -70%;
-  left: -30%;
-  animation: wave 16s linear infinite;
-  animation-delay: -5s;
-}
-
-.wave3 {
-  background: linear-gradient(90deg, rgba(168, 85, 247, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
-  bottom: -65%;
-  left: -40%;
-  animation: wave 18s linear infinite;
-  animation-delay: -2s;
-}
-
-.wave4 {
-  background: linear-gradient(90deg, rgba(236, 72, 153, 0.05) 0%, rgba(219, 39, 119, 0.05) 100%);
-  bottom: -75%;
-  left: -45%;
-  animation: wave 22s linear infinite;
-  animation-delay: -7s;
-}
-
-@keyframes wave {
-  0% {
-    transform: rotate(0deg);
+/* 반응형 디자인 */
+@media (max-width: 968px) {
+  div[style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
   }
-  100% {
-    transform: rotate(360deg);
+  
+  [data-detail] > div {
+    order: 1 !important;
+    padding-left: 0 !important;
+  }
+  
+  [data-detail] > div:last-child {
+    order: 2 !important;
   }
 }
 
-/* 플로팅 아이콘 */
-.floating-element {
-  position: absolute;
-  width: 60px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 50%;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(5px);
-  z-index: 1;
-}
-
-.floating-icon {
-  font-size: 2rem;
-  color: #3b82f6;
-}
-
-.element1 {
-  top: 20%;
-  left: 5%;
-  animation: float 6s ease-in-out infinite;
-}
-
-.element2 {
-  top: 60%;
-  left: 15%;
-  animation: float 8s ease-in-out infinite;
-  animation-delay: 1s;
-}
-
-.element3 {
-  top: 30%;
-  right: 10%;
-  animation: float 7s ease-in-out infinite;
-  animation-delay: 2s;
-}
-
-.element4 {
-  bottom: 15%;
-  right: 20%;
-  animation: float 9s ease-in-out infinite;
-  animation-delay: 3s;
-}
-
-@keyframes floatDevice {
-  0% {
-    transform: translateY(0) rotate(0deg);
+@media (max-width: 640px) {
+  section {
+    padding: 40px 20px !important;
   }
-  25% {
-    transform: translateY(-15px) rotate(1deg);
-  }
-  50% {
-    transform: translateY(0) rotate(0deg);
-  }
-  75% {
-    transform: translateY(10px) rotate(-1deg);
-  }
-  100% {
-    transform: translateY(0) rotate(0deg);
-  }
-}
-
-@keyframes ctaGlow {
-  0% {
-    transform: rotate(45deg) translateY(0);
-    opacity: 0.5;
-  }
-  50% {
-    transform: rotate(45deg) translateY(-100%);
-    opacity: 0.8;
-  }
-  100% {
-    transform: rotate(45deg) translateY(-200%);
-    opacity: 0;
-  }
-}
-
-@keyframes ctaShine {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-@keyframes pulseBg {
-  0% {
-    opacity: 0.2;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.4;
-    transform: scale(1.05);
-  }
-  100% {
-    opacity: 0.2;
-    transform: scale(1);
-  }
-}
-
-.animated-device {
-  position: relative;
-  width: 280px;
-  height: 560px;
-  background: #111827;
-  border-radius: 40px;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 0 10px rgba(0, 0, 0, 0.5);
-  padding: 10px;
-  overflow: hidden;
-  animation: device-float 6s ease-in-out infinite;
-  transform-style: preserve-3d;
-  perspective: 1000px;
-  transition: all 0.5s ease;
-}
-
-.animated-device::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%);
-  border-radius: 40px;
-  z-index: 2;
-  pointer-events: none;
-}
-
-@keyframes device-float {
-  0% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-15px);
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
-
-.device-notch {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 150px;
-  height: 30px;
-  background: #111827;
-  border-bottom-left-radius: 15px;
-  border-bottom-right-radius: 15px;
-  z-index: 3;
-}
-
-.device-button {
-  position: absolute;
-  right: -3px;
-  top: 100px;
-  width: 3px;
-  height: 50px;
-  background: #2d3748;
-  border-top-left-radius: 2px;
-  border-bottom-left-radius: 2px;
-}
-
-.device-screen {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  background: #1a202c;
-  overflow: hidden;
-  z-index: 1;
-}
-
-.chat-interface {
-  padding: 60px 15px 15px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  background: linear-gradient(180deg, #111827 0%, #1e293b 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-.chat-interface::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%233b82f6' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  opacity: 0.2;
-  pointer-events: none;
-}
-
-.chat-message {
-  margin-bottom: 15px;
-  display: flex;
-  animation: message-fade-in 0.5s ease-out forwards;
-  opacity: 0;
-}
-
-.ai-message {
-  justify-content: flex-start;
-}
-
-.user-message {
-  justify-content: flex-end;
-}
-
-.message-bubble {
-  max-width: 80%;
-  padding: 14px 18px;
-  border-radius: 20px;
-  font-size: 14px;
-  line-height: 1.5;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
-  transform: translateZ(0);
-  position: relative;
-  overflow: hidden;
-}
-
-.ai-message .message-bubble {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
-  border-bottom-left-radius: 5px;
-  border-top-right-radius: 24px;
-  box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
-}
-
-.ai-message .message-bubble::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%);
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.user-message .message-bubble {
-  background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
-  color: white;
-  border-bottom-right-radius: 5px;
-  border-top-left-radius: 24px;
-  box-shadow: 0 5px 15px rgba(75, 85, 99, 0.3);
-}
-
-.delay-1 {
-  animation-delay: 1s;
-}
-
-.delay-2 {
-  animation-delay: 2s;
-}
-
-.delay-3 {
-  animation-delay: 3s;
-}
-
-@keyframes message-fade-in {
-  0% {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.typing-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-}
-
-.typing-indicator span {
-  width: 8px;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 50%;
-  display: inline-block;
-  animation: typing-bounce 1.4s infinite ease-in-out both;
-}
-
-.typing-indicator span:nth-child(1) {
-  animation-delay: -0.32s;
-}
-
-.typing-indicator span:nth-child(2) {
-  animation-delay: -0.16s;
-}
-
-@keyframes typing-bounce {
-  0%, 80%, 100% {
-    transform: scale(0.6);
-  }
-  40% {
-    transform: scale(1);
-  }
-}
-
-/* 버튼 애니메이션 */
-.pulse-animation {
-  animation: pulse 2s infinite;
-}
-
-.btn-hover-effect {
-  transition: all 0.3s ease;
-}
-
-.btn-hover-effect:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
-}
-
-/* 특징 카드 효과 */
-.feature-card {
-  position: relative;
-  overflow: hidden;
-}
-
-.feature-hover-effect {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.feature-card:hover .feature-hover-effect {
-  opacity: 1;
-}
-
-.feature-icon-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 1.5rem;
-  border-radius: 50%;
-  background: rgba(59, 130, 246, 0.1);
-  position: relative;
-}
-
-.feature-icon-wrapper::after {
-  content: '';
-  position: absolute;
-  top: -5px;
-  left: -5px;
-  right: -5px;
-  bottom: -5px;
-  border-radius: 50%;
-  border: 2px solid rgba(59, 130, 246, 0.2);
-  animation: pulse-glow 2s infinite;
-}
-
-@keyframes pulse-glow {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 0.5;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.shimmer-effect {
-  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 3s infinite;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.feature-card:hover .shimmer-effect {
-  opacity: 1;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-/* 버튼 클릭 효과 */
-.btn-hover-effect:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-/* 반응형 스타일 */
-@media (max-width: 768px) {
-  .hero-container {
-    flex-direction: column;
-    padding: 3rem 1rem;
-  }
-
-  .hero-content {
-    margin-bottom: 2rem;
-  }
-
-  .animated-device {
-    width: 240px;
-    height: 480px;
-  }
-
-  .feature-card {
-    padding: 2rem 1.5rem;
-  }
-
-  .floating-element {
-    transform: scale(0.8);
-  }
-
-  .element1 {
-    left: -10%;
-  }
-
-  .element3 {
-    right: -10%;
-  }
-
-  .element4 {
-    bottom: -10%;
-  }
-
-  .gradient-text {
-    display: inline;
-  }
-}
-
-@media (max-width: 480px) {
-  .hero-title {
-    font-size: 2rem;
-  }
-
-  .hero-subtitle {
-    font-size: 1rem;
-  }
-
-  .button-group {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .animated-device {
-    width: 200px;
-    height: 400px;
-  }
-
-  .device-notch {
-    width: 100px;
-    height: 20px;
-  }
-
-  .floating-element {
-    display: none;
+  
+  button {
+    width: 100%;
+    max-width: 400px;
   }
 }
 </style>
