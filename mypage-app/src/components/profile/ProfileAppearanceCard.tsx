@@ -1,8 +1,5 @@
-{/* 프로필 카드 */}
-
 import React, { useState } from "react";
 import { ProfileAppearanceResponse } from "../../api/profileAppearanceApi.ts";
-// import { UserLevelResponse } from "../../api/userLevelApi.ts";
 import { UserTitleResponse } from "../../api/userTitleApi.ts";
 import styled from "styled-components";
 import defaultProfile from "../../assets/default_profile.png";
@@ -11,162 +8,224 @@ import { notifyError } from "../../utils/toast";
 
 type Props = {
     profile: ProfileAppearanceResponse;
-    // userLevel?: UserLevelResponse | null;
     titles?: UserTitleResponse[];
 };
 
-// export default function ProfileAppearanceCard({ profile, userLevel, titles }: Props) {
 export default function ProfileAppearanceCard({ profile, titles }: Props) {
     const [isOpen, setIsOpen] = useState(true);
-    const [hasErrorNotified, setHasErrorNotified] = useState(false);
-
-    if (!profile) {
-        return <p>불러오는 중...</p>;
-    }
-
-    // 수정: 대표 칭호 찾기 (titles 배열에서 isEquipped가 true인 것)
+    const [isModalOpen, setIsModalOpen] = useState(false); // ✅ 확대 이미지 모달 상태
     const equippedTitle = titles?.find((t) => t.equipped);
 
+    if (!profile) return <p>불러오는 중...</p>;
+
     return (
-        <Card>
-            {/* 헤더 */}
-            <Header onClick={() => setIsOpen(!isOpen)}>
-                <span>내 프로필</span>
-                <ArrowIcon>
-                    {isOpen ? <FaChevronUp /> : <FaChevronDown />}
-                </ArrowIcon>
-            </Header>
+        <>
+            <Card>
+                {/* ✅ 헤더 */}
+                <Header onClick={() => setIsOpen(!isOpen)}>
+                    <HeaderTitle>내 프로필</HeaderTitle>
+                    <ArrowIcon>{isOpen ? <FaChevronUp /> : <FaChevronDown />}</ArrowIcon>
+                </Header>
 
-            {/* 본문 (토글됨) */}
-            {isOpen && (
-                <Content>
-                    <ImageWrapper>
-                        <ProfileImage
-                            src={profile.photoUrl || defaultProfile}
-                            alt="profile"
-                            onError={(e) => {
-                                const img = e.target as HTMLImageElement;
-                                img.src = defaultProfile;
+                {/* ✅ 본문 */}
+                {isOpen && (
+                    <Content>
+                        <ImageWrapper>
+                            <ProfileImage
+                                src={profile.photoUrl || defaultProfile}
+                                alt="profile"
+                                onClick={() => setIsModalOpen(true)} // ✅ 클릭 시 모달 오픈
+                                onError={(e) => {
+                                    const img = e.target as HTMLImageElement;
+                                    img.src = defaultProfile;
+                                    if (!localStorage.getItem("profileImgErrorNotified")) {
+                                        notifyError("프로필 이미지를 불러오지 못했습니다. 기본 이미지로 변경됩니다.");
+                                        localStorage.setItem("profileImgErrorNotified", "true");
+                                    }
+                                }}
+                            />
+                        </ImageWrapper>
 
-                                // localStorage 기반: 세션 동안 한 번만 알림
-                                if (!localStorage.getItem("profileImgErrorNotified")) {
-                                    notifyError("프로필 이미지를 불러오지 못했습니다. 기본 이미지로 변경됩니다.");
-                                    localStorage.setItem("profileImgErrorNotified", "true");
-                                }
-                            }}
-                        />
-                    </ImageWrapper>
+                        <InfoBox>
+                            <Row>
+                                <Label>칭호</Label>
+                                <Value>{equippedTitle?.displayName ?? "칭호 없음"}</Value>
+                            </Row>
+                            <Divider />
+                            <Row>
+                                <Label>별명</Label>
+                                <Value>{profile.nickname}</Value>
+                            </Row>
+                        </InfoBox>
+                    </Content>
+                )}
+            </Card>
 
-                    <InfoTable>
-                        <tbody>
-                        {/*<tr>*/}
-                        {/*    <LabelCell>레벨</LabelCell> /!* 등급 → 레벨 *!/*/}
-                        {/*    <Separator>|</Separator>*/}
-                        {/*    <ValueCell>*/}
-                        {/*        /!* 수정: profile.userLevel → userLevel prop으로 변경 *!/*/}
-                        {/*        {userLevel*/}
-                        {/*            ? `Lv.${userLevel.level} (Exp ${userLevel.exp}/${userLevel.totalExp})`*/}
-                        {/*            : "레벨 정보 없음"}*/}
-                        {/*    </ValueCell>*/}
-                        {/*</tr>*/}
-                        <tr>
-                            <LabelCell>칭호</LabelCell>
-                            <Separator>|</Separator>
-                            <ValueCell>
-                                {/* 수정: profile.title → titles prop에서 equippedTitle */}
-                                {equippedTitle?.displayName ?? "칭호 없음"}
-                            </ValueCell>
-                        </tr>
-                        <tr>
-                            <LabelCell>별명</LabelCell>
-                            <Separator>|</Separator>
-                            <ValueCell>{profile.nickname}</ValueCell>
-                        </tr>
-                        </tbody>
-                    </InfoTable>
-                </Content>
+            {/* ✅ 모달 (이미지 확대 보기) */}
+            {isModalOpen && (
+                <ModalOverlay onClick={() => setIsModalOpen(false)}>
+                    <ModalContent onClick={(e) => e.stopPropagation()}>
+                        <LargeImage src={profile.photoUrl || defaultProfile} alt="profile-large" />
+                    </ModalContent>
+                </ModalOverlay>
             )}
-        </Card>
+        </>
     );
 }
 
 /* ================== styled-components ================== */
 
 const Card = styled.div`
-    border: 1px solid rgb(229, 231, 235);
-    border-radius: 12px;
-    padding: 12px;
-    background: rgb(249, 250, 251);
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e5e7eb;
+    padding: 16px 20px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    transition: all 0.25s ease;
 `;
 
 const Header = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 15px;
-    font-weight: 600;
-    color: rgb(17, 24, 39);
+    margin-bottom: 10px;
     cursor: pointer;
 `;
 
+const HeaderTitle = styled.span`
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+`;
+
 const ArrowIcon = styled.span`
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgb(59, 130, 246);
+    background: #3b82f6;
     color: white;
-    border-radius: 6px;
-    font-size: 14px;
+    border-radius: 8px;
+    font-size: 13px;
 `;
 
 const Content = styled.div`
-    overflow: hidden;
-    transition: all 0.3s ease-in-out;
-    padding-bottom: 24px;   /* 하단 공간 확보 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
 `;
 
 const ImageWrapper = styled.div`
     display: flex;
     justify-content: center;
-    margin-bottom: 20px;
+    margin-top: 12px;
+    margin-bottom: 8px;
 `;
 
 const ProfileImage = styled.img`
-    width: 160px;
-    height: 160px;
+    width: 180px;
+    height: 180px;
     border-radius: 50%;
     object-fit: cover;
-    border: 1px solid rgb(229, 231, 235);
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+
+    &:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+    }
 `;
 
-const InfoTable = styled.table`
-    margin: 0 auto;
-    font-size: 14px;
-    line-height: 28px;
-    border-collapse: separate;
-    border-spacing: 8px 0;
+/* ✅ 인스타그램식 확대 모달 */
+const ModalOverlay = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.25s ease;
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
 `;
 
-const LabelCell = styled.td`
-    text-align: right;
+const ModalContent = styled.div`
+    background: transparent;
+    padding: 0;
+`;
+
+const LargeImage = styled.img`
+    width: 400px;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 3px solid white;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    animation: zoomIn 0.25s ease;
+
+    @keyframes zoomIn {
+        from {
+            transform: scale(0.9);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    @media (max-width: 768px) {
+        width: 80vw;
+        height: 80vw;
+    }
+`;
+
+const InfoBox = styled.div`
+    width: 100%;
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+`;
+
+const Row = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+`;
+
+const Label = styled.span`
     font-weight: 600;
-    color: rgb(55, 65, 81);
-    white-space: nowrap;
+    color: #374151;
+    font-size: 14px;
 `;
 
-const Separator = styled.td`
-    text-align: center;
-    color: rgb(209, 213, 219);
+const Value = styled.span`
+    color: #1f2937;
+    font-size: 14px;
 `;
 
-const ValueCell = styled.td`
-    text-align: left;
-    color: rgb(31, 41, 55);
-    word-break: break-all;
-    white-space: normal;
+const Divider = styled.hr`
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 4px 0;
 `;

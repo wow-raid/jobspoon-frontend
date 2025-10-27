@@ -1,4 +1,4 @@
-{/* 마이페이지 전체 레이아웃(좌: 프로필+사이드바 / 우: 메인 컨텐츠) */}
+/* ====================== 마이페이지 전체 레이아웃 (좌: 프로필+사이드바 / 우: 메인 컨텐츠) ====================== */
 
 import React, { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
@@ -29,23 +29,22 @@ export default function MyPageLayout() {
         }
 
         try {
-            // await new Promise((r) => setTimeout(r, 2000)); // ✅ 테스트용 지연
             const [p, t] = await Promise.all([fetchMyProfile(), fetchMyTitles()]);
             setProfile(p);
             setTitles(t);
         } catch (error) {
             console.error("❌ 데이터 갱신 실패:", error);
-            notifyError("프로필 정보를 불러오지 못했습니다."); // ✅ 추가
+            notifyError("프로필 정보를 불러오지 못했습니다.");
         }
     };
 
     useEffect(() => {
-        // ✅ 로딩 시작
         setIsLoading(true);
         refreshAll()
             .catch((err) => console.error("초기 데이터 로드 실패:", err))
-            .finally(() => setIsLoading(false)); // ✅ 로딩 종료
+            .finally(() => setIsLoading(false));
     }, []);
+
     return (
         <>
             {/* ✅ 전역 Footer z-index 적용 */}
@@ -54,13 +53,15 @@ export default function MyPageLayout() {
             <LayoutContainer>
                 {/* 좌측 고정 사이드바 */}
                 <FixedAside>
-                    <HomeButton onClick={() => navigate("/mypage")}>
-                        <HomeIcon>
+                    {/* ✅ 수정됨: 마이페이지 헤더 블록 추가 */}
+                    <HomeHeader onClick={() => navigate("/mypage")}>
+                        <HomeHeaderIcon>
                             <FaHome />
-                        </HomeIcon>
-                        <HomeLabel>마이페이지</HomeLabel>
-                    </HomeButton>
+                        </HomeHeaderIcon>
+                        <HomeHeaderLabel>마이페이지</HomeHeaderLabel>
+                    </HomeHeader>
 
+                    {/* ✅ 기존 프로필 카드 그대로 유지 */}
                     {profile && (
                         <ProfileAppearanceCard profile={profile} titles={titles} />
                     )}
@@ -72,7 +73,7 @@ export default function MyPageLayout() {
                 <Main>
                     {isLoading ? (
                         <Spinner />
-                        ) : (
+                    ) : (
                         <Outlet context={{ profile, titles, refreshAll }} />
                     )}
                 </Main>
@@ -81,13 +82,13 @@ export default function MyPageLayout() {
     );
 }
 
-/* ================== styled-components ================== */
+/* ====================== styled-components ====================== */
 
 /** ✅ Footer가 사이드바 위로 올라오게 하는 전역 스타일 */
 const GlobalFooterStyle = createGlobalStyle`
     footer {
         position: relative;
-        z-index: 20; /* 사이드바보다 위 */
+        z-index: 20;
     }
 `;
 
@@ -104,7 +105,7 @@ const LayoutContainer = styled.div`
 const FixedAside = styled.aside`
     position: fixed;
     top: 79px; /* 네브바 높이 아래 */
-    left: calc(10%); /* 80% 중앙 정렬 기준의 왼쪽 */
+    left: calc(10%);
     width: 240px;
     height: calc(100vh - 79px);
     overflow-y: auto;
@@ -121,12 +122,52 @@ const FixedAside = styled.aside`
     }
 `;
 
+/** ✅ 수정됨: 마이페이지 헤더 블록 */
+const HomeHeader = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+    color: white;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 3px 10px rgba(59, 130, 246, 0.25);
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 14px rgba(59, 130, 246, 0.3);
+    }
+
+    &:active {
+        transform: scale(0.98);
+    }
+`;
+
+/** ✅ 수정됨: 아이콘 */
+const HomeHeaderIcon = styled.span`
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+`;
+
+/** ✅ 수정됨: 라벨 */
+const HomeHeaderLabel = styled.span`
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.3px;
+`;
+
 /** ✅ 메인 콘텐츠 영역 */
 const Main = styled.main`
     flex: 1;
     padding: 24px;
     margin-left: 260px;
-
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -139,35 +180,4 @@ const Main = styled.main`
         padding: 16px;
         margin-left: 0;
     }
-`;
-
-/** 홈 버튼 */
-const HomeButton = styled.button`
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 16px;
-    font-weight: 600;
-    color: rgb(17, 24, 39);
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    outline: none;
-`;
-
-const HomeIcon = styled.span`
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgb(59, 130, 246);
-    color: white;
-    border-radius: 6px;
-    font-size: 14px;
-`;
-
-const HomeLabel = styled.span`
-    padding: 2px 6px;
-    border-radius: 4px;
 `;

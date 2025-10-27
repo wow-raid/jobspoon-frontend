@@ -175,7 +175,7 @@ export default function DashboardSection() {
 
 const Section = styled.section`
     background: ${theme.color.bgWhite};
-    backdrop-filter: blur(8px);
+    //backdrop-filter: blur(8px);
     border-radius: ${theme.radius.section};
     padding: ${theme.spacing.sectionPadding};
     box-shadow: ${theme.shadow.section};
