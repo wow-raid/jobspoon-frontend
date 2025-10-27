@@ -20,6 +20,7 @@
     "start": "lerna run start --parallel"
   },
   "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0",
     "autoprefixer": "^10.4.21",
     "cross-env": "^7.0.3",
     "external-remotes-plugin": "^1.0.0",

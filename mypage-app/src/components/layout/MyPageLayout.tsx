@@ -10,10 +10,12 @@ import ProfileAppearanceCard from "../profile/ProfileAppearanceCard.tsx";
 import { fetchMyProfile, ProfileAppearanceResponse } from "../../api/profileAppearanceApi.ts";
 import { fetchMyTitles, UserTitleResponse } from "../../api/userTitleApi.ts";
 import { notifyError } from "../../utils/toast";
+import Spinner from "../common/Spinner.tsx";
 
 export default function MyPageLayout() {
     const navigate = useNavigate();
 
+    const [isLoading, setIsLoading] = useState(true);
     const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
     const [titles, setTitles] = useState<UserTitleResponse[]>([]);
 
@@ -27,6 +29,7 @@ export default function MyPageLayout() {
         }
 
         try {
+            await new Promise((r) => setTimeout(r, 2000)); // ✅ 테스트용 지연
             const [p, t] = await Promise.all([fetchMyProfile(), fetchMyTitles()]);
             setProfile(p);
             setTitles(t);
@@ -37,11 +40,12 @@ export default function MyPageLayout() {
     };
 
     useEffect(() => {
-        refreshAll().catch((err) =>
-            console.error("초기 데이터 로드 실패:", err)
-        );
+        // ✅ 로딩 시작
+        setIsLoading(true);
+        refreshAll()
+            .catch((err) => console.error("초기 데이터 로드 실패:", err))
+            .finally(() => setIsLoading(false)); // ✅ 로딩 종료
     }, []);
-
     return (
         <>
             {/* ✅ 전역 Footer z-index 적용 */}
@@ -66,7 +70,11 @@ export default function MyPageLayout() {
 
                 {/* 메인 영역 */}
                 <Main>
-                    <Outlet context={{ profile, titles, refreshAll }} />
+                    {isLoading ? (
+                        <Spinner />
+                        ) : (
+                        <Outlet context={{ profile, titles, refreshAll }} />
+                    )}
                 </Main>
             </LayoutContainer>
         </>
