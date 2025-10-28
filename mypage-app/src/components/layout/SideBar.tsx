@@ -1,7 +1,6 @@
-{/* 마이페이지 사이드바 레이아웃 */}
-
 import React, { useState } from "react";
-import ServiceModal from "../modals/ServiceModal.tsx";
+import { NavLink } from "react-router-dom";
+import styled from "styled-components";
 import {
     FaUser,
     FaCalendarAlt,
@@ -12,206 +11,137 @@ import {
     FaQuestionCircle
 } from "react-icons/fa";
 import { MdArticle } from "react-icons/md";
-import styled from "styled-components";
-import { NavLink } from "react-router-dom";
+import ServiceModal from "../modals/ServiceModal.tsx";
 
 export default function SideBar() {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // 공통 모달 오픈 함수
-    const handleOpenModal = () => setIsModalOpen(true);
-
     return (
-        <Container>
-            {/* 메뉴 리스트 */}
-            <Nav>
-                <ul>
-                    <li>
-                        <StyledNavLink to="account/edit">
-                            <FaUser className="icon" />
-                            회원정보
-                        </StyledNavLink>
-                    </li>
+        <Wrapper>
+            <NavSection>
+                <MenuList>
+                    <StyledNavLink to="account/edit">
+                        <FaUser className="icon" />
+                        회원정보
+                    </StyledNavLink>
 
-                    {/*<li>*/}
-                    {/*    <StyledNavLink to="user/history">*/}
-                    {/*        <FaChartLine className="icon" />*/}
-                    {/*        이력 관리*/}
-                    {/*    </StyledNavLink>*/}
-                    {/*</li>*/}
+                    <StyledNavLink to="interview/history">
+                        <FaFolderOpen className="icon" />
+                        면접기록
+                    </StyledNavLink>
 
-                    <li>
-                        <StyledNavLink to="interview/history">
-                            <FaFolderOpen className="icon" />
-                            면접기록
-                        </StyledNavLink>
-                    </li>
+                    <StyledNavLink to="schedule">
+                        <FaCalendarAlt className="icon" />
+                        일정관리
+                    </StyledNavLink>
 
-                    <li>
-                        <StyledNavLink to="schedule">
-                            <FaCalendarAlt className="icon" />
-                            일정관리
-                        </StyledNavLink>
-                    </li>
+                    <StyledNavLink to="my-reports">
+                        <FaExclamationTriangle className="icon" />
+                        신고내역
+                    </StyledNavLink>
 
-                    <li>
-                        <StyledNavLink to="my-reports">
-                            <FaExclamationTriangle className="icon" />
-                            신고내역
-                        </StyledNavLink>
-                    </li>
+                    <StyledNavLink to="membership">
+                        <FaCrown className="icon" />
+                        멤버십
+                    </StyledNavLink>
 
-                    <li>
-                        <StyledNavLink to="membership">
-                            <FaCrown className="icon" />
-                            멤버십
-                        </StyledNavLink>
-                    </li>
+                    <StyledNavLink to="my-posts">
+                        <MdArticle className="icon" />
+                        작성한 글
+                    </StyledNavLink>
+                </MenuList>
+            </NavSection>
 
-                    <li>
-                        <StyledNavLink to="my-posts">
-                            <MdArticle className="icon" />
-                            작성한 글
-                        </StyledNavLink>
-                    </li>
+            <BottomSection>
+                <StyledNavLink to="inquiry">
+                    <FaQuestionCircle className="icon" />
+                    문의하기
+                </StyledNavLink>
 
-                    <Divider />
+                <StyledNavLink to="withdrawal">
+                    <FaSignOutAlt className="icon" />
+                    회원탈퇴
+                </StyledNavLink>
+            </BottomSection>
 
-                    <li>
-                        <StyledNavLink to="inquiry">
-                            <FaQuestionCircle className="icon" />
-                            문의하기
-                        </StyledNavLink>
-                    </li>
-
-                    <li>
-                        <StyledNavLink to="withdrawal">
-                            <FaSignOutAlt className="icon" />
-                            회원탈퇴
-                        </StyledNavLink>
-                    </li>
-                </ul>
-            </Nav>
-
-            {/* 모달 */}
             <ServiceModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)} />
-        </Container>
+                onClose={() => setIsModalOpen(false)}
+            />
+        </Wrapper>
     );
 }
 
-/* ================== styled-components ================== */
+/* ================== Styled ================== */
 
-const Container = styled.div`
-    flex: 1;
+const Wrapper = styled.div`
     display: flex;
     flex-direction: column;
-    padding: 8px;
-    gap: 16px;
-    box-sizing: border-box; /* 폭 계산 시 패딩 포함 */
-    width: 100%; /* 사이드바 크기 자동 따라감 */
+    justify-content: space-between;
+    height: 100%;
+    padding: 16px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
 `;
 
-const Nav = styled.nav`
-    flex: 1;
-    ul {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        margin: 0;
-        padding: 0;
-        list-style: none;  /* 불릿 제거 */
-    }
-`;
-const NavButton = styled.button<{ active?: boolean }>`
-    width: 100%;
+const NavSection = styled.div`
     display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 16px;
-    font-size: 14px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-
-    color: ${({ active }) => 
-            (active ? "rgb(37, 99, 235)" : "rgb(55, 65, 81)")};
-    background: ${({ active }) => 
-            (active ? "rgb(239, 246, 255)" : "transparent")};
-
-    .icon {
-        color: ${({ active }) => 
-                (active ? "rgb(37, 99, 235)" : "rgb(107, 114, 128)")};
-    }
-
-    &:hover {
-        background: rgb(239, 246, 255);
-        color: rgb(37, 99, 235);
-
-        .icon {
-            color: rgb(37, 99, 235);
-        }
-    }
+    flex-direction: column;
+    gap: 4px;
 `;
 
-const Badge = styled.span`
-  margin-left: auto;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 500;
-  border-radius: 9999px;
-  background: rgb(219, 234, 254);
-  color: rgb(37, 99, 235);
+const MenuList = styled.ul`
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
 `;
 
-const Divider = styled.hr`
-  border: none;
-  border-top: 1px solid rgb(229, 231, 235);
-  margin: 12px 0;
+const BottomSection = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 10px;
 `;
 
-/* NavLink 전용 스타일 */
 const StyledNavLink = styled(NavLink)`
-    width: 100%;
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 16px;
+    padding: 10px 14px;
     font-size: 14px;
-    border-radius: 8px;
+    font-weight: 500;
+    color: #374151;
+    border-radius: 10px;
     text-decoration: none;
     transition: all 0.2s ease-in-out;
 
-    color: rgb(55, 65, 81);
-    background: transparent;
-
     .icon {
-        color: rgb(107, 114, 128);
+        font-size: 16px;
+        color: #9ca3af;
+        transition: color 0.2s;
     }
 
-    /* 활성화 상태 */
     &.active {
-        background: rgb(239, 246, 255);   /* hover와 같은 파란 배경 */
-        color: rgb(37, 99, 235);
+        background: #eff6ff;
+        color: #2563eb;
 
         .icon {
-            color: rgb(37, 99, 235);
+            color: #2563eb;
         }
     }
 
     &:hover {
-        background: rgb(239, 246, 255);
-        color: rgb(37, 99, 235);
+        background: #f3f8ff;
+        color: #2563eb;
+        transform: translateX(2px);
 
         .icon {
-            color: rgb(37, 99, 235);
+            color: #2563eb;
         }
     }
 `;
