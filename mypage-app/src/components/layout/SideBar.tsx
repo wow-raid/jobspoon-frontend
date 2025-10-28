@@ -79,22 +79,22 @@ const Wrapper = styled.div`
     flex-direction: column;
     justify-content: space-between;
     height: 100%;
-    padding: 16px;
+    padding: 18px 16px;
     background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+    border-radius: 18px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 `;
 
 const NavSection = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
 `;
 
 const MenuList = styled.ul`
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     list-style: none;
     padding: 0;
     margin: 0;
@@ -103,33 +103,33 @@ const MenuList = styled.ul`
 const BottomSection = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     border-top: 1px solid #f1f5f9;
-    padding-top: 10px;
+    padding-top: 12px;
 `;
 
 const StyledNavLink = styled(NavLink)`
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 14px;
-    font-size: 14px;
+    padding: 12px 16px;
+    font-size: 15px;
     font-weight: 500;
-    color: #374151;
+    color: #2d2d2d;
     border-radius: 10px;
     text-decoration: none;
-    transition: all 0.2s ease-in-out;
+    letter-spacing: -0.2px;
+    transition: all 0.25s ease-in-out;
 
     .icon {
-        font-size: 16px;
-        color: #9ca3af;
-        transition: color 0.2s;
+        font-size: 15px;
+        color: #a0a0a0;
+        transition: color 0.25s ease;
     }
 
     &.active {
         background: #eff6ff;
         color: #2563eb;
-
         .icon {
             color: #2563eb;
         }
@@ -139,7 +139,6 @@ const StyledNavLink = styled(NavLink)`
         background: #f3f8ff;
         color: #2563eb;
         transform: translateX(2px);
-
         .icon {
             color: #2563eb;
         }
