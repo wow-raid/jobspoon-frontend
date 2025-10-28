@@ -3,9 +3,29 @@
 import React from "react";
 import styled from "styled-components";
 
+const COLORS = ["#20A4AD", "#2998C5", "#13B38D"];
+
 export default function MailTemplatePreview() {
     return (
         <Wrapper>
+
+            <div style={{ display: "flex", gap: "8px", padding: "20px" }}>
+                {COLORS.map((color) => (
+                    <div
+                        key={color}
+                        style={{
+                            width: "60px",
+                            height: "30px",
+                            borderRadius: "6px",
+                            backgroundColor: color,
+                            boxShadow: "0 0 4px rgba(0,0,0,0.15)",
+                            border: "1px solid rgba(0,0,0,0.05)",
+                        }}
+                        title={color}
+                    />
+                ))}
+            </div>
+
             {/* ===== 회원가입 메일 ===== */}
             <MailPreview>
                 <MailHeader>회원가입 완료 메일</MailHeader>
