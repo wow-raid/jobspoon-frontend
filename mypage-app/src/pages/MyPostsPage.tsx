@@ -12,7 +12,7 @@ export default function MyPostsPage() {
             <Card>
                 <CardHeader>
                     <IconBox>
-                        <FaFolderOpen size={26} color="#2563eb" />
+                        <FaFolderOpen size={26} color={palette.accent} />
                     </IconBox>
                     <CardTitle>JobSpoon 활동 기록</CardTitle>
                     <Tag>COMING SOON</Tag>
@@ -33,7 +33,7 @@ export default function MyPostsPage() {
                 </CardBody>
 
                 <ComingSoonBox>
-                    <FaPenFancy size={15} color="#2563eb" />
+                    <FaPenFancy size={15} color={palette.primary} />
                     <span>게시물 관리 기능 준비 중</span>
                 </ComingSoonBox>
             </Card>
@@ -41,16 +41,19 @@ export default function MyPostsPage() {
     );
 }
 
-/* ================= styled-components ================= */
+/* ================= 색상 팔레트 ================= */
+const palette = {
+    primary: "#1B8C95",   // 메인 민트보다 어두운 톤
+    accent: "#0E8E75",    // 포인트 민트 (아이콘/제목)
+    text: "#0f172a",      // 진한 네이비톤 텍스트
+    subtext: "#374151",   // 본문 텍스트
+    shadow: "rgba(27, 140, 149, 0.15)",
+};
+
+/* ================= 애니메이션 ================= */
 const fadeUp = keyframes`
-    from {
-        opacity: 0;
-        transform: translateY(16px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
 `;
 
 const float = keyframes`
@@ -61,14 +64,15 @@ const float = keyframes`
 const pulse = keyframes`
     0%, 100% {
         transform: scale(1);
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
+        box-shadow: 0 4px 12px rgba(27, 140, 149, 0.08);
     }
     50% {
         transform: scale(1.015);
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
+        box-shadow: 0 8px 24px rgba(27, 140, 149, 0.18);
     }
 `;
 
+/* ================= 레이아웃 ================= */
 const Section = styled.section`
     padding: 24px;
     border-radius: 12px;
@@ -89,21 +93,22 @@ const SectionHeader = styled.div`
 const SectionTitle = styled.h2`
     font-size: 20px;
     font-weight: 700;
-    color: rgb(17, 24, 39);
+    color: ${palette.text};
 `;
 
 const Card = styled.div`
     border: 1px solid #e5e7eb;
     border-radius: 16px;
     padding: 32px;
-    background: linear-gradient(180deg, #f9fafb 0%, #ffffff 100%);
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
     animation: ${float} 4s ease-in-out infinite, ${pulse} 5s ease-in-out infinite;
     text-align: center;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 10px ${palette.shadow};
 
     &:hover {
         transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
+        box-shadow: 0 8px 24px ${palette.shadow};
     }
 `;
 
@@ -118,7 +123,7 @@ const CardHeader = styled.div`
 const IconBox = styled.div`
     width: 52px;
     height: 52px;
-    background: rgba(37, 99, 235, 0.1);
+    background: rgba(27, 140, 149, 0.1);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -128,14 +133,14 @@ const IconBox = styled.div`
 const CardTitle = styled.h3`
     font-size: 20px;
     font-weight: 700;
-    color: #1e3a8a;
+    color: ${palette.accent};
 `;
 
 const Tag = styled.span`
     font-size: 12px;
     font-weight: 600;
-    color: #2563eb;
-    background: rgba(37, 99, 235, 0.1);
+    color: ${palette.primary};
+    background: rgba(27, 140, 149, 0.1);
     border-radius: 8px;
     padding: 3px 10px;
     letter-spacing: 0.5px;
@@ -144,11 +149,11 @@ const Tag = styled.span`
 const CardBody = styled.div`
     font-size: 15px;
     line-height: 1.8;
-    color: #374151;
+    color: ${palette.subtext};
 
     strong {
         font-weight: 600;
-        color: #1e40af;
+        color: ${palette.accent};
     }
 
     p + p {
@@ -162,8 +167,8 @@ const ComingSoonBox = styled.div`
     gap: 6px;
     padding: 8px 14px;
     border-radius: 8px;
-    background: rgba(37, 99, 235, 0.06);
-    color: #2563eb;
+    background: rgba(27, 140, 149, 0.06);
+    color: ${palette.primary};
     font-size: 14px;
     font-weight: 500;
     margin-top: 20px;
