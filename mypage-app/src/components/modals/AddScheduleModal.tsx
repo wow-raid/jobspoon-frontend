@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { useEffect, useState } from "react";
 import { UserScheduleRequest } from "../../api/userScheduleApi.ts";
+import { notifyError, notifySuccess } from "../../utils/toast";
 
 /* 🕐 TimePicker (오전/오후 + 시 + 분) */
 function TimePicker({ label, name, value, onChange, disabled }: {
@@ -118,18 +119,28 @@ export default function AddScheduleModal({ onClose, onSubmit, initialData }: {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!form.title) return alert("제목을 입력해주세요.");
+        if (!form.title.trim()) return notifyError("제목을 입력해주세요.");
+        if (!form.startDate || !form.endDate) return notifyError("날짜를 선택해주세요.");
+        if (new Date(form.endDate) < new Date(form.startDate))
+            return notifyError("종료일은 시작일 이후여야 합니다.");
 
-        const startTime = form.allDay
-            ? `${form.startDate}T00:00:00`
-            : `${form.startDate}T${form.startTime}`;
-        const endTime = form.allDay
-            ? `${form.endDate}T23:59:59`
-            : `${form.endDate}T${form.endTime}`;
+        try {
+            const startTime = form.allDay
+                ? `${form.startDate}T00:00:00`
+                : `${form.startDate}T${form.startTime}`;
+            const endTime = form.allDay
+                ? `${form.endDate}T23:59:59`
+                : `${form.endDate}T${form.endTime}`;
 
-        const data: UserScheduleRequest = { ...form, startTime, endTime };
-        await onSubmit(data);
-        alert(isEditMode ? "일정이 수정되었습니다!" : "일정이 추가되었습니다!");
+            const data: UserScheduleRequest = { ...form, startTime, endTime };
+            await onSubmit(data);
+
+            onClose();
+        } catch (err: any) {
+            console.error(err);
+            const message = err?.response?.data?.message || "일정 저장 중 오류가 발생했습니다.";
+            notifyError(message);
+        }
     };
 
     return (
@@ -148,7 +159,6 @@ export default function AddScheduleModal({ onClose, onSubmit, initialData }: {
                             value={form.title}
                             onChange={(e) => setForm({ ...form, title: e.target.value })}
                             placeholder="일정 제목을 입력하세요"
-                            required
                         />
                     </label>
 

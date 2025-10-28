@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import MyPageLayout from "./components/layout/MyPageLayout.tsx";
 import DashboardSection from "./components/dashboard/DashboardSection.tsx";
 import AccountProfilePage from "./pages/AccountProfilePage.tsx";
@@ -7,7 +8,6 @@ import InterviewResultList from "./pages/InterviewResultList.tsx";
 import InterviewResultDetail from "./pages/InterviewResultDetail.tsx";
 import AccountWithdrawal from "./pages/AccountWithdrawal.tsx";
 import MembershipPage from "./pages/MemebershipPage.tsx";
-import UserHistoryPage from "./pages/UserHistoryPage.tsx";
 import SchedulePage from "./pages/SchedulePage.tsx";
 import MyPostsPage from "./pages/MyPostsPage.tsx";
 import InquiryPage from "./pages/InquiryPage.tsx";
@@ -76,6 +76,55 @@ export default function App() {
         <ThemeProvider theme={theme}>
             <AppShell>
                 <ScopedGlobal />
+
+                {/* 전역 토스트 컨테이너 (한 번만 선언) */}
+                <Toaster
+                    position="top-center"
+                    reverseOrder={false}
+                    containerStyle={{
+                        top: 60, // ✅ 기본보다 약간 아래 (px 단위, 40~80 정도가 자연스러움)
+                    }}
+                    toastOptions={{
+                        style: {
+                            borderRadius: "14px",
+                            padding: "12px 18px",
+                            fontSize: "15px",
+                            fontWeight: 600,
+                            boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+                            color: mode === "dark" ? "#F9FAFB" : "#111827",
+                            background: mode === "dark"
+                                ? "rgba(28,28,30,0.9)"
+                                : "rgba(255,255,255,0.95)",
+                            backdropFilter: "blur(10px)",
+                            border: mode === "dark"
+                                ? "1px solid rgba(255,255,255,0.08)"
+                                : "1px solid rgba(0,0,0,0.08)",
+                        },
+                        success: {
+                            iconTheme: {
+                                primary: "#3B82F6",
+                                secondary: "#fff",
+                            },
+                            style: {
+                                background: mode === "dark" ? "rgba(37,99,235,0.15)" : "#EBF5FF",
+                                color: "#1E40AF",
+                                border: "1px solid rgba(37,99,235,0.2)",
+                            },
+                        },
+                        error: {
+                            iconTheme: {
+                                primary: "#EF4444",
+                                secondary: "#fff",
+                            },
+                            style: {
+                                background: mode === "dark" ? "rgba(239,68,68,0.15)" : "#FEE2E2",
+                                color: "#991B1B",
+                                border: "1px solid rgba(239,68,68,0.2)",
+                            },
+                        },
+                    }}
+                />
+
                 <Routes>
                     <Route path="/" element={<MyPageLayout />}>
                         {/* 기본: 대시보드 (우측 영역) */}
@@ -89,8 +138,6 @@ export default function App() {
                         <Route path="withdrawal" element={<AccountWithdrawal />} />
                         {/* 멤버십 */}
                         <Route path="membership" element={<MembershipPage />} />
-                        {/* 이력 관리 */}
-                        <Route path="user/history" element={<UserHistoryPage />} />
                         {/* 작성한 글 */}
                         <Route path="my-posts" element={<MyPostsPage />} />
                         {/* 일정 */}
