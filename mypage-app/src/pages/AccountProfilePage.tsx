@@ -231,7 +231,7 @@ export default function AccountProfilePage() {
                 {/* 활동 점수 요약 */}
                 <BaseCard>
                     <CardHeader>
-                        <h3>🛡️ 활동 점수 요약</h3>
+                        <h3>활동 점수 요약</h3>
                     </CardHeader>
 
                     {trustStatus === "loading" ? (
@@ -242,34 +242,34 @@ export default function AccountProfilePage() {
                         <>
                             <TrustGrid>
                                 <TrustItemCard>
-                                    <TrustLabel>👣 출석률</TrustLabel>
+                                    <TrustLabel>출석률</TrustLabel>
                                     <ProgressBar percent={(calcAttendanceScore(trustScore!.attendanceRate) / 25) * 100} />
                                     <TrustCount>
                                         {calcAttendanceScore(trustScore!.attendanceRate).toFixed(1)} / 25점
                                     </TrustCount>
                                 </TrustItemCard>
                                 <TrustItemCard>
-                                    <TrustLabel>🎤 모의면접</TrustLabel>
+                                    <TrustLabel>모의면접</TrustLabel>
                                     <ProgressBar percent={(calcInterviewScore(trustScore!.monthlyInterviews) / 20) * 100} />
                                     <TrustCount>{calcInterviewScore(trustScore!.monthlyInterviews)} / 20점</TrustCount>
                                 </TrustItemCard>
                                 <TrustItemCard>
-                                    <TrustLabel>🧩 문제풀이</TrustLabel>
+                                    <TrustLabel>문제풀이</TrustLabel>
                                     <ProgressBar percent={(calcProblemScore(trustScore!.monthlyProblems) / 20) * 100} />
                                     <TrustCount>{calcProblemScore(trustScore!.monthlyProblems)} / 20점</TrustCount>
                                 </TrustItemCard>
                                 <TrustItemCard>
-                                    <TrustLabel>✍️ 글 작성</TrustLabel>
+                                    <TrustLabel>글 작성</TrustLabel>
                                     <ProgressBar percent={(calcPostScore(trustScore!.monthlyPosts) / 15) * 100} />
                                     <TrustCount>{calcPostScore(trustScore!.monthlyPosts)} / 15점</TrustCount>
                                 </TrustItemCard>
                                 <TrustItemCard>
-                                    <TrustLabel>📚 스터디룸</TrustLabel>
+                                    <TrustLabel>스터디룸</TrustLabel>
                                     <ProgressBar percent={(calcStudyroomScore(trustScore!.monthlyStudyrooms) / 10) * 100} />
                                     <TrustCount>{calcStudyroomScore(trustScore!.monthlyStudyrooms)} / 10점</TrustCount>
                                 </TrustItemCard>
                                 <TrustItemCard>
-                                    <TrustLabel>💬 댓글</TrustLabel>
+                                    <TrustLabel>댓글</TrustLabel>
                                     <ProgressBar percent={(calcCommentScore(trustScore!.monthlyComments) / 15) * 100} />
                                     <TrustCount>{calcCommentScore(trustScore!.monthlyComments)} / 15점</TrustCount>
                                 </TrustItemCard>
@@ -291,7 +291,6 @@ export default function AccountProfilePage() {
                 <BaseCard>
                     <CardHeader>
                         <HeaderLeft>
-                            <Icon>📈</Icon>
                             <h3>활동 점수 변화 추이</h3>
                         </HeaderLeft>
                     </CardHeader>
@@ -317,7 +316,6 @@ export default function AccountProfilePage() {
                 <BaseCard>
                     <CardHeader>
                         <HeaderLeft>
-                            <Icon>🎖️</Icon>
                             <h3>획득한 칭호</h3>
                         </HeaderLeft>
                     </CardHeader>
@@ -725,10 +723,6 @@ export const HeaderLeft = styled.div`
     display: flex;
     align-items: center;
     gap: 8px;
-`;
-
-export const Icon = styled.span`
-    font-size: 18px;
 `;
 
 export const GraphSummary = styled.div`

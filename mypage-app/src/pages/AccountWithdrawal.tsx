@@ -194,11 +194,6 @@ const InfoCard = styled.div`
         align-items: center;
         gap: 8px;
         margin-bottom: 10px;
-
-        &::before {
-            content: "⚠️";
-            font-size: 16px;
-        }
     }
 
     ul {
@@ -226,11 +221,6 @@ const GuideBox = styled.div`
         font-weight: 600;
         margin-bottom: 10px;
         color: #111827;
-
-        &::before {
-            content: "📝";
-            margin-right: 6px;
-        }
     }
 `;
 

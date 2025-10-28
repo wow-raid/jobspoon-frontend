@@ -93,14 +93,6 @@ export default function Calendar({ schedules, onEventClick }: Props) {
         <div style={{ whiteSpace: "normal", fontSize: 13 }}>{event.title}</div>
     );
 
-    useEffect(() => {
-        if (schedules.length === 0) {
-            // 첫 렌더에 한 번만 띄우고 싶으면:
-            const timer = setTimeout(() => notifyInfo("등록된 일정이 없습니다 📭"), 400);
-            return () => clearTimeout(timer);
-        }
-    }, [schedules]);
-
     return (
         <CalendarWrapper>
             <BigCalendar

@@ -26,7 +26,7 @@ export default function InquiryPage() {
 
             <ContentBox>
                 <InfoCard>
-                    <h3>📧 대표 이메일</h3>
+                    <h3>대표 이메일</h3>
 
                     {/* ✅ 클릭 시 복사 기능 */}
                     <EmailLink onClick={handleCopyEmail}>
@@ -38,7 +38,7 @@ export default function InquiryPage() {
                 </InfoCard>
 
                 <GuideBox>
-                    <h4>💡 문의 전 확인해주세요</h4>
+                    <h4>문의 전 확인해주세요</h4>
                     <ul>
                         <li>로그인, 결제, 회원정보 관련 문의는 빠르게 처리됩니다.</li>
                         <li>서비스 개선 제안은 내부 검토 후 반영될 수 있습니다.</li>
