@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import { useOutletContext } from "react-router-dom";
 import defaultProfile from "../assets/default_profile.png";
@@ -369,7 +369,19 @@ export default function AccountProfilePage() {
 }
 
 /* ================== styled-components ================== */
+const fadeUp = keyframes`
+  from {
+    opacity: 0;
+    margin-top: 16px;
+  }
+  to {
+    opacity: 1;
+    margin-top: 0;
+  }
+`;
+
 export const Wrapper = styled.div`
+    animation: ${fadeUp} 0.6s ease both;
     display: flex;
     flex-direction: column;
     gap: 32px;

@@ -1,4 +1,4 @@
-/* ====================== 회원가입 / 탈퇴 메일 프리뷰 (확장 버전) ====================== */
+/* ====================== 회원가입 / 탈퇴 메일 프리뷰 (가운데 정렬 버전) ====================== */
 
 import React from "react";
 import styled from "styled-components";
@@ -111,11 +111,13 @@ const MailBody = styled.div`
     color: #374151;
     line-height: 1.7;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    text-align: center; /* ✅ 전체 중앙 정렬 */
 `;
 
 const Section = styled.div`
     display: flex;
     flex-direction: column;
+    align-items: center; /* ✅ 내부 요소 중앙 정렬 */
     gap: 20px;
 `;
 
@@ -126,67 +128,70 @@ const Intro = styled.h4`
 `;
 
 const Paragraph = styled.p`
-  font-size: 14px;
-  color: #374151;
-  margin: 0;
+    font-size: 14px;
+    color: #374151;
+    margin: 0;
 `;
 
 const GuideList = styled.ul`
-  font-size: 14px;
-  color: #1f2937;
-  list-style: none;
-  padding-left: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+    font-size: 14px;
+    color: #1f2937;
+    list-style: none;
+    padding-left: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* ✅ 리스트 항목 중앙 정렬 */
+    gap: 6px;
 
-  li {
-    line-height: 1.6;
-  }
+    li {
+        line-height: 1.6;
+    }
 `;
 
 const HighlightBox = styled.div`
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  padding: 16px;
-  border-radius: 10px;
-  text-align: left;
-  font-size: 14px;
-  color: #1e3a8a;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    padding: 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #1e3a8a;
+    text-align: center; /* ✅ 가운데 정렬 */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    width: 90%;
 `;
 
 const HighlightTitle = styled.div`
-  font-weight: 700;
-  margin-bottom: 6px;
+    font-weight: 700;
+    margin-bottom: 6px;
 `;
 
 const Divider = styled.hr`
-  border: none;
-  border-top: 1px solid #e5e7eb;
-  margin: 10px 0;
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 10px 0;
+    width: 80%;
 `;
 
 const Brand = styled.span`
-  color: #2563eb;
-  font-weight: 700;
+    color: #2563eb;
+    font-weight: 700;
 `;
 
 const MailButton = styled.a`
-  display: inline-block;
-  background: #2563eb;
-  color: white;
-  font-weight: 600;
-  padding: 10px 22px;
-  border-radius: 8px;
-  text-decoration: none;
-  margin-top: 8px;
-  align-self: flex-start;
-  transition: background 0.2s;
+    display: inline-block;
+    background: #2563eb;
+    color: white;
+    font-weight: 600;
+    padding: 10px 22px;
+    border-radius: 8px;
+    text-decoration: none;
+    margin-top: 8px;
+    transition: background 0.2s;
+    text-align: center;
 
-  &:hover {
-    background: #1d4ed8;
-  }
+    &:hover {
+        background: #1d4ed8;
+    }
 `;
 
 const Footer = styled.div`

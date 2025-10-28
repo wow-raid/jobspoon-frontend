@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { useEffect, useMemo, useState } from "react";
 import {
     fetchUserStudySchedules,
@@ -144,7 +144,19 @@ export default function SchedulePage() {
 }
 
 /* ================== styled-components ================== */
+const fadeUp = keyframes`
+  from {
+    opacity: 0;
+    margin-top: 16px;
+  }
+  to {
+    opacity: 1;
+    margin-top: 0;
+  }
+`;
+
 const Section = styled.section`
+    animation: ${fadeUp} 0.6s ease both;
     position: relative;
     padding: 24px;
     border-radius: 12px;
@@ -163,9 +175,9 @@ const HeaderArea = styled.div`
 `;
 
 const Title = styled.h2`
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
-    color: rgb(17, 24, 39);
+    color: #111827;
 `;
 
 const ViewToggle = styled.div`

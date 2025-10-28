@@ -1,7 +1,7 @@
 import React from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { FaEnvelopeOpenText } from "react-icons/fa";
-import { notifySuccess } from "../utils/toast"; // ✅ 토스트 임포트
+import { notifySuccess } from "../utils/toast";
 
 export default function InquiryPage() {
     const handleCopyEmail = async () => {
@@ -51,8 +51,19 @@ export default function InquiryPage() {
 }
 
 /* ================= styled-components ================= */
+const fadeUp = keyframes`
+  from {
+    opacity: 0;
+    margin-top: 16px;
+  }
+  to {
+    opacity: 1;
+    margin-top: 0;
+  }
+`;
 
 const Container = styled.div`
+    animation: ${fadeUp} 0.6s ease both;
     padding: 40px 28px;
     display: flex;
     flex-direction: column;
@@ -65,8 +76,8 @@ const Header = styled.div`
     margin-bottom: 36px;
 
     h2 {
-        font-size: 22px;
-        font-weight: 600;
+        font-size: 20px;
+        font-weight: 700;
         margin-top: 12px;
         color: #111827;
     }
@@ -91,6 +102,7 @@ const IconBox = styled.div`
 `;
 
 const ContentBox = styled.div`
+    animation: ${fadeUp} 0.6s ease both;
     width: 100%;
     max-width: 520px;
     display: flex;
@@ -121,7 +133,7 @@ const InfoCard = styled.div`
     }
 `;
 
-/* ✅ 클릭 시 복사되는 이메일 링크 */
+/* 클릭 시 복사되는 이메일 링크 */
 const EmailLink = styled.button`
     background: rgba(37, 99, 235, 0.08);
     border: 1px solid rgba(37, 99, 235, 0.2);

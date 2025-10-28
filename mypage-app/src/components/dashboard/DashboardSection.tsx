@@ -11,14 +11,13 @@ import {
 } from "../../api/dashboardApi.ts";
 import { fetchTrustScore, TrustScoreResponse } from "../../api/userTrustScoreApi.ts";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import TitleSection from "./TitleSection.tsx";
 import TrustScoreModal from "../modals/TrustScoreModal.tsx";
 import WritingModal from "../modals/WritingModal.tsx";
 import { notifyError } from "../../utils/toast";
-import { theme } from "../../styles/theme";
 
-const COLORS = [theme.color.primary, "rgb(229,231,235)"];
+const COLORS = ["#3B82F6", "rgb(229,231,235)"];
 
 /* ---------- 도넛 데이터 ---------- */
 const makeDonutData = (percent: number) => [
@@ -172,51 +171,60 @@ export default function DashboardSection() {
 }
 
 /* ================== styled-components ================== */
+const fadeUp = keyframes`
+  from {
+    opacity: 0;
+    margin-top: 16px;
+  }
+  to {
+    opacity: 1;
+    margin-top: 0;
+  }
+`;
 
 const Section = styled.section`
-    background: ${theme.color.bgWhite};
-    //backdrop-filter: blur(8px);
-    border-radius: ${theme.radius.section};
-    padding: ${theme.spacing.sectionPadding};
-    box-shadow: ${theme.shadow.section};
+    background: rgba(255,255,255,0.75);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
     display: flex;
     flex-direction: column;
     gap: 24px;
+    animation: ${fadeUp} 0.6s ease both;
 `;
 
 const SectionTitle = styled.h2`
-    ${theme.mixin.sectionTitle}
+    font-size: 19px;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: -0.2px;
+    margin-bottom: 8px;
 `;
 
 const TopCardGrid = styled.div`
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 20px;
-
     @media (max-width: 1200px) {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(3, 1fr);
     }
     @media (max-width: 900px) {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    @media (max-width: 600px) {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 `;
 
 const DetailButton = styled.button`
     margin-top: 10px;
     padding: 6px 14px;
-    font-size: ${theme.font.small};
+    font-size: 13px;
     font-weight: 600;
-    background: linear-gradient(90deg, ${theme.color.primary}, ${theme.color.secondary});
+    background: linear-gradient(90deg, #3B82F6, #2563EB);
     color: white;
     border: none;
-    border-radius: ${theme.radius.button};
+    border-radius: 8px;
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(59, 130, 246, 0.25);
     transition: all 0.25s ease;
-
     &:hover {
         transform: translateY(-1px);
         box-shadow: 0 3px 8px rgba(59, 130, 246, 0.3);
@@ -225,39 +233,22 @@ const DetailButton = styled.button`
 
 const TopCard = styled.div`
     background: white;
-    border-radius: ${theme.radius.card};
-    padding: ${theme.spacing.cardPadding};
+    border-radius: 12px;
+    padding: 20px;
     text-align: center;
-    box-shadow: ${theme.shadow.card};
-    transition: all 0.25s ease;
-    border-top: 4px solid rgba(59, 130, 246, 0.5);
-
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-top: 4px solid rgba(59,130,246,0.5);
     display: flex;
     flex-direction: column;
-    justify-content: center; /* 기본 중앙 정렬 */
     align-items: center;
-
-    &:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-    }
-
+    &:hover { transform: translateY(-3px); }
     p {
-        font-size: ${theme.font.small};
-        color: ${theme.color.textMuted};
-        margin: 4px 0;
+        font-size: 13px;
+        color: #6B7280;
     }
-
     strong {
         font-size: 18px;
-        font-weight: 700;
-        color: ${theme.color.text};
-        margin-bottom: 6px;
-    }
-
-    /* 버튼이 있을 때는 하단 여백 확보 */
-    ${DetailButton} {
-        margin-top: auto; /* 카드 하단에 정렬 */
+        color: #111827;
     }
 `;
 
@@ -265,32 +256,18 @@ const DonutGrid = styled.div`
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 20px;
-
-    @media (max-width: 1200px) {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
     @media (max-width: 900px) {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    @media (max-width: 600px) {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 `;
 
 const DonutCard = styled.div<{ isPrimary?: boolean }>`
     padding: 20px 10px 16px;
     background: ${({ isPrimary }) => (isPrimary ? "#EFF6FF" : "white")};
-    border: ${({ isPrimary }) =>
-            isPrimary ? `1.5px solid ${theme.color.primary}` : `1px solid ${theme.color.border}`};
-    border-radius: ${theme.radius.card};
-    box-shadow: ${theme.shadow.card};
-    transition: all 0.25s ease;
+    border: ${({ isPrimary }) => (isPrimary ? "1.5px solid #3B82F6" : "1px solid #E5E7EB")};
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     text-align: center;
-
-    &:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    }
 `;
 
 const ChartWrapper = styled.div`
@@ -298,32 +275,39 @@ const ChartWrapper = styled.div`
     width: 120px;
     height: 120px;
     margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 `;
 
 const CenterText = styled.div`
     position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* 완전 중앙 정렬 */
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 
     p {
         font-size: 22px;
         font-weight: 700;
-        color: ${theme.color.text};
+        color: #111827;
+        margin: 0;
+        line-height: 1;
     }
 `;
 
+
 const DonutLabelTop = styled.p`
-    font-size: ${theme.font.small};
-    color: ${theme.color.textMuted};
+    font-size: 13px;
+    color: #6B7280;
     margin-bottom: 12px;
     text-align: center;
 `;
 
 const LoadingText = styled.p`
-    font-size: ${theme.font.body};
-    color: ${theme.color.textMuted};
+    font-size: 15px;
+    color: #6B7280;
     text-align: center;
     margin-top: 40px;
 `;

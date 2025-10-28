@@ -47,13 +47,13 @@ export default function MyPageLayout() {
 
     return (
         <>
-            {/* ✅ 전역 Footer z-index 적용 */}
+            {/* 전역 Footer z-index 적용 */}
             <GlobalFooterStyle />
 
             <LayoutContainer>
                 {/* 좌측 고정 사이드바 */}
                 <FixedAside>
-                    {/* ✅ 수정됨: 마이페이지 헤더 블록 추가 */}
+                    {/* 마이페이지 헤더 블록 추가 */}
                     <HomeHeader onClick={() => navigate("/mypage")}>
                         <HomeHeaderIcon>
                             <FaHome />
@@ -61,7 +61,7 @@ export default function MyPageLayout() {
                         <HomeHeaderLabel>마이페이지</HomeHeaderLabel>
                     </HomeHeader>
 
-                    {/* ✅ 기존 프로필 카드 그대로 유지 */}
+                    {/* 기존 프로필 카드 그대로 유지 */}
                     {profile && (
                         <ProfileAppearanceCard profile={profile} titles={titles} />
                     )}
@@ -84,7 +84,7 @@ export default function MyPageLayout() {
 
 /* ====================== styled-components ====================== */
 
-/** ✅ Footer가 사이드바 위로 올라오게 하는 전역 스타일 */
+/** Footer가 사이드바 위로 올라오게 하는 전역 스타일 */
 const GlobalFooterStyle = createGlobalStyle`
     footer {
         position: relative;
@@ -97,11 +97,11 @@ const LayoutContainer = styled.div`
     display: flex;
     width: 80%;
     margin: 0 auto;
-    position: relative;
-    padding-bottom: 400px; /* Footer 높이(약 392px)에 맞춰 조정 */
+    //position: relative;
+    //padding-bottom: 400px; /* Footer 높이(약 392px)에 맞춰 조정 */
 `;
 
-/** ✅ 완전 고정 사이드바 */
+/** 완전 고정 사이드바 */
 const FixedAside = styled.aside`
     position: fixed;
     top: 79px; /* 네브바 높이 아래 */
@@ -122,7 +122,7 @@ const FixedAside = styled.aside`
     }
 `;
 
-/** ✅ 수정됨: 마이페이지 헤더 블록 */
+/** 마이페이지 헤더 블록 */
 const HomeHeader = styled.div`
     display: flex;
     align-items: center;
@@ -145,7 +145,7 @@ const HomeHeader = styled.div`
     }
 `;
 
-/** ✅ 수정됨: 아이콘 */
+/** 아이콘 */
 const HomeHeaderIcon = styled.span`
     background: rgba(255, 255, 255, 0.25);
     border-radius: 8px;
@@ -156,14 +156,14 @@ const HomeHeaderIcon = styled.span`
     font-size: 16px;
 `;
 
-/** ✅ 수정됨: 라벨 */
+/** 라벨 */
 const HomeHeaderLabel = styled.span`
     font-weight: 600;
     font-size: 15px;
     letter-spacing: -0.3px;
 `;
 
-/** ✅ 메인 콘텐츠 영역 */
+/** 메인 콘텐츠 영역 */
 const Main = styled.main`
     flex: 1;
     padding: 24px;

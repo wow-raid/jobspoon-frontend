@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { fetchMyReports, CreateReportResponse } from "../api/reportApi";
 import { notifyError } from "../utils/toast";
 import { useNavigate } from "react-router-dom";
-import { FaDove } from "react-icons/fa"; // 🕊️ 진짜 비둘기 아이콘
+import { FaDove } from "react-icons/fa";
 
 /* ====================== 메인 컴포넌트 ====================== */
 export default function MyReportsPage() {
@@ -126,6 +126,16 @@ function EmptyState({ onGoContact }: { onGoContact: () => void }) {
 }
 
 /* ====================== Styled Components ====================== */
+const fadeUp = keyframes`
+  from {
+    opacity: 0;
+    margin-top: 16px;
+  }
+  to {
+    opacity: 1;
+    margin-top: 0;
+  }
+`;
 
 const Section = styled.section`
     padding: 24px;
@@ -136,6 +146,7 @@ const Section = styled.section`
     flex-direction: column;
     gap: 20px;
     margin-bottom: 20px;
+    animation: ${fadeUp} 0.6s ease both;
 `;
 
 const Header = styled.div`
@@ -143,7 +154,7 @@ const Header = styled.div`
 `;
 
 const Title = styled.h2`
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
     color: #111827;
 `;
@@ -160,6 +171,7 @@ const ReportTable = styled.div`
     overflow: hidden;
     background: #fff;
     margin-top: 12px;
+    animation: ${fadeUp} 0.6s ease both;
 `;
 
 const TableHeader = styled.div`
@@ -236,6 +248,7 @@ const EmptyCard = styled.div`
     text-align: center;
     animation: fadeUp 0.6s ease both;
     transition: all 0.3s ease;
+    animation: ${fadeUp} 0.6s ease both;
 
     &:hover {
         transform: translateY(-2px);
