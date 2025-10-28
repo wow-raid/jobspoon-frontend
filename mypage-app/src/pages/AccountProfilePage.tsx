@@ -75,8 +75,7 @@ export default function AccountProfilePage() {
                         (a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime()
                     );
                     // 항상 마지막 기록은 지난달 점수
-                    const lastMonthScore = sorted.at(-1)?.score ?? 0;
-                    // 이번 달 실시간 점수와 비교
+                    const lastMonthScore = sorted.slice(-1)[0]?.score ?? 0;                    // 이번 달 실시간 점수와 비교
                     const diff = trust.totalScore - lastMonthScore;
                     setScoreDiff(diff);
                 }
