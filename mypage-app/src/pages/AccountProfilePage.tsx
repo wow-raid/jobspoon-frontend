@@ -390,8 +390,9 @@ const Section = styled.section`
 export const SectionTitle = styled.h2`
   font-size: 20px;
   font-weight: 700;
-  color: #1e3a8a;
-  margin-bottom: 20px;
+  //color: #1e3a8a;
+    color: #111827;
+    margin-bottom: 20px;
 `;
 
 /* ---------- 회원정보 ---------- */
@@ -481,15 +482,26 @@ export const NicknameArea = styled.div`
     }
 `;
 
-export const NicknameInput = styled.input`
-  font-size: 20px;
-  font-weight: 700;
-  color: #111827;
-  border: none;
-  border-bottom: 2px solid #3b82f6;
-  outline: none;
-  padding: 4px 0;
+export const NicknameInput = styled.input.attrs({
+    spellCheck: false,
+})`
+    font-size: 20px;
+    font-weight: 700;
+    color: #111827;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 4px 0;
+    min-width: 150px;
+    border-bottom: 2px solid rgba(0,0,0,0.08);
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+
+    &:focus {
+        border-color: transparent;
+        box-shadow: 0 3px 0 0 rgba(59, 130, 246, 0.5);
+    }
 `;
+
 
 export const ButtonGroup = styled.div`
     display: flex;
@@ -609,7 +621,8 @@ export const CardHeader = styled.div`
     h3 {
         font-size: 18px;
         font-weight: 700;
-        color: #1e3a8a;
+        //color: #1e3a8a;
+        color: #111827;
         display: flex;
         align-items: center;
         gap: 6px;
