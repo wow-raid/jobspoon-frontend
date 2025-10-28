@@ -1,11 +1,10 @@
-{/* 회원탈퇴 메뉴 */}
-
 import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import { FaRegHandshake } from "react-icons/fa"; // 🤝 따뜻한 작별 아이콘
 import WithdrawalConfirmModal from "../components/modals/WithdrawalConfirmModal.tsx";
 import ServiceModal from "../components/modals/ServiceModal.tsx";
-import {withdrawAccount} from "../api/profileAppearanceApi.ts";
+import { withdrawAccount } from "../api/profileAppearanceApi.ts";
 
 export default function AccountWithdrawal() {
     const [reason, setReason] = useState("");
@@ -14,7 +13,6 @@ export default function AccountWithdrawal() {
     const navigate = useNavigate();
 
     const toggleReason = (value: string) => {
-        // 같은 걸 다시 누르면 해제
         setReason(reason === value ? "" : value);
     };
 
@@ -27,130 +25,206 @@ export default function AccountWithdrawal() {
     };
 
     const handleConfirm = async () => {
-
         try {
-            const result = await withdrawAccount(); // ✅ token 전달 제거
-            console.log(result);
+            await withdrawAccount();
         } catch (error) {
-            console.log(error);
+            console.error(error);
         }
-
         setShowConfirm(false);
-        localStorage.removeItem("isLoggedIn"); // ✅ 로그인 flag 제거
-        alert("회원 탈퇴 되었습니다.");
+        localStorage.removeItem("isLoggedIn");
+        alert("회원 탈퇴가 완료되었습니다. 이용해주셔서 감사합니다 🙏");
         window.location.href = "/";
-
-        // setShowServiceModal(true);
     };
 
     return (
-        <Section>
-            <Title>회원탈퇴</Title>
-
-            <WarningBox>
-                <h3>탈퇴 전 꼭 확인하세요</h3>
+        <Container>
+            <Header>
+                <IconBox>
+                    <FaRegHandshake size={42} color="#ef4444" />
+                </IconBox>
+                <h2>회원 탈퇴</h2>
                 <p>
-                    회원탈퇴 시 모든 데이터가 삭제되며, 복구가 불가능합니다. <br/>
-                    정말 떠나시겠습니까? 😢
+                    JobSpoon을 이용해주셔서 감사합니다.
+                    <br /> 계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다.
                 </p>
-            </WarningBox>
+            </Header>
 
-            <p>탈퇴 사유를 선택해주세요.</p>
+            <ContentBox>
+                <InfoCard>
+                    <h3>탈퇴 전 꼭 확인해주세요</h3>
+                    <ul>
+                        <li>출석, 일정, 신뢰점수 등 모든 활동 데이터가 즉시 삭제됩니다.</li>
+                        <li>동일 이메일로 재가입해도 기존 데이터는 복구되지 않습니다.</li>
+                        <li>진행 중인 스터디가 있다면 탈퇴 전 종료를 권장합니다.</li>
+                    </ul>
+                </InfoCard>
 
-            <Form>
-                <Option
-                    onClick={() => toggleReason("서비스가 기대에 미치지 못함")}
-                    active={reason === "서비스가 기대에 미치지 못함"}
-                >
-                    서비스가 기대에 미치지 못함
-                </Option>
-                <Option
-                    onClick={() => toggleReason("사용 빈도가 낮음")}
-                    active={reason === "사용 빈도가 낮음"}
-                >
-                    사용 빈도가 낮음
-                </Option>
-                <Option
-                    onClick={() => toggleReason("개인정보 보호 우려")}
-                    active={reason === "개인정보 보호 우려"}
-                >
-                    개인정보 보호 우려
-                </Option>
-                <OtherBox active={reason.startsWith("기타:")}>
-                    기타:
-                    <input
-                        type="text"
-                        placeholder="직접 입력"
-                        value={reason.startsWith("기타:") ? reason.replace("기타:", "") : ""}
-                        onFocus={() => {
-                            if (!reason.startsWith("기타:")) setReason("기타:");
-                        }}
-                        onChange={(e) => {
-                            const value = e.target.value;
-                            setReason(value ? `기타:${value}` : "");
-                        }}
-                    />
-                </OtherBox>
-            </Form>
+                <GuideBox>
+                    <h4>탈퇴 사유를 선택해주세요</h4>
+                    <Form>
+                        <Option
+                            onClick={() => toggleReason("서비스가 기대에 미치지 못함")}
+                            active={reason === "서비스가 기대에 미치지 못함"}
+                        >
+                            서비스가 기대에 미치지 못함
+                        </Option>
+                        <Option
+                            onClick={() => toggleReason("사용 빈도가 낮음")}
+                            active={reason === "사용 빈도가 낮음"}
+                        >
+                            사용 빈도가 낮음
+                        </Option>
+                        <Option
+                            onClick={() => toggleReason("개인정보 보호 우려")}
+                            active={reason === "개인정보 보호 우려"}
+                        >
+                            개인정보 보호 우려
+                        </Option>
 
-            <ButtonGroup>
-                <CancelButton onClick={() => navigate("/mypage")}>취소</CancelButton>
-                <DangerButton onClick={handleWithdrawalClick}>회원탈퇴</DangerButton>
-            </ButtonGroup>
+                        <OtherBox active={reason.startsWith("기타:")}>
+                            기타:
+                            <input
+                                type="text"
+                                placeholder="직접 입력"
+                                value={reason.startsWith("기타:") ? reason.replace("기타:", "") : ""}
+                                onFocus={() => {
+                                    if (!reason.startsWith("기타:")) setReason("기타:");
+                                }}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setReason(value ? `기타:${value}` : "");
+                                }}
+                            />
+                        </OtherBox>
+                    </Form>
+                </GuideBox>
 
-            {/* 확인 모달 */}
+                <ButtonGroup>
+                    <WithdrawButton onClick={handleWithdrawalClick}>
+                        회원 탈퇴하기
+                    </WithdrawButton>
+                    <CancelButton onClick={() => navigate("/mypage")}>취소</CancelButton>
+                </ButtonGroup>
+            </ContentBox>
+
             <WithdrawalConfirmModal
                 isOpen={showConfirm}
                 onClose={() => setShowConfirm(false)}
                 onConfirm={handleConfirm}
             />
 
-            {/* 서비스 준비중 모달 */}
             {showServiceModal && (
                 <ServiceModal
                     isOpen={showServiceModal}
                     onClose={() => setShowServiceModal(false)}
                 />
             )}
-        </Section>
+        </Container>
     );
 }
 
-/* ================== styled ================== */
+/* ================= styled-components ================= */
 
-const Section = styled.section`
-    padding: 24px;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+const Container = styled.div`
+    padding: 40px 28px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    align-items: center;
+    color: #374151;
 `;
 
-const Title = styled.h2`
-    font-size: 18px;
-    font-weight: 700;
-    color: rgb(17, 24, 39);
+const Header = styled.div`
+    text-align: center;
+    margin-bottom: 36px;
+
+    h2 {
+        font-size: 22px;
+        font-weight: 600;
+        margin-top: 12px;
+        color: #111827;
+    }
+
+    p {
+        margin-top: 8px;
+        font-size: 14px;
+        color: #6b7280;
+        line-height: 1.6;
+    }
 `;
 
-const WarningBox = styled.div`
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #b91c1c;
-    padding: 16px;
-    border-radius: 8px;
-    margin-bottom: 20px;
+const IconBox = styled.div`
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(248, 113, 113, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+`;
+
+const ContentBox = styled.div`
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+`;
+
+/* Apple 스타일 안내 카드 */
+const InfoCard = styled.div`
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: left;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 
     h3 {
-        margin: 0 0 8px 0;
-        font-weight: 700;
-        font-size: 16px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+
+        &::before {
+            content: "⚠️";
+            font-size: 16px;
+        }
     }
-    p {
+
+    ul {
+        list-style: none;
+        padding: 0;
         margin: 0;
-        font-size: 14px;
-        line-height: 1.5;
+        font-size: 13px;
+        color: #475569;
+        line-height: 1.6;
+
+        li + li {
+            margin-top: 4px;
+        }
+    }
+`;
+
+const GuideBox = styled.div`
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px 24px;
+
+    h4 {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #111827;
+
+        &::before {
+            content: "📝";
+            margin-right: 6px;
+        }
     }
 `;
 
@@ -158,6 +232,22 @@ const Form = styled.div`
     display: flex;
     flex-direction: column;
     gap: 12px;
+`;
+
+const Option = styled.div<{ active: boolean }>`
+    padding: 12px 16px;
+    border: 2px solid ${({ active }) => (active ? "#ef4444" : "#e5e7eb")};
+    border-radius: 10px;
+    cursor: pointer;
+    background: ${({ active }) => (active ? "rgba(248,113,113,0.05)" : "white")};
+    font-size: 15px;
+    font-weight: 500;
+    color: #374151;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background: #f9fafb;
+    }
 `;
 
 const OtherBox = styled.label<{ active?: boolean }>`
@@ -168,33 +258,16 @@ const OtherBox = styled.label<{ active?: boolean }>`
 
     input {
         flex: 1;
-        border: 2px solid ${({ active }) => (active ? "#dc2626" : "#e5e7eb")};
+        border: 2px solid ${({ active }) => (active ? "#ef4444" : "#e5e7eb")};
         border-radius: 10px;
         padding: 6px 8px;
         transition: all 0.2s ease;
+        font-size: 14px;
 
         &:focus {
             outline: none;
+            border-color: #ef4444;
         }
-    }
-`;
-
-const Option = styled.div<{ active: boolean }>`
-    padding: 14px 18px;
-    border: 2px solid ${({ active }) => (active ? "#dc2626" : "#e5e7eb")};
-    border-radius: 10px;
-    cursor: pointer;
-    background: white; /* ✅ 배경 흰색 고정 */
-    font-size: 15px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    &:hover {
-        background: #f9fafb; /* hover만 연회색 */
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     }
 `;
 
@@ -202,34 +275,34 @@ const ButtonGroup = styled.div`
     display: flex;
     justify-content: center;
     gap: 16px;
-    margin-top: 24px;
+    margin-top: 20px;
+`;
+
+const WithdrawButton = styled.button`
+    background: #ef4444;
+    color: white;
+    padding: 10px 22px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+
+    &:hover {
+        background: #dc2626;
+    }
 `;
 
 const CancelButton = styled.button`
     background: white;
     border: 1px solid #d1d5db;
     color: #374151;
-    padding: 10px 20px;
-    border-radius: 6px;
+    padding: 10px 22px;
+    border-radius: 8px;
     font-weight: 500;
     cursor: pointer;
 
     &:hover {
         background: #f3f4f6;
-    }
-`;
-
-const DangerButton = styled.button`
-    background: #dc2626;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
-
-    &:hover {
-        background: #b91c1c;
     }
 `;

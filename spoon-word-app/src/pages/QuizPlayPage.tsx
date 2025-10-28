@@ -18,10 +18,10 @@ const UI = {
     primarySoft: "#e6edff",
 
     // 정답/오답 요청 색상
-    danger: "#F95D5D",      // 테두리
-    success: "#28C8A3",     // 테두리
-    successSoft: "#e9fcf8", // 내부
-    dangerSoft: "#fee6e6",  // 내부
+    danger: "#F95D5D",
+    success: "#28C8A3",
+    successSoft: "#e9fcf8",
+    dangerSoft: "#fee6e6",
 
     shadow: "0 20px 60px rgba(62,99,224,.15)",
     radius: 20,
@@ -220,7 +220,7 @@ const truthy = (v: any): boolean => {
 type PlayState = {
     sessionId?: number;
     title?: string;
-    source?: "folder" | "category" | "selected";
+    source?: "folder" | "category" | "selected" | "retry";
 };
 
 type SessionItem = {
@@ -229,10 +229,21 @@ type SessionItem = {
     choices: { id: number; text: string; isAnswer?: boolean }[];
 };
 
+/* ====== 경로 유틸 ======
+   - /quiz/result, /spoon-quiz/result, /spoon-word/quiz/result, /spoon-word/spoon-quiz/result 지원 */
+const RESULT_PATH_RE = /(\/spoon-word)?\/(spoon-quiz|quiz)\/result$/;
+const BASE_PATH_CAPTURE_RE = /(\/spoon-word)?\/(spoon-quiz|quiz)/;
+
+function getQuizBasePath(pathname: string): string {
+    const m = pathname.match(BASE_PATH_CAPTURE_RE);
+    return m ? m[0].replace(/\/$/, "") : "/quiz";
+}
+
 /* 강조(‘않는’) 하이라이트 */
 function emphasizeNot(text: string) {
-    return text.replace(/(않는|아닌|NOT)/gi, (m) => `<em>${m}</em>`);
+    return text.replace(/(않는|않다|아닌|NOT)/gi, (m) => `<em>${m}</em>`);
 }
+
 /* ===================== ResultView ===================== */
 function ResultView({ title, summary, items, answers, sessionId, onClose }: any) {
     const nav = useNavigate();
@@ -295,8 +306,7 @@ function ResultView({ title, summary, items, answers, sessionId, onClose }: any)
         ])
     );
 
-
-    // ID를 "문자열 키"로 정규화 (숫자/문자 혼용 안전)
+    // ID를 "문자열 키"로 정규화
     const idKey = (v: any): string | null => {
         if (v == null || v === "") return null;
         if (Array.isArray(v)) return idKey(v[0]);
@@ -333,7 +343,6 @@ function ResultView({ title, summary, items, answers, sessionId, onClose }: any)
                 { headers: { ...authHeader() }, withCredentials: true }
             );
             const data = (res && (res as any).data) ? (res as any).data : res;
-            // 응답 바디에서 숫자로 안전 파싱
             const newSessionId = Number(
                 data?.sessionId ?? data?.id ?? data?.session?.id
             );
@@ -341,8 +350,8 @@ function ResultView({ title, summary, items, answers, sessionId, onClose }: any)
                 throw new Error("세션 생성에 실패했습니다. (sessionId 없음)");
             }
 
-            const prefix = loc.pathname.startsWith("/spoon-word/") ? "/spoon-word" : "";
-            nav(`${prefix}/spoon-quiz`, {
+            const base = getQuizBasePath(loc.pathname);
+            nav(`${base}`, {
                 state: { sessionId: newSessionId, title: title ?? "스푼퀴즈", source: "retry" },
                 replace: true,
             });
@@ -353,6 +362,8 @@ function ResultView({ title, summary, items, answers, sessionId, onClose }: any)
             setRetrying(false);
         }
     };
+
+    const base = getQuizBasePath(loc.pathname);
 
     return (
         <div>
@@ -395,8 +406,10 @@ function ResultView({ title, summary, items, answers, sessionId, onClose }: any)
                     }
 
                     // 틀린 문제인지
-                    const isWrongQuestion =
-                        pickedKey != null && correctKey != null && pickedKey !== correctKey;
+                    const isPickedWrong =
+                        typeof d?.correct === "boolean"
+                            ? (!d.correct && pickedKey != null)
+                            : (pickedKey != null && correctKey != null && pickedKey !== correctKey);
 
                     return (
                         <li key={String(q.questionId)} style={{ margin: "14px 0" }}>
@@ -412,28 +425,10 @@ function ResultView({ title, summary, items, answers, sessionId, onClose }: any)
                                     const isCorrectChoice =
                                         (cid != null && correctKey != null && cid === correctKey) ||
                                         (correctKey == null && c.isAnswer === true);
-                                    const pickedWrongByFlag = (typeof d?.correct === "boolean") ? (!d.correct && isPicked) : null;
-                                    const isPickedWrong = (() => {
-                                        // 1순위: detail에 correct 플래그가 있으면 그것을 사용
-                                        if (typeof d?.correct === "boolean") {
-                                            return !d.correct && isPicked;
-                                        }
 
-                                        // 2순위: key 비교로 오답 판별
-                                        return pickedKey != null &&
-                                            correctKey != null &&
-                                            isPicked &&
-                                            pickedKey !== correctKey;
-                                    })();
-
-
-                                    // 톤: 내가 고른 오답(빨강) > 정답(초록) > 일반
                                     let tone: "normal" | "ok" | "bad" = "normal";
-                                    if (isPickedWrong) {
-                                        tone = "bad";
-                                    } else if (isCorrectChoice) {
-                                        tone = "ok";
-                                    }
+                                    if (isPickedWrong && isPicked) tone = "bad";
+                                    else if (isCorrectChoice) tone = "ok";
 
                                     return (
                                         <Opt as="div" key={String(c.id)} $tone={tone}>
@@ -442,9 +437,8 @@ function ResultView({ title, summary, items, answers, sessionId, onClose }: any)
                                             </Bullet>
                                             <OptLabel>{c.text}</OptLabel>
 
-                                            {/* 배지 규칙 */}
                                             {isCorrectChoice && <Badge $tone="ok">정답</Badge>}
-                                            {isPickedWrong && <Badge $tone="bad">내 답</Badge>}
+                                            {isPickedWrong && isPicked && <Badge $tone="bad">내 답</Badge>}
                                         </Opt>
                                     );
                                 })}
@@ -455,7 +449,7 @@ function ResultView({ title, summary, items, answers, sessionId, onClose }: any)
             </ResultList>
 
             <Footer>
-                <Ghost type="button" onClick={onClose}>닫기</Ghost>
+                <Ghost type="button" onClick={() => onClose?.() ?? nav(base)}>닫기</Ghost>
                 {(() => {
                     const wrongCount = Math.max(0, Number(summary.total) - Number(summary.correct));
                     return(
@@ -464,7 +458,7 @@ function ResultView({ title, summary, items, answers, sessionId, onClose }: any)
                             onClick={handleRetryWrong}
                             disabled={retrying || wrongCount === 0}
                             style={{ pointerEvents: retrying ? "none" : undefined }}
-                            >
+                        >
                             {retrying ? "다시 시작 중..." : "틀린 문제 다시 풀기"}
                         </Primary>
                     );
@@ -490,10 +484,8 @@ export default function QuizPlayPage() {
     const [submitting, setSubmitting] = React.useState(false);
     const inFlightRef = React.useRef(false);
 
-    // 결과 경로 여부
-    const isResultRoute =
-        loc.pathname.endsWith("/spoon-quiz/result") ||
-        loc.pathname.endsWith("/spoon-word/spoon-quiz/result");
+    // 결과 경로 여부 (이 파일에서 직접 처리)
+    const isResultRoute = RESULT_PATH_RE.test(loc.pathname);
 
     React.useEffect(() => {
         if (isResultRoute) return;
@@ -558,8 +550,8 @@ export default function QuizPlayPage() {
 
             const summary = (resp && typeof resp === "object" && "data" in resp) ? (resp as any).data : resp;
 
-            const prefix = loc.pathname.startsWith("/spoon-word/") ? "/spoon-word" : "";
-            nav(`${prefix}/spoon-quiz/result`, {
+            const base = getQuizBasePath(loc.pathname) || "/quiz";
+            nav(`${base}/result`, {
                 state: {
                     sessionId: payload.sessionId,
                     title: payload.title ?? "스푼퀴즈",
@@ -581,7 +573,7 @@ export default function QuizPlayPage() {
     // ===== 렌더링 분기 =====
     if (isResultRoute) {
         const st = (loc.state as any) ?? {};
-        const prefix = loc.pathname.startsWith("/spoon-word/") ? "/spoon-word" : "/";
+        const base = getQuizBasePath(loc.pathname);
         return (
             <>
                 {/* 결과 화면도 동일한 배경/용지 적용 */}
@@ -595,7 +587,7 @@ export default function QuizPlayPage() {
                                 items={st.items}
                                 answers={st.answers}
                                 sessionId={st.sessionId}
-                                onClose={() => nav(prefix)}
+                                onClose={() => nav(base)}
                             />
                         </Card>
                     </NarrowLeft>
@@ -628,7 +620,7 @@ export default function QuizPlayPage() {
 
                                 {items.map((q, idx) => (
                                     <div key={q.questionId} style={{ marginBottom: 24 }}>
-                                        {/* 문제 번호 "텍스트" + 제목 (결과와 동일 템플릿/타이포) */}
+                                        {/* 문제 번호 "텍스트" + 제목 */}
                                         <QLine>
                                             <QNumText>{idx + 1}번.</QNumText>
                                             <QTitle

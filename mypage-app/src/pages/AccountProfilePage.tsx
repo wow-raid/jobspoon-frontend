@@ -7,14 +7,14 @@ import { useOutletContext } from "react-router-dom";
 import defaultProfile from "../assets/default_profile.png";
 import ServiceModal from "../components/modals/ServiceModal.tsx";
 import TitleGuideModal from "../components/modals/TitleGuideModal.tsx";
-import TrustScoreCriteria from "../components/history/TrustScoreCriteria.tsx";
+import TrustScoreCriteriaModal from "../components/modals/TrustScoreCriteriaModal.tsx";
 import { ProfileAppearanceResponse, uploadProfilePhoto } from "../api/profileAppearanceApi.ts";
 import { updateNickname } from "../api/accountProfileApi.ts";
-import {
-    fetchUserLevelHistory,
-    UserLevelResponse,
-    UserLevelHistoryResponse
-} from "../api/userLevelApi"; // 레벨 관련
+// import {
+//     fetchUserLevelHistory,
+//     UserLevelResponse,
+//     UserLevelHistoryResponse
+// } from "../api/userLevelApi"; // 레벨 관련
 import {
     equipTitle,
     unequipTitle,
@@ -36,7 +36,7 @@ import {
 
 type OutletContextType = {
     profile: ProfileAppearanceResponse | null;
-    userLevel: UserLevelResponse | null;
+    // userLevel: UserLevelResponse | null;
     titles: UserTitleResponse[];
     refreshAll: () => Promise<void>;
 };
@@ -44,31 +44,24 @@ type OutletContextType = {
 type Status = "loading" | "empty" | "loaded";
 
 export default function AccountProfilePage() {
-    const { profile, userLevel, titles, refreshAll } = useOutletContext<OutletContextType>();
+    // const { profile, userLevel, titles, refreshAll } = useOutletContext<OutletContextType>();
+    const { profile, titles, refreshAll } = useOutletContext<OutletContextType>();
 
     // 상태 관리
     const [trustScore, setTrustScore] = useState<TrustScoreResponse | null>(null);
-    const [levelHistory, setLevelHistory] = useState<UserLevelHistoryResponse[]>([]);
+    // const [levelHistory, setLevelHistory] = useState<UserLevelHistoryResponse[]>([]);
     const [trustStatus, setTrustStatus] = useState<Status>("loading");
-    const [levelStatus, setLevelStatus] = useState<Status>("loading");
+    // const [levelStatus, setLevelStatus] = useState<Status>("loading");
 
-    const [showTrustCriteria, setShowTrustCriteria] = useState(false);
+    // const [showTrustCriteria, setShowTrustCriteria] = useState(false);
+    const [isTrustCriteriaOpen, setIsTrustCriteriaOpen] = useState(false);
     const [isTitleGuideOpen, setIsTitleGuideOpen] = useState(false);
-    const [isLevelOpen, setIsLevelOpen] = useState(false);
+    // const [isLevelOpen, setIsLevelOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // 닉네임 수정 상태
     const [isEditingNickname, setIsEditingNickname] = useState(false);
     const [tempNickname, setTempNickname] = useState("");
-
-    // 프로필 공개 여부 상태
-    // const [isProfilePublic, setIsProfilePublic] = useState(true);
-
-    // 정보수신 동의 TODO: AccountProfile API 나오면 교체
-    // const [consent, setConsent] = useState({
-    //     phone: true,
-    //     email: false,
-    // });
 
     // 사진 업로드 관련
     const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -105,39 +98,28 @@ export default function AccountProfilePage() {
     useEffect(() => {
         const loadTrustAndHistory = async () => {
             try {
-                const [trust, history] = await Promise.all([
-                    fetchTrustScore(),
-                    fetchUserLevelHistory(),
-                ]);
+                // const [trust, history] = await Promise.all([
+                //     fetchTrustScore(),
+                //     fetchUserLevelHistory(),
+                // ]);
+                // setTrustScore(trust || null);
+                // setLevelHistory(history || []);
+                // setTrustStatus(trust ? "loaded" : "empty");
+                // setLevelStatus(history ? "loaded" : "empty");
+
+                const trust = await fetchTrustScore();
+
                 setTrustScore(trust || null);
-                setLevelHistory(history || []);
                 setTrustStatus(trust ? "loaded" : "empty");
-                setLevelStatus(history ? "loaded" : "empty");
+
             } catch (err) {
                 console.error(err);
                 setTrustStatus("empty");
-                setLevelStatus("empty");
+                // setLevelStatus("empty");
             }
         };
         loadTrustAndHistory();
     }, []);
-
-    // useEffect(() => {
-    //     if (photoError || photoSuccess) {
-    //         setFadeOut(false); // 처음에는 보이게
-    //         const fadeTimer = setTimeout(() => setFadeOut(true), 2500); // 2.5초 후 fade 시작
-    //         const removeTimer = setTimeout(() => {
-    //             setPhotoError(null);
-    //             setPhotoSuccess(null);
-    //             setFadeOut(false);
-    //         }, 4000); // 4초 후 state 제거
-    //
-    //         return () => {
-    //             clearTimeout(fadeTimer);
-    //             clearTimeout(removeTimer);
-    //         };
-    //     }
-    // }, [photoError, photoSuccess]);
 
     /** 닉네임 수정 시작 */
     const handleStartEdit = () => {
@@ -222,21 +204,6 @@ export default function AccountProfilePage() {
         }
     };
 
-    // // 토글 핸들러
-    // const handleToggleProfilePublic = () => {
-    //     setIsProfilePublic((prev) => !prev);
-    //     setIsModalOpen(true); // 안내 모달 열기
-    // };
-
-    // // 정보수신 동의 토글 핸들러
-    // const handleToggleConsent = (key: "phone" | "email") => {
-    //     setConsent((prev) => ({
-    //         ...prev,
-    //         [key]: !prev[key],
-    //     }));
-    //     setIsModalOpen(true);
-    // };
-
     if (!profile) {
         return <p>불러오는 중...</p>;
     }
@@ -299,7 +266,7 @@ export default function AccountProfilePage() {
                                 </NicknameMessage>
                             )}
 
-                            <Email>{profile.email}</Email>
+                            {/*<Email>{profile.email}</Email>*/}
                         </InfoText>
 
                         <ButtonGroup>
@@ -329,11 +296,11 @@ export default function AccountProfilePage() {
                     <BottomRow>
                         <InfoItem>
                             <FaEnvelope style={{ color: "#6b7280", marginRight: "8px" }} />
-                            <span>정보 1</span>
+                            <span>{profile.email}</span>
                         </InfoItem>
                         <InfoItem>
                             <FaLock style={{ color: "#6b7280", marginRight: "8px" }} />
-                            <span>정보 2</span>
+                            <span>가입일 : </span>
                         </InfoItem>
                     </BottomRow>
                 </InfoCard>
@@ -348,10 +315,10 @@ export default function AccountProfilePage() {
                     <HistoryHeader>
                         <HeaderLeft>
                             <Icon>🛡️</Icon>
-                            <h3>신뢰점수</h3>
+                            <h3>활동 점수</h3>
                         </HeaderLeft>
-                        <ToggleButton onClick={() => setShowTrustCriteria(!showTrustCriteria)}>
-                            {showTrustCriteria ? "숨기기" : "산정 기준"}
+                        <ToggleButton onClick={() => setIsTrustCriteriaOpen(true)}>
+                            산정 기준
                         </ToggleButton>
                     </HistoryHeader>
                     {trustStatus === "loading" ? (
@@ -435,59 +402,58 @@ export default function AccountProfilePage() {
                             </TrustContent>
                         </>
                     )}
-                    {showTrustCriteria && <TrustScoreCriteria />}
                 </Card>
 
                 {/* 레벨 */}
-                <Card>
-                    <HistoryHeader>
-                        <HeaderLeft>
-                            <Icon>🏅</Icon>
-                            <h3>레벨</h3>
-                        </HeaderLeft>
-                        <ToggleButton onClick={() => setIsLevelOpen(!isLevelOpen)}>
-                            {isLevelOpen ? (
-                                <>
-                                    <FaChevronUp size={10} /> 닫기
-                                </>
-                            ) : (
-                                <>
-                                    <FaChevronDown size={10} /> 히스토리
-                                </>
-                            )}
-                        </ToggleButton>
-                    </HistoryHeader>
+                {/*<Card>*/}
+                {/*    <HistoryHeader>*/}
+                {/*        <HeaderLeft>*/}
+                {/*            <Icon>🏅</Icon>*/}
+                {/*            <h3>레벨</h3>*/}
+                {/*        </HeaderLeft>*/}
+                {/*        <ToggleButton onClick={() => setIsLevelOpen(!isLevelOpen)}>*/}
+                {/*            {isLevelOpen ? (*/}
+                {/*                <>*/}
+                {/*                    <FaChevronUp size={10} /> 닫기*/}
+                {/*                </>*/}
+                {/*            ) : (*/}
+                {/*                <>*/}
+                {/*                    <FaChevronDown size={10} /> 히스토리*/}
+                {/*                </>*/}
+                {/*            )}*/}
+                {/*        </ToggleButton>*/}
+                {/*    </HistoryHeader>*/}
 
-                    {levelStatus === "loading" ? (
-                        <Empty>불러오는 중...</Empty>
-                    ) : !userLevel ? (
-                        <Empty>레벨 정보가 없습니다.</Empty>
-                    ) : (
-                        <LevelBox>
-                            <p>
-                                현재 Lv.{userLevel.level} (Exp {userLevel.exp}/{userLevel.totalExp})
-                            </p>
-                            <ProgressBar percent={(userLevel.exp / userLevel.totalExp) * 100} />
-                        </LevelBox>
-                    )}
+                {/*    {levelStatus === "loading" ? (*/}
+                {/*        <Empty>불러오는 중...</Empty>*/}
+                {/*    ) : !userLevel ? (*/}
+                {/*        <Empty>레벨 정보가 없습니다.</Empty>*/}
+                {/*    ) : (*/}
+                {/*        <LevelBox>*/}
+                {/*            <p>*/}
+                {/*                현재 Lv.{userLevel.level} (Exp {userLevel.exp}/{userLevel.totalExp})*/}
+                {/*            </p>*/}
+                {/*            <ProgressBar percent={(userLevel.exp / userLevel.totalExp) * 100} />*/}
+                {/*        </LevelBox>*/}
+                {/*    )}*/}
 
-                    {isLevelOpen && (
-                        <Timeline>
-                            {levelHistory.length === 0 ? (
-                                <Empty>레벨 업 기록이 없습니다.</Empty>
-                            ) : (
-                                levelHistory.map((item) => (
-                                    <TimelineItem key={item.achievedAt}>
-                                        <TimelineDate>
-                                            {new Date(item.achievedAt).toLocaleDateString()}
-                                        </TimelineDate>
-                                        <TimelineEvent>Lv.{item.level} 달성</TimelineEvent>
-                                    </TimelineItem>
-                                ))
-                            )}
-                        </Timeline>
-                    )}
-                </Card>
+                {/*    {isLevelOpen && (*/}
+                {/*        <Timeline>*/}
+                {/*            {levelHistory.length === 0 ? (*/}
+                {/*                <Empty>레벨 업 기록이 없습니다.</Empty>*/}
+                {/*            ) : (*/}
+                {/*                levelHistory.map((item) => (*/}
+                {/*                    <TimelineItem key={item.achievedAt}>*/}
+                {/*                        <TimelineDate>*/}
+                {/*                            {new Date(item.achievedAt).toLocaleDateString()}*/}
+                {/*                        </TimelineDate>*/}
+                {/*                        <TimelineEvent>Lv.{item.level} 달성</TimelineEvent>*/}
+                {/*                    </TimelineItem>*/}
+                {/*                ))*/}
+                {/*            )}*/}
+                {/*        </Timeline>*/}
+                {/*    )}*/}
+                {/*</Card>*/}
 
                 {/* 칭호 */}
                 <Card>
@@ -527,6 +493,11 @@ export default function AccountProfilePage() {
             <TitleGuideModal
                 isOpen={isTitleGuideOpen}
                 onClose={() => setIsTitleGuideOpen(false)}
+            />
+
+            <TrustScoreCriteriaModal
+                isOpen={isTrustCriteriaOpen}
+                onClose={() => setIsTrustCriteriaOpen(false)}
             />
 
             {/*
@@ -660,7 +631,7 @@ const InfoCard = styled.div`
 
 const TopRow = styled.div`
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
 `;
 

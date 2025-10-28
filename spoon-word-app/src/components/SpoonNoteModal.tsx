@@ -66,7 +66,10 @@ const Panel = styled.div`
     background: ${TOKENS.color.panelBg};
     border-radius: ${TOKENS.radius.panel}px;
     box-shadow: ${TOKENS.shadow.panel};
-    overflow: visible;
+    overflow-x: hidden;
+    max-height: min(82vh, 900px);
+    display: flex;
+    flex-direction: column;
 
     /* 3D 원근 추가 */
     perspective: 1000px;
@@ -94,6 +97,11 @@ const HeaderRight = styled.div`
 
 const Body = styled.div`
     padding: ${TOKENS.space(12)} ${TOKENS.space(14)};
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
 `;
 
 const List = styled.div<{ $disabled?: boolean }>`
@@ -146,6 +154,7 @@ const Left = styled.div`
     align-items: center;
     gap: 10px;
     flex: 1 1 auto;
+    min-width: 0;
 `;
 
 const Checkbox = styled.input.attrs({ type: "checkbox" })`
@@ -166,6 +175,9 @@ const Checkbox = styled.input.attrs({ type: "checkbox" })`
 const Name = styled.span`
     color: ${TOKENS.color.textPrimary};
     font-size: ${TOKENS.font.body};
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 `;
 
 const hexToRgb = (hex: string) => {
@@ -811,6 +823,14 @@ export default function SpoonNoteModal({
         }
     }, [internalOpen]);
 
+    React.useEffect(() => {
+        if (!internalOpen) return;
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => { document.body.style.overflow = prev; };
+    }, [internalOpen]);
+
+
     const shallowSame = React.useCallback((a: Notebook[], b: Notebook[]) => {
         if (a.length !== b.length) return false;
         for (let i = 0; i < a.length; i++) {
@@ -1202,13 +1222,13 @@ export default function SpoonNoteModal({
     );
 
     const modal = (
-        <Overlay role="dialog" aria-modal="true" aria-label="내 SpoonNote에 저장하기">
+        <Overlay role="dialog" aria-modal="true" aria-label="내 스푼노트에 저장하기">
             <Panel>
                 {/* 저장 체크 토스트 (3D) */}
                 <SavedToastView show={showSaved} tick={savedTick} />
 
                 <Header ref={headerRef}>
-                    <HeaderTitle>내 SpoonNote에 저장하기</HeaderTitle>
+                    <HeaderTitle>내 스푼노트에 저장하기</HeaderTitle>
                     <HeaderRight>
             <span
                 aria-live="polite"
@@ -1269,7 +1289,7 @@ export default function SpoonNoteModal({
                         >
                             <Left>
                                 <Plus>＋</Plus>
-                                <Name>새로운 SpoonNote에 만들기</Name>
+                                <Name>새로운 스푼노트 만들기</Name>
                             </Left>
                             {!bulkMode && <span aria-hidden="true">›</span>}
                         </Row>

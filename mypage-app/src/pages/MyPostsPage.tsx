@@ -1,6 +1,6 @@
-// pages/MyPostsPage.tsx
-import styled, { keyframes } from "styled-components";
 import React from "react";
+import styled, { keyframes } from "styled-components";
+import { FaFolderOpen, FaPenFancy } from "react-icons/fa";
 
 export default function MyPostsPage() {
     return (
@@ -9,16 +9,33 @@ export default function MyPostsPage() {
                 <SectionTitle>나의 게시물</SectionTitle>
             </SectionHeader>
 
-            <GuideBox>
-                JobSpoon 곳곳에서 내가 남긴 <span className="emoji">🗂️</span>
-                <strong> 게시글, 댓글, 리뷰</strong>를 한눈에 관리할 수 있는 공간이에요.
-                <br />
-                수정하거나 삭제할 수 있는
-                관리 기능이 함께 추가될 예정입니다.
-                <br />
-                <span className="emoji">🚀</span>현재는 서비스 준비 중이며,
-                더 편리한 기능으로 곧 찾아올게요 <span className="emoji">💙</span>
-            </GuideBox>
+            <Card>
+                <CardHeader>
+                    <IconBox>
+                        <FaFolderOpen size={26} color="#2563eb" />
+                    </IconBox>
+                    <CardTitle>JobSpoon 활동 기록</CardTitle>
+                </CardHeader>
+
+                <CardBody>
+                    <p>
+                        JobSpoon 곳곳에서 내가 남긴
+                        <strong> 게시글, 댓글, 리뷰</strong>를 한눈에 관리할 수 있는 공간이에요.
+                    </p>
+                    <p>
+                        수정하거나 삭제할 수 있는 관리 기능이 함께 추가될 예정입니다.
+                    </p>
+                    <p>
+                        <strong>현재는 서비스 준비 중</strong>이며,
+                        더 편리한 기능으로 곧 찾아올게요!
+                    </p>
+                </CardBody>
+
+                <ComingSoonBox>
+                    <FaPenFancy size={15} color="#2563eb" />
+                    <span>게시물 관리 기능 준비 중</span>
+                </ComingSoonBox>
+            </Card>
         </Section>
     );
 }
@@ -29,14 +46,9 @@ const fadeUp = keyframes`
     to { opacity: 1; transform: translateY(0); }
 `;
 
-const floatLoop = keyframes`
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
-`;
-
-const bounceEmoji = keyframes`
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
+const pulse = keyframes`
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(0.98); }
 `;
 
 const Section = styled.section`
@@ -47,6 +59,7 @@ const Section = styled.section`
     display: flex;
     flex-direction: column;
     gap: 20px;
+    animation: ${fadeUp} 0.6s ease both;
 `;
 
 const SectionHeader = styled.div`
@@ -61,47 +74,71 @@ const SectionTitle = styled.h2`
     color: rgb(17, 24, 39);
 `;
 
-const GuideBox = styled.div`
-    background: #e0ecff; /* 멤버십과 동일한 파스텔 블루 */
-    color: #1e3a8a;      /* 네이비 블루 텍스트 */
+const Card = styled.div`
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 32px;
+    background: linear-gradient(180deg, #f9fafb 0%, #ffffff 100%);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
+    animation: ${pulse} 6s ease-in-out infinite;
+    text-align: center;
+    transition: all 0.3s ease;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.08);
+    }
+`;
+
+const CardHeader = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 16px;
+`;
+
+const IconBox = styled.div`
+    width: 52px;
+    height: 52px;
+    background: rgba(37, 99, 235, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+`;
+
+const CardTitle = styled.h3`
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e3a8a;
+`;
+
+const CardBody = styled.div`
     font-size: 15px;
     line-height: 1.8;
-    font-weight: 500;
-    border-radius: 12px;
-    padding: 24px;
-    position: relative;
-    white-space: pre-line;
-    border: 1px solid #bfdbfe;
-    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.1);
-
-    animation: ${fadeUp} 0.8s ease both, ${floatLoop} 3.5s ease-in-out infinite;
-
-    &::before,
-    &::after {
-        content: "";
-        position: absolute;
-        left: 40px;
-        border-width: 0 8px 8px 8px;
-        border-style: solid;
-    }
-
-    &::before {
-        top: -9px;
-        border-color: transparent transparent #bfdbfe transparent;
-    }
-
-    &::after {
-        top: -8px;
-        border-color: transparent transparent #e0ecff transparent;
-    }
+    color: #374151;
 
     strong {
-        font-weight: 700;
-        color: #1e40af; /* 강조 파랑 */
+        font-weight: 600;
+        color: #1e40af;
     }
 
-    .emoji {
-        display: inline-block;
-        animation: ${bounceEmoji} 2.8s ease-in-out infinite;
+    p + p {
+        margin-top: 8px;
     }
+`;
+
+const ComingSoonBox = styled.div`
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: rgba(37, 99, 235, 0.06);
+    color: #2563eb;
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 20px;
+    animation: ${fadeUp} 1s ease both;
 `;

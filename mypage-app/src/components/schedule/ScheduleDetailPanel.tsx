@@ -39,7 +39,7 @@ export default function ScheduleDetailPanel({ schedule, onClose, onRefresh }: Pr
     /* ========== 이동 버튼 ========== */
     const handleMoveToStudyRoom = () => {
         if (!schedule?.studyRoomId) return;
-        navigate(`/studyroom/${schedule.studyRoomId}`);
+        navigate(`/studies/joined-study/${schedule.studyRoomId}/schedule`);
     };
 
     /* ========== 크기 조절 로직 ========== */
@@ -205,18 +205,17 @@ const Panel = styled(motion.div)`
     z-index: 25;
 `;
 
-/* ✅ Header에 타입별 색상 분기 추가 */
 const Header = styled.div<{ $type?: string }>`
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #e5e7eb;
     padding-bottom: 12px;
+
     h3 {
         font-size: 17px;
         font-weight: 700;
-        color: ${({ $type }) =>
-                $type === "study" ? "#047857" : "#1d4ed8"};
+        color: #111827;
     }
 `;
 
