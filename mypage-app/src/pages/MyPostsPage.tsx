@@ -43,11 +43,13 @@ export default function MyPostsPage() {
 
 /* ================= 색상 팔레트 ================= */
 const palette = {
-    primary: "#1B8C95",   // 메인 민트보다 어두운 톤
-    accent: "#0E8E75",    // 포인트 민트 (아이콘/제목)
-    text: "#0f172a",      // 진한 네이비톤 텍스트
-    subtext: "#374151",   // 본문 텍스트
-    shadow: "rgba(27, 140, 149, 0.15)",
+    primary: "#1B8C95",
+    accent: "#3AB49A",      // 포인트용 진한 민트
+    mintLight: "rgba(27,140,149,0.08)", // 아주 연한 민트 배경용
+    border: "#E5E7EB",      // 밝은 회색 선
+    text: "#0F172A",        // 메인 텍스트
+    subtext: "#6B7280",     // 서브 텍스트
+    shadow: "rgba(0,0,0,0.05)", // 은은한 그림자
 };
 
 /* ================= 애니메이션 ================= */
@@ -64,11 +66,11 @@ const float = keyframes`
 const pulse = keyframes`
     0%, 100% {
         transform: scale(1);
-        box-shadow: 0 4px 12px rgba(27, 140, 149, 0.08);
+        box-shadow: 0 4px 12px rgba(27,140,149,0.08);
     }
     50% {
         transform: scale(1.015);
-        box-shadow: 0 8px 24px rgba(27, 140, 149, 0.18);
+        box-shadow: 0 8px 22px rgba(27,140,149,0.18);
     }
 `;
 
@@ -76,8 +78,8 @@ const pulse = keyframes`
 const Section = styled.section`
     padding: 24px;
     border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -97,14 +99,14 @@ const SectionTitle = styled.h2`
 `;
 
 const Card = styled.div`
-    border: 1px solid #e5e7eb;
+    border: 1px solid ${palette.border};
     border-radius: 16px;
     padding: 32px;
-    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
-    animation: ${float} 4s ease-in-out infinite, ${pulse} 5s ease-in-out infinite;
+    background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
+    animation: ${float} 5s ease-in-out infinite, ${pulse} 4.5s ease-in-out infinite;
     text-align: center;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 10px ${palette.shadow};
+    box-shadow: 0 4px 12px ${palette.shadow};
 
     &:hover {
         transform: translateY(-3px) scale(1.02);
@@ -123,7 +125,7 @@ const CardHeader = styled.div`
 const IconBox = styled.div`
     width: 52px;
     height: 52px;
-    background: rgba(27, 140, 149, 0.1);
+    background: ${palette.mintLight};
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -133,14 +135,14 @@ const IconBox = styled.div`
 const CardTitle = styled.h3`
     font-size: 20px;
     font-weight: 700;
-    color: ${palette.accent};
+    color: ${palette.primary};
 `;
 
 const Tag = styled.span`
     font-size: 12px;
     font-weight: 600;
     color: ${palette.primary};
-    background: rgba(27, 140, 149, 0.1);
+    background: ${palette.mintLight};
     border-radius: 8px;
     padding: 3px 10px;
     letter-spacing: 0.5px;
@@ -167,7 +169,7 @@ const ComingSoonBox = styled.div`
     gap: 6px;
     padding: 8px 14px;
     border-radius: 8px;
-    background: rgba(27, 140, 149, 0.06);
+    background: ${palette.mintLight};
     color: ${palette.primary};
     font-size: 14px;
     font-weight: 500;

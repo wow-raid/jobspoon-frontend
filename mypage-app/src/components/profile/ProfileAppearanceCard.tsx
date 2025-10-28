@@ -13,7 +13,7 @@ type Props = {
 
 export default function ProfileAppearanceCard({ profile, titles }: Props) {
     const [isOpen, setIsOpen] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false); // ✅ 확대 이미지 모달 상태
+    const [isModalOpen, setIsModalOpen] = useState(false); // 확대 이미지 모달 상태
     const equippedTitle = titles?.find((t) => t.equipped);
 
     if (!profile) return <p>불러오는 중...</p>;
@@ -21,20 +21,20 @@ export default function ProfileAppearanceCard({ profile, titles }: Props) {
     return (
         <>
             <Card>
-                {/* ✅ 헤더 */}
+                {/* 헤더 */}
                 <Header onClick={() => setIsOpen(!isOpen)}>
                     <HeaderTitle>내 프로필</HeaderTitle>
                     <ArrowIcon>{isOpen ? <FaChevronUp /> : <FaChevronDown />}</ArrowIcon>
                 </Header>
 
-                {/* ✅ 본문 */}
+                {/* 본문 */}
                 {isOpen && (
                     <Content>
                         <ImageWrapper>
                             <ProfileImage
                                 src={profile.photoUrl || defaultProfile}
                                 alt="profile"
-                                onClick={() => setIsModalOpen(true)} // ✅ 클릭 시 모달 오픈
+                                onClick={() => setIsModalOpen(true)} // 클릭 시 모달 오픈
                                 onError={(e) => {
                                     const img = e.target as HTMLImageElement;
                                     img.src = defaultProfile;
@@ -61,7 +61,7 @@ export default function ProfileAppearanceCard({ profile, titles }: Props) {
                 )}
             </Card>
 
-            {/* ✅ 모달 (이미지 확대 보기) */}
+            {/* 모달 (이미지 확대 보기) */}
             {isModalOpen && (
                 <ModalOverlay onClick={() => setIsModalOpen(false)}>
                     <ModalContent onClick={(e) => e.stopPropagation()}>
