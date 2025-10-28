@@ -25,6 +25,7 @@ import { goToAccountLogin } from "./utils/auth";
 import OXQuizPage from "./pages/OXQuizPage.tsx";
 import {GlobalFonts} from "./styles/GlobalFonts.tsx";
 import InitialsQuizPage from "./pages/InitialsQuizPage.tsx";
+import QuizChoicePage from "./pages/QuizChoicePage.tsx";
 import QuizResultRoute from "./routes/QuizResultRoute.tsx";
 
 // notes 전용 로그인 가드
@@ -369,6 +370,7 @@ export default function App() {
                             <Route path="quiz">
                                 <Route index element={<QuizHomePage />} />
                                 <Route path="play" element={<QuizPlayPage />} />
+                                <Route path="today" element={<QuizChoicePage />} />
                                 <Route path="ox" element={<OXQuizPage />} />
                                 <Route path="initials" element={<InitialsQuizPage />} />
                                 <Route path="result" element={<QuizResultRoute />} />
