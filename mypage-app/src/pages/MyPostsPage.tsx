@@ -15,6 +15,7 @@ export default function MyPostsPage() {
                         <FaFolderOpen size={26} color="#2563eb" />
                     </IconBox>
                     <CardTitle>JobSpoon 활동 기록</CardTitle>
+                    <Tag>COMING SOON</Tag>
                 </CardHeader>
 
                 <CardBody>
@@ -42,25 +43,30 @@ export default function MyPostsPage() {
 
 /* ================= styled-components ================= */
 const fadeUp = keyframes`
-  from {
-    opacity: 0;
-    margin-top: 16px;
-  }
-  to {
-    opacity: 1;
-    margin-top: 0;
-  }
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+`;
+
+const float = keyframes`
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
 `;
 
 const pulse = keyframes`
-  0%, 100% {
-    opacity: 1;
-    box-shadow: 0 0 0 rgba(0,0,0,0);
-  }
-  50% {
-    opacity: 0.95;
-    box-shadow: 0 0 6px rgba(37,99,235,0.08);
-  }
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
+    }
+    50% {
+        transform: scale(1.015);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
+    }
 `;
 
 const Section = styled.section`
@@ -91,14 +97,13 @@ const Card = styled.div`
     border-radius: 16px;
     padding: 32px;
     background: linear-gradient(180deg, #f9fafb 0%, #ffffff 100%);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
-    animation: ${pulse} 6s ease-in-out infinite;
+    animation: ${float} 4s ease-in-out infinite, ${pulse} 5s ease-in-out infinite;
     text-align: center;
     transition: all 0.3s ease;
 
     &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.08);
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
     }
 `;
 
@@ -124,6 +129,16 @@ const CardTitle = styled.h3`
     font-size: 20px;
     font-weight: 700;
     color: #1e3a8a;
+`;
+
+const Tag = styled.span`
+    font-size: 12px;
+    font-weight: 600;
+    color: #2563eb;
+    background: rgba(37, 99, 235, 0.1);
+    border-radius: 8px;
+    padding: 3px 10px;
+    letter-spacing: 0.5px;
 `;
 
 const CardBody = styled.div`
