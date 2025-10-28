@@ -16,13 +16,13 @@ const UI = {
     shadow: "0 20px 60px rgba(62,99,224,.08)",
 };
 
-const Shell = styled.div`
+const Shell = styled.div<{ $noSide?: boolean }>`
     display: grid;
-    grid-template-columns: 220px 1fr;
+    grid-template-columns: ${p => (p.$noSide ? "1fr" : "220px 1fr")};
     gap: 24px;
     padding: 0 0 40px;
-    margin-left: -170px;
-    margin-right: 100px;
+    margin-left: ${p => (p.$noSide ? "0" : "-170px")};
+    margin-right: ${p => (p.$noSide ? "0" : "100px")};
 `;
 
 const Side = styled.nav`
@@ -89,6 +89,9 @@ export default function SpoonWordLayout() {
 
     // 히어로 숨김 :'퀴즈'
     const hideGlobalHero = under("/spoon-word/quiz");
+
+    // OX·초성·오늘의 등 “퀴즈 모드” 화면에서는 사이드 숨김
+    const isQuizModePage = /^\/spoon-word\/quiz\/(ox|today|initials)(\/|$)/.test(loc.pathname);
 
     // 라우트 분기
     const isNotesRoute = under("/spoon-word/notes");
@@ -186,21 +189,22 @@ export default function SpoonWordLayout() {
             {/* 히어로 아래 레이아웃 */}
             <Shell
                 data-testid="spoonword-shell"
+                $noSide={isQuizModePage}
                 style={{
-                    // 헤더(네비바) 높이가 110px이라고 가정 + 추가 간격 16px
                     ['--side-top' as any]: hideGlobalHero ? 'calc(110px + 16px)' : '20px',
-                    // 초기 배치 여백도 살짝 더
                     ['--side-mt'  as any]: hideGlobalHero ? '12px' : '0px',
                 }}
             >
-                <Side aria-label="스푼워드 네비게이션">
-                    <TitleLink to="/spoon-word" end aria-label="스푼워드 홈으로">스푼워드</TitleLink>
-                    <List>
-                        <li><ItemLink to="/spoon-word/notes" end>스푼노트</ItemLink></li>
-                        <li><ItemLink to="/spoon-word/quiz">스푼퀴즈</ItemLink></li>
-                        <li><ItemLink to="/spoon-word/book">스푼북</ItemLink></li>
-                    </List>
-                </Side>
+                {!isQuizModePage && (
+                    <Side aria-label="스푼워드 네비게이션">
+                        <TitleLink to="/spoon-word" end aria-label="스푼워드 홈으로">스푼워드</TitleLink>
+                        <List>
+                            <li><ItemLink to="/spoon-word/notes" end>스푼노트</ItemLink></li>
+                            <li><ItemLink to="/spoon-word/quiz">스푼퀴즈</ItemLink></li>
+                            <li><ItemLink to="/spoon-word/book">스푼북</ItemLink></li>
+                        </List>
+                    </Side>
+                )}
 
                 <Main>
                     {showSearchBars && (

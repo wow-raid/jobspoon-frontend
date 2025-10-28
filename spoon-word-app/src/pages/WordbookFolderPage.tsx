@@ -1520,25 +1520,37 @@ export default function WordbookFolderPage() {
 
     // ===== 정렬 상태 =====
     type SortKey = "createdAt_desc" | "title_asc" | "title_desc" | "status_asc" | "status_desc";
-    const [, setSortMenuOpen] = React.useState(false);
-    const [sortKey, setSortKey] = React.useState<SortKey>("createdAt_desc");
-
-    // 인라인 정렬 팝업 상태/레퍼런스
-    const [sortInlineOpen, setSortInlineOpen] = React.useState(false);
-    const inlineSortRef = React.useRef<HTMLSpanElement | null>(null);
 
     const sortToServer = (k: SortKey): string => {
         switch (k) {
-            case "title_asc":  return "title,ASC";
-            case "title_desc": return "title,DESC";
-            // case "status_asc": return "memorization,ASC";   // 서버에 이런 필드가 없다면 createdAt로 대체
-            // case "status_desc":return "memorization,DESC";  // ↑ 없다면 제거하거나 createdAt로 매핑
+            case "title_asc":  return "title,asc";
+            case "title_desc": return "title,desc";
             case "status_asc":
             case "status_desc":
             case "createdAt_desc":
             default:           return "createdAt,desc";
         }
     };
+    const [, setSortMenuOpen] = React.useState(false);
+
+    const parseSortKeyFromURL = (raw: string | null): SortKey => {
+        const value = (raw || "").trim().toLowerCase();
+
+        if (value.startsWith("title,asc")) return "title_asc";
+        if (value.startsWith("title,desc")) return "title_desc";
+        if (value.startsWith("status,asc")) return "status_asc";
+        if (value.startsWith("status,desc")) return "status_desc";
+
+        return "createdAt_desc";
+    };
+
+    const [sortKey, setSortKey] = React.useState<SortKey>(() => {
+        const params = new URLSearchParams(location.search);
+        return parseSortKeyFromURL(params.get("sort"));
+    });
+
+    const [sortInlineOpen, setSortInlineOpen] = React.useState(false);
+    const inlineSortRef = React.useRef<HTMLSpanElement | null>(null);
 
     // 현재 정렬 라벨
     const sortLabel = React.useMemo(() => {
@@ -1626,7 +1638,7 @@ export default function WordbookFolderPage() {
             setError(null);
             try {
                 const res = await http.get(`/me/folders/${folderId}/terms`, {
-                    params: { page: p, perPage: pageSize, sort: sortToServer(sortKeyNow) },
+                    params: { page: p, size: pageSize, sort: sortToServer(sortKeyNow) },
                     headers: { ...authHeader() },
                     withCredentials: true,
                 });
@@ -1643,13 +1655,18 @@ export default function WordbookFolderPage() {
                     (typeof d.total === "number" && d.total) ||
                     (typeof d.totalElements === "number" && d.totalElements) ||
                     0;
-                setTotal(nextTotal);
+                const headerTotalRaw = (res.headers?.["x-total-count"] ??
+                    (res.headers ? (res.headers as any)["X-Total-Count"] : undefined));
+                const headerTotal = Number(headerTotalRaw);
+                setTotal(Number.isFinite(headerTotal) ? headerTotal : nextTotal);
 
                 if (typeof d.folderName === "string" && d.folderName.trim())
                     setFolderName(d.folderName);
             } catch (err: any) {
-                const s = err?.response?.status;
-                console.error("server error body:", err?.response?.data);
+                const s = err?.response?.status ?? 0;
+                const msg = err?.message ?? "";
+                const data = err?.response?.data;
+                console.error("[fetchPage] failed:", { status: s, msg, body: data ?? "(no body)" });
                 if (s === 401) { goToAccountLogin(location.pathname + location.search); return; }
                 else if (s === 404 || s === 403) setError("폴더를 찾을 수 없습니다.");
                 else setError("데이터를 불러오는 중 오류가 발생했습니다.");
@@ -1683,11 +1700,13 @@ export default function WordbookFolderPage() {
         // URL → 상태 반영
         const p = Number(searchParams.get("page") ?? 0) || 0;
         const s = Number(searchParams.get("size") ?? 20) || 20;
+        const sk = parseSortKeyFromURL(searchParams.get("sort"));
         setPage(p);
         setSize(s);
+        setSortKey(sk);
 
         // 데이터 로드
-        fetchPage(p, s, sortKey);
+        fetchPage(p, s, sk);
         // count도 갱신
         refreshCount();
         // POP으로 돌아온 경우 스크롤 복원은 필요하면 sessionStorage로 별도 구현
@@ -2085,35 +2104,36 @@ export default function WordbookFolderPage() {
         setSortMenuOpen(false);
     };
 
-    // ===== 표시 목록(정렬 적용) — 훅은 항상 호출되도록 return보다 위! =====
+    // ===== 표시 목록(정렬 적용) =====
     const displayItems = React.useMemo(() => {
         const arr = [...items];
-        const byTitle = (a: TermItem, b: TermItem) =>
-            a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: "base" });
-        const statusRank = (id: string) => ((learn[id] ?? "unmemorized") === "memorized" ? 1 : 0);
+
+        const compareTitle = (a: TermItem, b: TermItem) =>
+            a.title.localeCompare(b.title, "ko", { numeric: true, sensitivity: "base" });
+
+        const safeDate = (it: TermItem) => {
+            const t = it.createdAt ? Date.parse(it.createdAt) : NaN;
+            return Number.isFinite(t) ? t : -Infinity;
+        };
+
+        if (sortKey === "status_asc" || sortKey === "status_desc") {
+            const rank = (id: string) => (learn[id] ?? "unmemorized") === "memorized" ? 1 : 0;
+            return arr.sort((a, b) => {
+                const diff = (sortKey === "status_asc" ? 1 : -1) * (rank(a.uwtId) - rank(b.uwtId));
+                return diff || compareTitle(a, b);
+            });
+        }
 
         switch (sortKey) {
             case "title_asc":
-                arr.sort(byTitle);
-                break;
+                return arr.sort(compareTitle);
             case "title_desc":
-                arr.sort((a, b) => -byTitle(a, b));
-                break;
-            case "status_asc":
-                arr.sort((a, b) => statusRank(a.uwtId) - statusRank(b.uwtId));
-                break;
-            case "status_desc":
-                arr.sort((a, b) => statusRank(b.uwtId) - statusRank(a.uwtId));
-                break;
+                return arr.sort((a, b) => compareTitle(b, a));
             case "createdAt_desc":
             default:
-                arr.sort((a, b) => {
-                    const ta = a.createdAt ? Date.parse(a.createdAt) : 0;
-                    const tb = b.createdAt ? Date.parse(b.createdAt) : 0;
-                    return tb - ta;
-                });
+                // 최신 등록순: 날짜 내림차순, 동률이면 제목순
+                return arr.sort((a, b) => (safeDate(b) - safeDate(a)) || compareTitle(a, b));
         }
-        return arr;
     }, [items, learn, sortKey]);
 
     const applySort = (next: SortKey) => {
