@@ -1,6 +1,6 @@
 {/* 칭호 안내 모달 */}
 
-import React from "react";
+import React, {useEffect} from "react";
 import styled from "styled-components";
 
 type Props = {
@@ -9,6 +9,15 @@ type Props = {
 };
 
 export default function TitleGuideModal({ isOpen, onClose }: Props) {
+    // ✅ ESC 키로 닫기
+    useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+        };
+        window.addEventListener("keydown", handleEsc);
+        return () => window.removeEventListener("keydown", handleEsc);
+    }, [onClose]);
+
     return (
         <Overlay isOpen={isOpen}>
             <ModalBox isOpen={isOpen}>

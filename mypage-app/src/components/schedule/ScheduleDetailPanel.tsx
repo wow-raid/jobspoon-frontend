@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { deleteUserSchedule, updateUserSchedule } from "../../api/userScheduleApi.ts";
 import AddScheduleModal from "../modals/AddScheduleModal.tsx"
+import { notifySuccess, notifyError, notifyInfo } from "../../utils/toast";
 
 type Props = {
     schedule: any | null;
@@ -16,18 +17,27 @@ export default function ScheduleDetailPanel({ schedule, onClose, onRefresh }: Pr
     const resizing = useRef(false);
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [pendingDelete, setPendingDelete] = useState(false);
 
     /* ========== 삭제 버튼 ========== */
     const handleDelete = async () => {
-        if (!window.confirm("정말 삭제하시겠습니까?")) return;
+        if (!pendingDelete) {
+            notifyInfo("한 번 더 클릭하면 일정이 삭제됩니다 🗑️");
+            setPendingDelete(true);
+            setTimeout(() => setPendingDelete(false), 4000); // 4초 내 두 번째 클릭만 유효
+            return;
+        }
+
         try {
             await deleteUserSchedule(schedule.id);
-            alert("일정이 삭제되었습니다.");
+            notifySuccess("일정이 삭제되었습니다 🗓️");
             onClose();
             await onRefresh();
         } catch (error) {
             console.error(error);
-            alert("삭제 중 오류가 발생했습니다.");
+            notifyError("삭제 중 오류가 발생했습니다 ❌");
+        } finally {
+            setPendingDelete(false);
         }
     };
 
@@ -38,7 +48,10 @@ export default function ScheduleDetailPanel({ schedule, onClose, onRefresh }: Pr
 
     /* ========== 이동 버튼 ========== */
     const handleMoveToStudyRoom = () => {
-        if (!schedule?.studyRoomId) return;
+        if (!schedule?.studyRoomId) {
+            notifyError("스터디룸 ID가 존재하지 않습니다 ❗");
+            return;
+        }
         navigate(`/studies/joined-study/${schedule.studyRoomId}/schedule`);
     };
 
@@ -160,15 +173,16 @@ export default function ScheduleDetailPanel({ schedule, onClose, onRefresh }: Pr
                                     setIsEditModalOpen(false);
                                     onClose();
                                     await onRefresh();
+                                    notifySuccess("일정이 수정되었습니다 ✏️");
                                 } catch (e) {
                                     console.error(e);
-                                    alert("수정 중 오류가 발생했습니다.");
+                                    notifyError("수정 중 오류가 발생했습니다 ❌");
                                 }
                             }}
                             initialData={{
                                 title: schedule.title,
                                 description: schedule.description,
-                                startTime: schedule.startTime || schedule.start, // react-big-calendar에서 오는 필드명 대응
+                                startTime: schedule.startTime || schedule.start,
                                 endTime: schedule.endTime || schedule.end,
                                 location: schedule.location,
                                 allDay: schedule.allDay,

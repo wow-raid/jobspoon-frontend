@@ -42,13 +42,25 @@ export default function MyPostsPage() {
 
 /* ================= styled-components ================= */
 const fadeUp = keyframes`
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    margin-top: 16px;
+  }
+  to {
+    opacity: 1;
+    margin-top: 0;
+  }
 `;
 
 const pulse = keyframes`
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.7; transform: scale(0.98); }
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 rgba(0,0,0,0);
+  }
+  50% {
+    opacity: 0.95;
+    box-shadow: 0 0 6px rgba(37,99,235,0.08);
+  }
 `;
 
 const Section = styled.section`
@@ -69,7 +81,7 @@ const SectionHeader = styled.div`
 `;
 
 const SectionTitle = styled.h2`
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
     color: rgb(17, 24, 39);
 `;
@@ -140,5 +152,5 @@ const ComingSoonBox = styled.div`
     font-size: 14px;
     font-weight: 500;
     margin-top: 20px;
-    animation: ${fadeUp} 1s ease both;
+    animation: ${fadeUp} 0.6s ease both;
 `;

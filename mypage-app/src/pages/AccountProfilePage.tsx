@@ -1,8 +1,6 @@
-{/* 회원정보 수정 메뉴 탭 */}
-
 import React, { useState, useRef, useEffect } from "react";
-import styled from "styled-components";
-import { FaEnvelope, FaLock, FaChevronUp, FaChevronDown } from "react-icons/fa";
+import styled, { keyframes } from "styled-components";
+import { FaEnvelope, FaLock } from "react-icons/fa";
 import { useOutletContext } from "react-router-dom";
 import defaultProfile from "../assets/default_profile.png";
 import ServiceModal from "../components/modals/ServiceModal.tsx";
@@ -10,20 +8,10 @@ import TitleGuideModal from "../components/modals/TitleGuideModal.tsx";
 import TrustScoreCriteriaModal from "../components/modals/TrustScoreCriteriaModal.tsx";
 import { ProfileAppearanceResponse, uploadProfilePhoto } from "../api/profileAppearanceApi.ts";
 import { updateNickname } from "../api/accountProfileApi.ts";
-// import {
-//     fetchUserLevelHistory,
-//     UserLevelResponse,
-//     UserLevelHistoryResponse
-// } from "../api/userLevelApi"; // 레벨 관련
-import {
-    equipTitle,
-    unequipTitle,
-    UserTitleResponse
-} from "../api/userTitleApi"; // 칭호 관련
-import {
-    fetchTrustScore,
-    TrustScoreResponse
-} from "../api/userTrustScoreApi"; // 신뢰점수 관련
+import TrustScoreHistoryGraph from "../components/history/TrustScoreHistoryGraph.tsx";
+import { equipTitle, unequipTitle, UserTitleResponse } from "../api/userTitleApi.ts";
+import { fetchTrustScore, TrustScoreResponse } from "../api/userTrustScoreApi.ts";
+import { fetchTrustScoreHistory, TrustScoreHistoryResponse } from "../api/userTrustScoreApi.ts";
 import {
     calcAttendanceScore,
     calcInterviewScore,
@@ -31,191 +19,169 @@ import {
     calcPostScore,
     calcStudyroomScore,
     calcCommentScore,
-    calcTotalScore
 } from "../utils/trustScoreUtils";
+import { notifySuccess, notifyError, notifyInfo } from "../utils/toast";
+import { motion } from "framer-motion";
+import confetti from "canvas-confetti";
 
+/* ================================
+   Types
+================================ */
 type OutletContextType = {
     profile: ProfileAppearanceResponse | null;
-    // userLevel: UserLevelResponse | null;
     titles: UserTitleResponse[];
     refreshAll: () => Promise<void>;
 };
 
 type Status = "loading" | "empty" | "loaded";
 
+/* ================================
+   Component
+================================ */
 export default function AccountProfilePage() {
-    // const { profile, userLevel, titles, refreshAll } = useOutletContext<OutletContextType>();
     const { profile, titles, refreshAll } = useOutletContext<OutletContextType>();
 
-    // 상태 관리
     const [trustScore, setTrustScore] = useState<TrustScoreResponse | null>(null);
-    // const [levelHistory, setLevelHistory] = useState<UserLevelHistoryResponse[]>([]);
     const [trustStatus, setTrustStatus] = useState<Status>("loading");
-    // const [levelStatus, setLevelStatus] = useState<Status>("loading");
-
-    // const [showTrustCriteria, setShowTrustCriteria] = useState(false);
     const [isTrustCriteriaOpen, setIsTrustCriteriaOpen] = useState(false);
     const [isTitleGuideOpen, setIsTitleGuideOpen] = useState(false);
-    // const [isLevelOpen, setIsLevelOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+    const [animatedId, setAnimatedId] = useState<number | null>(null);
 
-    // 닉네임 수정 상태
     const [isEditingNickname, setIsEditingNickname] = useState(false);
     const [tempNickname, setTempNickname] = useState("");
-
-    // 사진 업로드 관련
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const [history, setHistory] = useState<TrustScoreHistoryResponse[]>([]);
+    const [scoreDiff, setScoreDiff] = useState<number | null>(null);
 
-    // 닉네임 관련 에러
-    const [nicknameError, setNicknameError] = useState<string | null>(null);
-    const [nicknameSuccess, setNicknameSuccess] = useState<string | null>(null);
-
-    // 사진 업로드 관련 에러
-    const [photoError, setPhotoError] = useState<string | null>(null);
-    const [photoSuccess, setPhotoSuccess] = useState<string | null>(null);
-    const [fadeOut, setFadeOut] = useState(false);
-
-    /** 메시지 자동 사라짐 처리 */
+    /* ---------------- 신뢰점수 불러오기 ---------------- */
     useEffect(() => {
-        if (nicknameError || nicknameSuccess) {
-            setFadeOut(false);
-            const fadeTimer = setTimeout(() => setFadeOut(true), 2500);
-            const removeTimer = setTimeout(() => {
-                setNicknameError(null);
-                setNicknameSuccess(null);
-                setFadeOut(false);
-            }, 4000);
-
-            return () => {
-                clearTimeout(fadeTimer);
-                clearTimeout(removeTimer);
-            };
-        }
-    }, [nicknameError, nicknameSuccess]);
-
-    // 초기 데이터 로드
-    useEffect(() => {
-        const loadTrustAndHistory = async () => {
+        const loadTrustData = async () => {
             try {
-                // const [trust, history] = await Promise.all([
-                //     fetchTrustScore(),
-                //     fetchUserLevelHistory(),
-                // ]);
-                // setTrustScore(trust || null);
-                // setLevelHistory(history || []);
-                // setTrustStatus(trust ? "loaded" : "empty");
-                // setLevelStatus(history ? "loaded" : "empty");
-
-                const trust = await fetchTrustScore();
+                const [trust, hist] = await Promise.all([
+                    fetchTrustScore(),
+                    fetchTrustScoreHistory(),
+                ]);
 
                 setTrustScore(trust || null);
+                setHistory(hist || []);
                 setTrustStatus(trust ? "loaded" : "empty");
 
+                if (hist.length > 0 && trust) {
+                    // recordedAt 기준 오름차순 정렬
+                    const sorted = [...hist].sort(
+                        (a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime()
+                    );
+                    // 항상 마지막 기록은 지난달 점수
+                    const lastMonthScore = sorted.slice(-1)[0]?.score ?? 0;                    // 이번 달 실시간 점수와 비교
+                    const diff = trust.totalScore - lastMonthScore;
+                    setScoreDiff(diff);
+                }
             } catch (err) {
                 console.error(err);
                 setTrustStatus("empty");
-                // setLevelStatus("empty");
             }
         };
-        loadTrustAndHistory();
+        loadTrustData();
     }, []);
 
-    /** 닉네임 수정 시작 */
+    /* ---------------- 닉네임 수정 ---------------- */
     const handleStartEdit = () => {
         if (profile) {
-            setTempNickname(profile.nickname); //
+            setTempNickname(profile.nickname);
             setIsEditingNickname(true);
         }
     };
 
-    /** 닉네임 저장 */
     const handleSaveNickname = async () => {
-        const isLoggedIn = localStorage.getItem("isLoggedIn"); // ✅ 로그인 여부만 확인
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
         if (!isLoggedIn) {
-            setNicknameError("로그인이 필요합니다.");
+            notifyInfo("로그인이 필요합니다 🔒");
             return;
         }
 
         try {
-            await updateNickname(tempNickname); // ✅ token 인자 제거
+            await updateNickname(tempNickname);
             await refreshAll();
             setIsEditingNickname(false);
-            setNicknameError(null);
-            setNicknameSuccess("닉네임이 성공적으로 변경되었습니다.");
+            notifySuccess("닉네임이 성공적으로 변경되었습니다 ✨");
         } catch (err: any) {
-            setNicknameError(err.message || "닉네임 수정 실패");
-            setNicknameSuccess(null);
+            notifyError(err.message || "닉네임 수정 실패 ❌");
         }
     };
 
-    /** 닉네임 수정 취소 */
     const handleCancelEdit = () => {
         setTempNickname("");
         setIsEditingNickname(false);
-        setNicknameError(null);
     };
 
-    /** 사진 변경 버튼 클릭 */
-    const handleFileClick = () => {
-        fileInputRef.current?.click();
-    };
+    /* ---------------- 사진 업로드 ---------------- */
+    const handleFileClick = () => fileInputRef.current?.click();
 
-    /** 파일 선택 후 업로드 */
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const isLoggedIn = localStorage.getItem("isLoggedIn"); // ✅ 로그인 여부만 확인
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
         if (!isLoggedIn) {
-            setPhotoError("로그인이 필요합니다.");
+            notifyInfo("로그인이 필요합니다 🔒");
             return;
         }
 
         try {
             setIsUploading(true);
-            await uploadProfilePhoto(file); // ✅ token 인자 제거
+            await uploadProfilePhoto(file);
             await refreshAll();
-            setPhotoError(null);
-            setPhotoSuccess("사진 업로드 성공");
+            notifySuccess("프로필 사진이 변경되었습니다 📸");
         } catch (err: any) {
-            setPhotoError(err.message || "사진 업로드 실패");
-            setPhotoSuccess(null);
+            notifyError(err.message || "사진 업로드 실패 ❌");
         } finally {
             setIsUploading(false);
         }
     };
 
-    /** 칭호 장착/해제 */
+    /* ---------------- 칭호 장착/해제 ---------------- */
     const handleEquip = async (titleId: number) => {
         try {
             const target = titles.find((t) => t.id === titleId);
+
             if (target?.equipped) {
                 await unequipTitle();
                 await refreshAll();
-                alert("칭호가 해제되었습니다.");
+                notifyInfo("칭호가 해제되었습니다 💤");
             } else {
                 const updated = await equipTitle(titleId);
                 await refreshAll();
-                alert(`${updated.displayName} 칭호가 장착되었습니다.`);
+                notifySuccess(`「${updated.displayName}」 칭호가 장착되었습니다 🎉`);
+
+                // 🎆 Confetti 효과
+                confetti({
+                    particleCount: 80,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ["#007AFF", "#34C759", "#FF9500", "#FF2D55", "#5E5CE6"]
+                });
+
+                setAnimatedId(titleId);
+                setTimeout(() => setAnimatedId(null), 800);
             }
         } catch (error: any) {
-            alert(error.message || "칭호 장착/해제 실패");
+            notifyError(error.message || "칭호 장착/해제 실패 ❌");
         }
     };
 
-    if (!profile) {
-        return <p>불러오는 중...</p>;
-    }
+    if (!profile) return <p>불러오는 중...</p>;
 
     return (
         <Wrapper>
-            {/* 기본정보 */}
+            {/* ================= 회원정보 ================= */}
             <Section>
                 <SectionTitle>회원정보</SectionTitle>
                 <InfoCard>
-                    <TopRow>
-                        <PhotoSection>
+                    <ProfileRow>
+                        <ProfileLeft>
                             <PhotoWrapper>
                                 {isUploading ? (
                                     <Spinner />
@@ -223,64 +189,37 @@ export default function AccountProfilePage() {
                                     <Photo
                                         src={profile.photoUrl || defaultProfile}
                                         alt="프로필"
-                                        onError={(e) => {
-                                            (e.target as HTMLImageElement).src = defaultProfile;
-                                        }}
+                                        onError={(e) => ((e.target as HTMLImageElement).src = defaultProfile)}
+                                        onClick={() => setIsImageModalOpen(true)}
                                     />
                                 )}
                             </PhotoWrapper>
 
-                            {photoError && (
-                                <MessageBase fadeOut={fadeOut} type="error">
-                                    {photoError}
-                                </MessageBase>
-                            )}
-                            {photoSuccess && (
-                                <MessageBase fadeOut={fadeOut} type="success">
-                                    {photoSuccess}
-                                </MessageBase>
-                            )}
-                        </PhotoSection>
-
-                        <InfoText>
-                            <NicknameRow>
+                            <NicknameArea>
                                 {isEditingNickname ? (
                                     <NicknameInput
-                                        type="text"
                                         value={tempNickname}
                                         onChange={(e) => setTempNickname(e.target.value)}
-                                        placeholder="닉네임을 입력해주세요"
+                                        autoFocus
                                     />
                                 ) : (
-                                    <Nickname>{profile.nickname}</Nickname>
+                                    <h3>{profile.nickname}</h3>
                                 )}
-                            </NicknameRow>
-                            {nicknameError && (
-                                <NicknameMessage fadeOut={fadeOut} type="error">
-                                    {nicknameError}
-                                </NicknameMessage>
-                            )}
-                            {nicknameSuccess && (
-                                <NicknameMessage fadeOut={fadeOut} type="success">
-                                    {nicknameSuccess}
-                                </NicknameMessage>
-                            )}
-
-                            {/*<Email>{profile.email}</Email>*/}
-                        </InfoText>
+                            </NicknameArea>
+                        </ProfileLeft>
 
                         <ButtonGroup>
                             {isEditingNickname ? (
-                                <Row>
-                                    <SmallButton onClick={handleSaveNickname}>확인</SmallButton>
-                                    <SmallButton onClick={handleCancelEdit}>취소</SmallButton>
-                                </Row>
+                                <div style={{ display: "flex", gap: "6px" }}>
+                                    <SoftButton onClick={handleSaveNickname}>확인</SoftButton>
+                                    <SoftButton onClick={handleCancelEdit}>취소</SoftButton>
+                                </div>
                             ) : (
-                                <SmallButton onClick={handleStartEdit}>별명 수정</SmallButton>
+                                <SoftButton onClick={handleStartEdit}>별명 수정</SoftButton>
                             )}
-                            <SmallButton onClick={handleFileClick} disabled={isUploading}>
+                            <SoftButton onClick={handleFileClick} disabled={isUploading}>
                                 {isUploading ? "업로드 중..." : "사진 변경"}
-                            </SmallButton>
+                            </SoftButton>
                             <input
                                 type="file"
                                 ref={fileInputRef}
@@ -289,721 +228,692 @@ export default function AccountProfilePage() {
                                 onChange={handleFileChange}
                             />
                         </ButtonGroup>
-                    </TopRow>
+                    </ProfileRow>
 
-                    <Divider />
-
-                    <BottomRow>
+                    <InfoList>
                         <InfoItem>
-                            <FaEnvelope style={{ color: "#6b7280", marginRight: "8px" }} />
+                            <FaEnvelope />
                             <span>{profile.email}</span>
                         </InfoItem>
                         <InfoItem>
-                            <FaLock style={{ color: "#6b7280", marginRight: "8px" }} />
-                            <span>가입일 : </span>
+                            <FaLock />
+                            <span>가입일: -</span>
                         </InfoItem>
-                    </BottomRow>
+                    </InfoList>
                 </InfoCard>
             </Section>
 
-            {/* 활동 이력 */}
+            {/* ================= 활동 이력 ================= */}
             <Section>
                 <SectionTitle>활동 이력</SectionTitle>
 
-                {/* 신뢰점수 */}
-                <Card>
-                    <HistoryHeader>
-                        <HeaderLeft>
-                            <Icon>🛡️</Icon>
-                            <h3>활동 점수</h3>
-                        </HeaderLeft>
-                        <ToggleButton onClick={() => setIsTrustCriteriaOpen(true)}>
-                            산정 기준
-                        </ToggleButton>
-                    </HistoryHeader>
+                {/* 활동 점수 요약 */}
+                <BaseCard>
+                    <CardHeader>
+                        <h3>활동 점수 요약</h3>
+                    </CardHeader>
+
                     {trustStatus === "loading" ? (
                         <Empty>불러오는 중...</Empty>
                     ) : trustStatus === "empty" ? (
                         <Empty>신뢰점수가 없습니다.</Empty>
                     ) : (
                         <>
-                            <TrustContent>
-                                <TrustGrid>
-                                    {/* 출석률 */}
-                                    <TrustItem>
-                                        <span>출석률</span>
-                                        <ProgressBar
-                                            percent={(calcAttendanceScore(trustScore!.attendanceRate) / 25) * 100}
-                                        />
-                                        <Count>
-                                            {calcAttendanceScore(trustScore!.attendanceRate).toFixed(1)} / 25점
-                                        </Count>
-                                    </TrustItem>
+                            <TrustGrid>
+                                <TrustItemCard>
+                                    <TrustLabel>출석률</TrustLabel>
+                                    <ProgressBar percent={(calcAttendanceScore(trustScore!.attendanceRate) / 25) * 100} />
+                                    <TrustCount>
+                                        {calcAttendanceScore(trustScore!.attendanceRate).toFixed(1)} / 25점
+                                    </TrustCount>
+                                </TrustItemCard>
+                                <TrustItemCard>
+                                    <TrustLabel>모의면접</TrustLabel>
+                                    <ProgressBar percent={(calcInterviewScore(trustScore!.monthlyInterviews) / 20) * 100} />
+                                    <TrustCount>{calcInterviewScore(trustScore!.monthlyInterviews)} / 20점</TrustCount>
+                                </TrustItemCard>
+                                <TrustItemCard>
+                                    <TrustLabel>문제풀이</TrustLabel>
+                                    <ProgressBar percent={(calcProblemScore(trustScore!.monthlyProblems) / 20) * 100} />
+                                    <TrustCount>{calcProblemScore(trustScore!.monthlyProblems)} / 20점</TrustCount>
+                                </TrustItemCard>
+                                <TrustItemCard>
+                                    <TrustLabel>글 작성</TrustLabel>
+                                    <ProgressBar percent={(calcPostScore(trustScore!.monthlyPosts) / 15) * 100} />
+                                    <TrustCount>{calcPostScore(trustScore!.monthlyPosts)} / 15점</TrustCount>
+                                </TrustItemCard>
+                                <TrustItemCard>
+                                    <TrustLabel>스터디룸</TrustLabel>
+                                    <ProgressBar percent={(calcStudyroomScore(trustScore!.monthlyStudyrooms) / 10) * 100} />
+                                    <TrustCount>{calcStudyroomScore(trustScore!.monthlyStudyrooms)} / 10점</TrustCount>
+                                </TrustItemCard>
+                                <TrustItemCard>
+                                    <TrustLabel>댓글</TrustLabel>
+                                    <ProgressBar percent={(calcCommentScore(trustScore!.monthlyComments) / 15) * 100} />
+                                    <TrustCount>{calcCommentScore(trustScore!.monthlyComments)} / 15점</TrustCount>
+                                </TrustItemCard>
+                            </TrustGrid>
+                            <TrustTotal>
+                                총점 <strong>{trustScore?.totalScore?.toFixed(1) ?? "0.0"}</strong> / 100점
+                            </TrustTotal>
 
-                                    {/* 모의면접 */}
-                                    <TrustItem>
-                                        <span>모의면접</span>
-                                        <ProgressBar
-                                            percent={(calcInterviewScore(trustScore!.monthlyInterviews) / 20) * 100}
-                                        />
-                                        <Count>
-                                            {calcInterviewScore(trustScore!.monthlyInterviews)} / 20점
-                                        </Count>
-                                    </TrustItem>
-
-                                    {/* 문제풀이 */}
-                                    <TrustItem>
-                                        <span>문제풀이</span>
-                                        <ProgressBar
-                                            percent={(calcProblemScore(trustScore!.monthlyProblems) / 20) * 100}
-                                        />
-                                        <Count>
-                                            {calcProblemScore(trustScore!.monthlyProblems)} / 20점
-                                        </Count>
-                                    </TrustItem>
-
-                                    {/* 글 작성 */}
-                                    <TrustItem>
-                                        <span>글 작성</span>
-                                        <ProgressBar
-                                            percent={(calcPostScore(trustScore!.monthlyPosts) / 15) * 100}
-                                        />
-                                        <Count>
-                                            {calcPostScore(trustScore!.monthlyPosts)} / 15점
-                                        </Count>
-                                    </TrustItem>
-
-                                    {/* 스터디룸 */}
-                                    <TrustItem>
-                                        <span>스터디룸</span>
-                                        <ProgressBar
-                                            percent={(calcStudyroomScore(trustScore!.monthlyStudyrooms) / 10) * 100}
-                                        />
-                                        <Count>
-                                            {calcStudyroomScore(trustScore!.monthlyStudyrooms)} / 10점
-                                        </Count>
-                                    </TrustItem>
-
-                                    {/* 댓글 */}
-                                    <TrustItem>
-                                        <span>댓글</span>
-                                        <ProgressBar
-                                            percent={(calcCommentScore(trustScore!.monthlyComments) / 15) * 100}
-                                        />
-                                        <Count>
-                                            {calcCommentScore(trustScore!.monthlyComments)} / 15점
-                                        </Count>
-                                    </TrustItem>
-                                </TrustGrid>
-                                <Divider />
-                                <TotalScore>
-                                    총점: {calcTotalScore(trustScore!).toFixed(1)} / 100점
-                                </TotalScore>
-                            </TrustContent>
+                            <FooterRight>
+                                <ToggleButton onClick={() => setIsTrustCriteriaOpen(true)}>
+                                    산정 기준
+                                </ToggleButton>
+                            </FooterRight>
                         </>
                     )}
-                </Card>
+                </BaseCard>
 
-                {/* 레벨 */}
-                {/*<Card>*/}
-                {/*    <HistoryHeader>*/}
-                {/*        <HeaderLeft>*/}
-                {/*            <Icon>🏅</Icon>*/}
-                {/*            <h3>레벨</h3>*/}
-                {/*        </HeaderLeft>*/}
-                {/*        <ToggleButton onClick={() => setIsLevelOpen(!isLevelOpen)}>*/}
-                {/*            {isLevelOpen ? (*/}
-                {/*                <>*/}
-                {/*                    <FaChevronUp size={10} /> 닫기*/}
-                {/*                </>*/}
-                {/*            ) : (*/}
-                {/*                <>*/}
-                {/*                    <FaChevronDown size={10} /> 히스토리*/}
-                {/*                </>*/}
-                {/*            )}*/}
-                {/*        </ToggleButton>*/}
-                {/*    </HistoryHeader>*/}
-
-                {/*    {levelStatus === "loading" ? (*/}
-                {/*        <Empty>불러오는 중...</Empty>*/}
-                {/*    ) : !userLevel ? (*/}
-                {/*        <Empty>레벨 정보가 없습니다.</Empty>*/}
-                {/*    ) : (*/}
-                {/*        <LevelBox>*/}
-                {/*            <p>*/}
-                {/*                현재 Lv.{userLevel.level} (Exp {userLevel.exp}/{userLevel.totalExp})*/}
-                {/*            </p>*/}
-                {/*            <ProgressBar percent={(userLevel.exp / userLevel.totalExp) * 100} />*/}
-                {/*        </LevelBox>*/}
-                {/*    )}*/}
-
-                {/*    {isLevelOpen && (*/}
-                {/*        <Timeline>*/}
-                {/*            {levelHistory.length === 0 ? (*/}
-                {/*                <Empty>레벨 업 기록이 없습니다.</Empty>*/}
-                {/*            ) : (*/}
-                {/*                levelHistory.map((item) => (*/}
-                {/*                    <TimelineItem key={item.achievedAt}>*/}
-                {/*                        <TimelineDate>*/}
-                {/*                            {new Date(item.achievedAt).toLocaleDateString()}*/}
-                {/*                        </TimelineDate>*/}
-                {/*                        <TimelineEvent>Lv.{item.level} 달성</TimelineEvent>*/}
-                {/*                    </TimelineItem>*/}
-                {/*                ))*/}
-                {/*            )}*/}
-                {/*        </Timeline>*/}
-                {/*    )}*/}
-                {/*</Card>*/}
-
-                {/* 칭호 */}
-                <Card>
-                    <HistoryHeader>
+                {/* 활동 점수 변화 추이 */}
+                <BaseCard>
+                    <CardHeader>
                         <HeaderLeft>
-                            <Icon>🎖️</Icon>
-                            <h3>칭호 이력</h3>
+                            <h3>활동 점수 변화 추이</h3>
                         </HeaderLeft>
-                        <ToggleButton onClick={() => setIsTitleGuideOpen(true)}>
-                            칭호 가이드
-                        </ToggleButton>
-                    </HistoryHeader>
+                    </CardHeader>
+
+                    <GraphSummary>
+                        <h4>
+                            이번 달 활동 점수: <strong>{trustScore?.totalScore?.toFixed(1) ?? "0.0"}점</strong>
+                        </h4>
+
+                        {scoreDiff !== null ? (
+                            <ChangeTag up={scoreDiff > 0}>
+                                {scoreDiff > 0
+                                    ? `▲ ${scoreDiff.toFixed(1)} 상승`
+                                    : scoreDiff < 0
+                                        ? `▼ ${Math.abs(scoreDiff).toFixed(1)} 하락`
+                                        : "변동 없음"}
+                            </ChangeTag>
+                        ) : (
+                            <ChangeTag>변동 없음</ChangeTag>
+                        )}
+                    </GraphSummary>
+
+                    <GraphNotice>
+                        현재 그래프는 <strong>지난달까지의 기록</strong>이며,{" "}
+                        <strong>이번 달 점수</strong>는 실시간으로 반영 중입니다.
+                    </GraphNotice>
+
+                    <GraphWrapper>
+                        <TrustScoreHistoryGraph
+                            history={history}
+                            currentScore={trustScore?.totalScore ?? 0}
+                        />
+                    </GraphWrapper>
+                </BaseCard>
+
+                {/* ================= 칭호 이력 ================= */}
+                <BaseCard>
+                    <CardHeader>
+                        <HeaderLeft>
+                            <h3>획득한 칭호</h3>
+                        </HeaderLeft>
+                    </CardHeader>
 
                     {titles.length === 0 ? (
                         <Empty>획득한 칭호가 없습니다.</Empty>
                     ) : (
                         <TitleGrid>
                             {titles.map((title) => (
-                                <TitleCard key={title.id} equipped={title.equipped}>
-                                    <TitleName>{title.displayName}</TitleName>
-                                    <AcquiredDate>
-                                        {new Date(title.acquiredAt).toLocaleDateString()}
-                                    </AcquiredDate>
-                                    <Description>{title.description}</Description>
-                                    <ActionButton onClick={() => handleEquip(title.id)}>
-                                        {title.equipped ? "해제" : "장착"}
-                                    </ActionButton>
-                                </TitleCard>
+                                <BadgeCard
+                                    key={title.id}
+                                    equipped={title.equipped}
+                                    onClick={() => handleEquip(title.id)}
+                                    whileHover={{ scale: 1.03 }}
+                                    transition={{ duration: 0.25 }}
+                                >
+                                    {title.equipped && <EquippedRibbon>착용 중</EquippedRibbon>}
+
+                                    <BadgeIcon equipped={title.equipped}>🏅</BadgeIcon>
+                                    <BadgeName equipped={title.equipped}>{title.displayName}</BadgeName>
+                                    <BadgeDesc>{title.description}</BadgeDesc>
+                                    <BadgeDate>획득일 {new Date(title.acquiredAt).toLocaleDateString()}</BadgeDate>
+                                    <BadgeButton equipped={title.equipped}>{title.equipped ? "해제" : "장착"}</BadgeButton>
+                                </BadgeCard>
                             ))}
                         </TitleGrid>
                     )}
-                </Card>
+
+                    <FooterRight>
+                        <ToggleButton onClick={() => setIsTitleGuideOpen(true)}>
+                            칭호 가이드
+                        </ToggleButton>
+                    </FooterRight>
+                </BaseCard>
             </Section>
 
             {/* 모달 */}
             <ServiceModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-            <TitleGuideModal
-                isOpen={isTitleGuideOpen}
-                onClose={() => setIsTitleGuideOpen(false)}
-            />
+            <TitleGuideModal isOpen={isTitleGuideOpen} onClose={() => setIsTitleGuideOpen(false)} />
+            <TrustScoreCriteriaModal isOpen={isTrustCriteriaOpen} onClose={() => setIsTrustCriteriaOpen(false)} />
 
-            <TrustScoreCriteriaModal
-                isOpen={isTrustCriteriaOpen}
-                onClose={() => setIsTrustCriteriaOpen(false)}
-            />
-
-            {/*
-            ===============================
-            ❌ 나머지 섹션 전부 주석 처리
-            ===============================
-            */}
-
-            {/*
-            프로필 공개 여부
-            <Section>
-                <SectionTitle>프로필 공개 설정</SectionTitle>
-                <ConsentCard>
-                    <ConsentRow>
-                        <Left>
-                            <span>스터디 모임 프로필 공개</span>
-                        </Left>
-                        <ToggleSwitch
-                            checked={isProfilePublic}
-                            onClick={handleToggleProfilePublic}>
-                            <span>{isProfilePublic ? "ON" : "OFF"}</span>
-                        </ToggleSwitch>
-                    </ConsentRow>
-
-                    {isProfilePublic && (
-                        <>
-                            <Divider />
-                            <ConsentRow className="sub-consent">
-                                <Left sub>
-                                    <span>정보 1</span>
-                                </Left>
-                                <ToggleSwitch
-                                    checked={consent.phone}
-                                    onClick={() => handleToggleConsent("phone")}>
-                                    <span>{consent.phone ? "ON" : "OFF"}</span>
-                                </ToggleSwitch>
-                            </ConsentRow>
-
-                            <Divider />
-
-                            <ConsentRow className="sub-consent">
-                                <Left sub>
-                                    <span>정보 2</span>
-                                </Left>
-                                <ToggleSwitch
-                                    checked={consent.email}
-                                    onClick={() => handleToggleConsent("email")}>
-                                    <span>{consent.email ? "ON" : "OFF"}</span>
-                                </ToggleSwitch>
-                            </ConsentRow>
-                        </>
-                    )}
-                </ConsentCard>
-            </Section>
-
-            프로모션 정보수신 동의
-            <Section>
-                <SectionTitle>프로모션 정보수신 동의</SectionTitle>
-                <ConsentCard>
-                    <ConsentRow>
-                        <Left>
-                            <FaEnvelope />
-                            <span>이메일</span>
-                        </Left>
-                        <ToggleSwitch
-                            checked={consent.email}
-                            onClick={() => handleToggleConsent("email")}>
-                            <span>{consent.email ? "ON" : "OFF"}</span>
-                        </ToggleSwitch>
-                    </ConsentRow>
-                </ConsentCard>
-            </Section>
-
-            보안 관리
-            <Section>
-                <SectionTitle>보안 관리</SectionTitle>
-                <Card>
-                    <h3>로그인 기록</h3>
-                    <p>
-                        해당 기능은 현재 준비 중입니다.
-                        <br />
-                        곧 만나보실 수 있어요 😊
-                    </p>
-                </Card>
-            </Section>
-
-            모달
-            <ServiceModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-            />
-            */}
+            {isImageModalOpen && (
+                <ModalOverlay onClick={() => setIsImageModalOpen(false)}>
+                    <ModalContent onClick={(e) => e.stopPropagation()}>
+                        <LargeImage src={profile.photoUrl || defaultProfile} alt="profile-large" />
+                    </ModalContent>
+                </ModalOverlay>
+            )}
         </Wrapper>
     );
 }
 
 /* ================== styled-components ================== */
+const fadeUp = keyframes`
+  from {
+    opacity: 0;
+    margin-top: 16px;
+  }
+  to {
+    opacity: 1;
+    margin-top: 0;
+  }
+`;
 
-const Wrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
+export const Wrapper = styled.div`
+    animation: ${fadeUp} 0.6s ease both;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
 `;
 
 const Section = styled.section`
-  padding: 24px;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    padding: 32px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px; /* 핵심: 카드들 사이 여백 */
 `;
 
-const SectionTitle = styled.h2`
-  font-size: 18px;
+export const SectionTitle = styled.h2`
+  font-size: 20px;
   font-weight: 700;
-  color: rgb(17, 24, 39);
+  //color: #1e3a8a;
+    color: #111827;
+    margin-bottom: 20px;
 `;
 
 /* ---------- 회원정보 ---------- */
-const InfoCard = styled.div`
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 28px 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+
+export const InfoCard = styled.div`
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    padding: 32px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
 `;
 
-const TopRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 16px;
+export const ProfileRow = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 24px;
 `;
 
-const PhotoSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
+export const ProfileLeft = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 20px;
 `;
 
-const PhotoWrapper = styled.div`
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: #e5e7eb;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const Photo = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-`;
-
-const Spinner = styled.div`
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #3b82f6;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  animation: spin 1s linear infinite;
-
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-`;
-
-const InfoText = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-`;
-
-const NicknameRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const Nickname = styled.div`
-  font-size: 22px;
-  font-weight: 700;
-  color: #111827;
-`;
-
-const NicknameInput = styled.input`
-  font-size: 22px;
-  font-weight: 700;
-  color: #111827;
-  border: none;
-  border-bottom: 2px solid #3b82f6;
-  padding: 4px 0;
-  outline: none;
-  width: 100%;
-`;
-
-const Email = styled.div`
-  font-size: 14px;
-  color: #6b7280;
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: flex-end;
-`;
-
-const Row = styled.div`
-  display: flex;
-  gap: 6px;
-  width: 100px;
-`;
-
-const SmallButton = styled.button`
-  width: 100px;
-  text-align: center;
-  padding: 6px 0;
-  font-size: 13px;
-  background: #f9fafb;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  cursor: pointer;
-  color: #374151;
-
-  &:hover {
-    background: #f3f4f6;
-  }
-
-  ${Row} & {
-    flex: 1;
-    width: auto;
-  }
-`;
-
-const Divider = styled.hr`
-  border: none;
-  border-top: 1px solid #e5e7eb;
-  margin: 0;
-`;
-
-const BottomRow = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-`;
-
-const InfoItem = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 14px;
-  color: #374151;
-
-  span {
-    flex: 1;
-    margin-left: 8px;
-    color: #6b7280;
-  }
-`;
-
-const MessageBase = styled.div<{ fadeOut: boolean; type: "error" | "success" }>`
-  font-size: 12px;
-  text-align: center;
-  color: ${({ type }) => (type === "error" ? "#dc2626" : "#16a34a")};
-  opacity: ${({ fadeOut }) => (fadeOut ? 0 : 1)};
-  transition: opacity 1.5s ease;
-`;
-
-const NicknameMessage = styled.div<{ fadeOut: boolean; type: "error" | "success" }>`
-  font-size: 13px;
-  margin-top: 4px;
-  text-align: left;
-  color: ${({ type }) => (type === "error" ? "#dc2626" : "#16a34a")};
-  opacity: ${({ fadeOut }) => (fadeOut ? 0 : 1)};
-  transition: opacity 1.5s ease;
-`;
-
-/* ---------- 활동 이력 (신뢰점수/레벨/칭호) ---------- */
-
-const Card = styled.div`
-  background: rgb(249, 250, 251);
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-
-  h3 {
-    font-size: 16px;
-    font-weight: 600;
-    color: rgb(17, 24, 39);
-  }
-
-  p {
-    font-size: 14px;
-    color: rgb(107, 114, 128);
-  }
-`;
-
-const HistoryHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const HeaderLeft = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const Icon = styled.span`
-  font-size: 18px;
-`;
-
-const ToggleButton = styled.button`
-  font-size: 13px;
-  color: #3b82f6;
-  border: none;
-  background: none;
-  cursor: pointer;
-
-  &:hover {
-    text-decoration: underline;
-  }
-`;
-
-const TrustGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 12px;
-`;
-
-const TrustItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: center;
-`;
-
-const ProgressBar = styled.div<{ percent: number }>`
-  width: 100%;
-  height: 10px;
-  background: #e5e7eb;
-  border-radius: 6px;
-  overflow: hidden;
-  position: relative;
-
-  &::after {
-    content: "";
-    display: block;
-    height: 100%;
-    width: ${({ percent }) => percent}%;
-    background: linear-gradient(90deg, #3b82f6, #10b981);
-    transition: width 0.3s ease;
-  }
-`;
-
-const Count = styled.span`
-  font-size: 13px;
-  font-weight: 600;
-  color: rgb(31, 41, 55);
-`;
-
-const TrustContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-`;
-
-const TotalScore = styled.div`
-  margin-top: 0;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: rgba(37, 99, 235, 0.08);
-  font-size: 15px;
-  font-weight: 700;
-  color: #2563eb;
-  align-self: flex-start;
-`;
-
-const LevelBox = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-
-  p {
-    font-size: 14px;
-    color: #374151;
-  }
-`;
-
-const Timeline = styled.ul`
-  margin: 1rem 0;
-  padding-left: 0;
-  list-style: none;
-`;
-
-const TimelineItem = styled.li`
-  position: relative;
-  margin-bottom: 1.5rem;
-  padding-left: 24px;
-
-  &::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 14px;
-    height: 14px;
+export const PhotoWrapper = styled.div`
+    width: 88px;
+    height: 88px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #8b5cf6, #ec4899);
-    box-shadow: -3px 3px 0 rgba(156, 163, 175, 0.4);
-  }
+    border: 2px solid #3b82f6;
+    background: linear-gradient(145deg, #f8fbff, #eef4ff);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(59, 130, 246, 0.15);
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    &:hover img {
+        transform: scale(1.05);
+    }
 `;
 
-const TimelineDate = styled.span`
-  font-size: 0.85rem;
-  color: #6b7280;
-  margin-right: 8px;
+export const Photo = styled.img`
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
 `;
 
-const TimelineEvent = styled.span`
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #111827;
+export const Spinner = styled.div`
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3b82f6;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    animation: spin 1s linear infinite;
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
 `;
 
-const TitleGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 12px;
+export const NicknameArea = styled.div`
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    h3 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
+    }
 `;
 
-const TitleCard = styled.div<{ equipped: boolean }>`
-  border: 1px solid ${({ equipped }) => (equipped ? "#3b82f6" : "rgb(229,231,235)")};
-  border-radius: 8px;
-  padding: 12px;
-  background: ${({ equipped }) => (equipped ? "rgba(59,130,246,0.05)" : "white")};
+export const NicknameInput = styled.input.attrs({
+    spellCheck: false,
+})`
+    font-size: 20px;
+    font-weight: 700;
+    color: #111827;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 4px 0;
+    min-width: 150px;
+    border-bottom: 2px solid rgba(0,0,0,0.08);
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+
+    &:focus {
+        border-color: transparent;
+        box-shadow: 0 3px 0 0 rgba(59, 130, 246, 0.5);
+    }
+`;
+
+
+export const ButtonGroup = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+`;
+
+export const SoftButton = styled.button`
+    font-size: 13px;
+    padding: 6px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    color: #6b7280;
+    background: #ffffff;
+    cursor: pointer;
+    transition: 0.25s ease;
+    &:hover {
+        border-color: #3b82f6;
+        color: #3b82f6;
+        background: rgba(59, 130, 246, 0.05);
+    }
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+`;
+
+export const InfoList = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 12px;
+`;
+
+export const InfoItem = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    color: #6b7280;
+    span {
+        color: #111827;
+        font-weight: 500;
+    }
+`;
+
+/* ---------- 모달 (프로필 확대) ---------- */
+export const ModalOverlay = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.25s ease;
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+`;
+
+export const ModalContent = styled.div`
+    background: transparent;
+    padding: 0;
+`;
+
+export const LargeImage = styled.img`
+    width: 400px;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 3px solid white;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    animation: zoomIn 0.25s ease;
+    @keyframes zoomIn {
+        from {
+            transform: scale(0.9);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+    @media (max-width: 768px) {
+        width: 80vw;
+        height: 80vw;
+    }
+`;
+
+/* ---------- 활동 이력 ---------- */
+export const BaseCard = styled.div`
+    background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+    border: 1px solid #e0e7ff;
+    border-radius: 14px;
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.08);
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+`;
+
+export const CardHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    h3 {
+        font-size: 18px;
+        font-weight: 700;
+        //color: #1e3a8a;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+`;
+
+export const ToggleButton = styled.button`
+    font-size: 13px;
+    color: #3b82f6;
+    border: none;
+    background: none;
+    cursor: pointer;
+    &:hover {
+        text-decoration: underline;
+    }
+`;
+
+/* 2행 3열 */
+const TrustGrid = styled.div`
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px 20px;
+
+    @media (max-width: 900px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 600px) {
+        grid-template-columns: 1fr;
+    }
+`;
+
+
+export const TrustItemCard = styled.div`
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: 0.25s ease;
+    &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.15);
+    }
+`;
+
+export const TrustLabel = styled.div`
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+`;
+
+export const ProgressBar = styled.div<{ percent: number }>`
+    width: 100%;
+    height: 12px;
+    background: #f3f4f6;
+    border-radius: 6px;
+    margin-top: 6px;
+    position: relative;
+    overflow: hidden;
+    &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: ${({ percent }) => percent}%;
+        background: linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%);
+        border-radius: 6px;
+        transition: width 0.3s ease;
+    }
+`;
+
+export const TrustCount = styled.div`
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin-top: 4px;
+`;
+
+export const TrustTotal = styled.div`
+    text-align: center;
+    margin-top: 8px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #2563eb;
+    background: rgba(59, 130, 246, 0.08);
+    border-radius: 10px;
+    padding: 10px 0;
+    strong {
+        font-size: 18px;
+        color: #1d4ed8;
+    }
+`;
+
+export const HeaderLeft = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+`;
+
+export const GraphSummary = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-top: 2px;
+    h4 {
+        font-weight: 600;
+    }
+    strong {
+        color: #2563eb;
+        font-size: 16px;
+    }
+`;
+
+export const ChangeTag = styled.span<{ up?: boolean }>`
+    font-size: 13px;
+    font-weight: 700;
+    color: ${({ up }) => (up ? "#059669" : "#dc2626")};
+    background: ${({ up }) => (up ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)")};
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: -0.3px;
+`;
+
+export const GraphNotice = styled.p`
+    font-size: 12.5px;
+    color: #6b7280;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    strong {
+        color: #2563eb;
+    }
+`;
+
+export const GraphWrapper = styled.div`
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    padding: 10px 16px;
+    transition: 0.3s ease;
+    &:hover {
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12);
+        transform: translateY(-1px);
+    }
+`;
+
+export const Empty = styled.p`
+    font-size: 14px;
+    color: #888;
+    text-align: center;
+    margin: 12px 0;
+`;
+
+/* ---------- 칭호 ---------- */
+export const TitleGrid = styled.div`
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+`;
+
+export const BadgeCard = styled(motion.div)<{ equipped: boolean }>`
+    position: relative;
+    border: 1.5px solid ${({ equipped }) => (equipped ? "#3B82F6" : "#E5E7EB")};
+    background: ${({ equipped }) =>
+            equipped
+                    ? "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(147,197,253,0.15))"
+                    : "white"};
+    border-radius: 14px;
+    box-shadow: ${({ equipped }) =>
+            equipped ? "0 0 12px rgba(59,130,246,0.3)" : "0 2px 8px rgba(0,0,0,0.04)"};
+    padding: 18px 12px 16px;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
+    }
+`;
+
+export const BadgeIcon = styled.div<{ equipped: boolean }>`
+    font-size: 28px;
+    margin-bottom: 8px;
+    filter: ${({ equipped }) =>
+            equipped ? "drop-shadow(0 0 6px rgba(59,130,246,0.5))" : "none"};
+`;
+
+export const BadgeName = styled.div<{ equipped: boolean }>`
+    font-size: 15px;
+    font-weight: 700;
+    color: ${({ equipped }) => (equipped ? "#1D4ED8" : "#111827")};
+`;
+
+export const BadgeDesc = styled.p`
+    font-size: 12.5px;
+    color: #6b7280;
+    margin: 6px 0 8px;
+    line-height: 1.3;
+`;
+
+export const BadgeDate = styled.span`
+    font-size: 11.5px;
+    color: #9ca3af;
+`;
+
+export const BadgeButton = styled.button<{ equipped: boolean }>`
+    margin-top: 10px;
+    padding: 5px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    background: ${({ equipped }) =>
+            equipped ? "rgba(59,130,246,0.15)" : "#ffffff"};
+    border: 1px solid ${({ equipped }) => (equipped ? "#3B82F6" : "#E5E7EB")};
+    color: ${({ equipped }) => (equipped ? "#1D4ED8" : "#374151")};
+    cursor: pointer;
+    transition: 0.25s ease;
+    &:hover {
+        background: ${({ equipped }) =>
+                equipped ? "rgba(59,130,246,0.25)" : "#F3F4F6"};
+    }
+`;
+
+export const EquippedRibbon = styled.span`
+    position: absolute;
+    top: 10px;
+    right: -25px;
+    background: linear-gradient(90deg, #2563eb, #3b82f6);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 26px;
+    transform: rotate(45deg);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+`;
+
+const FooterRight = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s ease;
-`;
-
-const TitleName = styled.span`
-  font-size: 14px;
-  font-weight: 600;
-  color: rgb(31, 41, 55);
-`;
-
-const AcquiredDate = styled.span`
-  font-size: 12px;
-  color: rgb(107, 114, 128);
-`;
-
-const Description = styled.p`
-  font-size: 12px;
-  color: #6b7280;
-  text-align: center;
-  margin: 8px 0;
-  flex-grow: 1;
-`;
-
-const ActionButton = styled.button`
-  margin-top: auto;
-  align-self: center;
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 600;
-  border: 1px solid #3b82f6;
-  color: #3b82f6;
-  background: white;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: #eff6ff;
-  }
-`;
-
-const Empty = styled.p`
-  font-size: 14px;
-  color: #888;
-`;
-
-const DividerThin = styled.hr`
-  border: none;
-  border-top: 1px solid #e5e7eb;
-  margin: 16px 0;
+  justify-content: flex-end;
+  margin-top: 4px;
 `;
