@@ -430,6 +430,7 @@ export const PhotoWrapper = styled.div`
     justify-content: center;
     align-items: center;
     overflow: hidden;
+    cursor: pointer;
     box-shadow: 0 3px 10px rgba(59, 130, 246, 0.15);
 
     img {
