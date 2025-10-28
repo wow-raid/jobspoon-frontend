@@ -1,6 +1,6 @@
 {/* 신뢰점수 안내 모달 */}
 
-import React from "react";
+import React, {useEffect} from "react";
 import styled from "styled-components";
 import { TrustScoreResponse } from "../../api/userTrustScoreApi.ts";
 import {
@@ -27,14 +27,14 @@ export default function TrustScoreModal({ isOpen, onClose, trust }: Props) {
     const studyroomScore = calcStudyroomScore(trust.monthlyStudyrooms);
     const commentScore = calcCommentScore(trust.monthlyComments);
 
-    const totalScore = calcTotalScore({
-        attendanceRate: trust.attendanceRate,
-        monthlyInterviews: trust.monthlyInterviews,
-        monthlyProblems: trust.monthlyProblems,
-        monthlyPosts: trust.monthlyPosts,
-        monthlyStudyrooms: trust.monthlyStudyrooms,
-        monthlyComments: trust.monthlyComments
-    });
+    // ✅ ESC 키로 닫기
+    useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+        };
+        window.addEventListener("keydown", handleEsc);
+        return () => window.removeEventListener("keydown", handleEsc);
+    }, [onClose]);
 
     return (
         <Overlay isOpen={isOpen}>
@@ -56,7 +56,7 @@ export default function TrustScoreModal({ isOpen, onClose, trust }: Props) {
                     </ul>
                     <Divider />
                     <TotalScore>
-                        총점: {totalScore.toFixed(1)} / 100점
+                        총점: {trust.totalScore?.toFixed(1) ?? "0.0"} / 100점
                     </TotalScore>
                 </Content>
 

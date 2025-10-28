@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { FaRegHandshake } from "react-icons/fa"; // 🤝 따뜻한 작별 아이콘
 import WithdrawalConfirmModal from "../components/modals/WithdrawalConfirmModal.tsx";
 import ServiceModal from "../components/modals/ServiceModal.tsx";
 import { withdrawAccount } from "../api/profileAppearanceApi.ts";
+import { notifySuccess, notifyError, notifyInfo } from "../utils/toast";
 
 export default function AccountWithdrawal() {
     const [reason, setReason] = useState("");
@@ -18,7 +19,7 @@ export default function AccountWithdrawal() {
 
     const handleWithdrawalClick = () => {
         if (!reason.trim()) {
-            alert("탈퇴 사유를 선택하거나 입력해주세요.");
+            notifyInfo("탈퇴 사유를 선택하거나 입력해주세요 📝");
             return;
         }
         setShowConfirm(true);
@@ -27,13 +28,18 @@ export default function AccountWithdrawal() {
     const handleConfirm = async () => {
         try {
             await withdrawAccount();
+            localStorage.removeItem("isLoggedIn");
+            notifySuccess("회원 탈퇴가 완료되었습니다 🙏 감사합니다");
+            setShowConfirm(false);
+
+            // 1.5초 후 홈으로 이동 (UX 완화)
+            setTimeout(() => {
+                navigate("/");
+            }, 1500);
         } catch (error) {
             console.error(error);
+            notifyError("탈퇴 처리 중 오류가 발생했습니다 ❌");
         }
-        setShowConfirm(false);
-        localStorage.removeItem("isLoggedIn");
-        alert("회원 탈퇴가 완료되었습니다. 이용해주셔서 감사합니다 🙏");
-        window.location.href = "/";
     };
 
     return (
@@ -124,8 +130,19 @@ export default function AccountWithdrawal() {
 }
 
 /* ================= styled-components ================= */
+const fadeUp = keyframes`
+  from {
+    opacity: 0;
+    margin-top: 16px;
+  }
+  to {
+    opacity: 1;
+    margin-top: 0;
+  }
+`;
 
 const Container = styled.div`
+    animation: ${fadeUp} 0.6s ease both;
     padding: 40px 28px;
     display: flex;
     flex-direction: column;
@@ -138,8 +155,8 @@ const Header = styled.div`
     margin-bottom: 36px;
 
     h2 {
-        font-size: 22px;
-        font-weight: 600;
+        font-size: 20px;
+        font-weight: 700;
         margin-top: 12px;
         color: #111827;
     }
@@ -169,6 +186,7 @@ const ContentBox = styled.div`
     display: flex;
     flex-direction: column;
     gap: 24px;
+    animation: ${fadeUp} 0.6s ease both;
 `;
 
 /* Apple 스타일 안내 카드 */
@@ -188,11 +206,6 @@ const InfoCard = styled.div`
         align-items: center;
         gap: 8px;
         margin-bottom: 10px;
-
-        &::before {
-            content: "⚠️";
-            font-size: 16px;
-        }
     }
 
     ul {
@@ -220,11 +233,6 @@ const GuideBox = styled.div`
         font-weight: 600;
         margin-bottom: 10px;
         color: #111827;
-
-        &::before {
-            content: "📝";
-            margin-right: 6px;
-        }
     }
 `;
 

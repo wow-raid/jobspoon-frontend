@@ -1,6 +1,6 @@
 {/* 게시글 안내 모달 */}
 
-import React from "react";
+import React, {useEffect} from "react";
 import styled from "styled-components";
 import { WritingCountResponse } from "../../api/dashboardApi.ts";
 
@@ -12,6 +12,15 @@ type Props = {
 
 export default function WritingModal({ isOpen, onClose, writing }: Props) {
     if (!writing) return null; // 안전 처리
+
+    // ✅ ESC 키로 닫기
+    useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+        };
+        window.addEventListener("keydown", handleEsc);
+        return () => window.removeEventListener("keydown", handleEsc);
+    }, [onClose]);
 
     return (
         <Overlay isOpen={isOpen}>
@@ -38,7 +47,6 @@ export default function WritingModal({ isOpen, onClose, writing }: Props) {
         </Overlay>
     );
 }
-
 
 /* ================== styled-components ================== */
 

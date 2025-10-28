@@ -22,6 +22,11 @@ import {SpoonDialogProvider} from "./components/SpoonDialog.tsx";
 
 import { PageContainerFlushTop, NarrowLeft } from "./styles/layout";
 import { goToAccountLogin } from "./utils/auth";
+import OXQuizPage from "./pages/OXQuizPage.tsx";
+import {GlobalFonts} from "./styles/GlobalFonts.tsx";
+import InitialsQuizPage from "./pages/InitialsQuizPage.tsx";
+import QuizChoicePage from "./pages/QuizChoicePage.tsx";
+import QuizResultRoute from "./routes/QuizResultRoute.tsx";
 
 // notes 전용 로그인 가드
 function NotesGuard() {
@@ -349,31 +354,37 @@ function HomePage() {
 /* == 라우트 구성 == */
 export default function App() {
     return (
-        <SpoonDialogProvider>
-        <Routes>
-            {/* 공통 레이아웃 */}
-            <Route element={<AppLayout />}>
-                {/* 이 마이크로앱은 호스트가 /spoon-word/*에 마운트함 → 내부는 상대경로 "/*"로 베이스를 씌움 */}
-                <Route path="/*" element={<SpoonWordLayout />}>
-                    {/* /spoon-word 첫 진입 시 words로 */}
-                    <Route index element={<Navigate to="words" replace />} />
-                    <Route path="words" element={<TermListPage />} />
-                    <Route path="notes" element={<SpoonNoteHomePage />} />
-                    <Route path="search" element={<SearchPage />} />
-                    <Route path="quiz">
-                        <Route index element={<QuizHomePage />} />
-                        <Route path="play" element={<QuizPlayPage />} />
-                        <Route path="result" element={<QuizPlayPage />} />
-                    </Route>
-                    <Route path="book" element={<FavoriteTermsPage />} />
-                    <Route path="folders/:folderId" element={<WordbookFolderPage />} />
-                </Route>
+        <>
+            <GlobalFonts />
+            <SpoonDialogProvider>
+                <Routes>
+                    {/* 공통 레이아웃 */}
+                    <Route element={<AppLayout />}>
+                        {/* 이 마이크로앱은 호스트가 /spoon-word/*에 마운트함 → 내부는 상대경로 "/*"로 베이스를 씌움 */}
+                        <Route path="/*" element={<SpoonWordLayout />}>
+                            {/* /spoon-word 첫 진입 시 words로 */}
+                            <Route index element={<Navigate to="words" replace />} />
+                            <Route path="words" element={<TermListPage />} />
+                            <Route path="notes" element={<SpoonNoteHomePage />} />
+                            <Route path="search" element={<SearchPage />} />
+                            <Route path="quiz">
+                                <Route index element={<QuizHomePage />} />
+                                <Route path="play" element={<QuizPlayPage />} />
+                                <Route path="today" element={<QuizChoicePage />} />
+                                <Route path="ox" element={<OXQuizPage />} />
+                                <Route path="initials" element={<InitialsQuizPage />} />
+                                <Route path="result" element={<QuizResultRoute />} />
+                            </Route>
+                            <Route path="book" element={<FavoriteTermsPage />} />
+                            <Route path="folders/:folderId" element={<WordbookFolderPage />} />
+                        </Route>
 
-                {/* 기타 경로들 */}
-                <Route path="login" element={<RedirectToAccountLogin />} />
-                <Route path="*" element={<AutoContent />} />
-            </Route>
-        </Routes>
-        </SpoonDialogProvider>
+                        {/* 기타 경로들 */}
+                        <Route path="login" element={<RedirectToAccountLogin />} />
+                        <Route path="*" element={<AutoContent />} />
+                    </Route>
+                </Routes>
+            </SpoonDialogProvider>
+        </>
     );
 }
