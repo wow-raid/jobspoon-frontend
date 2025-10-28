@@ -131,16 +131,21 @@ const ProfileImage = styled.img`
     height: 180px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #e5e7eb;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 2px solid #3B82F6;
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.15);
+    transition:
+            transform 0.35s cubic-bezier(0.25, 0.1, 0.25, 1),
+            box-shadow 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
     cursor: pointer;
+    transform-origin: center center;
+    will-change: transform, box-shadow;
 
     &:hover {
         transform: scale(1.05);
-        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
     }
 `;
+
 
 /* ✅ 인스타그램식 확대 모달 */
 const ModalOverlay = styled.div`

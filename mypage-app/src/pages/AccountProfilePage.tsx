@@ -23,6 +23,7 @@ import {
 import { notifySuccess, notifyError, notifyInfo } from "../utils/toast";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
+import { theme } from "../styles/theme.ts";
 
 type OutletContextType = {
     profile: ProfileAppearanceResponse | null;
@@ -41,6 +42,7 @@ export default function AccountProfilePage() {
     const [isTitleGuideOpen, setIsTitleGuideOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [animatedId, setAnimatedId] = useState<number | null>(null);
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
     const [isEditingNickname, setIsEditingNickname] = useState(false);
     const [tempNickname, setTempNickname] = useState("");
@@ -155,8 +157,9 @@ export default function AccountProfilePage() {
             <Section>
                 <SectionTitle>회원정보</SectionTitle>
                 <InfoCard>
-                    <TopRow>
-                        <PhotoSection>
+                    <ProfileRow>
+                        {/* 왼쪽: 프로필 + 닉네임 */}
+                        <ProfileLeft>
                             <PhotoWrapper>
                                 {isUploading ? (
                                     <Spinner />
@@ -167,38 +170,37 @@ export default function AccountProfilePage() {
                                         onError={(e) => {
                                             (e.target as HTMLImageElement).src = defaultProfile;
                                         }}
+                                        onClick={() => setIsImageModalOpen(true)} // 클릭 시 모달 열림
                                     />
                                 )}
                             </PhotoWrapper>
-                        </PhotoSection>
 
-                        <InfoText>
-                            <NicknameRow>
+                            <NicknameArea>
                                 {isEditingNickname ? (
                                     <NicknameInput
-                                        type="text"
                                         value={tempNickname}
                                         onChange={(e) => setTempNickname(e.target.value)}
-                                        placeholder="닉네임을 입력해주세요"
+                                        autoFocus
                                     />
                                 ) : (
-                                    <Nickname>{profile.nickname}</Nickname>
+                                    <h3>{profile.nickname}</h3>
                                 )}
-                            </NicknameRow>
-                        </InfoText>
+                            </NicknameArea>
+                        </ProfileLeft>
 
+                        {/* 오른쪽: 버튼 */}
                         <ButtonGroup>
                             {isEditingNickname ? (
-                                <Row>
-                                    <SmallButton onClick={handleSaveNickname}>확인</SmallButton>
-                                    <SmallButton onClick={handleCancelEdit}>취소</SmallButton>
-                                </Row>
+                                <div style={{ display: "flex", gap: "6px" }}>
+                                    <SoftButton onClick={handleSaveNickname}>확인</SoftButton>
+                                    <SoftButton onClick={handleCancelEdit}>취소</SoftButton>
+                                </div>
                             ) : (
-                                <SmallButton onClick={handleStartEdit}>별명 수정</SmallButton>
+                                <SoftButton onClick={handleStartEdit}>별명 수정</SoftButton>
                             )}
-                            <SmallButton onClick={handleFileClick} disabled={isUploading}>
+                            <SoftButton onClick={handleFileClick} disabled={isUploading}>
                                 {isUploading ? "업로드 중..." : "사진 변경"}
-                            </SmallButton>
+                            </SoftButton>
                             <input
                                 type="file"
                                 ref={fileInputRef}
@@ -207,20 +209,18 @@ export default function AccountProfilePage() {
                                 onChange={handleFileChange}
                             />
                         </ButtonGroup>
-                    </TopRow>
+                    </ProfileRow>
 
-                    <Divider />
-
-                    <BottomRow>
+                    <InfoList>
                         <InfoItem>
-                            <FaEnvelope style={{ color: "#6b7280", marginRight: "8px" }} />
+                            <FaEnvelope />
                             <span>{profile.email}</span>
                         </InfoItem>
                         <InfoItem>
-                            <FaLock style={{ color: "#6b7280", marginRight: "8px" }} />
-                            <span>가입일 : </span>
+                            <FaLock />
+                            <span>가입일: -</span>
                         </InfoItem>
-                    </BottomRow>
+                    </InfoList>
                 </InfoCard>
             </Section>
 
@@ -375,6 +375,14 @@ export default function AccountProfilePage() {
             <ServiceModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
             <TitleGuideModal isOpen={isTitleGuideOpen} onClose={() => setIsTitleGuideOpen(false)} />
             <TrustScoreCriteriaModal isOpen={isTrustCriteriaOpen} onClose={() => setIsTrustCriteriaOpen(false)} />
+            {/* 프로필 이미지 확대 모달 */}
+            {isImageModalOpen && (
+                <ModalOverlay onClick={() => setIsImageModalOpen(false)}>
+                    <ModalContent onClick={(e) => e.stopPropagation()}>
+                        <LargeImage src={profile.photoUrl || defaultProfile} alt="profile-large" />
+                    </ModalContent>
+                </ModalOverlay>
+            )}
         </Wrapper>
     );
 }
@@ -387,167 +395,246 @@ const Wrapper = styled.div`
 `;
 
 const Section = styled.section`
-  padding: 24px;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    padding: ${theme.spacing.sectionPadding};
+    border-radius: ${theme.radius.section};
+    background: ${theme.color.bgWhite};
+    box-shadow: ${theme.shadow.section};
 `;
 
 const SectionTitle = styled.h2`
-  font-size: 18px;
-  font-weight: 700;
-  color: rgb(17, 24, 39);
+    ${theme.mixin.sectionTitle}
 `;
 
 /* ---------- 회원정보 ---------- */
+
 const InfoCard = styled.div`
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 28px 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+    background: ${theme.color.bgWhite};
+    border: 1px solid ${theme.color.border};
+    border-radius: ${theme.radius.card};
+    box-shadow: ${theme.shadow.card};
+    padding: 32px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
 `;
 
-const TopRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 16px;
+const ProfileRow = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
 `;
 
-const PhotoSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
+const ProfileLeft = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 20px;
 `;
 
 const PhotoWrapper = styled.div`
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: #e5e7eb;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const Photo = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-`;
-
-const Spinner = styled.div`
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #3b82f6;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  animation: spin 1s linear infinite;
-
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #f8fbff, #eef4ff);
+    border: 1.5px solid ${theme.color.primary};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05), 0 6px 20px rgba(0, 0, 0, 0.04);    
+    
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.25s ease;
+    } 
+    
+    &:hover img {
+        transform: scale(1.05);
     }
-    100% {
-      transform: rotate(360deg);
+`;
+
+const NicknameArea = styled.div`
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+
+    h3 {
+        font-size: 20px;
+        font-weight: 700;
+        color: ${theme.color.text};
     }
-  }
-`;
-
-const InfoText = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-`;
-
-const NicknameRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const Nickname = styled.div`
-  font-size: 22px;
-  font-weight: 700;
-  color: #111827;
 `;
 
 const NicknameInput = styled.input`
-  font-size: 22px;
-  font-weight: 700;
-  color: #111827;
-  border: none;
-  border-bottom: 2px solid #3b82f6;
-  padding: 4px 0;
-  outline: none;
-  width: 100%;
+    font-size: 20px;
+    font-weight: 700;
+    color: ${theme.color.text};
+    border: none;
+    border-bottom: 2px solid ${theme.color.primary};
+    outline: none;
+    background: transparent;
+    padding: 4px 0;
+    width: 180px;
 `;
 
 const ButtonGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: flex-end;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
 `;
 
-const Row = styled.div`
-  display: flex;
-  gap: 6px;
-  width: 100px;
-`;
-
-const SmallButton = styled.button`
-  width: 100px;
-  text-align: center;
-  padding: 6px 0;
-  font-size: 13px;
-  background: #f9fafb;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+const SoftButton = styled.button`
+  font-size: ${theme.font.small};
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid ${theme.color.border};
+  border-radius: ${theme.radius.button};
+  color: ${theme.color.textMuted};
   cursor: pointer;
-  color: #374151;
+  transition: 0.25s ease;
 
   &:hover {
-    background: #f3f4f6;
+    border-color: ${theme.color.primary};
+    color: ${theme.color.primary};
+    background: rgba(59, 130, 246, 0.05);
   }
 
-  ${Row} & {
-    flex: 1;
-    width: auto;
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 `;
 
-const Divider = styled.hr`
-  border: none;
-  border-top: 1px solid #e5e7eb;
-  margin: 0;
+const Spinner = styled.div`
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid ${theme.color.primary};
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    animation: spin 1s linear infinite;
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
 `;
 
-const BottomRow = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+const Photo = styled.img`
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    transform-origin: center center;
+    will-change: transform, box-shadow;
+    transition:
+            transform 0.35s cubic-bezier(0.25, 0.1, 0.25, 1),
+            box-shadow 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
+
+    &:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+    }
+`;
+
+
+const InfoList = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-top: 1px solid ${theme.color.border};
+    padding-top: 12px;
 `;
 
 const InfoItem = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: ${theme.font.body};
+    color: ${theme.color.textMuted};
+
+    svg {
+        font-size: 14px;
+        color: ${theme.color.textMuted};
+    }
+
+    span {
+        color: ${theme.color.text};
+        font-weight: 500;
+    }
+`;
+
+const Divider = styled.hr`
+    border: none;
+    border-top: 1px solid ${theme.color.border};
+    margin: 0;
+`;
+
+/* 인스타그램식 확대 모달 */
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: 14px;
-  color: #374151;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.25s ease;
 
-  span {
-    flex: 1;
-    margin-left: 8px;
-    color: #6b7280;
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+`;
+
+const ModalContent = styled.div`
+  background: transparent;
+  padding: 0;
+`;
+
+const LargeImage = styled.img`
+  width: 400px;
+  height: 400px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 3px solid white;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  animation: zoomIn 0.25s ease;
+
+  @keyframes zoomIn {
+    from {
+      transform: scale(0.9);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 768px) {
+    width: 80vw;
+    height: 80vw;
   }
 `;
 
@@ -646,14 +733,10 @@ const TrustContent = styled.div`
 `;
 
 const TotalScore = styled.div`
-  margin-top: 0;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: rgba(37, 99, 235, 0.08);
-  font-size: 15px;
-  font-weight: 700;
-  color: #2563eb;
-  align-self: flex-start;
+    background: rgba(59, 130, 246, 0.08);
+    color: ${theme.color.primary};
+    border-radius: ${theme.radius.button};
+    font-weight: 700;
 `;
 
 const TitleGrid = styled.div`
