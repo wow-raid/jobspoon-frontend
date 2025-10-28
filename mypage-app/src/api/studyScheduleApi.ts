@@ -11,6 +11,8 @@ export interface UserStudySchedule {
     studyRoomId: number;
     studyRoomTitle: string;
 }
+
+/* 내가 스터디 일정 모두 조회 */
 export async function fetchUserStudySchedules(): Promise<UserStudySchedule[]> {
     const res = await axios.get<UserStudySchedule[]>(
         `${API_BASE_URL}/api/my-study/schedules`,
