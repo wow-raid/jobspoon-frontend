@@ -128,20 +128,20 @@ const HomeHeader = styled.div`
     align-items: center;
     gap: 10px;
     padding: 14px 16px;
-    background: linear-gradient(135deg, #2998C5, #20A4AD); /* 브랜드 블루 + 민트 */
+    background: linear-gradient(90deg, #3B82F6 0%, #10B981 100%);
     color: white;
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.25s ease;
-    box-shadow: 0 3px 10px rgba(41, 152, 197, 0.25);
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
 
     &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 5px 14px rgba(32, 164, 173, 0.35);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
     }
 
     &:active {
-        transform: scale(0.98);
+        transform: translateY(0);
     }
 `;
 

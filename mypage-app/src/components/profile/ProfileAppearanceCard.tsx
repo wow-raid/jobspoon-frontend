@@ -78,8 +78,8 @@ export default function ProfileAppearanceCard({ profile, titles }: Props) {
 const Card = styled.div`
     background: #ffffff;
     border-radius: 16px;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
-    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(229, 231, 235, 0.6);
     padding: 16px 20px;
     display: flex;
     flex-direction: column;
@@ -106,7 +106,7 @@ const ArrowIcon = styled.span`
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #3b82f6;
+    background: linear-gradient(90deg, #3B82F6, #10B981);
     color: white;
     border-radius: 8px;
     font-size: 13px;
@@ -131,23 +131,22 @@ const ProfileImage = styled.img`
     height: 180px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #3B82F6;
-    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.15);
-    transition:
-            transform 0.35s cubic-bezier(0.25, 0.1, 0.25, 1),
-            box-shadow 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
+    border: 3px solid transparent;
+    background-image: linear-gradient(135deg, #3B82F6, #10B981);
+    background-origin: border-box;
+    background-clip: content-box, border-box;
+    box-shadow: 0 6px 18px rgba(59, 130, 246, 0.2);
+    transition: all 0.35s ease;
     cursor: pointer;
     transform-origin: center center;
-    will-change: transform, box-shadow;
 
     &:hover {
         transform: scale(1.05);
-        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
+        box-shadow: 0 10px 24px rgba(16, 185, 129, 0.3);
     }
 `;
 
-
-/* ✅ 인스타그램식 확대 모달 */
+/* 인스타그램식 확대 모달 */
 const ModalOverlay = styled.div`
     position: fixed;
     top: 0;
@@ -204,12 +203,17 @@ const LargeImage = styled.img`
 
 const InfoBox = styled.div`
     width: 100%;
-    background: #f9fafb;
+    background: linear-gradient(
+            180deg,
+            rgba(16, 185, 129, 0.04) 0%,
+            rgba(59, 130, 246, 0.05) 100%
+    );
     border-radius: 12px;
     padding: 12px 16px;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    border: 1px solid rgba(59, 130, 246, 0.12);
 `;
 
 const Row = styled.div`
@@ -220,17 +224,17 @@ const Row = styled.div`
 
 const Label = styled.span`
     font-weight: 600;
-    color: #374151;
-    font-size: 14px;
-`;
-
-const Value = styled.span`
-    color: #1f2937;
+    color: #2FA7C3; /* 블루와 민트 중간 계열 */
     font-size: 14px;
 `;
 
 const Divider = styled.hr`
     border: none;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid rgba(59, 130, 246, 0.1);
     margin: 4px 0;
+`;
+
+const Value = styled.span`
+    color: #1f2937;
+    font-size: 14px;
 `;
