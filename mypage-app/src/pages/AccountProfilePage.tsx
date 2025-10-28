@@ -11,6 +11,7 @@ import { updateNickname } from "../api/accountProfileApi.ts";
 import TrustScoreHistoryGraph from "../components/history/TrustScoreHistoryGraph.tsx";
 import { equipTitle, unequipTitle, UserTitleResponse } from "../api/userTitleApi.ts";
 import { fetchTrustScore, TrustScoreResponse } from "../api/userTrustScoreApi.ts";
+import { fetchTrustScoreHistory, TrustScoreHistoryResponse } from "../api/userTrustScoreApi.ts";
 import {
     calcAttendanceScore,
     calcInterviewScore,
@@ -52,20 +53,39 @@ export default function AccountProfilePage() {
     const [tempNickname, setTempNickname] = useState("");
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const [history, setHistory] = useState<TrustScoreHistoryResponse[]>([]);
+    const [scoreDiff, setScoreDiff] = useState<number | null>(null);
 
     /* ---------------- 신뢰점수 불러오기 ---------------- */
     useEffect(() => {
-        const loadTrust = async () => {
+        const loadTrustData = async () => {
             try {
-                const trust = await fetchTrustScore();
+                const [trust, hist] = await Promise.all([
+                    fetchTrustScore(),
+                    fetchTrustScoreHistory(),
+                ]);
+
                 setTrustScore(trust || null);
+                setHistory(hist || []);
                 setTrustStatus(trust ? "loaded" : "empty");
+
+                if (hist.length > 0 && trust) {
+                    // recordedAt 기준 오름차순 정렬
+                    const sorted = [...hist].sort(
+                        (a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime()
+                    );
+                    // 항상 마지막 기록은 지난달 점수
+                    const lastMonthScore = sorted.at(-1)?.score ?? 0;
+                    // 이번 달 실시간 점수와 비교
+                    const diff = trust.totalScore - lastMonthScore;
+                    setScoreDiff(diff);
+                }
             } catch (err) {
                 console.error(err);
                 setTrustStatus("empty");
             }
         };
-        loadTrust();
+        loadTrustData();
     }, []);
 
     /* ---------------- 닉네임 수정 ---------------- */
@@ -299,7 +319,18 @@ export default function AccountProfilePage() {
                         <h4>
                             이번 달 활동 점수: <strong>{trustScore?.totalScore?.toFixed(1) ?? "0.0"}점</strong>
                         </h4>
-                        <ChangeTag up>▲ 2.0 상승</ChangeTag>
+
+                        {scoreDiff !== null ? (
+                            <ChangeTag up={scoreDiff > 0}>
+                                {scoreDiff > 0
+                                    ? `▲ ${scoreDiff.toFixed(1)} 상승`
+                                    : scoreDiff < 0
+                                        ? `▼ ${Math.abs(scoreDiff).toFixed(1)} 하락`
+                                        : "변동 없음"}
+                            </ChangeTag>
+                        ) : (
+                            <ChangeTag>변동 없음</ChangeTag>
+                        )}
                     </GraphSummary>
 
                     <GraphNotice>
@@ -308,7 +339,10 @@ export default function AccountProfilePage() {
                     </GraphNotice>
 
                     <GraphWrapper>
-                        <TrustScoreHistoryGraph />
+                        <TrustScoreHistoryGraph
+                            history={history}
+                            currentScore={trustScore?.totalScore ?? 0}
+                        />
                     </GraphWrapper>
                 </BaseCard>
 
