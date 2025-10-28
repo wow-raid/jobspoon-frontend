@@ -18,13 +18,14 @@ import {
     calcPostScore,
     calcStudyroomScore,
     calcCommentScore,
-    calcTotalScore
 } from "../utils/trustScoreUtils";
 import { notifySuccess, notifyError, notifyInfo } from "../utils/toast";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
-import { theme } from "../styles/theme.ts";
 
+/* ================================
+   Types
+================================ */
 type OutletContextType = {
     profile: ProfileAppearanceResponse | null;
     titles: UserTitleResponse[];
@@ -33,6 +34,9 @@ type OutletContextType = {
 
 type Status = "loading" | "empty" | "loaded";
 
+/* ================================
+   Component
+================================ */
 export default function AccountProfilePage() {
     const { profile, titles, refreshAll } = useOutletContext<OutletContextType>();
 
@@ -41,15 +45,15 @@ export default function AccountProfilePage() {
     const [isTrustCriteriaOpen, setIsTrustCriteriaOpen] = useState(false);
     const [isTitleGuideOpen, setIsTitleGuideOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [animatedId, setAnimatedId] = useState<number | null>(null);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+    const [animatedId, setAnimatedId] = useState<number | null>(null);
 
     const [isEditingNickname, setIsEditingNickname] = useState(false);
     const [tempNickname, setTempNickname] = useState("");
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-    /** 신뢰점수 불러오기 */
+    /* ---------------- 신뢰점수 불러오기 ---------------- */
     useEffect(() => {
         const loadTrust = async () => {
             try {
@@ -64,7 +68,7 @@ export default function AccountProfilePage() {
         loadTrust();
     }, []);
 
-    /** 닉네임 수정 */
+    /* ---------------- 닉네임 수정 ---------------- */
     const handleStartEdit = () => {
         if (profile) {
             setTempNickname(profile.nickname);
@@ -94,7 +98,7 @@ export default function AccountProfilePage() {
         setIsEditingNickname(false);
     };
 
-    /** 사진 업로드 */
+    /* ---------------- 사진 업로드 ---------------- */
     const handleFileClick = () => fileInputRef.current?.click();
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,7 +123,7 @@ export default function AccountProfilePage() {
         }
     };
 
-    /** 칭호 장착/해제 */
+    /* ---------------- 칭호 장착/해제 ---------------- */
     const handleEquip = async (titleId: number) => {
         try {
             const target = titles.find((t) => t.id === titleId);
@@ -153,12 +157,11 @@ export default function AccountProfilePage() {
 
     return (
         <Wrapper>
-            {/* ================== 회원정보 ================== */}
+            {/* ================= 회원정보 ================= */}
             <Section>
                 <SectionTitle>회원정보</SectionTitle>
                 <InfoCard>
                     <ProfileRow>
-                        {/* 왼쪽: 프로필 + 닉네임 */}
                         <ProfileLeft>
                             <PhotoWrapper>
                                 {isUploading ? (
@@ -167,10 +170,8 @@ export default function AccountProfilePage() {
                                     <Photo
                                         src={profile.photoUrl || defaultProfile}
                                         alt="프로필"
-                                        onError={(e) => {
-                                            (e.target as HTMLImageElement).src = defaultProfile;
-                                        }}
-                                        onClick={() => setIsImageModalOpen(true)} // 클릭 시 모달 열림
+                                        onError={(e) => ((e.target as HTMLImageElement).src = defaultProfile)}
+                                        onClick={() => setIsImageModalOpen(true)}
                                     />
                                 )}
                             </PhotoWrapper>
@@ -188,7 +189,6 @@ export default function AccountProfilePage() {
                             </NicknameArea>
                         </ProfileLeft>
 
-                        {/* 오른쪽: 버튼 */}
                         <ButtonGroup>
                             {isEditingNickname ? (
                                 <div style={{ display: "flex", gap: "6px" }}>
@@ -224,21 +224,15 @@ export default function AccountProfilePage() {
                 </InfoCard>
             </Section>
 
-            {/* ================== 활동 이력 ================== */}
+            {/* ================= 활동 이력 ================= */}
             <Section>
                 <SectionTitle>활동 이력</SectionTitle>
 
-                {/* 신뢰점수 */}
-                <Card>
-                    <HistoryHeader>
-                        <HeaderLeft>
-                            <Icon>🛡️</Icon>
-                            <h3>활동 점수</h3>
-                        </HeaderLeft>
-                        <ToggleButton onClick={() => setIsTrustCriteriaOpen(true)}>
-                            산정 기준
-                        </ToggleButton>
-                    </HistoryHeader>
+                {/* 활동 점수 요약 */}
+                <BaseCard>
+                    <CardHeader>
+                        <h3>🛡️ 활동 점수 요약</h3>
+                    </CardHeader>
 
                     {trustStatus === "loading" ? (
                         <Empty>불러오는 중...</Empty>
@@ -246,136 +240,125 @@ export default function AccountProfilePage() {
                         <Empty>신뢰점수가 없습니다.</Empty>
                     ) : (
                         <>
-                            <TrustContent>
-                                <TrustGrid>
-                                    <TrustItem>
-                                        <span>출석률</span>
-                                        <ProgressBar
-                                            percent={(calcAttendanceScore(trustScore!.attendanceRate) / 25) * 100}
-                                        />
-                                        <Count>
-                                            {calcAttendanceScore(trustScore!.attendanceRate).toFixed(1)} / 25점
-                                        </Count>
-                                    </TrustItem>
-                                    <TrustItem>
-                                        <span>모의면접</span>
-                                        <ProgressBar
-                                            percent={(calcInterviewScore(trustScore!.monthlyInterviews) / 20) * 100}
-                                        />
-                                        <Count>
-                                            {calcInterviewScore(trustScore!.monthlyInterviews)} / 20점
-                                        </Count>
-                                    </TrustItem>
-                                    <TrustItem>
-                                        <span>문제풀이</span>
-                                        <ProgressBar
-                                            percent={(calcProblemScore(trustScore!.monthlyProblems) / 20) * 100}
-                                        />
-                                        <Count>
-                                            {calcProblemScore(trustScore!.monthlyProblems)} / 20점
-                                        </Count>
-                                    </TrustItem>
-                                    <TrustItem>
-                                        <span>글 작성</span>
-                                        <ProgressBar
-                                            percent={(calcPostScore(trustScore!.monthlyPosts) / 15) * 100}
-                                        />
-                                        <Count>
-                                            {calcPostScore(trustScore!.monthlyPosts)} / 15점
-                                        </Count>
-                                    </TrustItem>
-                                    <TrustItem>
-                                        <span>스터디룸</span>
-                                        <ProgressBar
-                                            percent={(calcStudyroomScore(trustScore!.monthlyStudyrooms) / 10) * 100}
-                                        />
-                                        <Count>
-                                            {calcStudyroomScore(trustScore!.monthlyStudyrooms)} / 10점
-                                        </Count>
-                                    </TrustItem>
-                                    <TrustItem>
-                                        <span>댓글</span>
-                                        <ProgressBar
-                                            percent={(calcCommentScore(trustScore!.monthlyComments) / 15) * 100}
-                                        />
-                                        <Count>
-                                            {calcCommentScore(trustScore!.monthlyComments)} / 15점
-                                        </Count>
-                                    </TrustItem>
-                                </TrustGrid>
-                                <Divider />
-                                <TotalScore>
-                                    총점: {trustScore?.totalScore?.toFixed(1) ?? "0.0"} / 100점
-                                </TotalScore>
-                            </TrustContent>
+                            <TrustGrid>
+                                <TrustItemCard>
+                                    <TrustLabel>👣 출석률</TrustLabel>
+                                    <ProgressBar percent={(calcAttendanceScore(trustScore!.attendanceRate) / 25) * 100} />
+                                    <TrustCount>
+                                        {calcAttendanceScore(trustScore!.attendanceRate).toFixed(1)} / 25점
+                                    </TrustCount>
+                                </TrustItemCard>
+                                <TrustItemCard>
+                                    <TrustLabel>🎤 모의면접</TrustLabel>
+                                    <ProgressBar percent={(calcInterviewScore(trustScore!.monthlyInterviews) / 20) * 100} />
+                                    <TrustCount>{calcInterviewScore(trustScore!.monthlyInterviews)} / 20점</TrustCount>
+                                </TrustItemCard>
+                                <TrustItemCard>
+                                    <TrustLabel>🧩 문제풀이</TrustLabel>
+                                    <ProgressBar percent={(calcProblemScore(trustScore!.monthlyProblems) / 20) * 100} />
+                                    <TrustCount>{calcProblemScore(trustScore!.monthlyProblems)} / 20점</TrustCount>
+                                </TrustItemCard>
+                                <TrustItemCard>
+                                    <TrustLabel>✍️ 글 작성</TrustLabel>
+                                    <ProgressBar percent={(calcPostScore(trustScore!.monthlyPosts) / 15) * 100} />
+                                    <TrustCount>{calcPostScore(trustScore!.monthlyPosts)} / 15점</TrustCount>
+                                </TrustItemCard>
+                                <TrustItemCard>
+                                    <TrustLabel>📚 스터디룸</TrustLabel>
+                                    <ProgressBar percent={(calcStudyroomScore(trustScore!.monthlyStudyrooms) / 10) * 100} />
+                                    <TrustCount>{calcStudyroomScore(trustScore!.monthlyStudyrooms)} / 10점</TrustCount>
+                                </TrustItemCard>
+                                <TrustItemCard>
+                                    <TrustLabel>💬 댓글</TrustLabel>
+                                    <ProgressBar percent={(calcCommentScore(trustScore!.monthlyComments) / 15) * 100} />
+                                    <TrustCount>{calcCommentScore(trustScore!.monthlyComments)} / 15점</TrustCount>
+                                </TrustItemCard>
+                            </TrustGrid>
+                            <TrustTotal>
+                                총점 <strong>{trustScore?.totalScore?.toFixed(1) ?? "0.0"}</strong> / 100점
+                            </TrustTotal>
+
+                            <FooterRight>
+                                <ToggleButton onClick={() => setIsTrustCriteriaOpen(true)}>
+                                    산정 기준
+                                </ToggleButton>
+                            </FooterRight>
                         </>
                     )}
-                </Card>
+                </BaseCard>
 
                 {/* 활동 점수 변화 추이 */}
-                <Card>
-                    <HistoryHeader>
+                <BaseCard>
+                    <CardHeader>
                         <HeaderLeft>
                             <Icon>📈</Icon>
                             <h3>활동 점수 변화 추이</h3>
                         </HeaderLeft>
-                    </HistoryHeader>
+                    </CardHeader>
+
+                    <GraphSummary>
+                        <h4>
+                            이번 달 활동 점수: <strong>{trustScore?.totalScore?.toFixed(1) ?? "0.0"}점</strong>
+                        </h4>
+                        <ChangeTag up>▲ 2.0 상승</ChangeTag>
+                    </GraphSummary>
 
                     <GraphNotice>
-                        현재 그래프는 <strong>지난달</strong>까지의 기록이며,{" "}
-                        <strong>이번달</strong> 점수는 실시간으로 반영 중입니다.
+                        현재 그래프는 <strong>지난달까지의 기록</strong>이며,{" "}
+                        <strong>이번 달 점수</strong>는 실시간으로 반영 중입니다.
                     </GraphNotice>
 
-                    <TrustScoreHistoryGraph />
-                </Card>
+                    <GraphWrapper>
+                        <TrustScoreHistoryGraph />
+                    </GraphWrapper>
+                </BaseCard>
 
-                {/* 칭호 */}
-                <Card>
-                    <HistoryHeader>
+                {/* ================= 칭호 이력 ================= */}
+                <BaseCard>
+                    <CardHeader>
                         <HeaderLeft>
                             <Icon>🎖️</Icon>
-                            <h3>칭호 이력</h3>
+                            <h3>획득한 칭호</h3>
                         </HeaderLeft>
-                        <ToggleButton onClick={() => setIsTitleGuideOpen(true)}>
-                            칭호 가이드
-                        </ToggleButton>
-                    </HistoryHeader>
+                    </CardHeader>
 
                     {titles.length === 0 ? (
                         <Empty>획득한 칭호가 없습니다.</Empty>
                     ) : (
                         <TitleGrid>
                             {titles.map((title) => (
-                                <TitleCard
+                                <BadgeCard
                                     key={title.id}
                                     equipped={title.equipped}
-                                    animate={
-                                        animatedId === title.id
-                                            ? { scale: [1, 1.15, 1], opacity: [1, 0.85, 1] }
-                                            : {}
-                                    }
-                                    transition={{ duration: 0.6, ease: "easeOut" }}
+                                    onClick={() => handleEquip(title.id)}
+                                    whileHover={{ scale: 1.03 }}
+                                    transition={{ duration: 0.25 }}
                                 >
-                                    <TitleName>{title.displayName}</TitleName>
-                                    <AcquiredDate>
-                                        {new Date(title.acquiredAt).toLocaleDateString()}
-                                    </AcquiredDate>
-                                    <Description>{title.description}</Description>
-                                    <ActionButton onClick={() => handleEquip(title.id)}>
-                                        {title.equipped ? "해제" : "장착"}
-                                    </ActionButton>
-                                </TitleCard>
+                                    {title.equipped && <EquippedRibbon>착용 중</EquippedRibbon>}
+
+                                    <BadgeIcon equipped={title.equipped}>🏅</BadgeIcon>
+                                    <BadgeName equipped={title.equipped}>{title.displayName}</BadgeName>
+                                    <BadgeDesc>{title.description}</BadgeDesc>
+                                    <BadgeDate>획득일 {new Date(title.acquiredAt).toLocaleDateString()}</BadgeDate>
+                                    <BadgeButton equipped={title.equipped}>{title.equipped ? "해제" : "장착"}</BadgeButton>
+                                </BadgeCard>
                             ))}
                         </TitleGrid>
                     )}
-                </Card>
+
+                    <FooterRight>
+                        <ToggleButton onClick={() => setIsTitleGuideOpen(true)}>
+                            칭호 가이드
+                        </ToggleButton>
+                    </FooterRight>
+                </BaseCard>
             </Section>
 
             {/* 모달 */}
             <ServiceModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
             <TitleGuideModal isOpen={isTitleGuideOpen} onClose={() => setIsTitleGuideOpen(false)} />
             <TrustScoreCriteriaModal isOpen={isTrustCriteriaOpen} onClose={() => setIsTrustCriteriaOpen(false)} />
-            {/* 프로필 이미지 확대 모달 */}
+
             {isImageModalOpen && (
                 <ModalOverlay onClick={() => setIsImageModalOpen(false)}>
                     <ModalContent onClick={(e) => e.stopPropagation()}>
@@ -388,137 +371,94 @@ export default function AccountProfilePage() {
 }
 
 /* ================== styled-components ================== */
-const Wrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
+export const Wrapper = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
 `;
 
 const Section = styled.section`
-    padding: ${theme.spacing.sectionPadding};
-    border-radius: ${theme.radius.section};
-    background: ${theme.color.bgWhite};
-    box-shadow: ${theme.shadow.section};
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    padding: 32px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px; /* 핵심: 카드들 사이 여백 */
 `;
 
-const SectionTitle = styled.h2`
-    ${theme.mixin.sectionTitle}
+export const SectionTitle = styled.h2`
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin-bottom: 20px;
 `;
 
 /* ---------- 회원정보 ---------- */
 
-const InfoCard = styled.div`
-    background: ${theme.color.bgWhite};
-    border: 1px solid ${theme.color.border};
-    border-radius: ${theme.radius.card};
-    box-shadow: ${theme.shadow.card};
+export const InfoCard = styled.div`
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     padding: 32px 36px;
     display: flex;
     flex-direction: column;
-    gap: 28px;
+    gap: 24px;
 `;
 
-const ProfileRow = styled.div`
+export const ProfileRow = styled.div`
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 24px;
     flex-wrap: wrap;
+    gap: 24px;
 `;
 
-const ProfileLeft = styled.div`
+export const ProfileLeft = styled.div`
     display: flex;
     align-items: center;
     gap: 20px;
 `;
 
-const PhotoWrapper = styled.div`
+export const PhotoWrapper = styled.div`
     width: 88px;
     height: 88px;
     border-radius: 50%;
+    border: 2px solid #3b82f6;
     background: linear-gradient(145deg, #f8fbff, #eef4ff);
-    border: 1.5px solid ${theme.color.primary};
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     overflow: hidden;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05), 0 6px 20px rgba(0, 0, 0, 0.04);    
-    
+    box-shadow: 0 3px 10px rgba(59, 130, 246, 0.15);
+
     img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: transform 0.25s ease;
-    } 
-    
+        transition: transform 0.3s ease;
+    }
+
     &:hover img {
         transform: scale(1.05);
     }
 `;
 
-const NicknameArea = styled.div`
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 4px;
-
-    h3 {
-        font-size: 20px;
-        font-weight: 700;
-        color: ${theme.color.text};
-    }
+export const Photo = styled.img`
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
 `;
 
-const NicknameInput = styled.input`
-    font-size: 20px;
-    font-weight: 700;
-    color: ${theme.color.text};
-    border: none;
-    border-bottom: 2px solid ${theme.color.primary};
-    outline: none;
-    background: transparent;
-    padding: 4px 0;
-    width: 180px;
-`;
-
-const ButtonGroup = styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 6px;
-`;
-
-const SoftButton = styled.button`
-  font-size: ${theme.font.small};
-  padding: 6px 12px;
-  background: white;
-  border: 1px solid ${theme.color.border};
-  border-radius: ${theme.radius.button};
-  color: ${theme.color.textMuted};
-  cursor: pointer;
-  transition: 0.25s ease;
-
-  &:hover {
-    border-color: ${theme.color.primary};
-    color: ${theme.color.primary};
-    background: rgba(59, 130, 246, 0.05);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-`;
-
-const Spinner = styled.div`
+export const Spinner = styled.div`
     border: 3px solid #f3f3f3;
-    border-top: 3px solid ${theme.color.primary};
+    border-top: 3px solid #3b82f6;
     border-radius: 50%;
     width: 32px;
     height: 32px;
     animation: spin 1s linear infinite;
-
     @keyframes spin {
         0% {
             transform: rotate(0deg);
@@ -529,290 +469,398 @@ const Spinner = styled.div`
     }
 `;
 
-const Photo = styled.img`
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    cursor: pointer;
-    border-radius: 50%;
-    border: 2px solid #e5e7eb;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-    transform-origin: center center;
-    will-change: transform, box-shadow;
-    transition:
-            transform 0.35s cubic-bezier(0.25, 0.1, 0.25, 1),
-            box-shadow 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
-
-    &:hover {
-        transform: scale(1.05);
-        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+export const NicknameArea = styled.div`
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    h3 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
     }
 `;
 
+export const NicknameInput = styled.input`
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  border: none;
+  border-bottom: 2px solid #3b82f6;
+  outline: none;
+  padding: 4px 0;
+`;
 
-const InfoList = styled.div`
+export const ButtonGroup = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+`;
+
+export const SoftButton = styled.button`
+    font-size: 13px;
+    padding: 6px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    color: #6b7280;
+    background: #ffffff;
+    cursor: pointer;
+    transition: 0.25s ease;
+    &:hover {
+        border-color: #3b82f6;
+        color: #3b82f6;
+        background: rgba(59, 130, 246, 0.05);
+    }
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+`;
+
+export const InfoList = styled.div`
     display: flex;
     flex-direction: column;
     gap: 10px;
-    border-top: 1px solid ${theme.color.border};
+    border-top: 1px solid #e5e7eb;
     padding-top: 12px;
 `;
 
-const InfoItem = styled.div`
+export const InfoItem = styled.div`
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: ${theme.font.body};
-    color: ${theme.color.textMuted};
-
-    svg {
-        font-size: 14px;
-        color: ${theme.color.textMuted};
-    }
-
+    font-size: 15px;
+    color: #6b7280;
     span {
-        color: ${theme.color.text};
+        color: #111827;
         font-weight: 500;
     }
 `;
 
-const Divider = styled.hr`
+/* ---------- 모달 (프로필 확대) ---------- */
+export const ModalOverlay = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.25s ease;
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+`;
+
+export const ModalContent = styled.div`
+    background: transparent;
+    padding: 0;
+`;
+
+export const LargeImage = styled.img`
+    width: 400px;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 3px solid white;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    animation: zoomIn 0.25s ease;
+    @keyframes zoomIn {
+        from {
+            transform: scale(0.9);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+    @media (max-width: 768px) {
+        width: 80vw;
+        height: 80vw;
+    }
+`;
+
+/* ---------- 활동 이력 ---------- */
+export const BaseCard = styled.div`
+    background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+    border: 1px solid #e0e7ff;
+    border-radius: 14px;
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.08);
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+`;
+
+export const CardHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    h3 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1e3a8a;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+`;
+
+export const ToggleButton = styled.button`
+    font-size: 13px;
+    color: #3b82f6;
     border: none;
-    border-top: 1px solid ${theme.color.border};
-    margin: 0;
-`;
-
-/* 인스타그램식 확대 모달 */
-const ModalOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.25s ease;
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
+    background: none;
+    cursor: pointer;
+    &:hover {
+        text-decoration: underline;
     }
-    to {
-      opacity: 1;
-    }
-  }
 `;
 
-const ModalContent = styled.div`
-  background: transparent;
-  padding: 0;
-`;
-
-const LargeImage = styled.img`
-  width: 400px;
-  height: 400px;
-  object-fit: cover;
-  border-radius: 12px;
-  border: 3px solid white;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-  animation: zoomIn 0.25s ease;
-
-  @keyframes zoomIn {
-    from {
-      transform: scale(0.9);
-      opacity: 0;
-    }
-    to {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-
-  @media (max-width: 768px) {
-    width: 80vw;
-    height: 80vw;
-  }
-`;
-
-/* ---------- 활동 이력 (신뢰점수/레벨/칭호) ---------- */
-
-const Card = styled.div`
-  background: rgb(249, 250, 251);
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-
-  h3 {
-    font-size: 16px;
-    font-weight: 600;
-    color: rgb(17, 24, 39);
-  }
-
-  p {
-    font-size: 14px;
-    color: rgb(107, 114, 128);
-  }
-`;
-
-const HistoryHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const HeaderLeft = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const Icon = styled.span`
-  font-size: 18px;
-`;
-
-const ToggleButton = styled.button`
-  font-size: 13px;
-  color: #3b82f6;
-  border: none;
-  background: none;
-  cursor: pointer;
-
-  &:hover {
-    text-decoration: underline;
-  }
-`;
-
+/* 2행 3열 */
 const TrustGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px 20px;
+
+    @media (max-width: 900px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 600px) {
+        grid-template-columns: 1fr;
+    }
 `;
 
-const TrustItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: center;
-`;
 
-const ProgressBar = styled.div<{ percent: number }>`
-  width: 100%;
-  height: 10px;
-  background: #e5e7eb;
-  border-radius: 6px;
-  overflow: hidden;
-  position: relative;
-
-  &::after {
-    content: "";
-    display: block;
-    height: 100%;
-    width: ${({ percent }) => percent}%;
-    background: linear-gradient(90deg, #3b82f6, #10b981);
-    transition: width 0.3s ease;
-  }
-`;
-
-const Count = styled.span`
-  font-size: 13px;
-  font-weight: 600;
-  color: rgb(31, 41, 55);
-`;
-
-const TrustContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-`;
-
-const TotalScore = styled.div`
-    background: rgba(59, 130, 246, 0.08);
-    color: ${theme.color.primary};
-    border-radius: ${theme.radius.button};
-    font-weight: 700;
-`;
-
-const TitleGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 12px;
-`;
-
-// ✅ motion.div로 교체
-const TitleCard = styled(motion.div)<{ equipped: boolean }>`
-    border: 1px solid ${({ equipped }) => (equipped ? "#3b82f6" : "rgb(229,231,235)")};
+export const TrustItemCard = styled.div`
+    background: white;
+    border: 1px solid #e5e7eb;
     border-radius: 10px;
     padding: 12px;
-    background: ${({ equipped }) => (equipped ? "rgba(59,130,246,0.05)" : "white")};
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    transition: all 0.25s ease;
-
+    transition: 0.25s ease;
     &:hover {
-        box-shadow: 0 0 8px rgba(59,130,246,0.25);
-        transform: translateY(-2px);
+        transform: translateY(-3px);
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.15);
     }
 `;
 
-const TitleName = styled.span`
-  font-size: 14px;
-  font-weight: 600;
-  color: rgb(31, 41, 55);
+export const TrustLabel = styled.div`
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
 `;
 
-const AcquiredDate = styled.span`
-  font-size: 12px;
-  color: rgb(107, 114, 128);
+export const ProgressBar = styled.div<{ percent: number }>`
+    width: 100%;
+    height: 12px;
+    background: #f3f4f6;
+    border-radius: 6px;
+    margin-top: 6px;
+    position: relative;
+    overflow: hidden;
+    &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: ${({ percent }) => percent}%;
+        background: linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%);
+        border-radius: 6px;
+        transition: width 0.3s ease;
+    }
 `;
 
-const Description = styled.p`
-  font-size: 12px;
-  color: #6b7280;
-  text-align: center;
-  margin: 8px 0;
-  flex-grow: 1;
+export const TrustCount = styled.div`
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin-top: 4px;
 `;
 
-const ActionButton = styled.button`
-  margin-top: auto;
-  align-self: center;
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 600;
-  border: 1px solid #3b82f6;
-  color: #3b82f6;
-  background: white;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: #eff6ff;
-  }
+export const TrustTotal = styled.div`
+    text-align: center;
+    margin-top: 8px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #2563eb;
+    background: rgba(59, 130, 246, 0.08);
+    border-radius: 10px;
+    padding: 10px 0;
+    strong {
+        font-size: 18px;
+        color: #1d4ed8;
+    }
 `;
 
-const Empty = styled.p`
-  font-size: 14px;
-  color: #888;
+export const HeaderLeft = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
 `;
 
-const GraphNotice = styled.p`
-  font-size: 12px;
-  color: #9ca3af;
-  margin-top: 4px;
-  margin-bottom: 8px;
-  margin-left: 2px;
-  strong {
+export const Icon = styled.span`
+    font-size: 18px;
+`;
+
+export const GraphSummary = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-top: 2px;
+    h4 {
+        font-weight: 600;
+    }
+    strong {
+        color: #2563eb;
+        font-size: 16px;
+    }
+`;
+
+export const ChangeTag = styled.span<{ up?: boolean }>`
+    font-size: 13px;
+    font-weight: 700;
+    color: ${({ up }) => (up ? "#059669" : "#dc2626")};
+    background: ${({ up }) => (up ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)")};
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: -0.3px;
+`;
+
+export const GraphNotice = styled.p`
+    font-size: 12.5px;
     color: #6b7280;
-  }
+    margin-top: 4px;
+    margin-bottom: 8px;
+    strong {
+        color: #2563eb;
+    }
+`;
+
+export const GraphWrapper = styled.div`
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    padding: 10px 16px;
+    transition: 0.3s ease;
+    &:hover {
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12);
+        transform: translateY(-1px);
+    }
+`;
+
+export const Empty = styled.p`
+    font-size: 14px;
+    color: #888;
+    text-align: center;
+    margin: 12px 0;
+`;
+
+/* ---------- 칭호 ---------- */
+export const TitleGrid = styled.div`
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+`;
+
+export const BadgeCard = styled(motion.div)<{ equipped: boolean }>`
+    position: relative;
+    border: 1.5px solid ${({ equipped }) => (equipped ? "#3B82F6" : "#E5E7EB")};
+    background: ${({ equipped }) =>
+            equipped
+                    ? "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(147,197,253,0.15))"
+                    : "white"};
+    border-radius: 14px;
+    box-shadow: ${({ equipped }) =>
+            equipped ? "0 0 12px rgba(59,130,246,0.3)" : "0 2px 8px rgba(0,0,0,0.04)"};
+    padding: 18px 12px 16px;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
+    }
+`;
+
+export const BadgeIcon = styled.div<{ equipped: boolean }>`
+    font-size: 28px;
+    margin-bottom: 8px;
+    filter: ${({ equipped }) =>
+            equipped ? "drop-shadow(0 0 6px rgba(59,130,246,0.5))" : "none"};
+`;
+
+export const BadgeName = styled.div<{ equipped: boolean }>`
+    font-size: 15px;
+    font-weight: 700;
+    color: ${({ equipped }) => (equipped ? "#1D4ED8" : "#111827")};
+`;
+
+export const BadgeDesc = styled.p`
+    font-size: 12.5px;
+    color: #6b7280;
+    margin: 6px 0 8px;
+    line-height: 1.3;
+`;
+
+export const BadgeDate = styled.span`
+    font-size: 11.5px;
+    color: #9ca3af;
+`;
+
+export const BadgeButton = styled.button<{ equipped: boolean }>`
+    margin-top: 10px;
+    padding: 5px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    background: ${({ equipped }) =>
+            equipped ? "rgba(59,130,246,0.15)" : "#ffffff"};
+    border: 1px solid ${({ equipped }) => (equipped ? "#3B82F6" : "#E5E7EB")};
+    color: ${({ equipped }) => (equipped ? "#1D4ED8" : "#374151")};
+    cursor: pointer;
+    transition: 0.25s ease;
+    &:hover {
+        background: ${({ equipped }) =>
+                equipped ? "rgba(59,130,246,0.25)" : "#F3F4F6"};
+    }
+`;
+
+export const EquippedRibbon = styled.span`
+    position: absolute;
+    top: 10px;
+    right: -25px;
+    background: linear-gradient(90deg, #2563eb, #3b82f6);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 26px;
+    transform: rotate(45deg);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+`;
+
+const FooterRight = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
 `;
