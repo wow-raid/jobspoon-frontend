@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { fetchMyReports, CreateReportResponse } from "../api/reportApi";
-import { notifyError, notifySuccess, notifyInfo } from "../utils/toast";
+import { notifyError } from "../utils/toast";
 import { useNavigate } from "react-router-dom";
+import { FaDove } from "react-icons/fa"; // 🕊️ 진짜 비둘기 아이콘
 
 /* ====================== 메인 컴포넌트 ====================== */
 export default function MyReportsPage() {
@@ -20,7 +21,7 @@ export default function MyReportsPage() {
         } catch (err) {
             console.error(err);
             setError("신고 내역을 불러오는 중 오류가 발생했습니다.");
-            notifyError("신고 내역 불러오기 실패 ❌"); // ✅ 에러일 때만 알림
+            notifyError("신고 내역 불러오기 실패 ❌");
         } finally {
             setLoading(false);
         }
@@ -33,7 +34,8 @@ export default function MyReportsPage() {
     /* ===== 상태 분기 ===== */
     if (loading) return <StateBox>불러오는 중...</StateBox>;
     if (error) return <StateBox color="#EF4444">{error}</StateBox>;
-    if (reports.length === 0) return <EmptyState onGoContact={() => navigate("/mypage/inquiry")} />;
+    if (reports.length === 0)
+        return <EmptyState onGoContact={() => navigate("/mypage/inquiry")} />;
 
     return (
         <Section>
@@ -107,7 +109,9 @@ function EmptyState({ onGoContact }: { onGoContact: () => void }) {
             </Header>
 
             <EmptyCard>
-                <IconBox>📭</IconBox>
+                <IconBox>
+                    <FaDove />
+                </IconBox>
                 <CardTitle>신고 내역이 없습니다</CardTitle>
                 <CardBody>
                     <p>
@@ -120,6 +124,7 @@ function EmptyState({ onGoContact }: { onGoContact: () => void }) {
         </Section>
     );
 }
+
 /* ====================== Styled Components ====================== */
 
 const Section = styled.section`
@@ -160,8 +165,8 @@ const ReportTable = styled.div`
 const TableHeader = styled.div`
     display: grid;
     grid-template-columns: 1.2fr 1.2fr 1fr 1fr;
-    align-items: center; /* ✅ 세로 중앙정렬 */
-    text-align: center; /* ✅ 수평 중앙정렬 */
+    align-items: center;
+    text-align: center;
     padding: 18px 24px;
     background: #f9fafb;
     border-bottom: 1px solid #e5e7eb;
@@ -173,8 +178,8 @@ const TableHeader = styled.div`
 const TableRow = styled.div`
     display: grid;
     grid-template-columns: 1.2fr 1.2fr 1fr 1fr;
-    align-items: center; /* ✅ 세로 중앙정렬 */
-    text-align: center; /* ✅ 수평 중앙정렬 */
+    align-items: center;
+    text-align: center;
     padding: 20px 24px;
     border-bottom: 1px solid #f1f3f5;
     transition: background 0.15s ease;
@@ -211,7 +216,7 @@ const Status = styled.span<{ color: string }>`
 const DateCell = styled(Cell)`
     color: #9ca3af;
     font-size: 13px;
-    text-align: right; /* ✅ 날짜만 오른쪽 정렬 유지 */
+    text-align: right;
 `;
 
 const StateBox = styled.div<{ color?: string }>`
@@ -239,9 +244,19 @@ const EmptyCard = styled.div`
 `;
 
 const IconBox = styled.div`
-    font-size: 42px;
-    opacity: 0.85;
-    margin-bottom: 12px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(37, 99, 235, 0.1); /* 동일한 연한 블루 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px auto; /* 멤버십 카드와 동일한 위/아래 간격 */
+
+    svg {
+        color: #2563eb; /* 동일한 진한 블루 */
+        font-size: 28px; /* 동일한 아이콘 크기 */
+    }
 `;
 
 const CardTitle = styled.h3`
@@ -258,7 +273,7 @@ const CardBody = styled.div`
     text-align: center;
 
     p {
-        margin: 0 0 20px 0; /* ✅ 문단과 버튼 사이 여백 확보 */
+        margin: 0 0 20px 0;
     }
 `;
 
@@ -272,7 +287,8 @@ const ContactButton = styled.button`
     font-weight: 500;
     cursor: pointer;
     transition: background 0.2s ease;
-    margin-top: 20px; /* ✅ 4 → 20 으로 변경 (Membership spacing 맞춤) */
+    margin-top: 20px;
+
     &:hover {
         background: #1d4ed8;
     }
