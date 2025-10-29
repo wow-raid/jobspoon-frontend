@@ -27,11 +27,10 @@ export default function InterestSection() {
     if (!data || !data.hasInterview) {
         return (
             <Wrapper>
-                <Title>나의 관심 분야</Title>
                 <EmptyBox>
                     <p>아직 관심 분야가 등록되지 않았어요.</p>
                     <p>AI 면접을 통해 나의 기술 스택을 설정해보세요!</p>
-                    <StartButton onClick={() => navigate("/interview/start")}>
+                    <StartButton onClick={() => (window.location.href = "/vue-ai-interview/ai-interview/landing")}>
                         AI 면접 시작하기
                     </StartButton>
                 </EmptyBox>
@@ -41,7 +40,6 @@ export default function InterestSection() {
 
     return (
         <Wrapper>
-            <Title>나의 관심 분야</Title>
             <JobLabel>{data.job} 개발자</JobLabel>
             <TagList>
                 {data.techStacks?.map((stack) => (
@@ -59,13 +57,6 @@ const Wrapper = styled.section`
     background: #ffffff;
     border-radius: 16px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-`;
-
-const Title = styled.h2`
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 16px;
-    color: #0f172a;
 `;
 
 const JobLabel = styled.p`
