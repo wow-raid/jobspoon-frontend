@@ -167,7 +167,8 @@ const Panel = styled.div`
   border-radius: 12px;
   background: #fff;
   box-shadow: ${UI.shadow.card};
-  overflow: hidden;
+  overflow: visible;
+  position: relative;
 `;
 
 const HeadRow = styled.div`
@@ -414,7 +415,7 @@ const MenuPopup = styled.div`
   border-radius: 12px;
   box-shadow: ${UI.shadow.menu};
   padding: 6px;
-  z-index: 8;
+  z-index: 20;
 `;
 
 const MenuItemBtn = styled.button`
@@ -469,6 +470,70 @@ function hasNestedData<T>(x: unknown): x is NestedData<T> {
 function hasList<T>(x: unknown): x is LegacyList<T> {
     return Array.isArray((x as any)?.list);
 }
+
+// ===== Empty / NoResult =====
+const EmptyWrap = styled.div`
+  border: 1px solid ${UI.color.line};
+  border-radius: 16px;
+  background:
+    radial-gradient(800px 400px at 50% -120px, rgba(79,118,241,.08) 0%, rgba(62,99,224,.04) 35%, rgba(255,255,255,0) 70%),
+    #fff;
+  box-shadow: ${UI.shadow.card};
+  padding: 48px 28px;
+  display: grid;
+  gap: 18px;
+  place-items: center;
+  text-align: center;
+`;
+
+const EmptyIcon = styled.div`
+  width: 68px; height: 68px; border-radius: 16px;
+  background: ${UI.gradient.brand};
+  box-shadow: 0 10px 30px rgba(62,99,224,.28);
+  display:grid; place-items:center;
+  &::before{
+    content:"";
+    width: 36px; height: 36px;
+    background: center/contain no-repeat
+      url("data:image/svg+xml,%3Csvg width='36' height='36' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='white'%3E%3Cpath d='M6 4h7l3 3h2a2 2 0 0 1 2 2v8a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z'/%3E%3Crect x='7' y='11' width='10' height='2' rx='1'/%3E%3Crect x='7' y='15' width='6' height='2' rx='1'/%3E%3C/g%3E%3C/svg%3E");
+  }
+`;
+
+const EmptyTitle = styled.h3`
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  color: ${UI.color.text};
+`;
+
+const EmptyDesc = styled.p`
+  margin: 0;
+  max-width: 560px;
+  color: ${UI.color.muted};
+  font-size: ${UI.font.body};
+  line-height: 1.6;
+`;
+
+const EmptyActions = styled.div`
+  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+`;
+
+const GhostBtn = styled.button`
+  height: 38px; padding: 0 14px;
+  border-radius: 8px; border: 1px solid ${UI.color.line};
+  background: #fff; color: ${UI.color.text};
+  font-weight: 700; cursor: pointer;
+  transition: background .15s ease, transform .08s ease, filter .15s ease;
+  &:hover { background: #f9fafb; }
+  &:active { transform: translateY(1px); }
+  &:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(79,118,241,.25); }
+`;
+
+const NoResultWrap = styled(EmptyWrap)`
+  background:
+    radial-gradient(800px 400px at 50% -120px, rgba(17,24,39,.05) 0%, rgba(17,24,39,.02) 35%, rgba(255,255,255,0) 70%),
+    #fff;
+`;
 
 /* ===== Utils ===== */
 function formatKR(dateIso?: string) {
@@ -873,97 +938,124 @@ export default function SpoonNoteHomePage() {
             </Toolbar>
 
             {/* 목록 */}
-            <Panel role="table" aria-label="폴더 목록">
-                <HeadRow role="row">
-                    <Cell>
-                        <Checkbox
-                            ref={masterRef}
-                            aria-label="전체 선택"
-                            checked={selected.size === display.length && display.length > 0}
-                            onChange={(e) => toggleAll(e.currentTarget.checked)}
-                        />
-                    </Cell>
-                    <Cell>선택 항목</Cell>
-                    <CellCenter>단어 수</CellCenter>
-                    <CellCenter>학습 완료율</CellCenter>
-                    <CellCenter>최근 학습일</CellCenter>
-                    <Cell />
-                </HeadRow>
-
-                {display.map((f) => {
-                    const total = f.termCount ?? 0;
-                    const done = f.learnedCount ?? 0;
-                    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-
-                    return (
-                        <Row key={f.id} role="row">
+            {(total === 0 && all.length === 0 && !q) ? (
+                <EmptyWrap role="region" aria-live="polite">
+                    <EmptyIcon />
+                    <EmptyTitle>아직 만든 스푼노트가 없어요</EmptyTitle>
+                    <EmptyDesc>
+                        개인 학습 폴더를 만들어 용어를 모으고 진행률을 관리해 보세요.
+                        먼저 폴더를 만들고, 검색에서 원하는 용어를 담아두면 스푼퀴즈와도 자연스럽게 연동됩니다.
+                    </EmptyDesc>
+                    <EmptyActions>
+                        <Primary onClick={createFolder}>+ 새 폴더 만들기</Primary>
+                        <GhostBtn onClick={() => nav("/spoon-word/search")}>용어 탐색하기</GhostBtn>
+                    </EmptyActions>
+                </EmptyWrap>
+            ) : (q && all.length === 0) ? (
+                <NoResultWrap role="region" aria-live="polite">
+                    <EmptyIcon />
+                    <EmptyTitle>검색 결과가 없어요</EmptyTitle>
+                    <EmptyDesc>
+                        '{q}' 와(과) 일치하는 스푼노트를 찾지 못했어요. 검색어를 줄이거나 다른 키워드로 시도해 보세요.
+                    </EmptyDesc>
+                    <EmptyActions>
+                        <Primary onClick={() => setQ("")}>검색 초기화</Primary>
+                        <GhostBtn onClick={createFolder}>+ 새 폴더 만들기</GhostBtn>
+                    </EmptyActions>
+                </NoResultWrap>
+            ) : (
+                <>
+                    <Panel role="table" aria-label="폴더 목록">
+                        <HeadRow role="row">
                             <Cell>
                                 <Checkbox
-                                    aria-label={`${f.name} 선택`}
-                                    checked={selected.has(f.id)}
-                                    onChange={(e) => toggleOne(f.id, e.currentTarget.checked)}
+                                    ref={masterRef}
+                                    aria-label="전체 선택"
+                                    checked={selected.size === display.length && display.length > 0}
+                                    onChange={(e) => toggleAll(e.currentTarget.checked)}
                                 />
                             </Cell>
+                            <Cell>선택 항목</Cell>
+                            <CellCenter>단어 수</CellCenter>
+                            <CellCenter>학습 완료율</CellCenter>
+                            <CellCenter>최근 학습일</CellCenter>
+                            <Cell />
+                        </HeadRow>
 
-                            <Cell>
-                                <FolderName
-                                    onClick={() => nav(`/spoon-word/folders/${f.id}`, { state: { folderName: f.name } })}
-                                    aria-label={`${f.name} 폴더 열기`}
-                                >
-                                    {f.name}
-                                </FolderName>
-                            </Cell>
+                        {display.map((f) => {
+                            const total = f.termCount ?? 0;
+                            const done = f.learnedCount ?? 0;
+                            const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
-                            {/* 단어 수 */}
-                            <CellCenter>{total}</CellCenter>
+                            return (
+                                <Row key={f.id} role="row">
+                                    <Cell>
+                                        <Checkbox
+                                            aria-label={`${f.name} 선택`}
+                                            checked={selected.has(f.id)}
+                                            onChange={(e) => toggleOne(f.id, e.currentTarget.checked)}
+                                        />
+                                    </Cell>
 
-                            {/* 학습 완료율 */}
-                            <CellCenter>
-                                <CenterStack>
-                                    <span style={{ color: UI.color.muted, fontWeight: 600 }}>
-                                        {done}/{total}
-                                    </span>
-                                    <ProgressBar aria-label="학습 진행률">
-                                        <ProgressFill $pct={pct} />
-                                        <ProgressText $pct={pct}>{pct}%</ProgressText>
-                                    </ProgressBar>
-                                </CenterStack>
-                            </CellCenter>
+                                    <Cell>
+                                        <FolderName
+                                            onClick={() => nav(`/spoon-word/folders/${f.id}`, { state: { folderName: f.name } })}
+                                            aria-label={`${f.name} 폴더 열기`}
+                                        >
+                                            {f.name}
+                                        </FolderName>
+                                    </Cell>
 
-                            {/* 최근 학습일(없으면 최근 업데이트로 폴백) */}
-                            <CellCenter>{formatKR(f.lastStudiedAt || f.updatedAt)}</CellCenter>
+                                    <CellCenter>{total}</CellCenter>
 
-                            <CellAction>
-                                <Kebab
-                                    aria-label="더보기"
-                                    aria-haspopup="menu"
-                                    aria-expanded={menuFor === f.id}
-                                    onClick={() => {
-                                        setSortOpen(false); // 정렬 팝업 닫기
-                                        setMenuFor(prev => (prev === f.id ? null : f.id));
-                                    }}
-                                >
-                                    ⋯
-                                </Kebab>
+                                    <CellCenter>
+                                        <CenterStack>
+                <span style={{ color: UI.color.muted, fontWeight: 600 }}>
+                  {done}/{total}
+                </span>
+                                            <ProgressBar aria-label="학습 진행률">
+                                                <ProgressFill $pct={pct} />
+                                                <ProgressText $pct={pct}>{pct}%</ProgressText>
+                                            </ProgressBar>
+                                        </CenterStack>
+                                    </CellCenter>
 
-                                {menuFor === f.id && (
-                                    <MenuPopup role="menu" aria-label="폴더 메뉴">
-                                        <MenuItemBtn onClick={() => handleRename(f)}>스푼노트 이름 변경하기</MenuItemBtn>
-                                        <DangerItemBtn onClick={() => handleDelete(f)}>스푼노트 삭제하기</DangerItemBtn>
-                                    </MenuPopup>
-                                )}
-                            </CellAction>
-                        </Row>
-                    );
-                })}
-            </Panel>
-            {showPager && (
-                <Pagination
-                    page={page}
-                    size={perPage}
-                    total={pagerTotal}
-                    onChange={handlePageChange}
-                />
+                                    <CellCenter>{formatKR(f.lastStudiedAt || f.updatedAt)}</CellCenter>
+
+                                    <CellAction>
+                                        <Kebab
+                                            aria-label="더보기"
+                                            aria-haspopup="menu"
+                                            aria-expanded={menuFor === f.id}
+                                            onClick={() => {
+                                                setSortOpen(false);
+                                                setMenuFor(prev => (prev === f.id ? null : f.id));
+                                            }}
+                                        >
+                                            ⋯
+                                        </Kebab>
+
+                                        {menuFor === f.id && (
+                                            <MenuPopup role="menu" aria-label="폴더 메뉴">
+                                                <MenuItemBtn onClick={() => handleRename(f)}>스푼노트 이름 변경하기</MenuItemBtn>
+                                                <DangerItemBtn onClick={() => handleDelete(f)}>스푼노트 삭제하기</DangerItemBtn>
+                                            </MenuPopup>
+                                        )}
+                                    </CellAction>
+                                </Row>
+                            );
+                        })}
+                    </Panel>
+
+                    {showPager && (
+                        <Pagination
+                            page={page}
+                            size={perPage}
+                            total={pagerTotal}
+                            onChange={handlePageChange}
+                        />
+                    )}
+                </>
             )}
             {menuFor !== null && <GlobalOverlay onClick={closeMenu} />}
         </NarrowLeft>
