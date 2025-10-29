@@ -16,6 +16,7 @@ import TitleSection from "./TitleSection.tsx";
 import TrustScoreModal from "../modals/TrustScoreModal.tsx";
 import WritingModal from "../modals/WritingModal.tsx";
 import { notifyError } from "../../utils/toast";
+import InterestSection from "./InterestSection.tsx";
 
 /* ---------- 도넛 데이터 ---------- */
 const makeDonutData = (percent: number) => [
@@ -113,6 +114,12 @@ export default function DashboardSection() {
 
     return (
         <>
+            {/* 관심사 섹션 */}
+            <Section>
+                <SectionTitle>나의 관심사</SectionTitle>
+                <InterestSection />
+            </Section>
+
             <Section>
                 <SectionTitle>나의 활동 로그</SectionTitle>
 
