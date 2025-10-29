@@ -108,7 +108,7 @@ const ChartWrapper = styled.div`
 `;
 
 const Message = styled.p`
-    font-size: 14px;
+    font-size: 0.95rem;
     color: #888;
     text-align: center;
 `;

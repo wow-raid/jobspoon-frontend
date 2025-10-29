@@ -26,7 +26,7 @@ export default function InterestSection() {
 
     if (!data || !data.hasInterview) {
         return (
-            <Wrapper>
+            <>
                 <EmptyBox>
                     <p>아직 관심 분야가 등록되지 않았어요.</p>
                     <p>AI 면접을 통해 나의 기술 스택을 설정해보세요!</p>
@@ -34,19 +34,19 @@ export default function InterestSection() {
                         AI 면접 시작하기
                     </StartButton>
                 </EmptyBox>
-            </Wrapper>
+            </>
         );
     }
 
     return (
-        <Wrapper>
+        <>
             <JobLabel>{data.job} 개발자</JobLabel>
             <TagList>
                 {data.techStacks?.map((stack) => (
                     <Tag key={stack.key}>{stack.displayName}</Tag>
                 ))}
             </TagList>
-        </Wrapper>
+        </>
     );
 }
 
@@ -81,7 +81,7 @@ const Tag = styled.span`
 `;
 
 const EmptyBox = styled.div`
-    background: #f9fafb;
+    background: transparent;
     padding: 20px;
     border-radius: 12px;
     text-align: center;
@@ -91,15 +91,19 @@ const EmptyBox = styled.div`
 
 const StartButton = styled.button`
     margin-top: 12px;
-    background: #2998c5;
+    background: linear-gradient(90deg, #4cc4a8, #3ab49a); /* 💚 따뜻한 민트 그라데이션 */
     color: white;
     font-weight: 600;
     border: none;
     border-radius: 10px;
     padding: 10px 18px;
     cursor: pointer;
-    transition: 0.2s ease;
+    transition: 0.25s ease;
+    box-shadow: 0 3px 8px rgba(76, 196, 168, 0.25);
+
     &:hover {
-        background: #0077a8;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(76, 196, 168, 0.35);
+        background: linear-gradient(90deg, #3ab49a, #4cc4a8);
     }
 `;

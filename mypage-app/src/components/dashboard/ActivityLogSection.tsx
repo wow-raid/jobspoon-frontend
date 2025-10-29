@@ -131,9 +131,7 @@ export default function ActivityLogSection() {
 
     /* ---------- 렌더링 ---------- */
     return (
-        <Section>
-            <SectionTitle>나의 활동 로그</SectionTitle>
-
+        <>
             {/* 텍스트 카드 */}
             <TopCardGrid>
                 <TopCard>
@@ -184,29 +182,11 @@ export default function ActivityLogSection() {
                 trustScore={trust}
                 trustStatus={trust ? "loaded" : "empty"}
             />
-        </Section>
+        </>
     );
 }
 
 /* ================== styled-components ================== */
-
-const Section = styled.section`
-    background: rgba(255, 255, 255, 0.75);
-    border-radius: 16px;
-    padding: 28px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    animation: ${fadeUp} 0.6s ease both;
-`;
-
-const SectionTitle = styled.h2`
-    font-size: 19px;
-    font-weight: 700;
-    color: ${palette.textMain};
-    margin-bottom: 8px;
-`;
 
 const LoadingText = styled.p`
     font-size: 15px;
@@ -246,7 +226,7 @@ const TopCard = styled.div`
     }
 
     p {
-        font-size: 13px;
+        font-size: 0.95rem;
         color: ${palette.textSub};
     }
     strong {
@@ -307,7 +287,7 @@ const DonutCard = styled.div<{ isPrimary?: boolean }>`
 `;
 
 const DonutLabelTop = styled.p`
-    font-size: 13px;
+    font-size: 0.95rem;
     color: ${palette.textSub};
     margin-bottom: 12px;
     text-align: center;

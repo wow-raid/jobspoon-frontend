@@ -89,13 +89,16 @@ export default function DashboardSection() {
     return (
         <>
             {/* 관심사 */}
-            <Section>
+            <BaseCard>
                 <SectionTitle>나의 관심사</SectionTitle>
                 <InterestSection />
-            </Section>
+            </BaseCard>
 
             {/* 활동 로그 */}
-            <ActivityLogSection />
+            <Section>
+                <SectionTitle>나의 활동 로그</SectionTitle>
+                <ActivityLogSection />
+            </Section>
 
             {/* 성장 추이 (그래프) */}
             <BaseCard>
@@ -216,7 +219,7 @@ const ChangeTag = styled.span<{ up?: boolean }>`
 `;
 
 const GraphNotice = styled.p`
-    font-size: 12.5px;
+    font-size: 0.95rem;
     color: ${palette.textSub};
     margin-top: 4px;
     margin-bottom: 8px;
