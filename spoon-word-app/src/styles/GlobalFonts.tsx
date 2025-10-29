@@ -1,6 +1,6 @@
 import { createGlobalStyle } from "styled-components";
 
-const ASSET = process.env.MFE_PUBLIC_SERVICE || "";
+const ASSET = ""; // ⚠️ 포트 3006로 보내지 말고, 동일 오리진에서 받자!
 
 export const GlobalFonts = createGlobalStyle`
   @font-face {

@@ -9,7 +9,8 @@ const ASSET = process.env.MFE_PUBLIC_SERVICE || "";
 const GhanaFont = createGlobalStyle`
   @font-face {
     font-family: 'GhanaChocolate';
-    src: url('${ASSET}/fonts/ghana-choco/GhanaChocolate.woff2') format('woff2');
+    src: url('/fonts/ghana-choco/GhanaChocolate.woff2') format('woff2'),
+      url('${process.env.MFE_PUBLIC_SERVICE || ""}/fonts/ghana-choco/GhanaChocolate.woff2') format('woff2');
     font-weight: 400;
     font-style: normal;
     font-display: swap;
@@ -224,7 +225,7 @@ const RightCol = styled.div`
 `;
 const Emblem = styled.img`
   --emblem-size: clamp(110px, 15vw, 210px);
-  --emblem-nudge-x: clamp(32px, 1vw, 64px);
+  --emblem-nudge-x: clamp(22px, 1vw, 64px);
   position: absolute;
   right: 0;
   bottom: calc(100% + clamp(6px, 1vw, 12px));
@@ -259,7 +260,7 @@ const OptionWrap = styled.li`
 `;
 const OptText = styled.span`
   font-weight: 750; letter-spacing: -.02em; color: ${UI.text};
-  font-size: clamp(15px, 1.9vw, 18px); line-height: 1.35; word-break: break-word;
+  font-size: clamp(19px, 3.0vw, 26px); line-height: 1.35; word-break: break-word;
   text-decoration: none;
   &:hover, &:focus { text-decoration: none; }
 `;
