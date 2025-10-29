@@ -11,9 +11,9 @@ import {
 import styled from "styled-components";
 import {
     TrustScoreHistoryResponse,
-} from "../../api/userTrustScoreApi";
+} from "../../api/userTrustScoreApi.ts";
 
-export default function TrustScoreHistoryGraph({ history, currentScore }: {
+export default function GrowthSection({ history, currentScore }: {
     history: TrustScoreHistoryResponse[];
     currentScore: number;
 }) {

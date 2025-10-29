@@ -21,7 +21,7 @@ import TitleSection from "./TitleSection.tsx";
 import InterestSection from "./InterestSection.tsx";
 import TrustScoreModal from "../modals/TrustScoreModal.tsx";
 import WritingModal from "../modals/WritingModal.tsx";
-import TrustScoreHistoryGraph from "../history/TrustScoreHistoryGraph.tsx";
+import GrowthSection from "./GrowthSection.tsx";
 import { notifyError } from "../../utils/toast";
 
 /* ================== 기본 색상 팔레트 ================== */
@@ -228,7 +228,7 @@ export default function DashboardSection() {
                 </GraphNotice>
 
                 <GraphWrapper>
-                    <TrustScoreHistoryGraph
+                    <GrowthSection
                         history={history}
                         currentScore={trust.totalScore ?? 0}
                     />
