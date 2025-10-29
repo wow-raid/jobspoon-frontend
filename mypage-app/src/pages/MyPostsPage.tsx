@@ -12,7 +12,7 @@ export default function MyPostsPage() {
             <Card>
                 <CardHeader>
                     <IconBox>
-                        <FaFolderOpen size={26} color={palette.accent} />
+                        <FaFolderOpen size={26} color="#2563eb"/>
                     </IconBox>
                     <CardTitle>JobSpoon 활동 기록</CardTitle>
                     <Tag>COMING SOON</Tag>
@@ -33,7 +33,7 @@ export default function MyPostsPage() {
                 </CardBody>
 
                 <ComingSoonBox>
-                    <FaPenFancy size={15} color={palette.primary} />
+                    <FaPenFancy size={15} color="#2563eb" />
                     <span>게시물 관리 기능 준비 중</span>
                 </ComingSoonBox>
             </Card>
@@ -41,49 +41,47 @@ export default function MyPostsPage() {
     );
 }
 
-/* ================= 색상 팔레트 ================= */
-const palette = {
-    primary: "#1B8C95",
-    accent: "#3AB49A",      // 포인트용 진한 민트
-    mintLight: "rgba(27,140,149,0.08)", // 아주 연한 민트 배경용
-    border: "#E5E7EB",      // 밝은 회색 선
-    text: "#0F172A",        // 메인 텍스트
-    subtext: "#6B7280",     // 서브 텍스트
-    shadow: "rgba(0,0,0,0.05)", // 은은한 그림자
-};
-
-/* ================= 애니메이션 ================= */
+/* ================= styled-components ================= */
 const fadeUp = keyframes`
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    margin-top: 16px;
+  }
+  to {
+    opacity: 1;
+    margin-top: 0;
+  }
 `;
 
 const float = keyframes`
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
 `;
 
 const pulse = keyframes`
     0%, 100% {
         transform: scale(1);
-        box-shadow: 0 4px 12px rgba(27,140,149,0.08);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
     }
     50% {
-        transform: scale(1.015);
-        box-shadow: 0 8px 22px rgba(27,140,149,0.18);
+        transform: scale(1.015); /* 살짝 커졌다가 */
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.15); /* 그림자 강조 */
     }
 `;
 
-/* ================= 레이아웃 ================= */
 const Section = styled.section`
+    animation: ${fadeUp} 0.6s ease both;
     padding: 24px;
     border-radius: 12px;
-    background: #ffffff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     display: flex;
     flex-direction: column;
     gap: 20px;
-    animation: ${fadeUp} 0.6s ease both;
 `;
 
 const SectionHeader = styled.div`
@@ -95,22 +93,22 @@ const SectionHeader = styled.div`
 const SectionTitle = styled.h2`
     font-size: 20px;
     font-weight: 700;
-    color: ${palette.text};
+    color: #111827;
 `;
 
 const Card = styled.div`
-    border: 1px solid ${palette.border};
+    border: 1px solid #e5e7eb;
     border-radius: 16px;
     padding: 32px;
-    background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
-    animation: ${float} 5s ease-in-out infinite, ${pulse} 4.5s ease-in-out infinite;
-    text-align: center;
+    background: linear-gradient(180deg, #f9fafb 0%, #ffffff 100%);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
+    animation: ${float} 4s ease-in-out infinite, ${pulse} 5s ease-in-out infinite;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px ${palette.shadow};
+    text-align: center;
 
     &:hover {
-        transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 8px 24px ${palette.shadow};
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.08);
     }
 `;
 
@@ -125,7 +123,7 @@ const CardHeader = styled.div`
 const IconBox = styled.div`
     width: 52px;
     height: 52px;
-    background: ${palette.mintLight};
+    background: rgba(37, 99, 235, 0.1);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -135,14 +133,14 @@ const IconBox = styled.div`
 const CardTitle = styled.h3`
     font-size: 20px;
     font-weight: 700;
-    color: ${palette.primary};
+    color: #1e3a8a;
 `;
 
 const Tag = styled.span`
     font-size: 12px;
     font-weight: 600;
-    color: ${palette.primary};
-    background: ${palette.mintLight};
+    color: #2563eb;
+    background: rgba(37, 99, 235, 0.1);
     border-radius: 8px;
     padding: 3px 10px;
     letter-spacing: 0.5px;
@@ -151,11 +149,11 @@ const Tag = styled.span`
 const CardBody = styled.div`
     font-size: 15px;
     line-height: 1.8;
-    color: ${palette.subtext};
+    color: #374151;
 
     strong {
         font-weight: 600;
-        color: ${palette.accent};
+        color: #1e40af;
     }
 
     p + p {
@@ -169,8 +167,8 @@ const ComingSoonBox = styled.div`
     gap: 6px;
     padding: 8px 14px;
     border-radius: 8px;
-    background: ${palette.mintLight};
-    color: ${palette.primary};
+    background: rgba(37, 99, 235, 0.06);
+    color: #2563eb;
     font-size: 14px;
     font-weight: 500;
     margin-top: 20px;
