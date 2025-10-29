@@ -236,21 +236,27 @@ const TopCard = styled.div`
 `;
 
 const DetailButton = styled.button`
-    margin-top: 10px;
-    padding: 6px 14px;
-    font-size: 13px;
-    font-weight: 600;
-    background: linear-gradient(90deg, ${palette.primary}, ${palette.accent});
+    margin-top: 6px;
+    padding: 5px 11px;
+    border-radius: 100px;
+    background: linear-gradient(90deg, #43d0b2, #25a58b);
     color: white;
+    font-weight: 500;
+    font-size: 0.78rem;
     border: none;
-    border-radius: 8px;
+    letter-spacing: 0.1px;
+    box-shadow: 0 1px 3px rgba(76, 196, 168, 0.25);
     cursor: pointer;
-    box-shadow: 0 2px 4px ${palette.shadow};
     transition: all 0.25s ease;
 
     &:hover {
         transform: translateY(-1px);
-        box-shadow: 0 3px 8px ${palette.shadow};
+        filter: brightness(1.06);
+        box-shadow: 0 2px 6px rgba(76, 196, 168, 0.3);
+    }
+
+    &:active {
+        transform: scale(0.98);
     }
 `;
 
