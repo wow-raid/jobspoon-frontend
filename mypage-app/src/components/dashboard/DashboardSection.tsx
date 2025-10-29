@@ -114,7 +114,10 @@ export default function DashboardSection() {
                         <strong>{trust.totalScore?.toFixed(1) ?? "0.0"}점</strong>
                     </h4>
 
-                    <ChangeTag up={scoreDiff > 0}>
+                    <ChangeTag
+                        up={scoreDiff > 0}
+                        down={scoreDiff < 0}
+                    >
                         {scoreDiff > 0
                             ? `▲ ${scoreDiff.toFixed(1)} 상승`
                             : scoreDiff < 0
@@ -214,14 +217,20 @@ const GraphSummary = styled.div`
     }
 `;
 
-const ChangeTag = styled.span<{ up?: boolean }>`
+const ChangeTag = styled.span<{ up?: boolean; down?: boolean }>`
     font-size: 13px;
     font-weight: 700;
-    color: ${({ up }) => (up ? "#0E766E" : "#C2410C")};
-    background: ${({ up }) =>
-    up ? "rgba(16,185,129,0.15)" : "rgba(234,88,12,0.15)"};
+    color: ${({ up, down }) =>
+            up ? "#0E766E" : down ? "#C2410C" : "#6B7280"};
+    background: ${({ up, down }) =>
+            up
+                    ? "rgba(16,185,129,0.15)"
+                    : down
+                            ? "rgba(234,88,12,0.15)"
+                            : "rgba(107,114,128,0.12)"};
     padding: 3px 8px;
     border-radius: 6px;
+    letter-spacing: 0.2px;
 `;
 
 const GraphNotice = styled.p`
