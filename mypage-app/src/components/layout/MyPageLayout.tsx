@@ -47,9 +47,6 @@ export default function MyPageLayout() {
 
     return (
         <>
-            {/* 전역 Footer z-index 적용 */}
-            <GlobalFooterStyle />
-
             <LayoutContainer>
                 {/* 좌측 고정 사이드바 */}
                 <FixedAside>
@@ -84,38 +81,24 @@ export default function MyPageLayout() {
 
 /* ====================== styled-components ====================== */
 
-/** Footer가 사이드바 위로 올라오게 하는 전역 스타일 */
-const GlobalFooterStyle = createGlobalStyle`
-    footer {
-        position: relative;
-        z-index: 20;
-    }
-`;
-
 /** 전체 컨테이너 */
 const LayoutContainer = styled.div`
     display: flex;
     width: 80%;
     margin: 0 auto;
-    //position: relative;
-    //padding-bottom: 400px; /* Footer 높이(약 392px)에 맞춰 조정 */
+    height: 110vh;
 `;
 
 /** 완전 고정 사이드바 */
 const FixedAside = styled.aside`
-    position: fixed;
-    top: 79px; /* 네브바 높이 아래 */
     left: calc(10%);
     width: 240px;
     height: calc(100vh - 79px);
-    overflow-y: auto;
-    border-right: 1px solid rgb(229, 231, 235);
     background-color: white;
     display: flex;
     flex-direction: column;
     gap: 16px;
     padding: 12px;
-    z-index: 10;
 
     @media (min-width: 1024px) {
         width: 300px;
@@ -167,14 +150,9 @@ const HomeHeaderLabel = styled.span`
 const Main = styled.main`
     flex: 1;
     padding: 24px;
-    margin-left: 260px;
     display: flex;
     flex-direction: column;
     gap: 24px;
-
-    @media (min-width: 1024px) {
-        margin-left: 320px;
-    }
 
     @media (max-width: 768px) {
         padding: 16px;
