@@ -116,7 +116,7 @@ export default function AccountProfilePage() {
     return (
         <Wrapper>
             {/* ================= 회원정보 ================= */}
-            <Section>
+            <ProfileSection>
                 <SectionTitle>회원정보</SectionTitle>
                 <InfoCard>
                     <ProfileRow>
@@ -180,7 +180,7 @@ export default function AccountProfilePage() {
                         </InfoItem>
                     </InfoList>
                 </InfoCard>
-            </Section>
+            </ProfileSection>
 
             {/* ================= 칭호 이력 ================= */}
             <Section>
@@ -234,9 +234,7 @@ export default function AccountProfilePage() {
     );
 }
 
-/* ================================
-   Styled Components
-================================ */
+/* ================================   Styled Components   ================================ */
 const fadeUp = keyframes`
   from { opacity: 0; margin-top: 16px; }
   to { opacity: 1; margin-top: 0; }
@@ -257,6 +255,18 @@ const Section = styled.section`
     display: flex;
     flex-direction: column;
     gap: 32px;
+`;
+
+const ProfileSection = styled.section`
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbf8 100%);
+    border: 1px solid rgba(76, 196, 168, 0.35);
+    border-radius: 16px;
+    padding: 32px 36px;
+    box-shadow: 0 4px 12px rgba(76, 196, 168, 0.22);
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    animation: ${fadeUp} 0.6s ease both;
 `;
 
 export const SectionTitle = styled.h2`
@@ -402,11 +412,10 @@ export const LargeImage = styled.img`
 
 /* ---------- 칭호 ---------- */
 export const BaseCard = styled.div`
-    background: linear-gradient(180deg,#fff 0%,#f9fbff 100%);
-    border: 1px solid #e0e7ff;
+    border: 1px solid #E5E7EB; /* 🔹 아주 옅은 회색 테두리 */
     border-radius: 14px;
-    box-shadow: 0 4px 10px rgba(59,130,246,0.08);
     padding: 24px 28px;
+    background: #fff; /* 🔹 배경은 유지 (필요 시 제거 가능) */
 `;
 
 export const Empty = styled.p`
@@ -423,43 +432,53 @@ export const TitleGrid = styled.div`
 
 export const BadgeCard = styled(motion.div)<{ equipped: boolean }>`
     position: relative;
-    border: 1.5px solid ${({ equipped }) => (equipped ? "#3B82F6" : "#E5E7EB")};
+    border: 1.5px solid ${({ equipped }) =>
+            equipped ? "#4CC4A8" : "rgba(229,231,235,1)"};
     background: ${({ equipped }) =>
-    equipped ? "rgba(59,130,246,0.08)" : "#fff"};
+            equipped
+                    ? "linear-gradient(180deg, rgba(76,196,168,0.08) 0%, rgba(59,130,246,0.05) 100%)"
+                    : "#fff"};
     border-radius: 14px;
-    padding: 18px 12px;
+    padding: 18px 12px 48px;
     text-align: center;
-    transition: all 0.3s ease;
     cursor: pointer;
+    transition: all 0.25s ease;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+
     &:hover {
         transform: translateY(-3px);
-        box-shadow: 0 4px 14px rgba(59,130,246,0.25);
+        box-shadow: 0 4px 14px rgba(76, 196, 168, 0.25);
     }
 `;
 
 export const EquippedRibbon = styled.span`
     position: absolute;
     top: 10px;
-    right: -25px;
-    background: linear-gradient(90deg, #2563eb, #3b82f6);
+    right: -22px;
+    background: linear-gradient(90deg, #43d0b2, #25a58b);
     color: white;
     font-size: 11px;
     font-weight: 700;
-    padding: 3px 26px;
+    padding: 3px 24px;
     transform: rotate(45deg);
+    box-shadow: 0 2px 5px rgba(76, 196, 168, 0.25);
 `;
 
 export const BadgeIcon = styled.div<{ equipped: boolean }>`
     font-size: 28px;
     margin-bottom: 8px;
     filter: ${({ equipped }) =>
-    equipped ? "drop-shadow(0 0 6px rgba(59,130,246,0.5))" : "none"};
+            equipped ? "drop-shadow(0 0 6px rgba(76,196,168,0.5))" : "none"};
 `;
 
 export const BadgeName = styled.div<{ equipped: boolean }>`
     font-size: 15px;
     font-weight: 700;
-    color: ${({ equipped }) => (equipped ? "#1D4ED8" : "#111827")};
+    color: ${({ equipped }) => (equipped ? "#0E766E" : "#111827")};
 `;
 
 export const BadgeDesc = styled.p`
@@ -474,14 +493,24 @@ export const BadgeDate = styled.span`
 `;
 
 export const BadgeButton = styled.button<{ equipped: boolean }>`
-    margin-top: 10px;
-    padding: 5px 12px;
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 14px;
     font-size: 13px;
     font-weight: 600;
     border-radius: 8px;
-    background: ${({ equipped }) => (equipped ? "rgba(59,130,246,0.15)" : "#fff")};
-    border: 1px solid ${({ equipped }) => (equipped ? "#3B82F6" : "#E5E7EB")};
-    color: ${({ equipped }) => (equipped ? "#1D4ED8" : "#374151")};
+    background: ${({ equipped }) => (equipped ? "rgba(76,196,168,0.15)" : "#fff")};
+    border: 1px solid ${({ equipped }) => (equipped ? "#4CC4A8" : "#E5E7EB")};
+    color: ${({ equipped }) => (equipped ? "#0E766E" : "#374151")};
+    transition: 0.2s ease;
+    cursor: pointer;
+
+    &:hover {
+        filter: brightness(1.05);
+        transform: translate(-50%, -1px);
+    }
 `;
 
 export const FooterRight = styled.div`
@@ -492,7 +521,7 @@ export const FooterRight = styled.div`
 
 export const ToggleButton = styled.button`
     font-size: 13px;
-    color: #3b82f6;
+    color: #3AB49A;
     border: none;
     background: none;
     cursor: pointer;
