@@ -1,7 +1,7 @@
 import { createAxiosInstances, springAdminAxiosInst } from "@/account/utility/axiosInstance";
 import {AwsDailyCost} from "@/administrator/service/AdminAwsCostExplorer/dto/AdminAwsCostExplorerDto.ts";
 
-function ensureSpringAdminAxios() {
+export function ensureSpringAdminAxios() {
     if (!springAdminAxiosInst) createAxiosInstances();
     return springAdminAxiosInst!;
 }
