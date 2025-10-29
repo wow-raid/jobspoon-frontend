@@ -1520,33 +1520,51 @@ export default function WordbookFolderPage() {
 
     // ===== 정렬 상태 =====
     type SortKey = "createdAt_desc" | "title_asc" | "title_desc" | "status_asc" | "status_desc";
+    const CLIENT_SORT_PARAM = "cs";
+    const [, setSortMenuOpen] = React.useState(false);
 
     const sortToServer = (k: SortKey): string => {
         switch (k) {
-            case "title_asc":  return "title,asc";
-            case "title_desc": return "title,desc";
+            case "title_asc":
+                return "title,asc";
+            case "title_desc":
+                return "title,desc";
+            case "createdAt_desc":
+                return "createdAt,desc";
             case "status_asc":
             case "status_desc":
-            case "createdAt_desc":
-            default:           return "createdAt,desc";
+            default:
+                return "createdAt,desc";
         }
     };
-    const [, setSortMenuOpen] = React.useState(false);
 
-    const parseSortKeyFromURL = (raw: string | null): SortKey => {
-        const value = (raw || "").trim().toLowerCase();
-
-        if (value.startsWith("title,asc")) return "title_asc";
-        if (value.startsWith("title,desc")) return "title_desc";
-        if (value.startsWith("status,asc")) return "status_asc";
-        if (value.startsWith("status,desc")) return "status_desc";
-
-        return "createdAt_desc";
+    const parseSortKeyFromSearch = (sp: URLSearchParams): SortKey => {
+        const cs = (sp.get(CLIENT_SORT_PARAM) || "").trim().toLowerCase();
+            if (cs === "title,asc")  return "title_asc";
+            if (cs === "title,desc") return "title_desc";
+            if (cs === "status,asc") return "status_asc";
+            if (cs === "status,desc")return "status_desc";
+                // fallback: 기존 sort=title,asc|desc|createdAt,desc만 해석
+        const sort = (sp.get("sort") || "").trim().toLowerCase();
+            if (sort.startsWith("title,asc")) return "title_asc";
+            if (sort.startsWith("title,desc")) return "title_desc";
+            return "createdAt_desc";
     };
+
+            const clientSortToUrl = (k: SortKey): string => {
+                switch (k) {
+                    case "title_asc":  return "title,asc";
+                        case "title_desc": return "title,desc";
+                        case "status_asc": return "status,asc";
+                        case "status_desc":return "status,desc";
+                        case "createdAt_desc":
+                        default:           return "createdAt,desc";
+                    }
+            };
 
     const [sortKey, setSortKey] = React.useState<SortKey>(() => {
         const params = new URLSearchParams(location.search);
-        return parseSortKeyFromURL(params.get("sort"));
+        return parseSortKeyFromSearch(params);
     });
 
     const [sortInlineOpen, setSortInlineOpen] = React.useState(false);
@@ -1557,8 +1575,8 @@ export default function WordbookFolderPage() {
         switch (sortKey) {
             case "title_asc":  return "제목순";
             case "title_desc": return "제목역순";
-            case "status_asc": return "상태: 미암기→완료";
-            case "status_desc":return "상태: 완료→미암기";
+            case "status_asc": return "상태: 학습 중→학습 완료";
+            case "status_desc":return "상태: 학습 완료→학습 중";
             case "createdAt_desc":
             default:           return "최신 등록순";
         }
@@ -1642,31 +1660,30 @@ export default function WordbookFolderPage() {
                     headers: { ...authHeader() },
                     withCredentials: true,
                 });
+
                 const d = res.data ?? {};
                 const raw: any[] = d.userWordbookTermList || d.items || d.content || d.terms || d.data || [];
                 const list = raw.map(mapRow).filter(Boolean) as TermItem[];
-
-                // 페이지 교체 방식
                 setItems(list);
 
-                // total / totalPages 파싱
                 const nextTotal =
                     (typeof d.totalItems === "number" && d.totalItems) ||
                     (typeof d.total === "number" && d.total) ||
                     (typeof d.totalElements === "number" && d.totalElements) ||
                     0;
+
                 const headerTotalRaw = (res.headers?.["x-total-count"] ??
                     (res.headers ? (res.headers as any)["X-Total-Count"] : undefined));
                 const headerTotal = Number(headerTotalRaw);
                 setTotal(Number.isFinite(headerTotal) ? headerTotal : nextTotal);
 
-                if (typeof d.folderName === "string" && d.folderName.trim())
-                    setFolderName(d.folderName);
+                if (typeof d.folderName === "string" && d.folderName.trim()) setFolderName(d.folderName);
             } catch (err: any) {
                 const s = err?.response?.status ?? 0;
                 const msg = err?.message ?? "";
                 const data = err?.response?.data;
                 console.error("[fetchPage] failed:", { status: s, msg, body: data ?? "(no body)" });
+
                 if (s === 401) { goToAccountLogin(location.pathname + location.search); return; }
                 else if (s === 404 || s === 403) setError("폴더를 찾을 수 없습니다.");
                 else setError("데이터를 불러오는 중 오류가 발생했습니다.");
@@ -1674,7 +1691,7 @@ export default function WordbookFolderPage() {
                 setLoading(false);
             }
         },
-        [folderId, navigate]
+        [folderId]
     );
 
     // 페이지 바뀔 때 URL 업데이트 + 스크롤 상단
@@ -1682,7 +1699,8 @@ export default function WordbookFolderPage() {
         const sp = new URLSearchParams(location.search);
         sp.set("page", String(p));
         sp.set("size", String(s));
-        sp.set("sort", sortToServer(sk)); // 백업용, 필요 없으면 제거
+        sp.set("sort", sortToServer(sk));
+        sp.set(CLIENT_SORT_PARAM, clientSortToUrl(sk));
         navigate({ search: `?${sp.toString()}` }, { replace: false });
     }, [location.search, navigate]);
 
@@ -1700,7 +1718,7 @@ export default function WordbookFolderPage() {
         // URL → 상태 반영
         const p = Number(searchParams.get("page") ?? 0) || 0;
         const s = Number(searchParams.get("size") ?? 20) || 20;
-        const sk = parseSortKeyFromURL(searchParams.get("sort"));
+        const sk = parseSortKeyFromSearch(searchParams);
         setPage(p);
         setSize(s);
         setSortKey(sk);
@@ -2432,10 +2450,10 @@ export default function WordbookFolderPage() {
                                     <span /> 제목역순
                                 </RadioItem>
                                 <RadioItem $checked={sortKey === "status_asc"} onClick={() => applySort("status_asc")}>
-                                    <span /> 상태: 미암기 → 완료
+                                    <span /> 상태: 학습 중 → 학습 완료
                                 </RadioItem>
                                 <RadioItem $checked={sortKey === "status_desc"} onClick={() => applySort("status_desc")}>
-                                    <span /> 상태: 완료 → 미암기
+                                    <span /> 상태: 학습 완료 → 학습 중
                                 </RadioItem>
                             </SortPopup>
                         )}
