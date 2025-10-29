@@ -198,13 +198,19 @@ const GraphSummary = styled.div`
     align-items: center;
     gap: 10px;
     font-size: 15px;
-    font-weight: 600;
     color: ${palette.textMain};
     margin-top: 2px;
+
+    h4 {
+        font-weight: 400; /* ✅ 굵은 제목 해제 */
+        margin: 0;
+        color: ${palette.textSub};
+    }
 
     strong {
         color: ${palette.primary};
         font-size: 16px;
+        font-weight: 600;
     }
 `;
 
