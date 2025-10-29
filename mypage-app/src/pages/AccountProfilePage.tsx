@@ -339,11 +339,29 @@ export const NicknameArea = styled.div`
 `;
 
 export const NicknameInput = styled.input`
-    font-size: 20px;
-    font-weight: 700;
+    font-size: 18px;
+    font-weight: 500;
+    color: #1c1c1e;
+    background: transparent;
     border: none;
-    border-bottom: 2px solid rgba(0,0,0,0.08);
-    &:focus { box-shadow: 0 3px 0 rgba(59,130,246,0.5); }
+    border-bottom: 1.5px solid #d2d2d7;
+    padding: 6px 4px;
+    outline: none;
+    width: 160px;
+    transition: border-color 0.2s ease;
+
+    &:hover {
+        border-bottom-color: #a1a1aa;
+    }
+
+    &:focus {
+        border-bottom-color: #007aff;
+    }
+
+    &::placeholder {
+        color: #a1a1a6;
+        font-weight: 400;
+    }
 `;
 
 export const ButtonGroup = styled.div`
