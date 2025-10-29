@@ -171,11 +171,11 @@ export default function AccountProfilePage() {
 
                     <InfoList>
                         <InfoItem>
-                            <FaEnvelope />
+                            <FaEnvelope color={"#329FCB"} />
                             <span>{profile.email}</span>
                         </InfoItem>
                         <InfoItem>
-                            <FaLock />
+                            <FaLock color={"#329FCB"} />
                             <span>가입일: -</span>
                         </InfoItem>
                     </InfoList>
@@ -306,9 +306,6 @@ export const PhotoWrapper = styled.div`
     width: 88px;
     height: 88px;
     border-radius: 50%;
-    border: 2px solid #3b82f6;
-    background: linear-gradient(145deg, #f8fbff, #eef4ff);
-    box-shadow: 0 3px 10px rgba(59, 130, 246, 0.15);
     overflow: hidden;
     cursor: pointer;
 `;
@@ -344,18 +341,18 @@ export const NicknameInput = styled.input`
     color: #1c1c1e;
     background: transparent;
     border: none;
-    border-bottom: 1.5px solid #d2d2d7;
     padding: 6px 4px;
     outline: none;
-    width: 160px;
-    transition: border-color 0.2s ease;
+    width: 200px;
+    transition: border-color 0.25s ease;
 
     &:hover {
-        border-bottom-color: #a1a1aa;
+        border-bottom-color: #9ccbeb;
     }
 
     &:focus {
-        border-bottom-color: #007aff;
+        border-bottom-color: #329FCB;
+        box-shadow: 0 2px 0 #329FCB;
     }
 
     &::placeholder {
@@ -373,17 +370,24 @@ export const ButtonGroup = styled.div`
 
 export const SoftButton = styled.button`
     font-size: 13px;
-    padding: 6px 12px;
+    padding: 6px 16px;
     border: 1px solid #e5e7eb;
-    border-radius: 8px;
+    border-radius: 9999px;
     background: #fff;
     color: #6b7280;
     cursor: pointer;
-    transition: 0.25s;
+    transition: all 0.25s ease;
+    
     &:hover {
-        border-color: #3b82f6;
-        color: #3b82f6;
-        background: rgba(59,130,246,0.05);
+        border-color: #4cc4a8;
+        color: #0e766e;
+        background: #fff;
+        box-shadow: 0 2px 6px rgba(76, 196, 168, 0.15);
+    }
+    
+    &:active {
+        transform: scale(0.97);
+        box-shadow: 0 1px 3px rgba(76, 196, 168, 0.1);
     }
 `;
 
@@ -477,13 +481,13 @@ export const EquippedRibbon = styled.span`
     position: absolute;
     top: 10px;
     right: -22px;
-    background: linear-gradient(90deg, #43d0b2, #25a58b);
+    background: linear-gradient(90deg, #329FCB, #278FC1);
     color: white;
     font-size: 11px;
     font-weight: 700;
     padding: 3px 24px;
     transform: rotate(45deg);
-    box-shadow: 0 2px 5px rgba(76, 196, 168, 0.25);
+    box-shadow: 0 2px 6px rgba(50, 159, 203, 0.3);
 `;
 
 export const BadgeIcon = styled.div<{ equipped: boolean }>`
@@ -515,19 +519,29 @@ export const BadgeButton = styled.button<{ equipped: boolean }>`
     bottom: 12px;
     left: 50%;
     transform: translateX(-50%);
-    padding: 6px 14px;
+    padding: 6px 18px;
     font-size: 13px;
     font-weight: 600;
-    border-radius: 8px;
-    background: ${({ equipped }) => (equipped ? "rgba(76,196,168,0.15)" : "#fff")};
-    border: 1px solid ${({ equipped }) => (equipped ? "#4CC4A8" : "#E5E7EB")};
-    color: ${({ equipped }) => (equipped ? "#0E766E" : "#374151")};
-    transition: 0.2s ease;
+    border-radius: 9999px;
+    transition: all 0.25s ease;
     cursor: pointer;
 
+    /* 상태 반전 */
+    background: ${({ equipped }) => (equipped ? "#fff" : "#329FCB")};
+    border: 1.5px solid #329FCB;
+    color: ${({ equipped }) => (equipped ? "#278FC1" : "#fff")};
+
     &:hover {
-        filter: brightness(1.05);
+        background: ${({ equipped }) => (equipped ? "#F7FBFE" : "#278FC1")};
+        border-color: #278FC1;
+        color: ${({ equipped }) => (equipped ? "#1677AD" : "#fff")};
+        box-shadow: 0 2px 8px rgba(50, 159, 203, 0.25);
         transform: translate(-50%, -1px);
+    }
+
+    &:active {
+        transform: translate(-50%, 1px) scale(0.97);
+        box-shadow: none;
     }
 `;
 
@@ -539,7 +553,8 @@ export const FooterRight = styled.div`
 
 export const ToggleButton = styled.button`
     font-size: 13px;
-    color: #3AB49A;
+    font-weight: bold;
+    color: #329FCB;
     border: none;
     background: none;
     cursor: pointer;
