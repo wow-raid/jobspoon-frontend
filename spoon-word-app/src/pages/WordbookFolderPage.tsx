@@ -2382,6 +2382,11 @@ export default function WordbookFolderPage() {
         throw new Error(`fetch session failed: HTTP ${res.status}`);
     }
 
+    const goToNotes = React.useCallback(() => {
+        const base = location.pathname.startsWith("/spoon-word") ? "/spoon-word" : "";
+        navigate(`${base}/notes`);
+    }, [location.pathname, navigate]);
+
     return (
         <NarrowLeft style={{ padding: "8px 0 24px" }}>  {/* SearchBar와 동일 폭/정렬 */}
             {/* 상단 툴바 */}
@@ -2389,7 +2394,7 @@ export default function WordbookFolderPage() {
                 <ChipRow>
                     <button
                         type="button"
-                        onClick={() => navigate(-1)}
+                        onClick={goToNotes}
                         aria-label="이전으로"
                         style={{ border: 0, background: "transparent", cursor: "pointer" }}
                     >
