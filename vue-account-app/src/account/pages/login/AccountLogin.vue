@@ -116,6 +116,23 @@
             />
           </button>
 
+          <!-- 관리자(GitHub) 버튼: Alt 키를 누를 때만 노출, 우상단에서 '빼꼼' -->
+          <button
+              v-show="altPressed"
+              @click="goToAdminLogin"
+              aria-label="관리자 로그인"
+              title="관리자 로그인"
+              class="absolute top-3 z-10 rounded-full shadow-lg border border-white/20 hover:scale-105 transition-transform focus:outline-none"
+              style="
+          right:-12px;               /* 컨테이너 밖으로 살짝(빼꼼) */
+          width:48px;height:48px;
+          background: white;
+          display:flex;align-items:center;justify-content:center;
+          opacity:0.95;
+        "
+          >
+            <img :src="githubIcon" alt="" style="width:26px;height:26px;" />
+          </button>
 
 
 
@@ -128,6 +145,8 @@
 
 
   </div>
+
+
 </template>
 
 <script setup lang="ts">
@@ -238,7 +257,7 @@ const titleSpanStyle = {
   backgroundClip: 'text',
   WebkitBackgroundClip: 'text',
   color: 'transparent',
-  backgroundImage: 'linear-gradient(to right, #2563eb, #7c3aed)',
+  backgroundImage: 'linear-gradient(to right, #4F9CF9, #10B981)',
 }
 
 const subtitleStyle = {
@@ -258,7 +277,7 @@ const subtitleLastStyle = {
 }
 
 const registerLinkStyle = {
-  color: '#2563eb',
+  color: '#2CADB1',
   fontWeight: '500',
 }
 
