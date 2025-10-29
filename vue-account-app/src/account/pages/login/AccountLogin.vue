@@ -16,7 +16,7 @@
       </div>
       <!-- 컨테이너 전체 -->
       <div :style="loginBoxStyle" @mouseenter="Object.assign(loginBoxStyle, loginBoxHoverStyle)" @mouseleave="loginBoxStyle.boxShadow = '0 10px 30px rgba(31, 38, 135, 0.4)'">
-        <div style="display: flex; justify-content: center; height: 100px; margin-bottom: 30px">
+        <div style="display: flex; justify-content: center; height: 100px; margin-bottom: 30px" @click="goHome">
           <img :src="logoBlack" :style="{ width: 'auto', height: '100%' }" alt="Logo" />
         </div>
 
