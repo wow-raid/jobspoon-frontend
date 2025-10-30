@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { fetchInterviewResultList } from "../api/InterviewApi.ts";
-import { FaRobot, FaRegClock, FaSearch } from "react-icons/fa";
+import {FaRobot, FaRegClock, FaSearch, FaLock} from "react-icons/fa";
 import Spinner from "../components/common/Spinner.tsx";
-import { notifyError } from "../utils/toast.ts";
+import {notifyError, notifyInfo} from "../utils/toast.ts";
 import { useNavigate } from "react-router-dom";
 
-/* ---------- 타입 ---------- */
 type InterviewSummary = {
     interviewId: number;
     interviewType: string;
@@ -15,41 +14,20 @@ type InterviewSummary = {
     finished: boolean;
 };
 
-/* ---------- 팔레트 ---------- */
-const palette = {
-    primary: "#4CC4A8",
-    accent: "#1B8C95",
-    lightBG: "#F8FBF8",
-    border: "rgba(76,196,168,0.35)",
-    shadow: "rgba(76,196,168,0.22)",
-    textMain: "#0F172A",
-    textSub: "#64748B",
-};
-
-/* ---------- 애니메이션 ---------- */
-const fadeUp = keyframes`
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-`;
-
-/* ---------- 메인 ---------- */
 export default function InterviewResultPage() {
     const [loading, setLoading] = useState(true);
     const [list, setList] = useState<InterviewSummary[]>([]);
     const [searchText, setSearchText] = useState("");
     const [filterStatus, setFilterStatus] = useState<"all" | "completed" | "progress">("all");
     const [sortOption, setSortOption] = useState<"latest" | "oldest" | "status">("latest");
-
     const navigate = useNavigate();
 
-    /* ---------- 데이터 로드 ---------- */
     useEffect(() => {
         const loadData = async () => {
             try {
                 const data = await fetchInterviewResultList();
                 if (!data || !Array.isArray(data.interviewResultList))
                     throw new Error("Invalid response");
-
                 setList(data.interviewResultList);
             } catch (err) {
                 console.error(err);
@@ -63,7 +41,6 @@ export default function InterviewResultPage() {
 
     if (loading) return <Spinner />;
 
-    /* ---------- 검색/필터/정렬 ---------- */
     const filteredList = list
         .filter((item) =>
             (item.interviewType ?? "").toLowerCase().includes(searchText.toLowerCase())
@@ -82,13 +59,11 @@ export default function InterviewResultPage() {
             return 0;
         });
 
-    /* ---------- 렌더링 ---------- */
     return (
         <Section>
             <SectionTitle>AI 면접 결과</SectionTitle>
             <SubText>최근 진행한 모의면접 결과를 확인할 수 있어요.</SubText>
 
-            {/* 검색/필터/정렬 */}
             <FilterBar>
                 <SearchBox>
                     <FaSearch color="#9ca3af" size={14} />
@@ -121,7 +96,6 @@ export default function InterviewResultPage() {
                 </Select>
             </FilterBar>
 
-            {/* 1. 전체 데이터가 아예 없을 때 */}
             {list.length === 0 ? (
                 <EmptyState>
                     <FaRobot size={44} color={palette.primary} />
@@ -135,31 +109,13 @@ export default function InterviewResultPage() {
                     </StartButton>
                 </EmptyState>
             ) : filteredList.length === 0 ? (
-                /* 2~3. 필터 또는 검색 결과 없음 */
                 <EmptyState>
-                    {filterStatus === "progress" ? (
-                        <>
-                            <FaRobot size={44} color={palette.primary} />
-                            <h2>진행 중인 면접이 없습니다</h2>
-                            <p>새로운 AI 모의면접을 다시 시작해보세요!</p>
-                            <StartButton
-                                onClick={() =>
-                                    (window.location.href = "/vue-ai-interview/ai-interview/landing")
-                                }>
-                                AI 면접 시작하기
-                            </StartButton>
-                        </>
-                    ) : (
-                        <>
-                            <FaSearch size={42} color={palette.accent} />
-                            <h2>검색 결과가 없습니다</h2>
-                            <p>입력하신 조건에 맞는 면접 결과를 찾을 수 없습니다.</p>
-                            <p>다른 키워드로 검색해보세요</p>
-                        </>
-                    )}
+                    <FaSearch size={42} color={palette.accent} />
+                    <h2>검색 결과가 없습니다</h2>
+                    <p>입력하신 조건에 맞는 면접 결과를 찾을 수 없습니다.</p>
+                    <p>다른 키워드로 검색해보세요</p>
                 </EmptyState>
             ) : (
-                /* 4. 정상 목록 출력 */
                 <BaseCard>
                     {filteredList.map((item) => (
                         <InterviewRow key={item.interviewId}>
@@ -176,14 +132,25 @@ export default function InterviewResultPage() {
 
                             <RightArea>
                                 <StatusBadge isFinished={item.finished}>
-                                    {item.finished ? "✅ COMPLETED" : "🟡 IN_PROGRESS"}
+                                    {item.finished ? "COMPLETED" : "IN PROGRESS"}
                                 </StatusBadge>
-                                <DetailButton
-                                    onClick={() =>
-                                        navigate(`/mypage/interview/history/${item.interviewId}`)
-                                    }>
-                                    상세보기
-                                </DetailButton>
+
+                                {item.finished ? (
+                                    <DetailButton
+                                        onClick={() => {
+                                            window.location.href = `/vue-ai-interview/ai-interview/result/${item.interviewId}`;
+                                        }}>
+                                        상세보기
+                                    </DetailButton>
+                                ) : (
+                                    <DisabledButton
+                                        onClick={() =>
+                                            notifyInfo("아직 면접이 완료되지 않았습니다 ❗")
+                                        }>
+                                        <FaLock size={12} />
+                                        진행중
+                                    </DisabledButton>
+                                )}
                             </RightArea>
                         </InterviewRow>
                     ))}
@@ -193,12 +160,32 @@ export default function InterviewResultPage() {
     );
 }
 
+/* ---------- 팔레트 ---------- */
+const palette = {
+    primary: "#4CC4A8",
+    accent: "#1B8C95",
+    lightBG: "#F8FBF8",
+    border: "rgba(76,196,168,0.35)",
+    shadow: "rgba(76,196,168,0.22)",
+    textMain: "#0F172A",
+    textSub: "#64748B",
+};
+
+/* ---------- 애니메이션 ---------- */
+const fadeUp = keyframes`
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+`;
+
 /* ---------- 스타일 ---------- */
 const Section = styled.section`
-    background: ${palette.lightBG};
-    padding: 32px;
+    background: rgba(255, 255, 255, 0.75);
     border-radius: 16px;
+    padding: 28px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
     animation: ${fadeUp} 0.6s ease both;
 `;
 
@@ -254,10 +241,8 @@ const Select = styled.select`
 `;
 
 const BaseCard = styled.div`
-    background: linear-gradient(180deg, #ffffff 0%, #f8fbf8 100%);
-    border: 1px solid ${palette.border};
+    background: ${palette.lightBG};
     border-radius: 14px;
-    box-shadow: 0 4px 10px ${palette.shadow};
     padding: 18px 24px;
     display: flex;
     flex-direction: column;
@@ -311,30 +296,54 @@ const RightArea = styled.div`
 `;
 
 const StatusBadge = styled.span<{ isFinished: boolean }>`
-    font-size: 12px;
+    font-size: 12.5px;
     font-weight: 600;
-    color: ${({ isFinished }) => (isFinished ? "#065F46" : "#92400E")};
-    background-color: ${({ isFinished }) => (isFinished ? "#D1FAE5" : "#FEF3C7")};
-    border: 1px solid ${({ isFinished }) => (isFinished ? "#A7F3D0" : "#FCD34D")};
     border-radius: 999px;
-    padding: 4px 10px;
+    padding: 5px 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.3px;
+    transition: all 0.2s ease;
+
+    color: ${({ isFinished }) => (isFinished ? "#1E40AF" : "#92400E")};
+    background-color: ${({ isFinished }) => (isFinished ? "#DBEAFE" : "#FEF3C7")};
+    border: 1px solid ${({ isFinished }) => (isFinished ? "#BFDBFE" : "#FDE68A")};
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+
+    &:hover {
+        filter: brightness(0.98);
+    }
 `;
 
 const DetailButton = styled.button`
-    background: transparent;
-    border: 1px solid ${palette.border};
-    border-radius: 6px;
-    padding: 6px 12px;
     font-size: 13px;
-    color: ${palette.textMain};
+    font-weight: 600;
+    color: #1e3a8a;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(147, 197, 253, 0.5);
+    border-radius: 999px;
+    padding: 7px 18px;
     cursor: pointer;
-    transition: 0.2s ease;
+    transition: all 0.25s ease;
+    backdrop-filter: blur(8px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 2px 4px rgba(37, 99, 235, 0.15);
+
     &:hover {
-        background: ${palette.primary};
+        background: linear-gradient(90deg, #3b82f6, #2563eb);
         color: white;
-        border-color: ${palette.primary};
+        border-color: transparent;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+        transform: translateY(-1px);
+    }
+
+    &:active {
+        transform: scale(0.98);
+        box-shadow: 0 1px 4px rgba(37, 99, 235, 0.2);
     }
 `;
+
 
 const EmptyState = styled.div`
     display: flex;
@@ -369,4 +378,19 @@ const StartButton = styled.button`
         transform: translateY(-2px);
         opacity: 0.95;
     }
+`;
+
+const DisabledButton = styled.button`
+    font-size: 13px;
+    font-weight: 600;
+    color: #9ca3af;
+    background: rgba(240, 240, 240, 0.9);
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    padding: 7px 18px;
+    cursor: not-allowed;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0.8;
 `;

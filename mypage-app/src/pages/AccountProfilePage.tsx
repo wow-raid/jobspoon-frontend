@@ -116,7 +116,7 @@ export default function AccountProfilePage() {
     return (
         <Wrapper>
             {/* ================= 회원정보 ================= */}
-            <ProfileSection>
+            <Section>
                 <SectionTitle>회원정보</SectionTitle>
                 <InfoCard>
                     <ProfileRow>
@@ -171,16 +171,16 @@ export default function AccountProfilePage() {
 
                     <InfoList>
                         <InfoItem>
-                            <FaEnvelope color={"#329FCB"} />
+                            <FaEnvelope color={"#4CC4A8"} />
                             <span>{profile.email}</span>
                         </InfoItem>
                         <InfoItem>
-                            <FaLock color={"#329FCB"} />
+                            <FaLock color={"#4CC4A8"} />
                             <span>가입일: -</span>
                         </InfoItem>
                     </InfoList>
                 </InfoCard>
-            </ProfileSection>
+            </Section>
 
             {/* ================= 칭호 이력 ================= */}
             <Section>
@@ -434,10 +434,10 @@ export const LargeImage = styled.img`
 
 /* ---------- 칭호 ---------- */
 export const BaseCard = styled.div`
-    border: 1px solid #E5E7EB; /* 🔹 아주 옅은 회색 테두리 */
+    border: 1px solid #E5E7EB;
     border-radius: 14px;
     padding: 24px 28px;
-    background: #fff; /* 🔹 배경은 유지 (필요 시 제거 가능) */
+    background: #fff;
 `;
 
 export const Empty = styled.p`
