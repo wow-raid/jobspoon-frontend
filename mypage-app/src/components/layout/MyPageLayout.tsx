@@ -86,14 +86,18 @@ const LayoutContainer = styled.div`
     display: flex;
     width: 80%;
     margin: 0 auto;
-    height: 110vh;
+    min-height: calc(100vh - 60px); /* 약간 여유 */
+    height: auto;
+    overflow-y: visible;
 `;
 
 /** 완전 고정 사이드바 */
 const FixedAside = styled.aside`
-    left: calc(10%);
+    position: sticky;
+    top: 80px; /* 스크롤 시 고정되게 */
+    align-self: flex-start;
     width: 240px;
-    height: calc(100vh - 79px);
+    height: fit-content; /* 사이드바도 콘텐츠에 맞게 */
     background-color: white;
     display: flex;
     flex-direction: column;
@@ -153,6 +157,10 @@ const Main = styled.main`
     display: flex;
     flex-direction: column;
     gap: 24px;
+    min-height: calc(100vh - 80px); /* 뷰포트보다 살짝 여유 */
+    overflow-y: auto; /* 내부 스크롤 허용 */
+    scroll-behavior: smooth; /* 부드러운 스크롤 */
+    padding-bottom: 60px; /* 여유 공간 */
 
     @media (max-width: 768px) {
         padding: 16px;
