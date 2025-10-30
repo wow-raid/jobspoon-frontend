@@ -5,7 +5,6 @@ import MyPageLayout from "./components/layout/MyPageLayout.tsx";
 import DashboardSection from "./components/dashboard/DashboardSection.tsx";
 import AccountProfilePage from "./pages/AccountProfilePage.tsx";
 import InterviewResultList from "./pages/InterviewResultList.tsx";
-import InterviewResultDetail from "./pages/InterviewDetailPage.tsx";
 import AccountWithdrawal from "./pages/AccountWithdrawal.tsx";
 import MembershipPage from "./pages/MemebershipPage.tsx";
 import SchedulePage from "./pages/SchedulePage.tsx";
@@ -133,7 +132,6 @@ export default function App() {
                         <Route path="account/edit" element={<AccountProfilePage />} />
                         {/* 인터뷰 결과 보관함 */}
                         <Route path="interview/history" element={<InterviewResultList />} />
-                        <Route path="interview/history/:interviewId" element={<InterviewResultDetail />} />
                         {/* 회원탈퇴 */}
                         <Route path="withdrawal" element={<AccountWithdrawal />} />
                         {/* 멤버십 */}
