@@ -24,7 +24,7 @@ export default function InterestSection() {
 
     if (loading) return <LoadingBox>불러오는 중...</LoadingBox>;
 
-    // 🔹 Empty State (AI 면접 전)
+    // Empty State (AI 면접 전)
     if (!data || !data.hasInterview) {
         return (
             <GlassCard>
@@ -41,7 +41,7 @@ export default function InterestSection() {
         );
     }
 
-    // 🔹 관심사 데이터 있을 때
+    // 관심사 데이터 있을 때
     return (
         <GlassCard>
             <Content>
