@@ -1,11 +1,13 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import QuizResultPage from "../pages/QuizResultPage";
-import { getSessionReport } from "../api/quiz"
+import { getSessionReport, getSessionSummary } from "../api/quiz";
+import { retryWrongOnly } from "../api/quizChoice";
 
 type OX = "O" | "X";
 const QUIZ_LEN = 3;
 const LS_KEY_LAST_SESSION = "quiz:lastSessionId";
+const LS_KEY_PROGRESS = "quiz/initials-or-ox/progress";
 
 type ResultState = {
     progress?: (OX | null)[];
@@ -17,7 +19,6 @@ export default function QuizResultRoute() {
     const location = useLocation();
     const { state } = location as { state?: ResultState };
 
-    // 진행도 복구
     const stored = React.useMemo<(OX | null)[] | null>(() => {
         try {
             const raw = localStorage.getItem(LS_KEY_PROGRESS);
@@ -27,12 +28,10 @@ export default function QuizResultRoute() {
         }
     }, []);
 
-    // 세션ID 복구: state → querystring → localStorage
     const sessionId = React.useMemo(() => {
         const fromState = state?.sessionId;
         const fromQs = new URLSearchParams(location.search).get("sessionId");
         const fromLs = localStorage.getItem(LS_KEY_LAST_SESSION);
-
         const cand = [fromState, fromQs, fromLs].find(
             (v) => v != null && String(v).trim() !== ""
         );
@@ -47,28 +46,63 @@ export default function QuizResultRoute() {
         (async () => {
             if (!sessionId) return;
             try {
-                // 서버 결과 예: { total, correct, details:[{quizQuestionId, selectedChoiceId, correctChoiceId, correct}, ...] }
+                const sum = await getSessionSummary(sessionId);
+                const st = String(sum?.status || sum?.sessionStatus || "").toUpperCase();
+                if (aborted || st !== "SUBMITTED") return; // 제출 전이면 리포트 조회 X
+
                 const rep = await getSessionReport(sessionId);
-                if (aborted || !rep?.details) return;
+                if (aborted || !rep?.details) return;       // 엔드포인트 없거나 결과가 없으면 무시
                 const arr: OX[] = rep.details.map((d: any) => (d?.correct ? "O" : "X"));
                 setServerProgress(arr);
-            } catch {}
+            } catch {
+            }
         })();
         return () => { aborted = true; };
     }, [sessionId]);
 
     const progress: (OX | null)[] =
-        serverProgress
-            ? serverProgress
-            : state?.progress
-                ? state.progress
-                : stored ?? Array.from({ length: QUIZ_LEN }, () => null);
+        serverProgress ?? state?.progress ?? stored ?? Array.from({ length: QUIZ_LEN }, () => null);
+
+    // === 오답만 다시 풀기 ===
+    const handleRetryWrong = async () => {
+        if (!sessionId) return;
+        try {
+            const res = await retryWrongOnly(sessionId);
+            const newSid = Number(res?.newSessionId);
+            if (!Number.isFinite(newSid)) throw new Error("Invalid newSessionId");
+            try { localStorage.setItem(LS_KEY_LAST_SESSION, String(newSid)); } catch {}
+
+            // 타입 모호하면 새 세션 요약으로 보강
+            let qt = String(res?.questionType || "").toUpperCase();
+            if (!qt) {
+                try { const sum = await getSessionSummary(newSid);
+                    qt = String(sum?.questionType || sum?.question_type || "").toUpperCase();
+                } catch {}
+            }
+
+            const playPath = (res?.playPath || "").trim();
+            const route = playPath || resolveRouteForQuestionType(qt);
+            nav(`${route}?sessionId=${newSid}`, { replace: true });
+        } catch (e) {
+            console.error("[retryWrongOnly] failed", e);
+            alert("오답만 다시 풀기를 시작하지 못했어요. 잠시 후 다시 시도해주세요.");
+        }
+    };
+
+    function resolveRouteForQuestionType(qt: string): string {
+        const Q = qt.toUpperCase();
+        if (Q.includes("OX") || Q.includes("TRUE_FALSE") || Q === "TF" || Q === "BOOLEAN")
+            return "/spoon-word/quiz/ox";
+        if (Q.includes("INITIAL")) return "/spoon-word/quiz/initials";
+        return "/spoon-word/quiz/choice";
+    }
 
     return (
         <QuizResultPage
             progress={progress}
             sessionId={sessionId}
             title="결과 보기"
+            onRetryWrong={handleRetryWrong}
             onClose={() => nav("/spoon-word/quiz", { replace: true })}
             onFinish={() => nav("/spoon-word/quiz", { replace: true })}
         />
