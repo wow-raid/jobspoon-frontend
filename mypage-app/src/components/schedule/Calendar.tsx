@@ -81,10 +81,10 @@ export default function Calendar({ schedules, onEventClick }: Props) {
         location: s.location || "",
         color:
             s.type === "study"
-                ? "rgba(52,211,153,0.9)" // 💚 Mint Green (스터디)
+                ? "rgba(52,211,153,0.9)"
                 : s.color
                     ? s.color
-                    : "rgba(0,122,255,0.9)", // 💙 Apple-style 블루 (개인)
+                    : "rgba(0,122,255,0.9)",
         type: s.type,
         studyRoomId: s.studyRoomId,
     }));
@@ -102,7 +102,7 @@ export default function Calendar({ schedules, onEventClick }: Props) {
                 endAccessor="end"
                 onSelectEvent={(event) => {
                     if (onEventClick) onEventClick(event);
-                    else notifyInfo("일정 정보를 불러오는 중입니다 🗓️");
+                    else notifyInfo("일정 정보를 불러오는 중입니다...");
                 }}
                 culture="ko"
                 style={{ height: "100%" }}
@@ -148,12 +148,12 @@ const CalendarWrapper = styled.div`
     font-family: "SF Pro Text", "Noto Sans KR", sans-serif;
     transition: all 0.2s ease;
 
-    /* ✅ 캘린더 외곽 테두리 제거 */
+    /* 캘린더 외곽 테두리 제거 */
     .rbc-month-view {
         border: none !important;
     }
 
-    /* ✅ 요일(일~토) 사이 세로 구분선 제거 */
+    /* 요일(일~토) 사이 세로 구분선 제거 */
     .rbc-header {
         border-left: none !important;
         border-right: none !important;
@@ -184,19 +184,19 @@ const CalendarWrapper = styled.div`
         border-radius: 6px;
     }
 
-    /* ✅ 주말 텍스트 (요일 헤더 + 날짜 숫자 둘 다) */
+    /* 주말 텍스트 (요일 헤더 + 날짜 숫자 둘 다) */
     && {
         /* === 일요일 === */
         .rbc-month-view .rbc-header:first-child,
         .rbc-month-row .rbc-row > .rbc-date-cell:first-child .rbc-button-link {
-            color: #ff3b30 !important; /* 🍎 Apple Red */
+            color: #ff3b30 !important;
             font-weight: 400 !important;
         }
 
         /* === 토요일 === */
         .rbc-month-view .rbc-header:last-child,
         .rbc-month-row .rbc-row > .rbc-date-cell:last-child .rbc-button-link {
-            color: #007aff !important; /* 💙 Apple Blue */
+            color: #007aff !important;
             font-weight: 400 !important;
         }
 
@@ -207,7 +207,7 @@ const CalendarWrapper = styled.div`
         }
     }
 
-    /* ✅ [수정됨] 오늘 날짜 강조 + 주말 분기 + hover 인터랙션 */
+    /* 오늘 날짜 강조 + 주말 분기 + hover 인터랙션 */
     && {
         /* 오늘 날짜 셀 기본 설정 */
         .rbc-month-view .rbc-date-cell.rbc-now {
@@ -218,8 +218,8 @@ const CalendarWrapper = styled.div`
 
         /* 오늘 날짜 버튼 공통 스타일 */
         .rbc-month-view .rbc-date-cell.rbc-now button.rbc-button-link {
-            background-color: #007aff !important; /* 💙 기본 Apple Blue */
-            color: #ffffff !important; /* ✅ 흰색 숫자 */
+            background-color: #007aff !important;
+            color: #ffffff !important;
             border-radius: 50%;
             width: 26px;
             height: 26px;
@@ -235,33 +235,33 @@ const CalendarWrapper = styled.div`
             transform: scale(1);
         }
 
-        /* 💫 hover 시 밝은 파랑 + 확대 */
+        /* hover 시 밝은 파랑 + 확대 */
         .rbc-month-view .rbc-date-cell.rbc-now button.rbc-button-link:hover {
             background-color: #0a84ff !important;
             box-shadow: 0 2px 8px rgba(0, 122, 255, 0.35);
             transform: scale(1.08);
         }
 
-        /* 🫧 클릭 시 줄어듦 */
+        /* 클릭 시 줄어듦 */
         .rbc-month-view .rbc-date-cell.rbc-now button.rbc-button-link:active {
             transform: scale(0.96);
             box-shadow: 0 1px 3px rgba(0, 122, 255, 0.2);
         }
 
-        /* 🩵 오늘이 토요일일 때 (덮어쓰기) */
+        /* 오늘이 토요일일 때 (덮어쓰기) */
         .rbc-month-view .rbc-date-cell.rbc-now:last-child button.rbc-button-link {
             background-color: #007aff !important; /* Blue 유지 */
             color: #ffffff !important;
         }
 
-        /* ❤️ 오늘이 일요일일 때 (덮어쓰기) */
+        /* 오늘이 일요일일 때 (덮어쓰기) */
         .rbc-month-view .rbc-date-cell.rbc-now:first-child button.rbc-button-link {
             background-color: #ff3b30 !important; /* Apple Red */
             color: #ffffff !important;
             box-shadow: 0 1px 4px rgba(255, 59, 48, 0.25);
         }
 
-        /* ❤️ hover 시 (일요일용 밝은 레드) */
+        /* hover 시 (일요일용 밝은 레드) */
         .rbc-month-view .rbc-date-cell.rbc-now:first-child button.rbc-button-link:hover {
             background-color: #ff453a !important;
             box-shadow: 0 2px 8px rgba(255, 59, 48, 0.35);
@@ -278,7 +278,7 @@ const CalendarWrapper = styled.div`
         padding: 1rem;
     }
 
-    /* ==================== 🕒 Day / Week View 스타일 ==================== */
+    /* ==================== Day / Week View 스타일 ==================== */
     .rbc-time-view {
         border: none !important;
         background: #ffffff !important;
@@ -351,12 +351,12 @@ const ToolbarWrapper = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 4px 12px 6px; /* ✅ 상하 패딩 줄임 (10px → 4px) */
+    padding: 4px 12px 6px; /* 상하 패딩 줄임 (10px → 4px) */
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(8px);
     border: 1px solid rgba(0, 0, 0, 0.05);
-    border-radius: 8px; /* ✅ 조금 더 compact하게 */
-    margin-bottom: 0.5rem; /* ✅ 툴바-캘린더 간격 축소 */
+    border-radius: 8px; /* 조금 더 compact하게 */
+    margin-bottom: 0.5rem; /* 툴바-캘린더 간격 축소 */
 
     .nav-buttons {
         display: flex;
@@ -367,8 +367,8 @@ const ToolbarWrapper = styled.div`
     .nav-buttons button {
         background: rgba(255, 255, 255, 0.6);
         border: 1px solid rgba(0, 0, 0, 0.08);
-        border-radius: 6px; /* ✅ 작게 조정 */
-        padding: 3px 8px; /* ✅ 버튼 세로 높이 감소 */
+        border-radius: 6px; /* 작게 조정 */
+        padding: 3px 8px; /* 버튼 세로 높이 감소 */
         font-size: 12.5px;
         color: #111;
         cursor: pointer;

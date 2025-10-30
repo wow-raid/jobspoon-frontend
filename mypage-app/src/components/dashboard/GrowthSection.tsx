@@ -11,9 +11,9 @@ import {
 import styled from "styled-components";
 import {
     TrustScoreHistoryResponse,
-} from "../../api/userTrustScoreApi";
+} from "../../api/userTrustScoreApi.ts";
 
-export default function TrustScoreHistoryGraph({ history, currentScore }: {
+export default function GrowthSection({ history, currentScore }: {
     history: TrustScoreHistoryResponse[];
     currentScore: number;
 }) {
@@ -108,7 +108,7 @@ const ChartWrapper = styled.div`
 `;
 
 const Message = styled.p`
-    font-size: 14px;
+    font-size: 0.95rem;
     color: #888;
     text-align: center;
 `;
