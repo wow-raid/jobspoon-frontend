@@ -591,26 +591,26 @@ const backToInterviewTypeSelection = () => {
 };
 
 // TTS 및 기타 로직
-const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
-const handleBeforeUnload = () => {
-  if (synth && synth.speaking) synth.cancel();
-  localStorage.removeItem("interviewInfo");
-};
-
-onBeforeUnmount(() => {
-  if (synth && synth.speaking) synth.cancel();
-  window.removeEventListener("beforeunload", handleBeforeUnload);
-});
-
-const speakNotice = () => {
-  const message = `안녕하십니까? AI 모의 면접 서비스입니다. 면접 유형을 선택하고 상세 정보를 입력하여 맞춤형 면접을 시작하세요.`;
-  const utterance = new SpeechSynthesisUtterance(message);
-  utterance.lang = "ko-KR";
-  utterance.rate = 1;
-  utterance.pitch = 1;
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utterance);
-};
+// const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
+// const handleBeforeUnload = () => {
+//   if (synth && synth.speaking) synth.cancel();
+//   localStorage.removeItem("interviewInfo");
+// };
+//
+// onBeforeUnmount(() => {
+//   if (synth && synth.speaking) synth.cancel();
+//   window.removeEventListener("beforeunload", handleBeforeUnload);
+// });
+//
+// const speakNotice = () => {
+//   const message = `안녕하십니까? AI 모의 면접 서비스입니다. 면접 유형을 선택하고 상세 정보를 입력하여 맞춤형 면접을 시작하세요.`;
+//   const utterance = new SpeechSynthesisUtterance(message);
+//   utterance.lang = "ko-KR";
+//   utterance.rate = 1;
+//   utterance.pitch = 1;
+//   window.speechSynthesis.cancel();
+//   window.speechSynthesis.speak(utterance);
+// };
 
 onMounted(() => {
   // 로그인 체크 (필요시 주석 해제)
@@ -623,8 +623,8 @@ onMounted(() => {
   }
   */
   
-  speakNotice();
-  window.addEventListener("beforeunload", handleBeforeUnload);
+  // speakNotice();
+  // window.addEventListener("beforeunload", handleBeforeUnload);
 });
 
 // 면접 시작 함수
