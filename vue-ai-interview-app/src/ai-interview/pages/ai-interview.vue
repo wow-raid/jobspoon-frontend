@@ -1,10 +1,16 @@
 <template>
-  <v-container v-if="!start" :style="interviewStartContainerStyle" fluid>
+  <!--  로딩  -->
+  <LoadingSpinner v-if="isLoading"/>
+
+
+  <v-container v-else-if="!start" :style="interviewStartContainerStyle" fluid>
     <!-- 배경 텍스트 -->
     <div :style="backgroundTextStyle">
       AI INTERVIEW
     </div>
-    
+
+
+
     <div :style="interviewStartWrapperStyle">
       <!-- 큰 카메라 화면 -->
       <div :style="mainCameraContainerStyle">
@@ -19,7 +25,7 @@
           <v-icon size="80" color="white">mdi-video-outline</v-icon>
           <p :style="overlayTextStyle">카메라를 활성화하세요</p>
         </div>
-        
+
         <!-- 우측 상단 작은 프리뷰 (선택사항) -->
         <div :style="smallPreviewStyle" v-if="mediaChecked">
           <video
@@ -30,7 +36,7 @@
             :style="smallVideoStyle"
           />
         </div>
-        
+
         <!-- 좌측 상단 타이머 -->
         <div :style="topLeftBadgeStyle">
           <v-icon size="16" color="white">mdi-circle</v-icon>
@@ -48,37 +54,37 @@
               {{ mediaChecked ? '카메라와 마이크가 정상적으로 작동합니다. 면접을 시작하세요.' : '카메라와 마이크를 확인해주세요' }}
             </p>
           </div>
-          
+
           <!-- 컨트롤 버튼 -->
           <div :style="bottomButtonsStyle">
-            <v-btn 
+            <v-btn
               v-if="!mediaChecked"
-              color="primary" 
-              :style="mainActionBtnStyle" 
-              elevation="0" 
+              color="primary"
+              :style="mainActionBtnStyle"
+              elevation="0"
               rounded
               large
               @click="checkMediaReady"
             >
               확인
             </v-btn>
-            
+
             <template v-else>
-              <v-btn 
-                color="primary" 
-                :style="secondaryActionBtnStyle" 
-                elevation="0" 
+              <v-btn
+                color="primary"
+                :style="secondaryActionBtnStyle"
+                elevation="0"
                 rounded
                 @click="startRecording"
                 :disabled="!mediaChecked"
               >
                 <v-icon>mdi-waveform</v-icon>
               </v-btn>
-              
-              <v-btn 
-                color="primary" 
-                :style="mainActionBtnStyle" 
-                elevation="0" 
+
+              <v-btn
+                color="primary"
+                :style="mainActionBtnStyle"
+                elevation="0"
                 rounded
                 large
                 @click="handleStartInterview"
@@ -86,11 +92,11 @@
                 <v-icon left size="20">mdi-play-circle</v-icon>
                 면접 시작
               </v-btn>
-              
-              <v-btn 
-                color="default" 
-                :style="secondaryActionBtnStyle" 
-                elevation="0" 
+
+              <v-btn
+                color="default"
+                :style="secondaryActionBtnStyle"
+                elevation="0"
                 rounded
                 @click="playRecording"
                 :disabled="!recordedBlob"
@@ -102,13 +108,15 @@
     </div>
   </v-container>
 
+
+
   <v-container v-else fluid :style="interviewActiveContainerStyle">
     <div :style="interviewStartWrapperStyle">
       <!-- 큰 이미지 화면 (카메라 자리) -->
       <div :style="mainCameraContainerStyle">
         <!-- 면접관 이미지 -->
         <img :src="hhImage" alt="면접관" :style="interviewerImageInCameraStyle" />
-        
+
         <!-- 우측 상단: 사용자 비디오 (작은 화면) -->
         <div :style="smallPreviewStyle">
           <video
@@ -120,7 +128,7 @@
             :style="smallVideoStyle"
           ></video>
         </div>
-        
+
         <!-- 좌측 상단: 타이머 -->
         <div :style="topLeftBadgeStyle">
           <v-icon size="16" color="white">mdi-clock-outline</v-icon>
@@ -136,7 +144,7 @@
           <v-icon size="32" color="primary">mdi-loading mdi-spin</v-icon>
           <p :style="questionLoadingTextStyle">면접 질문을 준비 중입니다...</p>
         </div>
-        
+
         <div v-else :style="questionBoxStyle">
           <div :style="questionBoxHeaderStyle">
             <div :style="questionNumberBadgeStyle">Q{{ interviewSequence + 1 }}</div>
@@ -144,7 +152,7 @@
           </div>
           <p :style="questionBoxTextStyle" v-html="formattedAIMessage"></p>
         </div>
-        
+
         <!-- 답변 버튼 영역 -->
         <div v-if="!visible" :style="answerButtonAreaStyle">
           <!-- STT 결과 미리보기 (간단하게) -->
@@ -156,18 +164,18 @@
           <!-- 답변 버튼 영역 -->
           <div v-if="!visible" :style="answerButtonAreaStyle">
             <!-- 텍스트 입력 필드 추가 -->
-            <div :style="textInputContainerStyle">
-              <v-textarea
-                  v-model="textAnswer"
-                  :style="textInputFieldStyle"
-                  placeholder="음성 인식이 어려운 경우 여기에 직접 입력하세요"
-                  rows="2"
-                  outlined
-                  dense
-                  hide-details
-                  :disabled="recognizing"
-              ></v-textarea>
-            </div>
+<!--            <div :style="textInputContainerStyle">-->
+<!--              <v-textarea-->
+<!--                  v-model="textAnswer"-->
+<!--                  :style="textInputFieldStyle"-->
+<!--                  placeholder="음성 인식이 어려운 경우 여기에 직접 입력하세요"-->
+<!--                  rows="2"-->
+<!--                  outlined-->
+<!--                  dense-->
+<!--                  hide-details-->
+<!--                  :disabled="recognizing"-->
+<!--              ></v-textarea>-->
+<!--            </div>-->
 
             <!-- STT 결과 미리보기 (간단하게) -->
             <div v-if="sttLog !== ''" :style="sttPreviewStyle">
@@ -180,14 +188,14 @@
               <!-- 기존 버튼들... -->
             </div>
           </div>
-          
+
           <!-- 버튼 그룹 -->
           <div :style="interviewActionButtonsStyle">
-            <v-btn 
+            <v-btn
               v-if="!recognizing"
-              color="primary" 
-              :style="startAnswerBtnStyle" 
-              elevation="0" 
+              color="primary"
+              :style="startAnswerBtnStyle"
+              elevation="0"
               rounded
               large
               @click="startSTT"
@@ -196,12 +204,12 @@
               <v-icon left size="20">mdi-microphone</v-icon>
               답변 시작
             </v-btn>
-            
-            <v-btn 
+
+            <v-btn
               v-else
-              color="error" 
-              :style="stopAnswerBtnStyle" 
-              elevation="0" 
+              color="error"
+              :style="stopAnswerBtnStyle"
+              elevation="0"
               rounded
               large
               @click="startSTT"
@@ -209,11 +217,11 @@
               <v-icon left size="20">mdi-stop-circle</v-icon>
               답변 중지
             </v-btn>
-            
-            <v-btn 
-              color="default" 
-              :style="replayBtnStyle" 
-              elevation="0" 
+
+            <v-btn
+              color="default"
+              :style="replayBtnStyle"
+              elevation="0"
               rounded
               @click="replayQuestion"
               :disabled="isGenerating"
@@ -252,6 +260,9 @@
   </v-btn>
 </template>
 
+
+
+
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { useAiInterviewStore } from "../stores/aiInterviewStore";
@@ -259,6 +270,11 @@ import { useRouter, onBeforeRouteLeave } from "vue-router";
 import "@mdi/font/css/materialdesignicons.css";
 import hhImage from "@/assets/images/fixed/aiai.png";
 import { useHead } from '@vueuse/head'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
+
+
+
+
 
 useHead({
   title: "AI 모의 면접 시작 | 잡스틱(JobStick)",
@@ -299,6 +315,7 @@ const mediaChecked = ref(false);
 const previewVideo = ref(null);
 const mediaStream = ref(null);
 const isGenerating = ref(false);
+const isEnded = ref(false);
 
 // 맨 위로 스크롤
 const scrollToTop = () => {
@@ -610,7 +627,6 @@ const handleStartInterview = async () => {
 const onAnswerComplete = async () => {
   isGenerating.value = true;
 
-
   clearInterval(timer.value);
   if (recognition && recognizing.value) recognition.stop();
 
@@ -619,12 +635,6 @@ const onAnswerComplete = async () => {
   //   isGenerating.value = false;
   //   return;
   // }
-  if (interviewSequence.value >= 7) {
-    alert("모든 면접이 완료되었습니다");
-    finished.value = true;
-    isGenerating.value = true;
-    return;
-  }
 
   const finalAnswer = (sttLog.value + " " + textAnswer.value).trim();
 
@@ -690,15 +700,21 @@ const onAnswerComplete = async () => {
 
     // 6번째 질문이면 면접 종료 페이지로 이동
     if(interviewSequence.value === 6){
+      isLoading.value = true;
+
       // 면접 종료 데이터 저장
       localStorage.setItem("interviewEndData", JSON.stringify({
         interviewId: currentInterviewId.value,
         interviewQAId: currentQuestionId.value,
         lastAnswer: finalAnswer
       }));
-      
-      // 종료 페이지로 이동
-      router.push("/ai-interview/end");
+
+      nextTick(() => {
+        setTimeout(() => {
+          router.push("/ai-interview/end");
+        }, 5000); // n초 후 이동
+      });
+
       return;
     }
     
@@ -746,11 +762,16 @@ onBeforeUnmount(() => {
 });
 
 onBeforeRouteLeave((to, from, next) => {
+  console.log("인터뷰 끝남 여부 : " + isEnded.value);
   if (start.value && !finished.value) {
-    const answer = window.confirm(
-        "면접이 진행 중입니다. 페이지를 나가시겠습니까?"
-    );
-    answer ? next() : next(false);
+    if (interviewSequence.value !== 6) {
+      const answer = window.confirm(
+          "면접이 진행 중입니다. 페이지를 나가시겠습니까?"
+      );
+      answer ? next() : next(false);
+    } else {
+      next();
+    }
   } else {
     next();
   }
