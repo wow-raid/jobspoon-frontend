@@ -6,6 +6,13 @@ import ExploreFilterBar, { FilterSelection } from "../components/ExploreFilterBa
 import SpoonWordHeroBanner from "../components/SpoonWordHeroBanner.tsx";
 import SpoonNoteHeroBanner from "../components/SpoonNoteHeroBanner";
 import { NarrowLeft } from "../styles/layout";
+import icon1 from "../assets/hero/icon-1.png";
+import icon2 from "../assets/hero/icon-2.png";
+import icon3 from "../assets/hero/icon-3.png";
+import icon4 from "../assets/hero/icon-4.png";
+
+const RUNTIME: any =
+    (typeof window !== "undefined" && (window as any).__APP_CONFIG__) || {};
 
 const UI = {
     line: "#e5e7eb",
@@ -146,12 +153,7 @@ export default function SpoonWordLayout() {
                 <SpoonWordHeroBanner
                     align="left"
                     narrow
-                    floatingIcons={[
-                        "http://localhost:3006/hero/icon-1.png",
-                        "http://localhost:3006/hero/icon-2.png",
-                        "http://localhost:3006/hero/icon-3.png",
-                    ]}
-                    assetHost={process.env.MFE_PUBLIC_SERVICE || "http://localhost:3006"}
+                    floatingIcons={[icon1, icon2, icon3]}
                     iconProps={{
                         width: "360px",
                         height: "240px",
@@ -159,8 +161,8 @@ export default function SpoonWordLayout() {
                         rightOffset: 0,
                         positions: [
                             { left: 20, top: 30 },
-                            { left: 66, top: 12 },
-                            { left: 45, top: 62 },
+                            { left: 66, top: 30 },
+                            { left: 45, top: 55 },
                         ],
                         maxIconWidthPercent: 38,
                         withShadow: false,
@@ -172,7 +174,7 @@ export default function SpoonWordLayout() {
                 <SpoonNoteHeroBanner
                     align="left"
                     narrow
-                    assetHost={process.env.MFE_PUBLIC_SERVICE || "http://localhost:3006"}
+                    floatingIcons={[icon4]}
                     iconProps={{
                         width: "360px",
                         height: "240px",

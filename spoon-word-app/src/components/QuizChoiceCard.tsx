@@ -3,18 +3,17 @@ import React from "react";
 import styled, {css, createGlobalStyle, keyframes, FastOmit} from "styled-components";
 import SoftBlobsBackground from "./SoftBlobsBackground";
 import {BaseObject, IStyledComponentBase} from "styled-components/dist/types";
+import emblem from "../assets/quiz/emblem.png"
+import GhanaWoff2 from "../assets/fonts/ghana-choco/GhanaChocolate.woff2?url";
 
-/* ====== 폰트 ====== */
-const ASSET = process.env.MFE_PUBLIC_SERVICE || "";
-const GhanaFont = createGlobalStyle`
-  @font-face {
-    font-family: 'GhanaChocolate';
-    src: url('/fonts/ghana-choco/GhanaChocolate.woff2') format('woff2'),
-      url('${process.env.MFE_PUBLIC_SERVICE || ""}/fonts/ghana-choco/GhanaChocolate.woff2') format('woff2');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-  }
+export const GhanaFont = createGlobalStyle`
+    @font-face {
+        font-family: 'GhanaChocolate';
+        src: url('${GhanaWoff2}') format('woff2');
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+    }
 `;
 
 /* ====== 토큰 ====== */
@@ -238,7 +237,7 @@ const Emblem = styled.img`
   transform: translateX(var(--emblem-nudge-x));
   @media (max-width: 640px){ display:none; }
 `;
-const DEFAULT_EMBLEM = `${ASSET}/quiz/emblem.png`;
+const DEFAULT_EMBLEM = emblem;
 
 /* ====== 보기 리스트 ====== */
 const List = styled.ul`

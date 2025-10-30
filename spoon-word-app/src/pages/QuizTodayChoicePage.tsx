@@ -6,7 +6,7 @@ import { fetchChoiceQuestionsBySetId, ChoiceQuestion } from "../api/quizChoice";
 import QuizChoiceCard from "../components/QuizChoiceCard";
 import { goToAccountLogin } from "../utils/auth";
 import { startQuizUnified } from "../api/quiz";
-import http, { authHeader } from "../utils/http";
+import http from "../utils/http";
 import { getSessionReport } from "../api/quiz";
 
 const Stage = styled.div`
@@ -91,7 +91,6 @@ async function loadSessionItems(
 
     const raw = await http.get(`/me/quiz/sessions/${sid}/items`, {
         params: { offset: 0, limit, includeAnswers },
-        headers: authHeader(),
         withCredentials: true,
     });
 
@@ -196,7 +195,7 @@ export default function QuizTodayChoicePage() {
 
     const loadSessionSummary = async (sid: number): Promise<SessionSummary> => {
         const { data } = await http.get(`/me/quiz/sessions/${sid}`, {
-            headers: authHeader(), withCredentials: true
+            withCredentials: true
         });
         return (data?.data ?? data) as SessionSummary;
     };
@@ -382,24 +381,57 @@ export default function QuizTodayChoicePage() {
                     await redirectIfDifferentQuestionType(sid);
                 }
 
-                // 화면용 문항 리스트
-                const provided = Array.isArray(startRes?.questions) ? (startRes as any).questions as ChoiceQuestion[] : null;
-                const list = provided ?? (await fetchChoiceQuestionsBySetId(p.quizSetId));
-
-                if ((!list || list.length === 0) && Number.isFinite(sid)) {
-                    await redirectIfDifferentQuestionType(sid);
-                }
-
-                // 제출용 wire: 세션 아이템 우선 시도
                 let items: SessionItem[] | null = null;
+                let list: ChoiceQuestion[] | null = null;
+
                 if (Number.isFinite(sid)) {
                     try {
+                        // 1) 세션 아이템에 텍스트/보기 있으면 그대로 화면 리스트로 사용
                         items = await loadSessionItems(sid, /* includeAnswers */ true);
-                    } catch {
-                        items = null;
+                        if (Array.isArray(items) && items.length) {
+                            const hasTexts = items.some(it =>
+                                typeof (it.q ?? it.question ?? it.questionText ?? it.question_text) === "string"
+                            );
+                            if (hasTexts) {
+                                list = buildListFromItems(items);
+                            } else {
+                                // 2) 세트 ID가 있으면 세트 기반으로 재정렬 (아이템 순서 유지)
+                                const sum = await loadSessionSummary(sid);
+                                const setId = deriveSetId(sum, items) ?? p.quizSetId;
+                                if (Number.isFinite(setId as any)) {
+                                    try {
+                                        list = await buildListFromSet(items, setId!);
+                                    } catch {
+                                        // 세트 API가 죽었으면 나중에 다른 소스로 보강
+                                    }
+                                }
+                            }
+                        }
+                    } catch { /* 세션 아이템 실패 시 아래로 폴백 */ }
+                }
+
+                // 3) 그래도 없으면: 시작 응답에 포함된 questions 사용 or 마지막으로 세트 API 시도
+                if (!list || list.length === 0) {
+                    const provided = Array.isArray(startRes?.questions)
+                        ? (startRes as any).questions as ChoiceQuestion[]
+                        : null;
+                    if (provided && provided.length) {
+                        list = provided;
+                    } else {
+                        // ❗ 이 지점에서만 세트 API 호출 (현재 서버가 500이면 여기도 실패할 수 있음)
+                        try {
+                            list = await fetchChoiceQuestionsBySetId(p.quizSetId);
+                        } catch {
+                            // 끝까지 실패 → 타입 확인 리다이렉트 시도(서버가 다른 타입 세션을 만들었을 가능성)
+                            if (Number.isFinite(sid)) await redirectIfDifferentQuestionType(sid!);
+                        }
                     }
                 }
-                // 초기화
+
+                if (!list || list.length === 0) {
+                    throw new Error("문항을 불러오지 못했어요."); // 상단 에러 UI로 처리
+                }
+
                 initializeQuizState(list, items ?? undefined);
             } catch (e: any) {
                 handleLoadError(e, ac);
@@ -479,18 +511,18 @@ export default function QuizTodayChoicePage() {
                     const answers = buildSubmitAnswers();
                     if (!answers.length) {
                         alert("제출할 답안이 없습니다. 각 문제에서 보기를 선택한 뒤 결과를 확인해주세요.");
-                        return; // ❗ 결과 화면으로 가지 말고 중단
+                        return; // 결과 화면으로 가지 말고 중단
                     }
                     const elapsedMs = Math.max(0, Date.now() - startMs);
                     await http.post(
                         `/me/quiz/sessions/${sessionId}/submit`,
                         {answers, elapsedMs},
-                        {headers: authHeader(), withCredentials: true}
+                        {withCredentials: true}
                     );
                 } catch (e) {
                     console.error("[submit] 실패", e);
                     alert("제출에 실패했어요. 네트워크 상태를 확인한 뒤 다시 시도해주세요.");
-                    return; // ❗ 실패 시 결과 화면으로 이동하지 않음
+                    return; // 실패 시 결과 화면으로 이동하지 않음
                 }
             }
 

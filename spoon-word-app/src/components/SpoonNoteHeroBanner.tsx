@@ -1,6 +1,8 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import styled from "styled-components";
 import HeroFloatingIcons from "./HeroFloatingIcons";
+import icon4 from "../assets/hero/icon-4.png";
 
 type Props = {
     title?: string;
@@ -11,6 +13,8 @@ type Props = {
     offsetLeft?: number;
     offsetRight?: number;
     assetHost?: string;
+    linkTo?: string;
+    floatingIcons?: string[];
     iconProps?: Partial<{
         width: string;
         height: string;
@@ -74,7 +78,7 @@ const HeroWrap = styled.section`
 `;
 
 /* 전면 오버레이 링크 */
-const OverlayLink = styled.a`
+const OverlayLink = styled(Link)`
   position: absolute;
   inset: 0;            /* 전체 영역 커버 */
   z-index: 10;         /* 텍스트/아이콘 위에 */
@@ -160,9 +164,13 @@ export default function SpoonNoteHeroBanner({
                                                 offsetLeft = 15,
                                                 offsetRight = 0,
                                                 assetHost,
+                                                linkTo = "/spoon-word/notes",
+                                                floatingIcons,
                                                 iconProps,
                                             }: Props) {
-    const ICON_SRC = "/hero/icon-4.png";
+    const srcs = (floatingIcons && floatingIcons.length > 0)
+        ? floatingIcons
+        : [icon4];
 
     return (
         <HeroWrap className={className} aria-label="스푼노트 소개 배너">
@@ -184,16 +192,8 @@ export default function SpoonNoteHeroBanner({
                 </HeroInner>
             </Inset>
 
-            {/* 항상 icon-4만 렌더 */}
-            <HeroFloatingIcons
-                srcs={[ICON_SRC]}
-                assetHost={assetHost}
-                {...(iconProps ?? {})}
-            />
-            <OverlayLink
-                href="http://localhost/spoon-word/notes"
-                aria-label="스푼노트로 이동"
-            />
+            <HeroFloatingIcons srcs={srcs} {...(iconProps ?? {})} />
+            <OverlayLink to={linkTo} aria-label="스푼노트로 이동" />
         </HeroWrap>
     );
 }

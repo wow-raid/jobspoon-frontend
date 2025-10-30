@@ -1,6 +1,13 @@
 import React, { useMemo, useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate, useLocation } from "react-router-dom";
+import quiz1 from "../assets/hero/quiz-1.png";
+import quiz2 from "../assets/hero/quiz-2.png";
+import quiz3 from "../assets/hero/quiz-3.png";
+import act1 from "../assets/quiz/quiz-actionbar-1.png";
+import act2 from "../assets/quiz/quiz-actionbar-2.png";
+import act3 from "../assets/quiz/quiz-actionbar-3.png";
+import act4 from "../assets/quiz/quiz-actionbar-4.png";
 
 /* ====== UI 토큰 ====== */
 const UI = {
@@ -23,8 +30,6 @@ const UI = {
     gradient: { quizCta: "linear-gradient(90deg, #3E82E8 0%, #2BC6A6 100%)" },
 };
 
-const ASSET_HOST = process.env.MFE_PUBLIC_SERVICE || "http://localhost:3006";
-
 export default function QuizHomePage() {
     const nav = useNavigate();
     const loc = useLocation();
@@ -37,7 +42,7 @@ export default function QuizHomePage() {
                 titleEmphasis: "스푼퀴즈",
                 subtitle: "하루 10분 투자로 당신의 가치를 만들어 나가세요",
                 ctaLabel: "지금 스푼퀴즈 도전하기",
-                artSrc: `${process.env.MFE_PUBLIC_SERVICE}/hero/quiz-1.png`,
+                artSrc: quiz1,
             },
             {
                 id: "initials",
@@ -45,7 +50,7 @@ export default function QuizHomePage() {
                 titleEmphasis: "초성퀴즈",
                 subtitle: "AI 면접 준비, 초성퀴즈로 핵심 개념을 빠르게 점검하세요",
                 ctaLabel: "지금 스푼퀴즈 도전하기",
-                artSrc: `${process.env.MFE_PUBLIC_SERVICE}/hero/quiz-2.png`,
+                artSrc: quiz2,
             },
             {
                 id: "ox",
@@ -53,18 +58,21 @@ export default function QuizHomePage() {
                 titleEmphasis: "OX 퀴즈",
                 subtitle: "이 개념 맞을까? 틀릴까? OX로 빠르게 체크해 보세요!",
                 ctaLabel: "지금 스푼퀴즈 도전하기",
-                artSrc: `${process.env.MFE_PUBLIC_SERVICE}/hero/quiz-3.png`,
+                artSrc: quiz3,
             },
         ],
         []
     );
 
-    const actions = useMemo(() => [
-        { id: "a1", label: "내 스푼노트",       icon: `${ASSET_HOST}/quiz/quiz-actionbar-1.png`, to: "/spoon-word/notes" },
-        { id: "a2", label: "내 스푼퀴즈 이력", icon: `${ASSET_HOST}/quiz/quiz-actionbar-2.png`, to: "/spoon-word/quiz/history" },
-        { id: "a3", label: "오답노트 바로 가기", icon: `${ASSET_HOST}/quiz/quiz-actionbar-3.png`, to: "/spoon-word/notes/wrong" },
-        { id: "a4", label: "명예의 전당",       icon: `${ASSET_HOST}/quiz/quiz-actionbar-4.png`, to: "/spoon-word/hall" },
-    ], []);
+    const actions = useMemo(
+        () => [
+            { id: "a1", label: "내 스푼노트",        icon: act1, to: "/spoon-word/notes" },
+            { id: "a2", label: "내 스푼퀴즈 이력",  icon: act2, to: "/spoon-word/quiz/history" },
+            { id: "a3", label: "오답노트 바로 가기", icon: act3, to: "/spoon-word/notes/wrong" },
+            { id: "a4", label: "명예의 전당",        icon: act4, to: "/spoon-word/hall" },
+        ],
+        []
+    );
 
     const [idx, setIdx] = useState(0);
     const len = slides.length;
