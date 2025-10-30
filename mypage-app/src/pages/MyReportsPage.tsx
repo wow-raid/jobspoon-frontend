@@ -291,7 +291,7 @@ const CardBody = styled.div`
 `;
 
 const ContactButton = styled.button`
-    background: #2563eb;
+    background: linear-gradient(90deg, #3B82F6 0%, #10B981 100%);
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -299,10 +299,16 @@ const ContactButton = styled.button`
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: all 0.25s ease;
     margin-top: 20px;
 
     &:hover {
-        background: #1d4ed8;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.25);
+    }
+
+    &:active {
+        transform: translateY(0); /* 클릭 시 살짝 눌림 효과 */
+        filter: brightness(0.98);
     }
 `;

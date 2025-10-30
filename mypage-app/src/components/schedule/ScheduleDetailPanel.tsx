@@ -150,7 +150,7 @@ export default function ScheduleDetailPanel({ schedule, onClose, onRefresh }: Pr
                         <ButtonArea>
                             {isStudy ? (
                                 <MoveButton onClick={handleMoveToStudyRoom}>
-                                    스터디룸으로 이동하기 →
+                                    스터디룸으로 이동하기
                                 </MoveButton>
                             ) : (
                                 <>

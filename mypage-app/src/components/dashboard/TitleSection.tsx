@@ -194,16 +194,19 @@ const CurrentTitleCard = styled.div`
         color: ${palette.textSub};
     }
 `;
+
 const Badge = styled.div`
     position: absolute;
-    top: 14px;
-    right: 14px;
-    background: ${palette.primary};
+    top: 12px;
+    right: 12px;
+    background: linear-gradient(90deg, #43d0b2, #25a58b);
     color: white;
-    font-size: 11px;
+    font-size: 10px;            
     font-weight: 600;
-    padding: 4px 8px;
-    border-radius: 8px;
+    padding: 4px 8px;             
+    border-radius: 999px;
+    box-shadow: 0 1.5px 4px rgba(76, 196, 168, 0.25);
+    letter-spacing: 0.2px;
 `;
 
 const TitleListCard = styled.div`
@@ -299,14 +302,15 @@ const Tooltip = styled.div`
 
 const EquippedBadge = styled.span`
     position: absolute;
-    top: -4px;
-    right: -6px;
-    background: ${palette.accent};
+    top: -5px;
+    right: -8px;
+    background: linear-gradient(90deg, #43d0b2, #25a58b);
     color: white;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 600;
-    padding: 2px 6px;
-    border-radius: 6px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    box-shadow: 0 2px 5px rgba(76, 196, 168, 0.25);
 `;
 
 const NavButton = styled.button<{ position: "left" | "right" }>`

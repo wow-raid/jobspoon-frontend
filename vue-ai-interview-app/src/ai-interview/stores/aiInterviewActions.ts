@@ -291,11 +291,15 @@ export const aiInterviewActions = {
                 }
             );
             return res.data;
-        } catch (error) {
-            console.log("requestGetInterviewResultToSpring() 중 문제 발생:", error);
+        } catch (error: any) {
+            if (error.response) {
+                console.log("권한 없음!!!");
+                return error.response;
+            }
             throw error;
         }
     },
+
     //면접 종료
     async requestEndInterviewToDjango(payload: {
         userToken: string;

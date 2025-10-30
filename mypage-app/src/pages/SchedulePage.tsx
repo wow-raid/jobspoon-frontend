@@ -13,7 +13,8 @@ import {
 import Calendar from "../components/schedule/Calendar.tsx";
 import ScheduleDetailPanel from "../components/schedule/ScheduleDetailPanel.tsx";
 import AddScheduleModal from "../components/modals/AddScheduleModal.tsx";
-import { notifyError, notifySuccess, notifyInfo } from "../utils/toast";
+import { notifyError, notifySuccess } from "../utils/toast";
+import { motion } from "framer-motion";
 
 type UnifiedSchedule = (UserScheduleResponse | UserStudySchedule) & {
     type: "personal" | "study";
@@ -90,26 +91,27 @@ export default function SchedulePage() {
                     )}
 
                     {/* 보기 모드 토글 */}
-                    <ViewToggle>
-                        <button
-                            className={viewMode === "all" ? "active" : ""}
-                            onClick={() => setViewMode("all")}
-                        >
-                            전체
-                        </button>
-                        <button
-                            className={viewMode === "personal" ? "active" : ""}
-                            onClick={() => setViewMode("personal")}
-                        >
-                            개인 일정
-                        </button>
-                        <button
-                            className={viewMode === "study" ? "active" : ""}
-                            onClick={() => setViewMode("study")}
-                        >
-                            스터디 일정
-                        </button>
-                    </ViewToggle>
+                    <SegmentedToggle>
+                        {["all", "personal", "study"].map((mode, i) => (
+                            <SegmentButton
+                                key={mode}
+                                isActive={viewMode === mode}
+                                onClick={() => setViewMode(mode as any)}
+                            >
+                                {mode === "all"
+                                    ? "전체"
+                                    : mode === "personal"
+                                        ? "개인 일정"
+                                        : "스터디 일정"}
+                                {viewMode === mode && (
+                                    <ActiveBg
+                                        layoutId="active-bg"
+                                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                    />
+                                )}
+                            </SegmentButton>
+                        ))}
+                    </SegmentedToggle>
                 </RightArea>
             </HeaderArea>
 
@@ -180,49 +182,62 @@ const Title = styled.h2`
     color: #111827;
 `;
 
-const ViewToggle = styled.div`
-    display: flex;
-    gap: 8px;
-
-    button {
-        padding: 6px 14px;
-        border-radius: 6px;
-        border: 1px solid #d1d5db;
-        background: #f9fafb;
-        cursor: pointer;
-        font-size: 14px;
-        color: #374151;
-        transition: 0.2s;
-
-        &.active {
-            background: #3b82f6;
-            color: white;
-            border-color: #2563eb;
-        }
-
-        &:hover {
-            background: #e5e7eb;
-        }
-    }
-`;
-
 const RightArea = styled.div`
     display: flex;
     align-items: center;
     gap: 12px;
 `;
 
+const SegmentedToggle = styled.div`
+  display: flex;
+  background: #f3f4f6;
+  border-radius: 9999px;
+  padding: 4px;
+  position: relative;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+`;
+
+const SegmentButton = styled.button<{ isActive: boolean }>`
+  position: relative;
+  border: none;
+  background: none;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: ${({ isActive }) => (isActive ? "#fff" : "#374151")};
+  z-index: 1;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: ${({ isActive }) => (isActive ? "#fff" : "#111827")};
+  }
+`;
+
+const ActiveBg = styled(motion.div)`
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    z-index: -1;
+    background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 45%, #34d399 100%);
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
+`;
+
 const AddButton = styled.button`
-    background: #3b82f6;
+    background: #3b82f6; /* 메인 블루 (#2563eb보다 부드러운 느낌) */
     color: white;
     border: none;
-    border-radius: 6px;
-    padding: 6px 14px;
+    border-radius: 9999px;
+    padding: 6px 16px;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: 0.25s ease;
+    box-shadow: 0 2px 5px rgba(59,130,246,0.25);
+
     &:hover {
-        background: #2563eb;
+        background: #2563eb; /* hover 시 진한 블루 */
+        transform: translateY(-1px);
     }
 `;
