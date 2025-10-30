@@ -12,7 +12,6 @@ import {
 import { fetchTrustScore, TrustScoreResponse } from "../../api/userTrustScoreApi.ts";
 import { fetchInterviewResultList, InterviewSummary } from "../../api/InterviewApi.ts";
 import { notifyError } from "../../utils/toast";
-import WritingModal from "../modals/WritingModal.tsx";
 import TrustScoreModal from "../modals/TrustScoreModal.tsx";
 
 /* ================== 색상 팔레트 ================== */
@@ -169,9 +168,6 @@ export default function ActivityLogSection() {
                 <TopCard>
                     <p>총 글 작성</p>
                     <strong>{writing.totalCount}개</strong>
-                    <DetailButton onClick={() => setWritingModalOpen(true)}>
-                        자세히 보기
-                    </DetailButton>
                 </TopCard>
             </TopCardGrid>
 
@@ -189,11 +185,6 @@ export default function ActivityLogSection() {
             </DonutGrid>
 
             {/* 모달 */}
-            <WritingModal
-                isOpen={writingModalOpen}
-                onClose={() => setWritingModalOpen(false)}
-                writing={writing}
-            />
             <TrustScoreModal
                 isOpen={trustModalOpen}
                 onClose={() => setTrustModalOpen(false)}

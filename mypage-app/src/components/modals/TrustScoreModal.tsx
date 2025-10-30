@@ -6,9 +6,7 @@ import {
     calcAttendanceScore,
     calcInterviewScore,
     calcProblemScore,
-    calcPostScore,
-    calcStudyroomScore,
-    calcCommentScore,
+    calcStudyroomScore
 } from "../../utils/trustScoreUtils";
 
 /* ---------- 타입 ---------- */
@@ -70,38 +68,26 @@ export default function TrustScoreModal({
                                     <TrustGrid>
                                         <TrustItem>
                                             <Label>출석률</Label>
-                                            <ProgressBar percent={(calcAttendanceScore(trustScore!.attendanceRate) / 25) * 100} />
-                                            <Count>{calcAttendanceScore(trustScore!.attendanceRate).toFixed(1)} / 25점</Count>
+                                            <ProgressBar percent={(calcAttendanceScore(trustScore!.attendanceRate) / 40) * 100} />
+                                            <Count>{calcAttendanceScore(trustScore!.attendanceRate).toFixed(1)} / 40점</Count>
                                         </TrustItem>
 
                                         <TrustItem>
                                             <Label>모의면접</Label>
-                                            <ProgressBar percent={(calcInterviewScore(trustScore!.monthlyInterviews) / 20) * 100} />
-                                            <Count>{calcInterviewScore(trustScore!.monthlyInterviews)} / 20점</Count>
+                                            <ProgressBar percent={(calcInterviewScore(trustScore!.monthlyInterviews) / 25) * 100} />
+                                            <Count>{calcInterviewScore(trustScore!.monthlyInterviews).toFixed(1)} / 25점</Count>
                                         </TrustItem>
 
                                         <TrustItem>
                                             <Label>문제풀이</Label>
-                                            <ProgressBar percent={(calcProblemScore(trustScore!.monthlyProblems) / 20) * 100} />
-                                            <Count>{calcProblemScore(trustScore!.monthlyProblems)} / 20점</Count>
-                                        </TrustItem>
-
-                                        <TrustItem>
-                                            <Label>글 작성</Label>
-                                            <ProgressBar percent={(calcPostScore(trustScore!.monthlyPosts) / 15) * 100} />
-                                            <Count>{calcPostScore(trustScore!.monthlyPosts)} / 15점</Count>
+                                            <ProgressBar percent={(calcProblemScore(trustScore!.monthlyProblems) / 25) * 100} />
+                                            <Count>{calcProblemScore(trustScore!.monthlyProblems).toFixed(1)} / 25점</Count>
                                         </TrustItem>
 
                                         <TrustItem>
                                             <Label>스터디룸</Label>
                                             <ProgressBar percent={(calcStudyroomScore(trustScore!.monthlyStudyrooms) / 10) * 100} />
-                                            <Count>{calcStudyroomScore(trustScore!.monthlyStudyrooms)} / 10점</Count>
-                                        </TrustItem>
-
-                                        <TrustItem>
-                                            <Label>댓글</Label>
-                                            <ProgressBar percent={(calcCommentScore(trustScore!.monthlyComments) / 15) * 100} />
-                                            <Count>{calcCommentScore(trustScore!.monthlyComments)} / 15점</Count>
+                                            <Count>{calcStudyroomScore(trustScore!.monthlyStudyrooms).toFixed(1)} / 10점</Count>
                                         </TrustItem>
                                     </TrustGrid>
 
@@ -129,48 +115,39 @@ export default function TrustScoreModal({
                             </Header>
 
                             <CriteriaContent>
-                                <p>🛡️ 활동 점수는 다음 여섯 가지 항목으로 구성됩니다.</p>
+                                <p>활동 점수는 다음 네 가지 항목으로 구성됩니다.</p>
 
                                 <CardList>
                                     <Card>
                                         <Title>🗓️ 출석률</Title>
-                                        <Point>최대 25점</Point>
-                                        <Desc>이번 달 출석률에 따라 점수 반영 (100% = 25점)</Desc>
-                                        <Note>성실성 지표</Note>
+                                        <Point>최대 40점</Point>
+                                        <Desc>출석률 100% 달성 시 만점</Desc>
+                                        <Note>꾸준함을 평가합니다.</Note>
                                     </Card>
+
                                     <Card>
                                         <Title>🎤 모의면접</Title>
-                                        <Point>최대 15점</Point>
-                                        <Desc>이번 달 완료한 모의면접 횟수 기준</Desc>
-                                        <Note>실전 대비 지표</Note>
+                                        <Point>최대 25점</Point>
+                                        <Desc>완료한 모의면접 횟수 기준</Desc>
+                                        <Note>실전 대비 능력을 반영합니다.</Note>
                                     </Card>
+
                                     <Card>
                                         <Title>🧩 문제풀이</Title>
-                                        <Point>최대 15점</Point>
-                                        <Desc>이번 달 풀이한 문제 수 기준</Desc>
-                                        <Note>학습 꾸준함</Note>
+                                        <Point>최대 25점</Point>
+                                        <Desc>풀이한 문제 수 기준</Desc>
+                                        <Note>학습 성실도를 평가합니다.</Note>
                                     </Card>
-                                    <Card>
-                                        <Title>✍️ 게시글 작성</Title>
-                                        <Point>최대 15점</Point>
-                                        <Desc>이번 달 작성한 게시글 수 기준</Desc>
-                                        <Note>지식 공유 기여</Note>
-                                    </Card>
+
                                     <Card>
                                         <Title>👥 스터디룸 개설</Title>
-                                        <Point>최대 15점</Point>
-                                        <Desc>이번 달 개설한 스터디룸 수 기준</Desc>
-                                        <Note>커뮤니티 리더십</Note>
-                                    </Card>
-                                    <Card>
-                                        <Title>💬 댓글 작성</Title>
-                                        <Point>최대 15점</Point>
-                                        <Desc>이번 달 작성한 댓글 수 기준</Desc>
-                                        <Note>커뮤니티 참여</Note>
+                                        <Point>최대 10점</Point>
+                                        <Desc>개설한 스터디룸 수 기준</Desc>
+                                        <Note>리더십과 참여도를 평가합니다.</Note>
                                     </Card>
                                 </CardList>
 
-                                <p>총점은 최대 100점이며, 활동에 따라 월별로 갱신됩니다.</p>
+                                <p>총점은 최대 100점이며, 월별로 갱신됩니다.</p>
                             </CriteriaContent>
 
                             <Footer>
@@ -198,10 +175,10 @@ const Overlay = styled.div`
 
 const ModalCard = styled.div`
     background: #fff;
-    width: 680px;
+    width: 540px;
     max-width: 90vw;
     border-radius: 16px;
-    padding: 32px 36px;
+    padding: 28px 30px;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
     overflow: hidden;
 `;
@@ -232,10 +209,13 @@ const Empty = styled.p`
 
 const TrustGrid = styled.div`
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px 20px;
-`;
 
+    @media (max-width: 600px) {
+        grid-template-columns: 1fr;
+    }
+`;
 const TrustItem = styled.div`
     border: 1px solid #e5e7eb;
     border-radius: 10px;
