@@ -170,6 +170,7 @@ import {useRoute, useRouter} from "vue-router";
 import { useAiInterviewStore } from "../../stores/aiInterviewStore";
 import HexagonChart from "../result/HexagonChart.vue";
 import { useHead } from '@vueuse/head'
+import Swal from 'sweetalert2';
 
 const route = useRoute();
 
@@ -783,6 +784,78 @@ const getScoreResultList = async (interviewId) => {
     console.log("interviewId:", interviewId);
     
     const res = await aiInterviewStore.requestGetInterviewResultToSpring(interviewId);
+    console.log(res);
+    if (res.status === 401) {
+      Swal.fire({
+        title: '권한이 없습니다',
+        text: '접근 권한이 없습니다.',
+        icon: 'warning',
+        iconColor: '#2563EB',
+        background: '#F9FAFB',
+        color: '#111827',
+
+        showClass: {
+          popup: 'animate__animated animate__fadeInDown animate__faster'
+        },
+        hideClass: {
+          popup: 'animate__animated animate__fadeOutUp animate__faster'
+        },
+
+        backdrop: `rgba(0,0,0,0.6)`,
+
+        showCancelButton: false,
+        confirmButtonText: '확인',
+
+        buttonsStyling: false,
+        customClass: {
+          popup: 'rounded-xl shadow-2xl p-6',
+          confirmButton: 'custom-confirm-btn'
+        },
+        didOpen: () => {
+          const btn = document.querySelector('.custom-confirm-btn');
+          Object.assign(btn.style, {
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            padding: '16px 36px',
+            fontSize: '16px',
+            fontWeight: '700',
+            color: '#fff',
+            background: 'linear-gradient(90deg, #3B82F6 0%, #10B981 100%)',
+            borderRadius: '12px',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            width: '100%',
+            maxWidth: '200px',
+          });
+
+          btn.onmouseover = () => {
+            btn.style.transform = 'translateY(-2px)';
+            btn.style.boxShadow = '0 15px 30px rgba(0,0,0,0.25)';
+          };
+          btn.onmouseout = () => {
+            btn.style.transform = 'translateY(0)';
+            btn.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
+          };
+          btn.onmousedown = () => {
+            btn.style.transform = 'translateY(0)';
+            btn.style.boxShadow = '0 5px 15px rgba(0,0,0,0.2)';
+          };
+          btn.onmouseup = () => {
+            btn.style.transform = 'translateY(-2px)';
+            btn.style.boxShadow = '0 15px 30px rgba(0,0,0,0.25)';
+          };
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = "/";
+        }
+      });
+
+
+    }
     inputList.value = res.interviewResultList;
     const hexagon = res.hexagonScore || {};
     overallComment.value = res.overallComment;
