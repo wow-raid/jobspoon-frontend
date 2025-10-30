@@ -91,7 +91,7 @@ export default function TitleSection() {
                             <TitleList>
                                 {titles.slice(currentIndex, currentIndex + visibleCount).map((t) => (
                                     <MotionTitleItem key={t.id} isEquipped={t.equipped}
-                                                     whileHover={{ scale: 1.05, y: -4 }} transition={{ type: "spring", stiffness: 250, damping: 15 }}>
+                                                     whileHover={{ scale: 1.08, y: -6 }} transition={{ type: "spring", stiffness: 420, damping: 18, mass: 0.6, }}>
                                         <div className="iconWrapper">
                                             <img src={defaultTitle} alt={t.displayName} />
                                             {t.equipped && <EquippedBadge>장착</EquippedBadge>}
@@ -117,6 +117,18 @@ export default function TitleSection() {
     );
 }
 
+/* ================= 색상 팔레트 ================= */
+const palette = {
+    primary: "#4CC4A8",    // 따뜻하고 밝은 민트
+    accent: "#3AB49A",     // 강조용 진민트
+    softBG: "linear-gradient(145deg, #f9fbfa, #f4fbf7)", // 부드러운 배경
+    borderLight: "rgba(76,196,168,0.35)",
+    shadow: "rgba(76,196,168,0.22)",
+    textMain: "#0F172A",
+    textSub: "#64748B",
+};
+
+
 /* ================= styled-components ================= */
 const SectionHeader = styled.div`
     display: flex;
@@ -125,12 +137,14 @@ const SectionHeader = styled.div`
 
 const GuideButton = styled.button`
     font-size: 13px;
-    color: #3B82F6;
+    color: ${palette.accent};
     background: transparent;
     border: none;
     cursor: pointer;
     font-weight: 600;
-    &:hover { text-decoration: underline; }
+    &:hover {
+        text-decoration: underline;
+    }
 `;
 
 const ContentGrid = styled.div`
@@ -142,26 +156,49 @@ const ContentGrid = styled.div`
 
 const CurrentTitleCard = styled.div`
     position: relative;
-    background: linear-gradient(145deg, #f8fbff, #eef4ff);
-    border: 1.5px solid #3B82F6;
+    background: linear-gradient(
+            180deg,
+            rgba(16, 185, 129, 0.04) 0%,
+            rgba(59, 130, 246, 0.05) 100%
+    );
+    border: 1.5px solid ${palette.primary};
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 8px ${palette.shadow};
     padding: 28px;
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 8px;
-    img { width: 80px; height: 80px; margin-bottom: 8px; object-fit: contain; }
-    h3 { font-size: 18px; font-weight: 700; color: #111827; }
-    p { font-size: 13px; color: #6B7280; }
-`;
+    transition: transform 0.25s ease;
 
+    &:hover {
+        transform: translateY(-3px);
+    }
+
+    img {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 8px;
+        object-fit: contain;
+    }
+
+    h3 {
+        font-size: 18px;
+        font-weight: 700;
+        color: ${palette.textMain};
+    }
+
+    p {
+        font-size: 13px;
+        color: ${palette.textSub};
+    }
+`;
 const Badge = styled.div`
     position: absolute;
     top: 14px;
     right: 14px;
-    background: #3B82F6;
+    background: ${palette.primary};
     color: white;
     font-size: 11px;
     font-weight: 600;
@@ -172,7 +209,8 @@ const Badge = styled.div`
 const TitleListCard = styled.div`
     background: white;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid ${palette.borderLight};
+    box-shadow: 0 2px 8px ${palette.shadow};
     padding: 24px;
     display: flex;
     flex-direction: column;
@@ -183,7 +221,7 @@ const TitleListHeader = styled.div`
     align-items: center;
     margin-bottom: 14px;
     font-weight: 600;
-    color: #6B7280;
+    color: ${palette.textSub};
 `;
 
 const PreviewWrapper = styled.div`
@@ -200,20 +238,36 @@ const TitleList = styled.div`
     justify-content: center;
 `;
 
+
 const MotionTitleItem = styled(motion.div)<{ isEquipped?: boolean }>`
     position: relative;
     min-width: 90px;
     text-align: center;
-    background: ${({ isEquipped }) => (isEquipped ? "#EFF6FF" : "#F9FAFB")};
-    border: ${({ isEquipped }) => (isEquipped ? "1.5px solid #3B82F6" : "1px solid #E5E7EB")};
+    background: ${({ isEquipped }) => (isEquipped ? "rgba(76,196,168,0.06)" : "#F9FAFB")};
+    border: ${({ isEquipped }) =>
+            isEquipped
+                    ? `1px solid ${palette.primary}`
+                    : `1px solid ${palette.borderLight}`};
     border-radius: 14px;
     padding: 14px 8px;
-    box-shadow: ${({ isEquipped }) =>
-            isEquipped ? "0 4px 12px rgba(59,130,246,0.25)" : "0 3px 8px rgba(0,0,0,0.06)"};
-    transition: all 0.25s ease;
-    &:hover .tooltip { opacity: 1; visibility: visible; transform: translate(-50%, -6px); }
-    h4 { font-size: 13px; font-weight: 600; color: #111827; }
-    p { font-size: 11px; color: #6B7280; }
+    transition: box-shadow 0.15s ease, border 0.15s ease;
+
+    &:hover .tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, -6px);
+    }
+
+    h4 {
+        font-size: 13px;
+        font-weight: 600;
+        color: ${palette.textMain};
+    }
+
+    p {
+        font-size: 11px;
+        color: ${palette.textSub};
+    }
 `;
 
 const Tooltip = styled.div`
@@ -230,6 +284,7 @@ const Tooltip = styled.div`
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
+
     &::after {
         content: "";
         position: absolute;
@@ -246,7 +301,7 @@ const EquippedBadge = styled.span`
     position: absolute;
     top: -4px;
     right: -6px;
-    background: #3B82F6;
+    background: ${palette.accent};
     color: white;
     font-size: 9px;
     font-weight: 600;
@@ -260,15 +315,20 @@ const NavButton = styled.button<{ position: "left" | "right" }>`
     ${({ position }) => (position === "left" ? "left: 8px;" : "right: 8px;")}
     font-size: 22px;
     font-weight: bold;
-    color: #4B5563;
+    color: ${palette.textSub};
     background: transparent;
     border: none;
     cursor: pointer;
+
     &:hover:not(:disabled) {
-        color: #3B82F6;
+        color: ${palette.primary};
         transform: scale(1.2);
     }
-    &:disabled { opacity: 0.3; cursor: default; }
+
+    &:disabled {
+        opacity: 0.3;
+        cursor: default;
+    }
 `;
 
 const EmptyWrapper = styled.div`

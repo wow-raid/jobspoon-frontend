@@ -91,9 +91,23 @@ function InnerApp() {
       "/vue-ai-interview/ai-interview/form/",
       "/vue-ai-interview/ai-test/",
     ];
+
+      const hiddenLayoutsFooters = [
+          "/mypage/",
+          "/mypage",
+          "/vue-account/account/login",
+          "/vue-ai-interview/ai-interview/select",
+          "/vue-ai-interview/ai-interview/result",
+          "/vue-ai-interview/ai-interview/form/",
+          "/vue-ai-interview/ai-test/",
+      ];
     const hideLayout = hiddenLayouts.some((path) =>
       location.pathname.startsWith(path)
     );
+
+      const hideLayoutFooter = hiddenLayoutsFooters.some((path) =>
+          location.pathname.startsWith(path)
+      );
 
       const hiddenLayoutsLogo = [
           "/vue-ai-interview/ai-interview/select",
@@ -169,7 +183,7 @@ function InnerApp() {
           />
         </Routes>
 
-        {!hideLayout && <Footer />}
+        {!hideLayoutFooter && <Footer />}
       </Suspense>
     );
   }

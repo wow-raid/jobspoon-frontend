@@ -591,26 +591,26 @@ const backToInterviewTypeSelection = () => {
 };
 
 // TTS 및 기타 로직
-const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
-const handleBeforeUnload = () => {
-  if (synth && synth.speaking) synth.cancel();
-  localStorage.removeItem("interviewInfo");
-};
-
-onBeforeUnmount(() => {
-  if (synth && synth.speaking) synth.cancel();
-  window.removeEventListener("beforeunload", handleBeforeUnload);
-});
-
-const speakNotice = () => {
-  const message = `안녕하십니까? AI 모의 면접 서비스입니다. 면접 유형을 선택하고 상세 정보를 입력하여 맞춤형 면접을 시작하세요.`;
-  const utterance = new SpeechSynthesisUtterance(message);
-  utterance.lang = "ko-KR";
-  utterance.rate = 1;
-  utterance.pitch = 1;
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utterance);
-};
+// const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
+// const handleBeforeUnload = () => {
+//   if (synth && synth.speaking) synth.cancel();
+//   localStorage.removeItem("interviewInfo");
+// };
+//
+// onBeforeUnmount(() => {
+//   if (synth && synth.speaking) synth.cancel();
+//   window.removeEventListener("beforeunload", handleBeforeUnload);
+// });
+//
+// const speakNotice = () => {
+//   const message = `안녕하십니까? AI 모의 면접 서비스입니다. 면접 유형을 선택하고 상세 정보를 입력하여 맞춤형 면접을 시작하세요.`;
+//   const utterance = new SpeechSynthesisUtterance(message);
+//   utterance.lang = "ko-KR";
+//   utterance.rate = 1;
+//   utterance.pitch = 1;
+//   window.speechSynthesis.cancel();
+//   window.speechSynthesis.speak(utterance);
+// };
 
 onMounted(() => {
   // 로그인 체크 (필요시 주석 해제)
@@ -623,8 +623,8 @@ onMounted(() => {
   }
   */
   
-  speakNotice();
-  window.addEventListener("beforeunload", handleBeforeUnload);
+  // speakNotice();
+  // window.addEventListener("beforeunload", handleBeforeUnload);
 });
 
 // 면접 시작 함수
@@ -699,27 +699,54 @@ const startInterview = () => {
 
 
 // ---------- 스타일 변수 ---------- //
-const containerStyle = { marginBottom:"15%", marginTop: "1%", maxWidth: "1200px" };
+const containerStyle = { 
+  marginBottom: '0',
+  marginTop: '0', 
+  maxWidth: '100%',
+  width: '100%',
+  background: 'linear-gradient(180deg, #ffffff 0%, #f0f9ff 40%, #e0f2fe 100%)',
+  minHeight: '100vh',
+  padding: '80px 40px 120px',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center'
+};
 const cardStyle = { padding: "24px", borderRadius: "16px" };
 const optionRowStyle = { gap: "16px", marginTop: "16px" };
 const mb8Style = { marginBottom: "32px" };
 const mt8Style = { marginTop: "32px" };
 const mt16Style = { marginTop: "64px" };
-const formContainerStyle = { marginTop: "32px", padding: "16px" };
+const formContainerStyle = { 
+  marginTop: '48px', 
+  padding: '40px',
+  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 249, 255, 0.95) 100%)',
+  borderRadius: '24px',
+  boxShadow: '0 10px 40px rgba(79, 156, 249, 0.15)',
+  border: '2px solid rgba(79, 156, 249, 0.15)',
+  backdropFilter: 'blur(10px)',
+  maxWidth: '900px',
+  margin: '48px auto 0'
+};
 const drawLineStyle = {
-  border: "1px solid #333",
-  padding: "16px",
-  borderRadius: "10px",
-  width: "90%",
-  marginTop: "32px"
+  border: '2px solid rgba(79, 156, 249, 0.2)',
+  padding: '32px',
+  borderRadius: '20px',
+  width: '100%',
+  marginTop: '40px',
+  background: 'linear-gradient(135deg, rgba(79, 156, 249, 0.03) 0%, rgba(16, 185, 129, 0.03) 100%)',
+  boxShadow: '0 4px 16px rgba(79, 156, 249, 0.08)'
 };
 const liStyle = { marginLeft: "2%" };
 const buttonStyle = {
   minWidth: "120px",
-  padding: "12px 24px",
+  padding: "14px 32px",
   margin: "0 8px",
-  borderRadius: "8px",
-  fontWeight: "500",
+  borderRadius: "50px",
+  fontWeight: "700",
+  background: 'linear-gradient(135deg, #4F9CF9 0%, #10B981 100%)',
+  color: 'white',
+  boxShadow: '0 8px 24px rgba(79, 156, 249, 0.4)',
+  transition: 'all 0.3s ease'
 };
 
 // JobSpoon AI 인터뷰 로고 스타일
@@ -773,7 +800,7 @@ const enhancedTitleStyle = {
 
 // 타이틀 하이라이트 스타일
 const titleHighlightStyle = {
-  background: 'linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%)',
+  background: 'linear-gradient(135deg, #4F9CF9 0%, #10B981 100%)',
   WebkitBackgroundClip: 'text',
   WebkitTextFillColor: 'transparent',
   backgroundClip: 'text',
@@ -785,7 +812,7 @@ const titleHighlightStyle = {
 const titleUnderlineStyle = {
   width: '80px',
   height: '4px',
-  background: 'linear-gradient(90deg, #3b82f6 0%, rgba(59, 130, 246, 0.3) 100%)',
+  background: 'linear-gradient(90deg, #4F9CF9 0%, #10B981 100%)',
   borderRadius: '2px',
   marginBottom: '1.5rem'
 };
@@ -813,12 +840,14 @@ const titleStyle = {
 
 // 선택 화면 스타일
 const selectionContainerStyle = {
-  marginBottom: '10rem',
+  marginBottom: '0',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  width: '100%'
+  width: '100%',
+  maxWidth: '1400px',
+  margin: '0 auto'
 };
 
 // 면접 유형 선택 옵션 스타일
@@ -835,26 +864,32 @@ const interviewOptionsWrapperStyle = {
 // 면접 유형 아이템 스타일
 const interviewTypeItemStyle = {
   position: 'relative',
-  borderRadius: '12px',
+  borderRadius: '24px',
   overflow: 'hidden',
   cursor: 'pointer',
-  transition: 'all 0.3s ease',
-  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-  backgroundColor: 'white',
-  width: '280px',
-  height: '500px',
+  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+  boxShadow: '0 10px 40px rgba(79, 156, 249, 0.12)',
+  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  width: '320px',
+  minHeight: '420px',
   display: 'flex',
   flexDirection: 'column',
-  border: '1px solid #e5e7eb'
+  border: '2px solid rgba(79, 156, 249, 0.15)',
+  backdropFilter: 'blur(10px)',
+  '&:hover': {
+    transform: 'translateY(-8px)',
+    boxShadow: '0 20px 60px rgba(79, 156, 249, 0.25)',
+    borderColor: 'rgba(79, 156, 249, 0.3)'
+  }
 };
 
 // 선택된 면접 유형 아이템 스타일
 const selectedInterviewTypeItemStyle = {
-  backgroundColor: '#f0f7ff',
-  borderColor: '#3b82f6',
-  borderWidth: '2px',
-  boxShadow: '0 8px 24px rgba(59, 130, 246, 0.2)',
-  transform: 'translateY(-5px)'
+  background: 'linear-gradient(135deg, rgba(79, 156, 249, 0.12) 0%, rgba(16, 185, 129, 0.12) 100%)',
+  borderColor: '#4F9CF9',
+  borderWidth: '3px',
+  boxShadow: '0 20px 60px rgba(79, 156, 249, 0.35)',
+  transform: 'translateY(-12px) scale(1.03)'
 };
 
 // 준비중인 면접 유형 아이템 스타일
@@ -870,29 +905,33 @@ const interviewTypeIconStyle = {
   alignItems: 'center',
   justifyContent: 'center',
   width: '100%',
-  height: '80px',
-  backgroundColor: '#f3f4f6',
-  borderBottom: '1px solid #e5e7eb'
+  height: '120px',
+  background: 'linear-gradient(135deg, rgba(79, 156, 249, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%)',
+  borderBottom: '2px solid rgba(79, 156, 249, 0.1)',
+  transition: 'all 0.3s ease'
 };
 
 // 면접 유형 콘텐츠 스타일
 const interviewTypeContentStyle = {
   flex: '1',
-  padding: '1.5rem',
+  padding: '32px 24px',
   position: 'relative',
   zIndex: '2',
   display: 'flex',
   flexDirection: 'column',
-  justifyContent: 'center'
+  justifyContent: 'center',
+  gap: '12px'
 };
 
 // 면접 유형 제목 스타일
 const interviewTypeTitleStyle = {
-  fontSize: '1.25rem',
-  fontWeight: '600',
-  marginBottom: '0.5rem',
-  color: '#333',
-  textAlign: 'center'
+  fontSize: '1.5rem',
+  fontWeight: '800',
+  marginBottom: '8px',
+  color: '#1e293b',
+  textAlign: 'center',
+  letterSpacing: '-0.02em',
+  transition: 'color 0.3s ease'
 };
 
 // 선택된 면접 유형 제목 스타일
@@ -902,9 +941,11 @@ const selectedInterviewTypeTitleStyle = {
 
 // 면접 유형 설명 스타일
 const interviewTypeDescriptionStyle = {
-  fontSize: '0.9rem',
-  color: '#6b7280',
-  textAlign: 'center'
+  fontSize: '1rem',
+  color: '#64748b',
+  textAlign: 'center',
+  lineHeight: '1.6',
+  fontWeight: '500'
 };
 
 // 면접 유형 상태 스타일
@@ -931,8 +972,9 @@ const interviewTypeOverlayStyle = {
 // 회사 선택 스타일
 const companySelectionWrapperStyle = {
   width: '100%',
-  maxWidth: '800px',
-  margin: '0 auto 2rem'
+  maxWidth: '1000px',
+  margin: '0 auto 48px',
+  padding: '0 20px'
 };
 
 // 회사 선택 칩 컨테이너 스타일
@@ -940,27 +982,36 @@ const companyChipContainerStyle = {
   display: 'flex',
   flexWrap: 'wrap',
   justifyContent: 'center',
-  gap: '12px'
+  gap: '16px',
+  padding: '20px'
 };
 
 // 회사 선택 칩 스타일
 const companyChipStyle = {
   fontSize: '1rem',
-  padding: '12px 20px',
-  borderRadius: '30px',
-  backgroundColor: '#f3f4f6',
-  color: '#333',
-  border: '1px solid #e5e7eb',
-  transition: 'all 0.3s ease'
+  padding: '14px 28px',
+  borderRadius: '50px',
+  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  color: '#475569',
+  border: '2px solid rgba(79, 156, 249, 0.2)',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  boxShadow: '0 4px 12px rgba(79, 156, 249, 0.1)',
+  fontWeight: '600',
+  cursor: 'pointer',
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: '0 8px 20px rgba(79, 156, 249, 0.2)',
+    borderColor: 'rgba(79, 156, 249, 0.4)'
+  }
 };
 
 // 선택된 회사 칩 스타일
 const companyChipSelectedStyle = {
-  backgroundColor: '#3b82f6',
+  background: 'linear-gradient(135deg, #4F9CF9 0%, #10B981 100%)',
   color: 'white',
-  borderColor: '#3b82f6',
-  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-  transform: 'translateY(-2px)'
+  borderColor: '#4F9CF9',
+  boxShadow: '0 8px 24px rgba(79, 156, 249, 0.4)',
+  transform: 'translateY(-3px) scale(1.05)'
 };
 
 // 준비중 화면 컨테이너 스타일
@@ -970,9 +1021,10 @@ const preparingContainerStyle = {
   alignItems: 'center',
   justifyContent: 'center',
   padding: '3rem',
-  backgroundColor: '#f9fafb',
-  borderRadius: '16px',
-  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 249, 255, 0.95) 100%)',
+  borderRadius: '24px',
+  boxShadow: '0 10px 40px rgba(79, 156, 249, 0.15)',
+  border: '2px solid rgba(79, 156, 249, 0.15)',
   maxWidth: '600px',
   margin: '0 auto'
 };
@@ -1009,12 +1061,14 @@ const backButtonStyle = {
 
 // 선택 화면으로 돌아가기 버튼 스타일
 const backToSelectionBtnStyle = {
-  padding: '12px 24px',
-  fontWeight: '500',
-  borderRadius: '8px',
+  padding: '14px 32px',
+  fontWeight: '700',
+  borderRadius: '50px',
   color: 'white',
   textTransform: 'none',
-  letterSpacing: '0.02em'
+  letterSpacing: '0.02em',
+  background: 'linear-gradient(135deg, #4F9CF9 0%, #10B981 100%)',
+  boxShadow: '0 8px 24px rgba(79, 156, 249, 0.4)'
 };
 const selectedCardStyle = {
   backgroundColor: "#3b82f6",
@@ -1033,14 +1087,26 @@ const unselectedCardStyle = {
   borderRadius: "12px",
 };
 const selectedChipStyle = {
-  backgroundColor: "#6366f1",
-  color: "white",
-  transition: "all 0.3s ease",
+  background: 'linear-gradient(135deg, #4F9CF9 0%, #10B981 100%)',
+  color: 'white',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  boxShadow: '0 6px 20px rgba(79, 156, 249, 0.4)',
+  transform: 'scale(1.08)',
+  fontWeight: '700',
+  border: '2px solid transparent'
 };
 const unselectedChipStyle = {
-  backgroundColor: "#e0e0e0",
-  color: "black",
-  transition: "all 0.3s ease",
+  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  color: '#64748b',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  border: '2px solid rgba(79, 156, 249, 0.15)',
+  boxShadow: '0 2px 8px rgba(79, 156, 249, 0.08)',
+  fontWeight: '600',
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: '0 4px 16px rgba(79, 156, 249, 0.15)',
+    borderColor: 'rgba(79, 156, 249, 0.3)'
+  }
 };
 // --------------------------------- //
 

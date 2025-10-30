@@ -123,24 +123,24 @@ const StyledNavLink = styled(NavLink)`
 
     .icon {
         font-size: 15px;
-        color: #a0a0a0;
+        color: #94a3b8; /* 기존보다 살짝 부드러운 기본톤 */
         transition: color 0.25s ease;
     }
 
     &.active {
-        background: #eff6ff;
-        color: #2563eb;
+        background: rgba(41, 152, 197, 0.12); /* #eff6ff → 브랜드톤 */
+        color: #2998C5; /* 메인 블루 */
         .icon {
-            color: #2563eb;
+            color: #2998C5;
         }
     }
 
     &:hover {
-        background: #f3f8ff;
-        color: #2563eb;
+        background: rgba(41, 152, 197, 0.08); /* #f3f8ff → 브랜드톤 */
+        color: #20A4AD; /* hover 시 민트빛 포인트 */
         transform: translateX(2px);
         .icon {
-            color: #2563eb;
+            color: #20A4AD;
         }
     }
 `;
