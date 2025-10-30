@@ -13,7 +13,7 @@ type Props = {
 export default function WritingModal({ isOpen, onClose, writing }: Props) {
     if (!writing) return null; // 안전 처리
 
-    // ✅ ESC 키로 닫기
+    // ESC 키로 닫기
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
             if (e.key === "Escape") onClose();

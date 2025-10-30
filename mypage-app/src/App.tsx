@@ -4,7 +4,7 @@ import { Toaster } from "react-hot-toast";
 import MyPageLayout from "./components/layout/MyPageLayout.tsx";
 import DashboardSection from "./components/dashboard/DashboardSection.tsx";
 import AccountProfilePage from "./pages/AccountProfilePage.tsx";
-import InterviewResultList from "./pages/InterviewResultList.tsx";
+import InterviewResultList from "./pages/InterviewHistoryPage.tsx";
 import AccountWithdrawal from "./pages/AccountWithdrawal.tsx";
 import MembershipPage from "./pages/MemebershipPage.tsx";
 import SchedulePage from "./pages/SchedulePage.tsx";
