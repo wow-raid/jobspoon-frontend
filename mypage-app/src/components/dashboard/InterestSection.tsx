@@ -72,21 +72,18 @@ export default function InterestSection() {
 const GlassCard = styled.section`
     position: relative;
     overflow: hidden;
-    padding: 40px 28px;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px solid rgba(76, 196, 168, 0.25);
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.05);
-    backdrop-filter: blur(10px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 22px 20px; /* 🔹 기존 40px → 22px */
+    border-radius: 14px; /* 🔹 기존 20px → 14px */
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(76, 196, 168, 0.2);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+    backdrop-filter: blur(8px);
     text-align: center;
-    transition: 0.3s ease all;
+    transition: 0.25s ease all;
 
     &:hover {
-        box-shadow: 0 8px 28px rgba(76, 196, 168, 0.15);
-        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(76, 196, 168, 0.12);
+        transform: translateY(-1px);
     }
 `;
 
@@ -136,7 +133,7 @@ const LoadingBox = styled.div`
 const JobLabel = styled.p`
     color: #25a58b;
     font-weight: 600;
-    font-size: 1.05rem;
+    font-size: 0.95rem; /* 🔹 기존 1.05rem → 줄이기 */
 `;
 
 const TagList = styled.div`
@@ -148,17 +145,17 @@ const TagList = styled.div`
 `;
 
 const Tag = styled.span`
-    background: rgba(67, 208, 178, 0.12);
+    background: rgba(67, 208, 178, 0.1);
     color: #0f766e;
-    font-size: 0.85rem;
-    padding: 6px 14px;
-    border-radius: 20px;
+    font-size: 0.8rem; /* 🔹 기존 0.85rem → 미세 조정 */
+    padding: 5px 12px;
+    border-radius: 16px;
     font-weight: 500;
 `;
 
 const InfoText = styled.p`
-    margin-top: 12px;
-    font-size: 0.8rem;
-    color: #9ca3af;
-    letter-spacing: 0.2px;
+    margin-top: 6px;
+    font-size: 0.7rem !important; /* 🔹 작게 */
+    color: #b0b0b0;
+    letter-spacing: 0.1px;
 `;

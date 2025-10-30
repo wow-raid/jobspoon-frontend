@@ -19,7 +19,7 @@ export default function WithdrawalConfirmModal({
     const requiredPhrase = nickname + " 회원 탈퇴";
     const isMatch = inputValue.trim() === requiredPhrase;
 
-    // ✅ ESC 키로 닫기
+    // ESC 키로 닫기
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
             if (e.key === "Escape") onClose();
