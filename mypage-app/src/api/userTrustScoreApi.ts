@@ -15,7 +15,7 @@ export interface TrustScoreResponse {
 
 /** 월별 신뢰점수 히스토리 응답 */
 export interface TrustScoreHistoryResponse {
-    score: number;
+    totalScore: number;
     recordedAt: string; // ISO datetime
 }
 

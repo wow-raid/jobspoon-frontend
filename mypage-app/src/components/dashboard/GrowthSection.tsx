@@ -21,13 +21,16 @@ export default function GrowthSection({ history, currentScore }: {
         return <Message>활동 점수 이력이 없습니다.</Message>;
     }
 
-    const sortedData = [...history].sort(
-        (a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime()
-    );
+    const sortedData = [...history]
+        .sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime())
+        .map(item => ({
+            score: Number(item.totalScore ?? 0),
+            recordedAt: new Date(item.recordedAt).getMonth() + 1,
+        }));
 
     const chartData = [
         ...sortedData,
-        { score: currentScore, recordedAt: new Date().toISOString() },
+        { score: Number(currentScore), recordedAt: new Date().getMonth() + 1 },
     ];
 
     const yDomain = [0, 100];
@@ -45,9 +48,7 @@ export default function GrowthSection({ history, currentScore }: {
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.04)" />
                     <XAxis
                         dataKey="recordedAt"
-                        tickFormatter={(t) =>
-                            new Date(t).toLocaleDateString("ko-KR", { month: "short" })
-                        }
+                        tickFormatter={(t) => t}
                         interval="preserveStartEnd"
                         tick={{ fontSize: 12, fill: "#6B7280" }}
                         axisLine={false}
@@ -67,18 +68,14 @@ export default function GrowthSection({ history, currentScore }: {
                             fontSize: "13px",
                         }}
                         labelFormatter={(t) => {
-                            const date = new Date(t);
                             const now = new Date();
-                            const isThisMonth =
-                                date.getFullYear() === now.getFullYear() &&
-                                date.getMonth() === now.getMonth();
+                            const thisMonth = now.getMonth() + 1;
+                            const labelMonth = Number(t);
 
-                            // 과거달은 "9월", 이번달은 "10월 30일"
-                            if (isThisMonth) {
-                                return `${date.getMonth() + 1}월 ${date.getDate()}일`;
-                            } else {
-                                return `${date.getMonth() + 1}월`;
+                            if (labelMonth === thisMonth) {
+                                return `${labelMonth}월 ${now.getDate()}일`;
                             }
+                            return `${labelMonth}월`;
                         }}
                         formatter={(v: any) => [`${v.toFixed(1)}점`, "활동 점수"]}
                     />
