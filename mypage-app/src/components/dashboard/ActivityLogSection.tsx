@@ -5,12 +5,13 @@ import {
     getAttendanceRate,
     getQuizCompletion,
     getWritingCount,
+    getInterviewCompletion,
     AttendanceRateResponse,
     QuizCompletionResponse,
     WritingCountResponse,
+    InterviewCompletionResponse
 } from "../../api/dashboardApi.ts";
 import { fetchTrustScore, TrustScoreResponse } from "../../api/userTrustScoreApi.ts";
-import { fetchInterviewResultList, InterviewSummary } from "../../api/InterviewApi.ts";
 import { notifyError } from "../../utils/toast";
 import TrustScoreModal from "../modals/TrustScoreModal.tsx";
 
@@ -91,13 +92,12 @@ function DonutChart({
 /* ================== 메인 컴포넌트 ================== */
 export default function ActivityLogSection() {
     const [attendance, setAttendance] = useState<AttendanceRateResponse | null>(null);
-    const [interview, setInterview] = useState<{ total: number; monthly: number } | null>(null);
     const [quiz, setQuiz] = useState<QuizCompletionResponse | null>(null);
     const [writing, setWriting] = useState<WritingCountResponse | null>(null);
+    const [interview, setInterview] = useState<InterviewCompletionResponse | null>(null);
     const [trust, setTrust] = useState<TrustScoreResponse | null>(null);
 
     const [trustModalOpen, setTrustModalOpen] = useState(false);
-    const [writingModalOpen, setWritingModalOpen] = useState(false);
 
     /* ---------- 데이터 로드 ---------- */
     useEffect(() => {
@@ -109,31 +109,19 @@ export default function ActivityLogSection() {
 
         const loadData = async () => {
             try {
-                const [att, quizRes, writingRes, trustRes, interviewRes] = await Promise.all([
+                const [att, quizRes, writingRes, interviewRes, trustRes] = await Promise.all([
                     getAttendanceRate(),
                     getQuizCompletion(),
                     getWritingCount(),
-                    fetchTrustScore(),
-                    fetchInterviewResultList(),
+                    getInterviewCompletion(),
+                    fetchTrustScore()
                 ]);
 
                 setAttendance(att);
                 setQuiz(quizRes);
                 setWriting(writingRes);
+                setInterview(interviewRes);
                 setTrust(trustRes);
-
-                if (Array.isArray(interviewRes)) {
-                    const total = interviewRes.length;
-                    const monthly = interviewRes.filter((item) => {
-                        const d = new Date(item.createdAt);
-                        const now = new Date();
-                        return (
-                            d.getFullYear() === now.getFullYear() &&
-                            d.getMonth() === now.getMonth()
-                        );
-                    }).length;
-                    setInterview({ total, monthly });
-                }
             } catch (err) {
                 console.error("❌ 대시보드 데이터 로드 실패:", err);
                 notifyError("활동 로그 데이터를 불러오는 중 오류가 발생했습니다 ❗");
@@ -159,7 +147,7 @@ export default function ActivityLogSection() {
                 </TopCard>
                 <TopCard>
                     <p>총 모의면접</p>
-                    <strong>{interview.total}회</strong>
+                    <strong>{interview.interviewTotal}회</strong>
                 </TopCard>
                 <TopCard>
                     <p>총 문제풀이</p>
@@ -174,7 +162,7 @@ export default function ActivityLogSection() {
             {/* 도넛 차트 섹션 */}
             <DonutGrid>
                 <DonutChart value={attendance.attendanceRate} label="이번 달 출석률" unit="%" />
-                <DonutChart value={interview.monthly} label="이번 달 모의면접" unit="회" />
+                <DonutChart value={interview.interviewMonthly} label="이번 달 모의면접" unit="회" />
                 <DonutChart value={quiz.quizMonthlyCount} label="이번 달 문제풀이" unit="개" />
                 <DonutChart
                     value={trust.totalScore}

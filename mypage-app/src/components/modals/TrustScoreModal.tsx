@@ -2,16 +2,8 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrustScoreResponse } from "../../api/userTrustScoreApi";
-import {
-    calcAttendanceScore,
-    calcInterviewScore,
-    calcProblemScore,
-    calcStudyroomScore
-} from "../../utils/trustScoreUtils";
 
 /* ---------- 타입 ---------- */
-type Status = "loading" | "empty" | "loaded";
-
 type TrustScoreModalProps = {
     isOpen: boolean;
     onClose: () => void;
@@ -26,7 +18,6 @@ export default function TrustScoreModal({
                                             trustScore,
                                             trustStatus,
                                         }: TrustScoreModalProps) {
-
     const [showCriteria, setShowCriteria] = useState(false);
 
     useEffect(() => {
@@ -68,31 +59,51 @@ export default function TrustScoreModal({
                                     <TrustGrid>
                                         <TrustItem>
                                             <Label>출석률</Label>
-                                            <ProgressBar percent={(calcAttendanceScore(trustScore!.attendanceRate) / 40) * 100} />
-                                            <Count>{calcAttendanceScore(trustScore!.attendanceRate).toFixed(1)} / 40점</Count>
+                                            <ProgressBar
+                                                percent={(trustScore!.attendanceScore / 40) * 100}
+                                            />
+                                            <Count>
+                                                {trustScore!.attendanceScore.toFixed(1)} / 40점
+                                            </Count>
                                         </TrustItem>
 
                                         <TrustItem>
                                             <Label>모의면접</Label>
-                                            <ProgressBar percent={(calcInterviewScore(trustScore!.monthlyInterviews) / 25) * 100} />
-                                            <Count>{calcInterviewScore(trustScore!.monthlyInterviews).toFixed(1)} / 25점</Count>
+                                            <ProgressBar
+                                                percent={(trustScore!.interviewScore / 25) * 100}
+                                            />
+                                            <Count>
+                                                {trustScore!.interviewScore.toFixed(1)} / 25점
+                                            </Count>
                                         </TrustItem>
 
                                         <TrustItem>
                                             <Label>문제풀이</Label>
-                                            <ProgressBar percent={(calcProblemScore(trustScore!.monthlyProblems) / 25) * 100} />
-                                            <Count>{calcProblemScore(trustScore!.monthlyProblems).toFixed(1)} / 25점</Count>
+                                            <ProgressBar
+                                                percent={(trustScore!.problemScore / 25) * 100}
+                                            />
+                                            <Count>
+                                                {trustScore!.problemScore.toFixed(1)} / 25점
+                                            </Count>
                                         </TrustItem>
 
                                         <TrustItem>
                                             <Label>스터디룸</Label>
-                                            <ProgressBar percent={(calcStudyroomScore(trustScore!.monthlyStudyrooms) / 10) * 100} />
-                                            <Count>{calcStudyroomScore(trustScore!.monthlyStudyrooms).toFixed(1)} / 10점</Count>
+                                            <ProgressBar
+                                                percent={(trustScore!.studyroomScore / 10) * 100}
+                                            />
+                                            <Count>
+                                                {trustScore!.studyroomScore.toFixed(1)} / 10점
+                                            </Count>
                                         </TrustItem>
                                     </TrustGrid>
 
                                     <Total>
-                                        총점 <strong>{trustScore?.totalScore?.toFixed(1) ?? "0.0"}</strong> / 100점
+                                        총점{" "}
+                                        <strong>
+                                            {trustScore?.totalScore?.toFixed(1) ?? "0.0"}
+                                        </strong>{" "}
+                                        / 100점
                                     </Total>
 
                                     <Footer>
