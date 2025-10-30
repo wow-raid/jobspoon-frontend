@@ -50,16 +50,24 @@ const fadeUp = keyframes`
   }
 `;
 
-/* 가벼운 호버용 펄스 효과 */
-const pulse = keyframes`
+const float = keyframes`
   0%, 100% {
-    opacity: 1;
-    box-shadow: 0 0 0 rgba(0,0,0,0);
+    transform: translateY(0);
   }
   50% {
-    opacity: 0.95;
-    box-shadow: 0 0 6px rgba(37,99,235,0.08);
+    transform: translateY(-8px);
   }
+`;
+
+const pulse = keyframes`
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
+    }
+    50% {
+        transform: scale(1.015); /* 살짝 커졌다가 */
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.15); /* 그림자 강조 */
+    }
 `;
 
 const Section = styled.section`
@@ -91,7 +99,7 @@ const Card = styled.div`
     padding: 32px;
     background: linear-gradient(180deg, #f9fafb 0%, #ffffff 100%);
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
-    animation: ${pulse} 6s ease-in-out infinite;
+    animation: ${float} 4s ease-in-out infinite, ${pulse} 5s ease-in-out infinite;
     transition: all 0.3s ease;
     text-align: center;
 

@@ -586,11 +586,11 @@ export const InfoItem = styled.div`
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 15px;
+    font-size: 14px;
     color: #6b7280;
     span {
         color: #111827;
-        font-weight: 500;
+        font-weight: 350;
     }
 `;
 

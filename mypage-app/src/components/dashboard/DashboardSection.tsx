@@ -16,8 +16,7 @@ import TitleSection from "./TitleSection.tsx";
 import TrustScoreModal from "../modals/TrustScoreModal.tsx";
 import WritingModal from "../modals/WritingModal.tsx";
 import { notifyError } from "../../utils/toast";
-
-const COLORS = ["#3B82F6", "rgb(229,231,235)"];
+import InterestSection from "./InterestSection.tsx";
 
 /* ---------- 도넛 데이터 ---------- */
 const makeDonutData = (percent: number) => [
@@ -37,7 +36,7 @@ function DonutChart({ value, label, unit, onDetailClick }: {
 
     return (
         <DonutCard isPrimary={isPrimary}>
-            {/* ✅ 라벨을 위로 이동 */}
+            {/* 라벨을 위로 이동 */}
             <DonutLabelTop>{label}</DonutLabelTop>
 
             <ChartWrapper>
@@ -115,6 +114,12 @@ export default function DashboardSection() {
 
     return (
         <>
+            {/* 관심사 섹션 */}
+            <Section>
+                <SectionTitle>나의 관심사</SectionTitle>
+                <InterestSection />
+            </Section>
+
             <Section>
                 <SectionTitle>나의 활동 로그</SectionTitle>
 
@@ -171,15 +176,21 @@ export default function DashboardSection() {
 }
 
 /* ================== styled-components ================== */
+const palette = {
+    primary: "#4CC4A8",   // 노란빛이 도는 따뜻한 민트
+    accent: "#3AB49A",    // 버튼, 포인트용
+    lightBG: "#F8FBF8",   // 따뜻한 민트 톤 배경
+    border: "rgba(76,196,168,0.35)",
+    shadow: "rgba(76,196,168,0.22)",
+    textMain: "#0F172A",
+    textSub: "#64748B",
+};
+
+const COLORS = [palette.primary, "rgb(229,231,235)"];
+
 const fadeUp = keyframes`
-  from {
-    opacity: 0;
-    margin-top: 16px;
-  }
-  to {
-    opacity: 1;
-    margin-top: 0;
-  }
+    from { opacity: 0; margin-top: 16px; }
+    to { opacity: 1; margin-top: 0; }
 `;
 
 const Section = styled.section`
@@ -193,10 +204,11 @@ const Section = styled.section`
     animation: ${fadeUp} 0.6s ease both;
 `;
 
+
 const SectionTitle = styled.h2`
     font-size: 19px;
     font-weight: 700;
-    color: #111827;
+    color: ${palette.textMain};
     letter-spacing: -0.2px;
     margin-bottom: 8px;
 `;
@@ -205,12 +217,8 @@ const TopCardGrid = styled.div`
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 20px;
-    @media (max-width: 1200px) {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    @media (max-width: 900px) {
-        grid-template-columns: repeat(2, 1fr);
-    }
+    @media (max-width: 1200px) { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
 `;
 
 const DetailButton = styled.button`
@@ -218,16 +226,16 @@ const DetailButton = styled.button`
     padding: 6px 14px;
     font-size: 13px;
     font-weight: 600;
-    background: linear-gradient(90deg, #3B82F6, #2563EB);
+    background: linear-gradient(90deg, ${palette.primary}, ${palette.accent});
     color: white;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.25);
+    box-shadow: 0 2px 4px ${palette.shadow};
     transition: all 0.25s ease;
     &:hover {
         transform: translateY(-1px);
-        box-shadow: 0 3px 8px rgba(59, 130, 246, 0.3);
+        box-shadow: 0 3px 8px ${palette.shadow};
     }
 `;
 
@@ -236,38 +244,51 @@ const TopCard = styled.div`
     border-radius: 12px;
     padding: 20px;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    border-top: 4px solid rgba(59,130,246,0.5);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border-top: 4px solid ${palette.border};
     display: flex;
     flex-direction: column;
     align-items: center;
+    transition: transform 0.2s ease;
     &:hover { transform: translateY(-3px); }
-    p {
-        font-size: 13px;
-        color: #6B7280;
-    }
-    strong {
-        font-size: 18px;
-        color: #111827;
-    }
+    p { font-size: 13px; color: ${palette.textSub}; }
+    strong { font-size: 18px; color: ${palette.textMain}; }
 `;
 
 const DonutGrid = styled.div`
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 20px;
+
     @media (max-width: 900px) {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 600px) {
+        grid-template-columns: 1fr;
     }
 `;
 
 const DonutCard = styled.div<{ isPrimary?: boolean }>`
     padding: 20px 10px 16px;
-    background: ${({ isPrimary }) => (isPrimary ? "#EFF6FF" : "white")};
-    border: ${({ isPrimary }) => (isPrimary ? "1.5px solid #3B82F6" : "1px solid #E5E7EB")};
+    background: ${({ isPrimary }) =>
+            isPrimary
+                    ? `linear-gradient(
+                180deg,
+                rgba(16, 185, 129, 0.04) 0%,
+                rgba(59, 130, 246, 0.05) 100%
+            )`
+                    : "white"};
+    border: ${({ isPrimary }) =>
+            isPrimary ? `1.5px solid ${palette.primary}` : "1px solid #E5E7EB"};
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     text-align: center;
+    transition: transform 0.2s ease;
+
+    &:hover {
+        transform: translateY(-3px);
+    }
 `;
 
 const ChartWrapper = styled.div`
@@ -281,33 +302,27 @@ const CenterText = styled.div`
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%); /* 완전 중앙 정렬 */
+    transform: translate(-50%, -50%);
     text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
     p {
         font-size: 22px;
         font-weight: 700;
-        color: #111827;
+        color: ${palette.textMain};
         margin: 0;
         line-height: 1;
     }
 `;
 
-
 const DonutLabelTop = styled.p`
     font-size: 13px;
-    color: #6B7280;
+    color: ${palette.textSub};
     margin-bottom: 12px;
     text-align: center;
 `;
 
 const LoadingText = styled.p`
     font-size: 15px;
-    color: #6B7280;
+    color: ${palette.textSub};
     text-align: center;
     margin-top: 40px;
 `;

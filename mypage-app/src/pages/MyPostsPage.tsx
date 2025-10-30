@@ -12,9 +12,10 @@ export default function MyPostsPage() {
             <Card>
                 <CardHeader>
                     <IconBox>
-                        <FaFolderOpen size={26} color="#2563eb" />
+                        <FaFolderOpen size={26} color={palette.accent} />
                     </IconBox>
                     <CardTitle>JobSpoon 활동 기록</CardTitle>
+                    <Tag>COMING SOON</Tag>
                 </CardHeader>
 
                 <CardBody>
@@ -32,7 +33,7 @@ export default function MyPostsPage() {
                 </CardBody>
 
                 <ComingSoonBox>
-                    <FaPenFancy size={15} color="#2563eb" />
+                    <FaPenFancy size={15} color={palette.primary} />
                     <span>게시물 관리 기능 준비 중</span>
                 </ComingSoonBox>
             </Card>
@@ -40,34 +41,45 @@ export default function MyPostsPage() {
     );
 }
 
-/* ================= styled-components ================= */
+/* ================= 색상 팔레트 ================= */
+const palette = {
+    primary: "#1B8C95",
+    accent: "#3AB49A",      // 포인트용 진한 민트
+    mintLight: "rgba(27,140,149,0.08)", // 아주 연한 민트 배경용
+    border: "#E5E7EB",      // 밝은 회색 선
+    text: "#0F172A",        // 메인 텍스트
+    subtext: "#6B7280",     // 서브 텍스트
+    shadow: "rgba(0,0,0,0.05)", // 은은한 그림자
+};
+
+/* ================= 애니메이션 ================= */
 const fadeUp = keyframes`
-  from {
-    opacity: 0;
-    margin-top: 16px;
-  }
-  to {
-    opacity: 1;
-    margin-top: 0;
-  }
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+`;
+
+const float = keyframes`
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
 `;
 
 const pulse = keyframes`
-  0%, 100% {
-    opacity: 1;
-    box-shadow: 0 0 0 rgba(0,0,0,0);
-  }
-  50% {
-    opacity: 0.95;
-    box-shadow: 0 0 6px rgba(37,99,235,0.08);
-  }
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(27,140,149,0.08);
+    }
+    50% {
+        transform: scale(1.015);
+        box-shadow: 0 8px 22px rgba(27,140,149,0.18);
+    }
 `;
 
+/* ================= 레이아웃 ================= */
 const Section = styled.section`
     padding: 24px;
     border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -83,22 +95,22 @@ const SectionHeader = styled.div`
 const SectionTitle = styled.h2`
     font-size: 20px;
     font-weight: 700;
-    color: rgb(17, 24, 39);
+    color: ${palette.text};
 `;
 
 const Card = styled.div`
-    border: 1px solid #e5e7eb;
+    border: 1px solid ${palette.border};
     border-radius: 16px;
     padding: 32px;
-    background: linear-gradient(180deg, #f9fafb 0%, #ffffff 100%);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
-    animation: ${pulse} 6s ease-in-out infinite;
+    background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
+    animation: ${float} 5s ease-in-out infinite, ${pulse} 4.5s ease-in-out infinite;
     text-align: center;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 12px ${palette.shadow};
 
     &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.08);
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 8px 24px ${palette.shadow};
     }
 `;
 
@@ -113,7 +125,7 @@ const CardHeader = styled.div`
 const IconBox = styled.div`
     width: 52px;
     height: 52px;
-    background: rgba(37, 99, 235, 0.1);
+    background: ${palette.mintLight};
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -123,17 +135,27 @@ const IconBox = styled.div`
 const CardTitle = styled.h3`
     font-size: 20px;
     font-weight: 700;
-    color: #1e3a8a;
+    color: ${palette.primary};
+`;
+
+const Tag = styled.span`
+    font-size: 12px;
+    font-weight: 600;
+    color: ${palette.primary};
+    background: ${palette.mintLight};
+    border-radius: 8px;
+    padding: 3px 10px;
+    letter-spacing: 0.5px;
 `;
 
 const CardBody = styled.div`
     font-size: 15px;
     line-height: 1.8;
-    color: #374151;
+    color: ${palette.subtext};
 
     strong {
         font-weight: 600;
-        color: #1e40af;
+        color: ${palette.accent};
     }
 
     p + p {
@@ -147,8 +169,8 @@ const ComingSoonBox = styled.div`
     gap: 6px;
     padding: 8px 14px;
     border-radius: 8px;
-    background: rgba(37, 99, 235, 0.06);
-    color: #2563eb;
+    background: ${palette.mintLight};
+    color: ${palette.primary};
     font-size: 14px;
     font-weight: 500;
     margin-top: 20px;
