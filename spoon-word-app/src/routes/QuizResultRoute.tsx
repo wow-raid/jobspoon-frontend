@@ -32,9 +32,7 @@ export default function QuizResultRoute() {
         const fromState = state?.sessionId;
         const fromQs = new URLSearchParams(location.search).get("sessionId");
         const fromLs = localStorage.getItem(LS_KEY_LAST_SESSION);
-        const cand = [fromState, fromQs, fromLs].find(
-            (v) => v != null && String(v).trim() !== ""
-        );
+        const cand = [fromState, fromQs, fromLs].find((v) => v != null && String(v).trim() !== "");
         const n = Number(cand);
         return Number.isFinite(n) ? n : undefined;
     }, [state?.sessionId, location.search]);
@@ -48,10 +46,10 @@ export default function QuizResultRoute() {
             try {
                 const sum = await getSessionSummary(sessionId);
                 const st = String(sum?.status || sum?.sessionStatus || "").toUpperCase();
-                if (aborted || st !== "SUBMITTED") return; // 제출 전이면 리포트 조회 X
+                if (aborted || st !== "SUBMITTED") return;
 
                 const rep = await getSessionReport(sessionId);
-                if (aborted || !rep?.details) return;       // 엔드포인트 없거나 결과가 없으면 무시
+                if (aborted || !rep?.details) return;
                 const arr: OX[] = rep.details.map((d: any) => (d?.correct ? "O" : "X"));
                 setServerProgress(arr);
             } catch {
@@ -63,7 +61,6 @@ export default function QuizResultRoute() {
     const progress: (OX | null)[] =
         serverProgress ?? state?.progress ?? stored ?? Array.from({ length: QUIZ_LEN }, () => null);
 
-    // === 오답만 다시 풀기 ===
     const handleRetryWrong = async () => {
         if (!sessionId) return;
         try {
@@ -72,10 +69,10 @@ export default function QuizResultRoute() {
             if (!Number.isFinite(newSid)) throw new Error("Invalid newSessionId");
             try { localStorage.setItem(LS_KEY_LAST_SESSION, String(newSid)); } catch {}
 
-            // 타입 모호하면 새 세션 요약으로 보강
             let qt = String(res?.questionType || "").toUpperCase();
             if (!qt) {
-                try { const sum = await getSessionSummary(newSid);
+                try {
+                    const sum = await getSessionSummary(newSid);
                     qt = String(sum?.questionType || sum?.question_type || "").toUpperCase();
                 } catch {}
             }
