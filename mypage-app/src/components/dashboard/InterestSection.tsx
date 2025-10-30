@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { fetchMyTechStack, UserTechStackResponse } from "../../api/userTechStackApi";
-import { useNavigate } from "react-router-dom";
 
 export default function InterestSection() {
     const [data, setData] = useState<UserTechStackResponse | null>(null);
     const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
+
+    const formatDate = (isoString?: string) => {
+        if (!isoString) return "-";
+        const date = new Date(isoString);
+        return date.toLocaleDateString("ko-KR", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        });
+    };
 
     useEffect(() => {
         const load = async () => {
@@ -51,6 +59,9 @@ export default function InterestSection() {
                         <Tag key={stack.key}>{stack.displayName}</Tag>
                     ))}
                 </TagList>
+                <InfoText>
+                    ※ 최근 완료된 AI 면접 ({formatDate(data.createdAt)}) 기준으로 표시됩니다.
+                </InfoText>
             </Content>
         </GlassCard>
     );
@@ -143,4 +154,11 @@ const Tag = styled.span`
     padding: 6px 14px;
     border-radius: 20px;
     font-weight: 500;
+`;
+
+const InfoText = styled.p`
+    margin-top: 12px;
+    font-size: 0.8rem;
+    color: #9ca3af;
+    letter-spacing: 0.2px;
 `;

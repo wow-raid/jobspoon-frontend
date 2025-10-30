@@ -9,9 +9,10 @@ export type TechStackDto = {
 
 export type UserTechStackResponse = {
     hasInterview: boolean;
-    job: string | null;
-    techStacks: TechStackDto[] | null;
+    job: string;
+    techStacks: { key: string; displayName: string }[];
     message: string | null;
+    createdAt?: string;
 };
 
 /** 나의 기술 스택 정보 조회*/
