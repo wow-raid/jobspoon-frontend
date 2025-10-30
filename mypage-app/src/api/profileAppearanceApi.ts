@@ -9,6 +9,12 @@ export interface ProfileAppearanceResponse {
     email: string;
 }
 
+// 기본 회원 요약 정보 응답 (로그인타입 + 연속출석)
+export interface AccountSummaryResponse {
+    loginType: string;              // 예: "GOOGLE", "NAVER"
+    consecutiveAttendanceDays: number; // 예: 7
+}
+
 /** ---------------------- API 함수 ---------------------- **/
 
 // 내 프로필 조회
@@ -16,6 +22,15 @@ export async function fetchMyProfile() { // token 매개변수 제거
     const res = await axios.get<ProfileAppearanceResponse>(
         `${API_BASE_URL}/profile-appearance/my`,
         { withCredentials: true } // Authorization 헤더 제거, 쿠키 자동 전송 옵션 추가
+    );
+    return res.data;
+}
+
+// 기본 회원 요약 조회 (로그인타입 + 연속출석)
+export async function fetchAccountSummary() {
+    const res = await axios.get<AccountSummaryResponse>(
+        `${API_BASE_URL}/profile-appearance/basic`,
+        { withCredentials: true }
     );
     return res.data;
 }

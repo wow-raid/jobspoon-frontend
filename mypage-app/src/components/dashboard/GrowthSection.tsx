@@ -66,12 +66,20 @@ export default function GrowthSection({ history, currentScore }: {
                             borderRadius: "8px",
                             fontSize: "13px",
                         }}
-                        labelFormatter={(t) =>
-                            new Date(t).toLocaleDateString("ko-KR", {
-                                month: "long",
-                                day: "numeric",
-                            })
-                        }
+                        labelFormatter={(t) => {
+                            const date = new Date(t);
+                            const now = new Date();
+                            const isThisMonth =
+                                date.getFullYear() === now.getFullYear() &&
+                                date.getMonth() === now.getMonth();
+
+                            // 과거달은 "9월", 이번달은 "10월 30일"
+                            if (isThisMonth) {
+                                return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+                            } else {
+                                return `${date.getMonth() + 1}월`;
+                            }
+                        }}
                         formatter={(v: any) => [`${v.toFixed(1)}점`, "활동 점수"]}
                     />
                     <Area
