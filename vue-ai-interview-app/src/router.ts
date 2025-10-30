@@ -9,6 +9,7 @@ import AiInterviewSelect from "@/ai-interview/pages/ai-interview-select.vue";
 import AiInterviewDetail from "@/ai-interview/pages/ai-interview-detail.vue";
 import AiInterviewForm from "@/ai-interview/pages/ai-interview-form.vue";
 import AiInterviewEnd from "@/ai-interview/pages/ai-interview-end.vue";
+import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -34,6 +35,14 @@ const routes: Array<RouteRecordRaw> = [
         component: AiInterviewDetail,
         props: true,
     },
+
+    {
+        path: '/test',
+        name: 'test',
+        component: LoadingSpinner,
+        props: true,
+    },
+
     {
         path: '/ai-interview/form/:type/:subType?/:company?',
         name: 'ai-interview-form',
@@ -41,8 +50,9 @@ const routes: Array<RouteRecordRaw> = [
         props: true,
     },
     {
-        path: '/ai-interview/result',
+        path: '/ai-interview/result/:interviewId',
         component: AiInterviewAnswerResult,
+        props: true,
     },
     {
         path: '/ai-interview/end',
