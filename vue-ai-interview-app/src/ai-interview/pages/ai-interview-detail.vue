@@ -1,8 +1,14 @@
 <template>
   <main>
     <v-container align-center :style="containerStyle">
-      <v-btn icon @click="goBack" :style="backButtonStyle">
-        <v-icon>mdi-arrow-left</v-icon>
+      <v-btn 
+        icon 
+        @click="goBack" 
+        :style="backButtonStyle"
+        class="elevation-1"
+        aria-label="뒤로 가기"
+      >
+        <v-icon size="24">mdi-arrow-left</v-icon>
       </v-btn>
       
       <div :style="selectionContainerStyle">
@@ -42,17 +48,26 @@
 
         <!-- 기업별 면접 - 회사 선택 -->
         <div v-else-if="interviewType === '기업별'" :style="companySelectionWrapperStyle">
-          <div :style="companyChipContainerStyle">
-            <v-chip
-              v-for="(company, index) in companies"
+          <div :style="companyGridContainerStyle">
+            <div 
+              v-for="(company, index) in companies" 
               :key="index"
-              :value="company"
-              clickable
+              :style="[companyCardStyle, selectedCompany === company.name ? companyCardSelectedStyle : {}]"
               @click="selectCompany(company)"
-              :style="[companyChipStyle, selectedCompany === company ? companyChipSelectedStyle : {}]"
+              class="company-card"
+              :class="{ 'selected': selectedCompany === company.name }"
             >
-              {{ company }}
-            </v-chip>
+              <div :style="companyImageContainerStyle">
+                <img 
+                  :src="getCompanyImage(company)" 
+                  :alt="company + ' 로고'"
+                  :style="companyImageStyle"
+                  onerror="this.src='https://via.placeholder.com/100?text='+this.alt"
+                />
+              </div>
+              <div :style="companyNameStyle">{{ company.name }}</div>
+              <div class="card-glow"></div>
+            </div>
           </div>
           
           <div v-if="selectedCompany" :style="companyButtonContainerStyle">
@@ -89,6 +104,13 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import encore from '../../assets/images/company/Encore.png'
+import kt from '../../assets/images/company/kt.png'
+import dang from '../../assets/images/company/dang.png'
+import kakao from '../../assets/images/company/kakao.png'
+import naver from '../../assets/images/company/naver.png'
+import toss from '../../assets/images/company/toss.png'
+import coupang from '../../assets/images/company/coupang.png'
 
 const router = useRouter();
 const route = useRoute();
@@ -117,7 +139,12 @@ const goBack = () => {
 };
 
 // ---------- 스타일 변수 ---------- //
-const containerStyle = { marginBottom:"15%", marginTop: "1%", maxWidth: "1200px" };
+const containerStyle = { 
+  marginBottom: '5%', 
+  marginTop: '2%', 
+  maxWidth: '1200px',
+  padding: '0 24px'
+};
 const mb8Style = { marginBottom: "32px" };
 const formContainerStyle = { marginTop: "32px", padding: "16px" };
 const drawLineStyle = {
@@ -149,45 +176,51 @@ const titleContainerStyle = {
 
 // 향상된 타이틀 스타일
 const enhancedTitleStyle = {
-  fontSize: '2.8rem',
+  fontSize: '2.5rem',
   fontWeight: '800',
-  color: '#333',
-  marginBottom: '1rem',
+  color: '#1a1a1a',
+  marginBottom: '1.5rem',
   letterSpacing: '-0.02em',
   textAlign: 'center',
   width: '100%',
   position: 'relative',
-  textShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
-  lineHeight: '1.2'
-};
-
-// 타이틀 하이라이트 스타일
-const titleHighlightStyle = {
+  lineHeight: '1.2',
   background: 'linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%)',
   WebkitBackgroundClip: 'text',
   WebkitTextFillColor: 'transparent',
   backgroundClip: 'text',
-  position: 'relative',
-  display: 'inline-block'
+  paddingBottom: '1rem',
+  '@media (max-width: 768px)': {
+    fontSize: '2rem'
+  }
 };
+
+// 타이틀 하이라이트 스타일 (이제 enhancedTitleStyle로 이동)
 
 // 타이틀 밑줄 스타일
 const titleUnderlineStyle = {
-  width: '80px',
+  width: '60px',
   height: '4px',
-  background: 'linear-gradient(90deg, #3b82f6 0%, rgba(59, 130, 246, 0.3) 100%)',
-  borderRadius: '2px',
-  marginBottom: '1.5rem'
+  background: 'linear-gradient(90deg, #3b82f6 0%, rgba(59, 130, 246, 0.6) 100%)',
+  borderRadius: '4px',
+  margin: '1rem 0 1.5rem',
+  opacity: '0.8'
 };
 
 // 타이틀 설명 스타일
 const titleDescriptionStyle = {
-  fontSize: '1.2rem',
+  fontSize: '1.1rem',
   color: '#64748b',
   textAlign: 'center',
-  maxWidth: '600px',
-  lineHeight: '1.5',
-  fontWeight: '400'
+  maxWidth: '700px',
+  lineHeight: '1.7',
+  fontWeight: '400',
+  margin: '0 auto',
+  padding: '0 20px',
+  '@media (max-width: 768px)': {
+    fontSize: '1rem',
+    lineHeight: '1.6'
+  }
 };
 
 // 선택 화면 스타일
@@ -214,26 +247,44 @@ const interviewOptionsWrapperStyle = {
 // 면접 유형 아이템 스타일
 const interviewTypeItemStyle = {
   position: 'relative',
-  borderRadius: '12px',
+  borderRadius: '16px',
   overflow: 'hidden',
   cursor: 'pointer',
-  transition: 'all 0.3s ease',
-  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03)',
   backgroundColor: 'white',
-  width: '280px',
-  height: '500px',
+  width: '300px',
+  height: '480px',
   display: 'flex',
   flexDirection: 'column',
-  border: '1px solid #e5e7eb'
+  border: '1px solid rgba(229, 231, 235, 0.6)',
+  '&:hover': {
+    transform: 'translateY(-8px)',
+    boxShadow: '0 20px 25px -5px rgba(59, 130, 246, 0.2), 0 10px 10px -5px rgba(59, 130, 246, 0.1)'
+  },
+  '@media (max-width: 768px)': {
+    width: '100%',
+    maxWidth: '350px',
+    margin: '0 auto'
+  }
 };
 
 // 선택된 면접 유형 아이템 스타일
 const selectedInterviewTypeItemStyle = {
-  backgroundColor: '#f0f7ff',
-  borderColor: '#3b82f6',
-  borderWidth: '2px',
-  boxShadow: '0 8px 24px rgba(59, 130, 246, 0.2)',
-  transform: 'translateY(-5px)'
+  backgroundColor: '#f8fafc',
+  border: '2px solid #3b82f6',
+  boxShadow: '0 20px 25px -5px rgba(59, 130, 246, 0.2), 0 10px 10px -5px rgba(59, 130, 246, 0.1)',
+  transform: 'translateY(-8px)',
+  '&:before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '4px',
+    background: 'linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%)',
+    zIndex: 2
+  }
 };
 
 // 준비중인 면접 유형 아이템 스타일
@@ -314,32 +365,169 @@ const companySelectionWrapperStyle = {
   margin: '0 auto 2rem'
 };
 
-// 회사 선택 칩 컨테이너 스타일
-const companyChipContainerStyle = {
+// 회사 그리드 컨테이너 스타일
+const companyGridContainerStyle = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+  gap: '24px',
+  width: '100%',
+  maxWidth: '1000px',
+  margin: '0 auto',
+  padding: '0 16px',
+  '@media (max-width: 900px)': {
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '16px'
+  },
+  '@media (max-width: 600px)': {
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '12px'
+  }
+};
+
+// 회사 카드 스타일
+const companyCardStyle = {
+  position: 'relative',
+  borderRadius: '16px',
+  background: 'white',
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+  overflow: 'hidden',
+  cursor: 'pointer',
   display: 'flex',
-  flexWrap: 'wrap',
-  justifyContent: 'center',
-  gap: '12px'
+  flexDirection: 'column',
+  alignItems: 'center',
+  padding: '24px 16px',
+  border: '1px solid rgba(0, 0, 0, 0.05)',
+
+  '&:before': {
+    content: '""',
+    position: 'absolute',
+    top: '0',
+    left: '0',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.4))',
+    opacity: '0',
+    transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+    transform: 'translateZ(20px)'
+  },
+  '&:after': {
+    content: '""',
+    position: 'absolute',
+    top: '0',
+    left: '0',
+    width: '100%',
+    height: '100%',
+    borderRadius: '16px',
+    border: '2px solid rgba(99, 102, 241, 0.1)',
+    transition: 'all 0.4s ease',
+    boxSizing: 'border-box',
+    pointerEvents: 'none'
+  },
+  '&:hover': {
+    transform: 'translateY(-4px) scale(1.02) rotateX(5deg) rotateY(5deg)',
+    boxShadow: '12px 12px 24px #d1d9e6, -12px -12px 24px #ffffff',
+    color: '#4338ca',
+    '&:before': {
+      opacity: '1',
+      transform: 'translateZ(30px)'
+    },
+    '&:after': {
+      borderColor: 'rgba(99, 102, 241, 0.3)',
+      transform: 'scale(0.98)'
+    },
+    '& .chip-text': {
+      transform: 'translateZ(20px)',
+      textShadow: '0 2px 8px rgba(0,0,0,0.1)'
+    },
+    '& .chip-glow': {
+      opacity: '0.8',
+      transform: 'scale(1.1)'
+    }
+  },
+  '&:active': {
+    transform: 'translateY(1px) scale(0.99) rotateX(0) rotateY(0)',
+    boxShadow: '4px 4px 8px #e2e8f0, -4px -4px 8px #ffffff'
+  },
+  '& .chip-text': {
+    position: 'relative',
+    zIndex: '2',
+    transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+    display: 'inline-block',
+    transform: 'translateZ(10px)'
+  },
+  '& .chip-glow': {
+    position: 'absolute',
+    top: '0',
+    left: '0',
+    width: '100%',
+    height: '100%',
+    borderRadius: '16px',
+    background: 'radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15), transparent 60%)',
+    opacity: '0',
+    transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+    pointerEvents: 'none'
+  }
 };
 
-// 회사 선택 칩 스타일
-const companyChipStyle = {
-  fontSize: '1rem',
-  padding: '12px 20px',
-  borderRadius: '30px',
-  backgroundColor: '#f3f4f6',
-  color: '#333',
-  border: '1px solid #e5e7eb',
-  transition: 'all 0.3s ease'
-};
-
-// 선택된 회사 칩 스타일
-const companyChipSelectedStyle = {
-  backgroundColor: '#3b82f6',
-  color: 'white',
-  borderColor: '#3b82f6',
-  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-  transform: 'translateY(-2px)'
+// 선택된 회사 카드 스타일
+const companyCardSelectedStyle = {
+  position: 'relative',
+  transform: 'translateY(-5px)',
+  boxShadow: '0 12px 24px rgba(99, 102, 241, 0.2)',
+  border: '2px solid #6366f1',
+  animation: 'pulse 2s infinite',
+  '&:before': {
+    content: '""',
+    position: 'absolute',
+    top: '0',
+    left: '0',
+    right: '0',
+    height: '4px',
+    background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7)',
+    zIndex: '1',
+    animation: 'gradient 3s ease infinite',
+    backgroundSize: '200% 200%'
+  },
+  '&:hover': {
+    transform: 'translateY(-6px) scale(1.02)',
+    boxShadow: '0 15px 30px rgba(99, 102, 241, 0.3)',
+    '&:before': {
+      left: '100%',
+      transition: '1.2s'
+    },
+    '& .chip-text': {
+      transform: 'translateZ(30px) scale(1.05)',
+      textShadow: '0 2px 10px rgba(255,255,255,0.3)'
+    },
+    '& .chip-glow': {
+      opacity: '1',
+      transform: 'scale(1.2)'
+    }
+  },
+  '&:active': {
+    transform: 'translateY(-2px) scale(0.99) rotateX(0)'
+  },
+  '& .chip-text': {
+    position: 'relative',
+    zIndex: '2',
+    transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+    display: 'inline-block',
+    transform: 'translateZ(20px)',
+    textShadow: '0 1px 3px rgba(0,0,0,0.2)'
+  },
+  '& .chip-glow': {
+    position: 'absolute',
+    top: '0',
+    left: '0',
+    width: '100%',
+    height: '100%',
+    borderRadius: '16px',
+    background: 'radial-gradient(circle at 50% 0%, rgba(255,255,255,0.3), transparent 70%)',
+    opacity: '0.6',
+    transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+    pointerEvents: 'none'
+  }
 };
 
 // 준비중 화면 컨테이너 스타일
@@ -381,28 +569,294 @@ const preparingSubtextStyle = {
 // 뒤로가기 버튼 스타일
 const backButtonStyle = {
   position: 'absolute',
-  top: '50px',
-  left: '150px',
+  top: '30px',
+  left: '30px',
   zIndex: 10,
+  background: 'linear-gradient(145deg, #ffffff, #e6e9ef)',
+  boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
+  borderRadius: '50%',
+  width: '50px',
+  height: '50px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+  color: '#6366f1',
+  border: 'none',
+  cursor: 'pointer',
+  overflow: 'hidden',
+  '&:before': {
+    content: '""',
+    position: 'absolute',
+    top: '0',
+    left: '0',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(45deg, rgba(255,255,255,0.9), rgba(255,255,255,0.4))',
+    opacity: '0',
+    transition: 'opacity 0.3s ease'
+  },
+  '&:hover': {
+    transform: 'translateY(-3px) rotate(-5deg)',
+    boxShadow: '10px 10px 20px #d1d9e6, -10px -10px 20px #ffffff',
+    color: '#4f46e5',
+    '&:before': {
+      opacity: '1'
+    }
+  },
+  '&:active': {
+    transform: 'translateY(1px) scale(0.95)',
+    boxShadow: '4px 4px 8px #d1d9e6, -4px -4px 8px #ffffff'
+  },
+  '@media (max-width: 768px)': {
+    top: '20px',
+    left: '20px',
+    width: '46px',
+    height: '46px'
+  }
 };
 
 // 선택 화면으로 돌아가기 버튼 스타일
 const backToSelectionBtnStyle = {
-  padding: '12px 24px',
-  fontWeight: '500',
-  borderRadius: '8px',
+  padding: '16px 36px',
+  fontWeight: '600',
+  borderRadius: '50px',
   color: 'white',
   textTransform: 'none',
-  letterSpacing: '0.02em'
+  letterSpacing: '0.5px',
+  background: 'linear-gradient(45deg, #6366f1, #8b5cf6, #d946ef)',
+  backgroundSize: '200% 200%',
+  boxShadow: '0 8px 25px -5px rgba(99, 102, 241, 0.4)',
+  transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+  textDecoration: 'none',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  border: 'none',
+  cursor: 'pointer',
+  position: 'relative',
+  overflow: 'hidden',
+  '&:before': {
+    content: '""',
+    position: 'absolute',
+    top: '0',
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+    transition: '0.5s',
+    animation: 'shine 2s infinite',
+    zIndex: '1'
+  },
+  '&:hover': {
+    transform: 'translateY(-3px) scale(1.02)',
+    boxShadow: '0 15px 30px -5px rgba(99, 102, 241, 0.5)',
+    backgroundPosition: '100% 50%',
+    '&:before': {
+      left: '100%',
+      transition: '1s'
+    }
+  },
+  '&:active': {
+    transform: 'translateY(1px) scale(0.98)',
+    boxShadow: '0 5px 15px -3px rgba(99, 102, 241, 0.3)'
+  },
+  '& span': {
+    position: 'relative',
+    zIndex: '2',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  '& .v-icon': {
+    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
+  }
 };
 
 // 회사 선택 후 다음 버튼 컨테이너 스타일
 const companyButtonContainerStyle = {
   display: "flex",
   justifyContent: "center",
-  marginTop: "2rem",
-  width: "100%"
+  marginTop: "3rem",
+  width: "100%",
+  padding: '0 20px',
+  '& button': {
+    padding: '18px 40px',
+    fontSize: '1.1rem',
+    fontWeight: '600',
+    borderRadius: '50px',
+    color: 'white',
+    background: 'linear-gradient(45deg, #10b981, #3b82f6, #8b5cf6)',
+    backgroundSize: '200% 200%',
+    boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+    position: 'relative',
+    overflow: 'hidden',
+    '&:hover': {
+      transform: 'translateY(-3px) scale(1.02)',
+      boxShadow: '0 15px 30px -5px rgba(16, 185, 129, 0.5)',
+      backgroundPosition: '100% 50%',
+      '&:before': {
+        left: '100%',
+        transition: '1s'
+      }
+    },
+    '&:active': {
+      transform: 'translateY(1px) scale(0.98)'
+    },
+    '&:before': {
+      content: '""',
+      position: 'absolute',
+      top: '0',
+      left: '-100%',
+      width: '100%',
+      height: '100%',
+      background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+      transition: '0.5s',
+      animation: 'shine 2s infinite',
+      zIndex: '1'
+    },
+    '& .v-btn__content': {
+      position: 'relative',
+      zIndex: '2',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+    },
+    '& .v-icon': {
+      filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
+      transition: 'transform 0.3s ease',
+      marginLeft: '5px'
+    },
+    '&:hover .v-icon': {
+      transform: 'translateX(3px)'
+    }
+  },
+  '@media (max-width: 600px)': {
+    '& button': {
+      width: '100%',
+      maxWidth: '320px',
+      padding: '16px 24px',
+      fontSize: '1rem'
+    }
+  }
 };
+
+// 회사 이미지 컨테이너 스타일
+const companyImageContainerStyle = {
+  width: '80px',
+  height: '80px',
+  borderRadius: '50%',
+  backgroundColor: 'white',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginBottom: '16px',
+  overflow: 'hidden',
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+  border: '1px solid rgba(0, 0, 0, 0.05)'
+};
+
+// 회사 이미지 스타일
+const companyImageStyle = {
+  width: '60%',
+  height: '60%',
+  objectFit: 'contain',
+  transition: 'transform 0.3s ease'
+};
+
+// 회사 이름 스타일
+const companyNameStyle = {
+  fontSize: '1rem',
+  fontWeight: '600',
+  color: '#1e293b',
+  textAlign: 'center',
+  marginTop: '8px',
+  transition: 'color 0.3s ease'
+};
+
+// 전역 스타일
+const globalStyles = document.createElement('style');
+globalStyles.textContent = `
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+    }
+  }
+
+  @keyframes gradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  
+  @keyframes shine {
+    0% { 
+      left: -100%; 
+      opacity: 0.6;
+    }
+    20% { 
+      left: 100%;
+      opacity: 0.8;
+    }
+    100% { 
+      left: 100%;
+      opacity: 0;
+    }
+  }
+  
+  .company-card {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .company-card .company-image-container {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .card-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.15), transparent 70%);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+  
+  .company-card:hover .card-glow {
+    opacity: 0.8;
+  }
+  
+  .company-card.selected .card-glow {
+    opacity: 1;
+    background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.2), transparent 70%);
+  }
+  
+  .company-card.selected .company-image-container {
+    transform: scale(1.1);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.2);
+  }
+`;
+document.head.appendChild(globalStyles);
 
 // 회사 선택 후 다음 버튼 스타일
 const companyNextButtonStyle = {
@@ -457,13 +911,61 @@ const interviewSubTypes = [
 ];
 const selectedInterviewSubType = ref("");
 
-// 회사
-const companies = ref(["당근마켓", "Toss", "SK-encore", "KT M mobile", "네이버", "카카오", "라인", "쿠팡"]);
+// 회사 목록 (예시)
+const companies = [
+  { 
+    id: 'SK-encore',
+    name: 'SK-encore',
+    logo: encore,
+  },
+  { 
+    id: 'kakao',
+    name: '카카오',
+    logo: kakao
+  },
+  { 
+    id: 'naver',
+    name: '네이버',
+    logo: naver
+  },
+  { 
+    id: '라인',
+    name: '라인',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg'
+  },
+  { 
+    id: 'coupang',
+    name: '쿠팡',
+    logo: coupang
+  },
+  { 
+    id: 'KT M mobile',
+    name: 'KT M mobile',
+    logo: kt
+  },
+  { 
+    id: 'toss',
+    name: '토스',
+    logo: toss
+  },
+  { 
+    id: 'daangn',
+    name: '당근마켓',
+    logo: dang
+  }
+];
+
+// 회사 이미지 가져오기
+const getCompanyImage = (company) => {
+  return company.logo || `https://via.placeholder.com/100?text=${company.name}`;
+};
+
 const selectedCompany = ref("");
 
 // 회사 선택 함수
 const selectCompany = (company) => {
-  selectedCompany.value = company;
+  // 이미 선택된 회사를 다시 클릭하면 선택 해제, 아니면 새로 선택
+  selectedCompany.value = selectedCompany.value === company.name ? '' : company.name;
 };
 
 // 상세 정보 입력 페이지로 이동 함수
