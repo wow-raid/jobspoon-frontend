@@ -880,6 +880,14 @@ type FolderSelectProps = {
     placeholder?: string;
 };
 
+/* ---------- 퀴즈 베이스 경로 유틸 ---------- */
+//  /spoon-word/quiz  또는  /spoon-word/spoon-quiz  또는  /quiz  /spoon-quiz
+const BASE_PATH_CAPTURE_RE = /(\/spoon-word)?\/(spoon-quiz|quiz)/;
+function getQuizBasePath(pathname: string): string {
+    const m = pathname.match(BASE_PATH_CAPTURE_RE);
+    return m ? m[0].replace(/\/$/, "") : "/spoon-quiz";
+}
+
 const FolderSelect: React.FC<FolderSelectProps> = ({ value, onChange, options, placeholder="내 스푼노트 폴더 선택" }) => {
     const [open, setOpen] = React.useState(false);
     const [q, setQ] = React.useState("");
@@ -2164,19 +2172,6 @@ export default function WordbookFolderPage() {
         fetchPage(0, size, next);
     };
 
-    // 퀴즈 시작
-    const onStartQuiz = () => {
-        const termIds = Array.from(selectedTermIds);
-        const hasSelection = termIds.length > 0;
-        const base = location.pathname.startsWith("/spoon-word") ? "/spoon-word" : "";
-        navigate(`${base}/spoon-quiz/start`, { state: {
-                source,
-                folderId: source === "folder" ? Number(quizFolderId) : null,
-                categoryId: source === "category" ? quizCategoryId : null,
-                count: quizCount, type: quizType, level: quizLevel
-            }});
-    };
-
     // 퀴즈 설정 모달 상태
     const [quizOpen, setQuizOpen] = React.useState(false);
     type Source = "folder" | "category" | null;
@@ -2743,7 +2738,7 @@ export default function WordbookFolderPage() {
                                             setSaving((m) => ({ ...m, [it.uwtId]: true }));
                                             try {
                                                 await setMemorization({
-                                                    termId: it.termId,
+                                                    termId: Number(it.termId),
                                                     done: nextLocal === "memorized",
                                                 });
                                             } catch (err) {
