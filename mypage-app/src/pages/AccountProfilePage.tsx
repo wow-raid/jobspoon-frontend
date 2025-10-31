@@ -1,11 +1,16 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styled, { keyframes } from "styled-components";
-import { FaEnvelope, FaLock } from "react-icons/fa";
+import { FaEnvelope, FaLock, FaFire } from "react-icons/fa";
 import { useOutletContext } from "react-router-dom";
 import defaultProfile from "../assets/default_profile.png";
 import ServiceModal from "../components/modals/ServiceModal.tsx";
 import TitleGuideModal from "../components/modals/TitleGuideModal.tsx";
-import { ProfileAppearanceResponse, uploadProfilePhoto } from "../api/profileAppearanceApi.ts";
+import {
+    ProfileAppearanceResponse,
+    uploadProfilePhoto,
+    fetchAccountSummary,
+    AccountSummaryResponse
+} from "../api/profileAppearanceApi.ts";
 import { updateNickname } from "../api/accountProfileApi.ts";
 import { equipTitle, unequipTitle, UserTitleResponse } from "../api/userTitleApi.ts";
 import { notifySuccess, notifyError, notifyInfo } from "../utils/toast";
@@ -23,6 +28,7 @@ type OutletContextType = {
 export default function AccountProfilePage() {
     const { profile, titles, refreshAll } = useOutletContext<OutletContextType>();
 
+    const [summary, setSummary] = useState<AccountSummaryResponse | null>(null);
     const [isTitleGuideOpen, setIsTitleGuideOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
@@ -30,6 +36,18 @@ export default function AccountProfilePage() {
     const [tempNickname, setTempNickname] = useState("");
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+    useEffect(() => {
+        async function loadSummary() {
+            try {
+                const res = await fetchAccountSummary();
+                setSummary(res);
+            } catch (err) {
+                console.error("⚠️ 요약 정보 불러오기 실패:", err);
+            }
+        }
+        loadSummary();
+    }, []);
 
     /* ---------------- 닉네임 수정 ---------------- */
     const handleStartEdit = () => {
@@ -170,14 +188,20 @@ export default function AccountProfilePage() {
                     </ProfileRow>
 
                     <InfoList>
-                        <InfoItem>
-                            <FaEnvelope color={"#4CC4A8"} />
-                            <span>{profile.email}</span>
-                        </InfoItem>
-                        <InfoItem>
-                            <FaLock color={"#4CC4A8"} />
-                            <span>가입일: -</span>
-                        </InfoItem>
+                        <InfoRow color="#34C759">
+                            <FaEnvelope className="icon" />
+                            <span className="label">{profile.email}</span>
+                        </InfoRow>
+
+                        <InfoRow color="#329FCB">
+                            <FaLock className="icon" />
+                            <span className="label">로그인: {summary?.loginType ?? "..."}</span>
+                        </InfoRow>
+
+                        <InfoRow color="#FF6B6B">
+                            <FaFire className="icon" />
+                            <span className="label">연속 출석: {summary?.consecutiveAttendanceDays ?? 0}일째</span>
+                        </InfoRow>
                     </InfoList>
                 </InfoCard>
             </Section>
@@ -255,18 +279,6 @@ const Section = styled.section`
     display: flex;
     flex-direction: column;
     gap: 32px;
-`;
-
-const ProfileSection = styled.section`
-    background: linear-gradient(180deg, #ffffff 0%, #f8fbf8 100%);
-    border: 1px solid rgba(76, 196, 168, 0.35);
-    border-radius: 16px;
-    padding: 32px 36px;
-    box-shadow: 0 4px 12px rgba(76, 196, 168, 0.22);
-    display: flex;
-    flex-direction: column;
-    gap: 28px;
-    animation: ${fadeUp} 0.6s ease both;
 `;
 
 export const SectionTitle = styled.h2`
@@ -394,20 +406,41 @@ export const SoftButton = styled.button`
 export const InfoList = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    border-top: 1px solid #e5e7eb;
-    padding-top: 12px;
+    gap: 12px;
+    border-top: 1px solid rgba(76,196,168,0.2);
+    padding-top: 16px;
 `;
 
-export const InfoItem = styled.div`
+export const InfoRow = styled.div<{ color: string }>`
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 14px;
-    color: #6b7280;
-    span {
-        color: #111827;
-        font-weight: 400;
+    font-size: 15px;
+    color: #555; /* 전체 텍스트 회색으로 통일 */
+    font-weight: 400;
+    transition: all 0.25s ease;
+
+    .icon {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        color: ${({ color }) => color};
+        opacity: 0.9;
+        filter: drop-shadow(0 0 3px ${({ color }) => `${color}40`});
+        transition: transform 0.25s ease, filter 0.25s ease;
+    }
+
+    .label {
+        color: #555;
+        line-height: 1.4;
+    }
+
+    &:hover {
+        transform: translateX(2px);
+        .icon {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 5px ${({ color }) => `${color}60`});
+        }
     }
 `;
 

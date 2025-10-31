@@ -23,6 +23,12 @@ export interface WritingCountResponse {
     totalCount: number;
 }
 
+/** 인터뷰 통계 응답 */
+export interface InterviewCompletionResponse {
+    interviewTotal: number;
+    interviewMonthly: number;
+}
+
 // 출석률 조회
 export async function getAttendanceRate() { // token 파라미터 제거
     const res = await axios.get<AttendanceRateResponse>(
@@ -46,6 +52,16 @@ export async function getWritingCount() { // token 파라미터 제거
     const res = await axios.get<WritingCountResponse>(
         `${API_BASE_URL}/user-dashboard/writing/count`,
         { withCredentials: true } // Authorization 헤더 제거, 쿠키 자동 전송 옵션 추가
+    );
+    return res.data;
+}
+
+
+/** 인터뷰 통계 조회 */
+export async function getInterviewCompletion() {
+    const res = await axios.get<InterviewCompletionResponse>(
+        `${API_BASE_URL}/user-dashboard/interview/completion`,
+        { withCredentials: true }
     );
     return res.data;
 }

@@ -82,7 +82,7 @@ export default function DashboardSection() {
         return <LoadingText>불러오는 중...</LoadingText>;
 
     /* ---------- 점수 비교 계산 ---------- */
-    const lastMonthScore = history.length > 0 ? history[history.length - 1].score ?? 0 : 0;
+    const lastMonthScore = history.length > 0 ? history[0].totalScore ?? 0 : 0;
     const scoreDiff = trust.totalScore - lastMonthScore;
 
     /* ================== 렌더링 ================== */

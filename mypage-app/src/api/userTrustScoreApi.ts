@@ -2,28 +2,23 @@ import axios from "axios";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-/** ---------------------- 타입 정의 ---------------------- **/
-
 /** 최신 신뢰점수 응답 */
 export interface TrustScoreResponse {
-    accountId: number;
-    attendanceRate: number;
-    monthlyInterviews: number;
-    monthlyProblems: number;
-    monthlyPosts: number;
-    monthlyStudyrooms: number;
-    monthlyComments: number;
-    totalScore: number;
-    calculatedAt: string; // ISO datetime
+    attendanceRate: number;     // 출석률 (%)
+    attendanceScore: number;    // 출석 점수 (0~40)
+    interviewScore: number;     // 모의면접 점수 (0~25)
+    problemScore: number;       // 문제풀이 점수 (0~25)
+    studyroomScore: number;     // 스터디룸 점수 (0~10)
+    totalScore: number;         // 총점 (0~100)
+    calculatedAt: string;       // 계산 시각 (ISO datetime)
 }
 
 /** 월별 신뢰점수 히스토리 응답 */
 export interface TrustScoreHistoryResponse {
-    score: number;
+    totalScore: number;
     recordedAt: string; // ISO datetime
 }
 
-/** ---------------------- API 함수 ---------------------- **/
 
 // 최신 신뢰점수 조회
 export async function fetchTrustScore(): Promise<TrustScoreResponse> {
@@ -34,7 +29,7 @@ export async function fetchTrustScore(): Promise<TrustScoreResponse> {
     return res.data;
 }
 
-// 최신 신뢰점수 갱신 (DB 저장)
+// 실시간 신뢰점수 계산 (trust_score 테이블 갱신)
 export async function calculateTrustScore(): Promise<TrustScoreResponse> {
     const res = await axios.post<TrustScoreResponse>(
         `${API_BASE_URL}/trust-score/calculate`,

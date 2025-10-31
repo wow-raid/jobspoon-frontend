@@ -4,7 +4,6 @@ import { fetchMyProfile, ProfileAppearanceResponse } from "../../api/profileAppe
 import { fetchMyTitles, UserTitleResponse } from "../../api/userTitleApi.ts";
 import styled from "styled-components";
 import defaultTitle from "../../assets/default_rank.png";
-import TitleGuideModal from "../modals/TitleGuideModal.tsx";
 import { notifyError } from "../../utils/toast";
 import { motion } from "framer-motion";
 
@@ -12,7 +11,6 @@ export default function TitleSection() {
     const [profile, setProfile] = useState<ProfileAppearanceResponse | null>(null);
     const [titles, setTitles] = useState<UserTitleResponse[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isGuideOpen, setIsGuideOpen] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
     const visibleCount = 4;
     const prevCount = useRef(0);
@@ -107,12 +105,6 @@ export default function TitleSection() {
                     )}
                 </TitleListCard>
             </ContentGrid>
-
-            <SectionHeader>
-                <GuideButton onClick={() => setIsGuideOpen(true)}>칭호 가이드</GuideButton>
-            </SectionHeader>
-
-            <TitleGuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
         </>
     );
 }
@@ -130,23 +122,6 @@ const palette = {
 
 
 /* ================= styled-components ================= */
-const SectionHeader = styled.div`
-    display: flex;
-    justify-content: flex-end;
-`;
-
-const GuideButton = styled.button`
-    font-size: 13px;
-    color: ${palette.accent};
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    font-weight: 600;
-    &:hover {
-        text-decoration: underline;
-    }
-`;
-
 const ContentGrid = styled.div`
     display: grid;
     grid-template-columns: 1fr 2fr;

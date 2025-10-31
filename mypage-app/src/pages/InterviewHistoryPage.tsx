@@ -53,35 +53,39 @@ export default function InterviewResultPage() {
             <SubText>최근 진행한 모의면접 결과를 확인할 수 있어요.</SubText>
 
             <FilterBar>
-                <SearchBox>
-                    <FaSearch color="#9ca3af" size={14} />
-                    <SearchInput
-                        type="text"
-                        placeholder="면접 유형 검색..."
-                        value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
-                    />
-                </SearchBox>
+                <LeftGroup>
+                    <SearchBox>
+                        <FaSearch color="#9ca3af" size={14} />
+                        <SearchInput
+                            type="text"
+                            placeholder="면접 유형 검색..."
+                            value={searchText}
+                            onChange={(e) => setSearchText(e.target.value)}
+                        />
+                    </SearchBox>
+                </LeftGroup>
 
-                <Select
-                    value={filterStatus}
-                    onChange={(e) =>
-                        setFilterStatus(e.target.value as "all" | "completed" | "progress")
-                    }>
-                    <option value="all">전체</option>
-                    <option value="completed">완료</option>
-                    <option value="progress">진행 중</option>
-                </Select>
+                <RightGroup>
+                    <Select
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value as "all" | "completed" | "progress")}
+                    >
+                        <option value="all">전체</option>
+                        <option value="completed">완료</option>
+                        <option value="progress">진행 중</option>
+                    </Select>
 
-                <Select
-                    value={sortOption}
-                    onChange={(e) =>
-                        setSortOption(e.target.value as "latest" | "oldest" | "status")
-                    }>
-                    <option value="latest">최신순</option>
-                    <option value="oldest">오래된순</option>
-                    <option value="status">상태별</option>
-                </Select>
+                    <Select
+                        value={sortOption}
+                        onChange={(e) => setSortOption(e.target.value as "latest" | "oldest" | "status")}
+                    >
+                        <option value="latest">최신순</option>
+                        <option value="oldest">오래된순</option>
+                        <option value="status">상태별</option>
+                    </Select>
+                    <Divider />
+                    <CountText>{filteredList.length}건</CountText>
+                </RightGroup>
             </FilterBar>
 
             {list.length === 0 ? (
@@ -192,40 +196,89 @@ const SubText = styled.p`
 
 const FilterBar = styled.div`
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
+    background: #ffffff;
 `;
 
 const SearchBox = styled.div`
-    position: relative;
     display: flex;
     align-items: center;
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
     padding: 6px 10px;
-    width: 220px;
+    width: 240px;
+    transition: all 0.15s ease;
+
+    &:hover,
+    &:focus-within {
+        border-color: ${palette.primary};
+        background: #ffffff;
+        box-shadow: 0 0 0 2px rgba(76, 196, 168, 0.1);
+    }
+
+    svg {
+        color: #94a3b8;
+    }
 `;
 
 const SearchInput = styled.input`
     border: none;
     outline: none;
+    background: transparent;
+    margin-left: 8px;
     font-size: 14px;
-    margin-left: 6px;
-    color: ${palette.textMain};
+    color: #1e293b;
     width: 100%;
+
+    &::placeholder {
+        color: #94a3b8;
+    }
 `;
 
 const Select = styled.select`
-    padding: 6px 12px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
+    padding: 6px 12px;
     font-size: 14px;
-    color: ${palette.textMain};
-    background: #fff;
+    color: #334155;
     cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+        background: #ffffff;
+        border-color: ${palette.primary};
+        box-shadow: 0 0 0 2px rgba(76, 196, 168, 0.1);
+    }
+
+    &:focus {
+        outline: none;
+        border-color: ${palette.primary};
+    }
+`;
+
+const CountText = styled.span`
+  font-size: 13px;
+  color: ${palette.textSub};
+`;
+
+const Divider = styled.span`
+    width: 1px;
+    height: 18px;
+    background: #e5e7eb;
+    margin-left: 5px;
+`;
+
+const LeftGroup = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 12px;
+`;
+
+const RightGroup = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 10px;
 `;
 
 const BaseCard = styled.div`

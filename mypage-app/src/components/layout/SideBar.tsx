@@ -77,8 +77,7 @@ export default function SideBar() {
 const Wrapper = styled.div`
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    height: 100%;
+    justify-content: flex-start;
     padding: 18px 16px;
     background: #ffffff;
     border-radius: 18px;
