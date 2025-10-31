@@ -164,20 +164,20 @@
           <!-- 답변 버튼 영역 -->
           <div v-if="!visible" :style="answerButtonAreaStyle">
             <!-- 텍스트 입력 필드 추가 -->
-<!--            <div :style="textInputContainerStyle">-->
-<!--              <v-textarea-->
-<!--                  v-model="textAnswer"-->
-<!--                  :style="textInputFieldStyle"-->
-<!--                  placeholder="음성 인식이 어려운 경우 여기에 직접 입력하세요"-->
-<!--                  rows="2"-->
-<!--                  outlined-->
-<!--                  dense-->
-<!--                  hide-details-->
-<!--                  :disabled="recognizing"-->
-<!--              ></v-textarea>-->
-<!--            </div>-->
+            <div :style="textInputContainerStyle">
+              <v-textarea
+                  v-model="textAnswer"
+                  :style="textInputFieldStyle"
+                  placeholder="음성 인식이 어려운 경우 여기에 직접 입력하세요"
+                  rows="2"
+                  outlined
+                  dense
+                  hide-details
+                  :disabled="recognizing"
+              ></v-textarea>
+            </div>
 
-    
+
             <!-- 버튼 그룹 -->
             <div :style="interviewActionButtonsStyle">
               <!-- 기존 버튼들... -->
