@@ -14,19 +14,33 @@ import http from "./utils/http";
 import { fetchUserFolders, patchReorderFolders } from "./api/userWordbook";
 import WordbookFolderPage from "./pages/WordbookFolderPage";
 import FavoriteTermsPage from "./pages/FavoriteTermsPage";
-import SpoonWordHeroBanner from "./components/SpoonWordHeroBanner.tsx";
-import QuizHomePage from "./pages/QuizHomePage.tsx";
+import SpoonWordHeroBanner from "./components/SpoonWordHeroBanner";
+import QuizHomePage from "./pages/QuizHomePage";
 import QuizPlayPage from "./pages/QuizPlayPage";
-import SpoonNoteHomePage from "./pages/SpoonNoteHomePage.tsx";
-import {SpoonDialogProvider} from "./components/SpoonDialog.tsx";
+import SpoonNoteHomePage from "./pages/SpoonNoteHomePage";
+import {SpoonDialogProvider} from "./components/SpoonDialog";
 
 import { PageContainerFlushTop, NarrowLeft } from "./styles/layout";
 import { goToAccountLogin } from "./utils/auth";
-import OXQuizPage from "./pages/OXQuizPage.tsx";
-import {GlobalFonts} from "./styles/GlobalFonts.tsx";
-import InitialsQuizPage from "./pages/InitialsQuizPage.tsx";
-import QuizChoicePage from "./pages/QuizChoicePage.tsx";
-import QuizResultRoute from "./routes/QuizResultRoute.tsx";
+import OXQuizPage from "./pages/OXQuizPage";
+import {GlobalFonts} from "./styles/GlobalFonts";
+import InitialsQuizPage from "./pages/InitialsQuizPage";
+import QuizChoicePage from "./pages/QuizChoicePage";
+import QuizResultRoute from "./routes/QuizResultRoute";
+import QuizTodayChoicePage from "./pages/QuizTodayChoicePage";
+import QuizTodayOXPage from "./pages/QuizTodayOXPage";
+
+const RUNTIME: any =
+    (typeof window !== "undefined" && (window as any).__APP_CONFIG__) || {};
+
+const ASSET_BASE =
+    RUNTIME.MFE_PUBLIC_SERVICE ||
+    ((typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_MFE_PUBLIC_SERVICE) as string | undefined) ||
+    ((typeof process !== "undefined" && process.env && (process.env as any).MFE_PUBLIC_SERVICE) as string | undefined) ||
+    "";
+
+const joinAsset = (base: string | undefined, path: string) =>
+    base ? `${base.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}` : path;
 
 // notes 전용 로그인 가드
 function NotesGuard() {
@@ -308,11 +322,11 @@ function AppLayout() {
                         align="left"
                         narrow
                         floatingIcons={[
-                            "http://localhost:3006/hero/icon-1.png",
-                            "http://localhost:3006/hero/icon-2.png",
-                            "http://localhost:3006/hero/icon-3.png",
+                            joinAsset(ASSET_BASE, "/hero/icon-1.png"),
+                            joinAsset(ASSET_BASE, "/hero/icon-2.png"),
+                            joinAsset(ASSET_BASE, "/hero/icon-3.png"),
                         ]}
-                        assetHost={process.env.MFE_PUBLIC_SERVICE || "http://localhost:3006"}
+                        assetHost={ASSET_BASE}
                         iconProps={{
                             width: "360px",
                             height: "240px",
@@ -370,8 +384,8 @@ export default function App() {
                             <Route path="quiz">
                                 <Route index element={<QuizHomePage />} />
                                 <Route path="play" element={<QuizPlayPage />} />
-                                <Route path="today" element={<QuizChoicePage />} />
-                                <Route path="ox" element={<OXQuizPage />} />
+                                <Route path="today" element={<QuizTodayChoicePage />} />
+                                <Route path="ox" element={<QuizTodayOXPage  />} />
                                 <Route path="initials" element={<InitialsQuizPage />} />
                                 <Route path="result" element={<QuizResultRoute />} />
                             </Route>

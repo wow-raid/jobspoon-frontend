@@ -44,14 +44,18 @@ const Icon = styled.img<{ $z: number; $maxPct: number; $shadow: boolean }>`
 `;
 
 function absolutize(src: string, hostOrigin?: string): string {
-    if (!hostOrigin) return src;
-    try {
-        if (/^https?:\/\//i.test(src)) return src;
-        if (src.startsWith("/")) return `${hostOrigin}${src}`;
-        return `${hostOrigin}/${src.replace(/^\.?\//, "")}`;
-    } catch {
-        return src;
+    // 이미 절대 URL(https, http, //) 또는 data URL이면 그대로
+    if (/^(https?:)?\/\//i.test(src) || /^data:/i.test(src)) return src;
+
+    // hostOrigin이 없거나 "/"면, 루트 기준으로만 처리
+    if (!hostOrigin || hostOrigin === "/") {
+        return src.startsWith("/") ? src : `/${src}`;
     }
+
+    // hostOrigin 정규화해서 한 번만 슬래시 붙이기
+    const base = hostOrigin.replace(/\/+$/, "");
+    const path = src.replace(/^\/+/, "");
+    return `${base}/${path}`;
 }
 
 const HeroFloatingIcons: React.FC<Props> = ({

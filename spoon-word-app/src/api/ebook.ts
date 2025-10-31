@@ -1,4 +1,4 @@
-import axiosInstance from "../api/axiosInstance";
+import http from "../utils/http";
 import { parseContentDispositionFilename, sanitizeFilename } from "../utils/cdFilename";
 
 export type PdfMeta = {
@@ -11,7 +11,7 @@ export type PdfMeta = {
 };
 
 export async function generatePdfByTermIds(params: { termIds: (number|string)[]; title?: string }) {
-    const res = await axiosInstance.post("/api/pdf/generate", params, {
+    const res = await http.post("/pdf/generate", params, {
         responseType: "blob",
     });
 

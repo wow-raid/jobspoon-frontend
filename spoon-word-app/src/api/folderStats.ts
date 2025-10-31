@@ -16,7 +16,7 @@ export async function fetchMyFoldersWithStats(params: {
 }) {
     const { page, perPage = 20, sort = "sortOrder,asc", q } = params || {};
 
-    const res = await http.get("/me/wordbook/folders:stats", {
+    const res = await http.get("/me/wordbook/folders/stats", {
         params: page == null ? {} : { page, perPage, sort, q },
         headers: { ...authHeader() },
         withCredentials: true,

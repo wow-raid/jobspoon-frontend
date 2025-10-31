@@ -3,17 +3,17 @@ import React from "react";
 import styled, {css, createGlobalStyle, keyframes, FastOmit} from "styled-components";
 import SoftBlobsBackground from "./SoftBlobsBackground";
 import {BaseObject, IStyledComponentBase} from "styled-components/dist/types";
+import emblem from "../assets/quiz/emblem.png"
+import GhanaWoff2 from "../assets/fonts/ghana-choco/GhanaChocolate.woff2?url";
 
-/* ====== 폰트 ====== */
-const ASSET = process.env.MFE_PUBLIC_SERVICE || "";
-const GhanaFont = createGlobalStyle`
-  @font-face {
-    font-family: 'GhanaChocolate';
-    src: url('${ASSET}/fonts/ghana-choco/GhanaChocolate.woff2') format('woff2');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-  }
+export const GhanaFont = createGlobalStyle`
+    @font-face {
+        font-family: 'GhanaChocolate';
+        src: url('${GhanaWoff2}') format('woff2');
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+    }
 `;
 
 /* ====== 토큰 ====== */
@@ -224,7 +224,7 @@ const RightCol = styled.div`
 `;
 const Emblem = styled.img`
   --emblem-size: clamp(110px, 15vw, 210px);
-  --emblem-nudge-x: clamp(32px, 1vw, 64px);
+  --emblem-nudge-x: clamp(22px, 1vw, 64px);
   position: absolute;
   right: 0;
   bottom: calc(100% + clamp(6px, 1vw, 12px));
@@ -237,7 +237,7 @@ const Emblem = styled.img`
   transform: translateX(var(--emblem-nudge-x));
   @media (max-width: 640px){ display:none; }
 `;
-const DEFAULT_EMBLEM = `${ASSET}/quiz/emblem.png`;
+const DEFAULT_EMBLEM = emblem;
 
 /* ====== 보기 리스트 ====== */
 const List = styled.ul`
@@ -259,7 +259,7 @@ const OptionWrap = styled.li`
 `;
 const OptText = styled.span`
   font-weight: 750; letter-spacing: -.02em; color: ${UI.text};
-  font-size: clamp(15px, 1.9vw, 18px); line-height: 1.35; word-break: break-word;
+  font-size: clamp(19px, 3.0vw, 26px); line-height: 1.35; word-break: break-word;
   text-decoration: none;
   &:hover, &:focus { text-decoration: none; }
 `;

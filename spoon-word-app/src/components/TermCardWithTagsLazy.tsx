@@ -1,5 +1,5 @@
 import React from "react";
-import http from "../utils/http"; // 공통 http: baseURL = http://localhost:8080/api, withCredentials: true
+import http from "../utils/http";
 import TermCard, { TermCardProps } from "./TermCard";
 
 type Props = Omit<TermCardProps, "tags"> & {
