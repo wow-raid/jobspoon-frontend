@@ -5,6 +5,7 @@ import styled from "styled-components";
 import defaultProfile from "../../assets/default_profile.png";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { notifyError } from "../../utils/toast";
+import ReactDOM from "react-dom";
 
 type Props = {
     profile: ProfileAppearanceResponse;
@@ -62,13 +63,16 @@ export default function ProfileAppearanceCard({ profile, titles }: Props) {
             </Card>
 
             {/* 모달 (이미지 확대 보기) */}
-            {isModalOpen && (
-                <ModalOverlay onClick={() => setIsModalOpen(false)}>
-                    <ModalContent onClick={(e) => e.stopPropagation()}>
-                        <LargeImage src={profile.photoUrl || defaultProfile} alt="profile-large" />
-                    </ModalContent>
-                </ModalOverlay>
-            )}
+            {isModalOpen &&
+                ReactDOM.createPortal(
+                    <ModalOverlay onClick={() => setIsModalOpen(false)}>
+                        <ModalContent onClick={(e) => e.stopPropagation()}>
+                            <LargeImage src={profile.photoUrl || defaultProfile} alt="profile-large" />
+                        </ModalContent>
+                    </ModalOverlay>,
+                    document.body
+                )
+            }
         </>
     );
 }
@@ -157,7 +161,7 @@ const ModalOverlay = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 9999;
     animation: fadeIn 0.25s ease;
 
     @keyframes fadeIn {
