@@ -127,6 +127,39 @@ export default function SchedulePage() {
                 onEventClick={(event) => setSelected(event)}
             />
 
+
+            {/* 달력 아래 추가 */}
+            <MonthlySummary>
+                    <h4>{calendarDate.getFullYear()}년 {calendarDate.getMonth() + 1}월 일정 목록</h4>
+
+                {filteredSchedules.length === 0 ? (
+                    <EmptyText>이번 달에는 등록된 일정이 없습니다.</EmptyText>
+                ) : (
+                    <EventTable>
+                        <thead>
+                        <tr>
+                            <th>날짜</th>
+                            <th>제목</th>
+                            <th>구분</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {filteredSchedules.map((event) => (
+                            <tr key={event.id}>
+                                <td>{new Date(event.startTime).toLocaleDateString("ko-KR")}</td>
+                                <td>{event.title}</td>
+                                <td>
+                                    <Tag type={event.type}>
+                                        {event.type === "study" ? "스터디" : "개인"}
+                                    </Tag>
+                                </td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </EventTable>
+                )}
+            </MonthlySummary>
+
             {/* 일정 상세 패널 */}
             <ScheduleDetailPanel
                 schedule={selected}
@@ -240,4 +273,82 @@ const AddButton = styled.button`
         background: #2563eb; /* hover 시 진한 블루 */
         transform: translateY(-1px);
     }
+`;
+
+const MonthlySummary = styled.div`
+  margin-top: 30px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  padding: 24px 28px;
+
+  h4 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: #1e293b;
+  }
+`;
+
+const EventTable = styled.table`
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 12px;
+    overflow: hidden;
+
+    th,
+    td {
+        padding: 10px 12px;
+        font-size: 14px;
+        text-align: center;
+    }
+
+    th {
+        background: #E9F7F5;
+        color: #0F172A;
+        font-weight: 600;
+        letter-spacing: -0.2px;
+    }
+
+    td {
+        color: #334155;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    tbody tr:hover td {
+        background: #F8FBF8;
+        transition: all 0.25s ease;
+    }
+`;
+
+const Tag = styled.span<{ type: "study" | "personal" }>`
+    display: inline-block;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 100px;
+    letter-spacing: -0.3px;
+    border: 1px solid
+    ${({ type }) =>
+            type === "study" ? "rgba(76, 196, 168, 0.4)" : "rgba(41, 152, 197, 0.4)"};
+    background: ${({ type }) =>
+            type === "study"
+                    ? "rgba(76, 196, 168, 0.08)"
+                    : "rgba(41, 152, 197, 0.08)"};
+    color: ${({ type }) =>
+            type === "study"
+                    ? "#13B38D"
+                    : "#2998C5"};
+`;
+
+const EmptyText = styled.p`
+  font-size: 14px;
+  color: #94a3b8;
+  text-align: center;
+  padding: 20px 0;
 `;
