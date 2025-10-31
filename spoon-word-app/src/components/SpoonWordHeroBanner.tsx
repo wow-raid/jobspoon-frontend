@@ -27,57 +27,73 @@ type Props = {
     }>;
 };
 
+/* ===== 안전한 변수 기본값(라이트) + 다크/강제 오버라이드 지원 ===== */
 const HeroWrap = styled.section`
     width: 100vw;
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
     margin-bottom: 12px;
-
-    /* SpoonNote와 높이 맞춤 */
     padding-block: clamp(26px, 6.5vw, 72px);
     position: relative;
     isolation: isolate;
 
-    /* ===== light: 스푼워드 톤(스카이블루↔민트)으로 부드러운 블롭 두 개 ===== */
-    --blob-sky: 168 198 255;   /* rgb(하늘 파랑) */
-    --blob-mint: 196 236 220;  /* rgb(연한 민트) */
+    /* blob RGB는 공백 구분 r g b, 텍스트/배경은 변수로 */
+    --blob-sky: 168 198 255;   /* 하늘 파랑 */
+    --blob-mint: 196 236 220;  /* 연한 민트 */
+    --bg-top: #f7fbff;
+    --bg-bottom: #f9fffb;
+    --title-color: #0f172a;
+    --sub-color: #334155;
 
     background:
             radial-gradient(900px 600px at 20% 72%,
-            rgba(var(--blob-sky) / 0.55) 0%,
-            rgba(var(--blob-sky) / 0.28) 24%,
-            rgba(var(--blob-sky) / 0.10) 40%,
-            rgba(var(--blob-sky) / 0.00) 64%),
+            rgb(var(--blob-sky) / 0.55) 0%,
+            rgb(var(--blob-sky) / 0.28) 24%,
+            rgb(var(--blob-sky) / 0.10) 40%,
+            rgb(var(--blob-sky) / 0.00) 64%),
             radial-gradient(720px 620px at 76% 30%,
-            rgba(var(--blob-mint) / 0.60) 0%,
-            rgba(var(--blob-mint) / 0.26) 34%,
-            rgba(var(--blob-mint) / 0.08) 54%,
-            rgba(var(--blob-mint) / 0.00) 68%),
-            linear-gradient(180deg, #f7fbff 0%, #f9fffb 100%);
+            rgb(var(--blob-mint) / 0.60) 0%,
+            rgb(var(--blob-mint) / 0.26) 34%,
+            rgb(var(--blob-mint) / 0.08) 54%,
+            rgb(var(--blob-mint) / 0.00) 68%),
+            linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
     background-repeat: no-repeat;
 
+    /* 시스템 다크 선호 */
     @media (prefers-color-scheme: dark) {
-        /* ===== dark: 네이비 베이스 + 시안/민트 블롭 ===== */
-        --blob-sky: 120 170 255;
-        --blob-mint: 120 230 210;
+        --blob-sky: 120 150 255;
+        --blob-mint: 160 220 205;
+        --bg-top: #0b1222;
+        --bg-bottom: #0a0f1c;
+        --title-color: #e5e7eb;
+        --sub-color: #9aa4b2;
+    }
 
-        background:
-                radial-gradient(900px 600px at 20% 72%,
-                rgba(var(--blob-sky) / 0.38) 0%,
-                rgba(var(--blob-sky) / 0.18) 30%,
-                rgba(var(--blob-sky) / 0.00) 62%),
-                radial-gradient(720px 620px at 76% 30%,
-                rgba(var(--blob-mint) / 0.36) 0%,
-                rgba(var(--blob-mint) / 0.16) 36%,
-                rgba(var(--blob-mint) / 0.00) 62%),
-                linear-gradient(180deg, #0b1222 0%, #0a141d 100%);
+    /* 명시 오버라이드: <html data-theme="light|dark"> 또는 body에 지정 */
+    :root[data-theme='light'] &,
+    body[data-theme='light'] & {
+        --blob-sky: 168 198 255;
+        --blob-mint: 196 236 220;
+        --bg-top: #f7fbff;
+        --bg-bottom: #f9fffb;
+        --title-color: #0f172a;
+        --sub-color: #334155;
+    }
+    :root[data-theme='dark'] &,
+    body[data-theme='dark'] & {
+        --blob-sky: 120 150 255;
+        --blob-mint: 160 220 205;
+        --bg-top: #0b1222;
+        --bg-bottom: #0a0f1c;
+        --title-color: #e5e7eb;
+        --sub-color: #9aa4b2;
     }
 `;
 
 const OverlayLink = styled(Link)`
     position: absolute;
-    inset: 0;        /* 전체 영역 커버 */
-    z-index: 10;     /* 텍스트/아이콘 위에 */
+    inset: 0;
+    z-index: 10;
     display: block;
     pointer-events: auto;
     cursor: pointer;
@@ -91,7 +107,6 @@ const OverlayLink = styled(Link)`
 const Inset = styled.div`
     --hero-left-offset: 0px;
     --hero-right-offset: 0px;
-
     padding-left: calc(max(var(--shell-left, 20px), env(safe-area-inset-left)) + var(--hero-left-offset));
     padding-right: calc(max(var(--shell-right, 20px), env(safe-area-inset-right)) + var(--hero-right-offset));
 `;
@@ -116,9 +131,7 @@ const HeroTitle = styled.h1`
     letter-spacing: -0.06em;
     font-size: clamp(28px, 6vw, 56px);
     line-height: 1.1;
-    color: #0f172a;
-
-    @media (prefers-color-scheme: dark) { color: #e5e7eb; }
+    color: var(--title-color);
 `;
 
 const HeroSub = styled.p`
@@ -126,9 +139,7 @@ const HeroSub = styled.p`
     letter-spacing: -0.06em;
     font-size: clamp(14px, 2.6vw, 20px);
     line-height: 1.6;
-    color: #334155;
-
-    @media (prefers-color-scheme: dark) { color: #9aa4b2; }
+    color: var(--sub-color);
 `;
 
 const TextWrap = styled.div`
@@ -169,7 +180,6 @@ export default function SpoonWordHeroBanner({
                 </HeroInner>
             </Inset>
 
-            {/* 오른쪽 아이콘 (정적 배치) */}
             {floatingIcons && (
                 <HeroFloatingIcons
                     srcs={floatingIcons}
