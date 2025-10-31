@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate, useLocation } from "react-router-dom";
+import http, { authHeader } from "../utils/http";
 import quiz1 from "../assets/hero/quiz-1.png";
 import quiz2 from "../assets/hero/quiz-2.png";
 import quiz3 from "../assets/hero/quiz-3.png";
@@ -183,6 +184,38 @@ export default function QuizHomePage() {
         },
     ] as const;
 
+    // ===== Job Quiz Setup state =====
+    const [setupOpen, setSetupOpen] = useState(false);
+
+    type QType = "mix" | "choice" | "ox" | "initials";
+    type QLevel = "mix" | "easy" | "medium" | "hard";
+    const [qCount, setQCount] = useState<number>(10);
+    const [qType, setQType]   = useState<QType>("mix");
+    const [qLevel, setQLevel] = useState<QLevel>("mix");
+
+    type Topic = { id: string; label: string; to: string; groupId: string };
+    const [topic, setTopic] = useState<Topic | null>(null);
+
+    const toServerType = (t: QType) =>
+        ({ mix: "MIX", choice: "CHOICE", ox: "OX", initials: "INITIALS" } as const)[t];
+    const toServerLevel = (l: QLevel) =>
+        ({ mix: "MIX", easy: "EASY", medium: "MEDIUM", hard: "HARD" } as const)[l];
+
+    const onConfirmStart = () => {
+       if (!topic) { alert("먼저 퀴즈를 선택해 주세요."); return; }
+       const base = "/spoon-word/quiz";
+       nav(`${base}/play`, {
+             state: {
+               source: "topic",
+                   topicKey: topic.id,
+                   count: qCount,
+                   type: toServerType(qType),
+                   level: toServerLevel(qLevel),
+                 },
+       });
+    };
+
+
     return (
         <PageWrap>
             <HeroWrap style={{
@@ -300,7 +333,7 @@ export default function QuizHomePage() {
                                     <JobCard
                                         key={it.id}
                                         $tone={group.tone}
-                                        onClick={() => nav(it.to)}
+                                        onClick={() => { setTopic({ ...it, groupId: group.id }); setSetupOpen(true); }}
                                         aria-label={`${it.label} 퀴즈 시작`}
                                     >
                                         <TagPill $tone={group.tone}>{group.tag}</TagPill>
@@ -332,13 +365,78 @@ export default function QuizHomePage() {
                     </ShareHeading>
 
                     <ShareButton
-                        onClick={() => nav('/spoon-word/quiz/post')}  // 이동 경로 맞게 바꿔도 OK
+                        onClick={() => nav('/spoon-word/quiz/post')}
                         aria-label="스푼퀴즈 지금 등록하기"
                     >
                         지금 등록하기
                     </ShareButton>
                 </ShareWrap>
             </ShareSection>
+            {setupOpen && (
+                <Scrim role="dialog" aria-modal="true"
+                       onClick={(e) => { if (e.target === e.currentTarget) setSetupOpen(false); }}>
+                    <Sheet onClick={(e) => e.stopPropagation()}>
+                        <SheetHeader>
+
+                            <IconBox aria-hidden>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
+                                    <path d="M8.5 9c.6-1.5 2.1-2.5 3.8-2.5 2.1 0 3.8 1.7 3.8 3.8 0 1.5-1 2.7-2.4 3.3-.9.4-1.3.8-1.3 1.9"
+                                          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M12 17h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                            </IconBox>
+                            <TitleWrap>
+                                <h3>{topic ? `${topic.label} 퀴즈 설정` : '퀴즈 설정'}</h3>
+                                <small>문항 수, 유형, 난이도만 선택해 시작해요.</small>
+                            </TitleWrap>
+                            <CloseX aria-label="닫기" onClick={() => setSetupOpen(false)}>×</CloseX>
+                        </SheetHeader>
+
+
+                            <SheetBody>
+                                {/* 문항 수 */}
+                                <Section>
+                                    <h4>문항 수</h4>
+                                    <div style={{display:"flex", gap:8, flexWrap:"wrap"}}>
+                                        {[5,10,15,20,30].map(n => (
+                                            <CountChip key={n} $on={qCount===n} onClick={()=>setQCount(n)}>
+                                                {n}문항
+                                            </CountChip>
+                                        ))}
+                                    </div>
+                                </Section>
+
+                                {/* 문제 유형 */}
+                                <Section>
+                                    <h4>문제 유형</h4>
+                                    <div style={{display:"flex", gap:8, flexWrap:"wrap"}}>
+                                        <Chip $on={qType==="mix"}      onClick={()=>setQType("mix")}>유형 섞기</Chip>
+                                        <Chip $on={qType==="choice"}   onClick={()=>setQType("choice")}>객관식</Chip>
+                                        <Chip $on={qType==="ox"}       onClick={()=>setQType("ox")}>OX</Chip>
+                                        <Chip $on={qType==="initials"} onClick={()=>setQType("initials")}>초성</Chip>
+                                    </div>
+                                </Section>
+
+                                {/* 난이도 */}
+                                <Section>
+                                    <h4>문제 난이도</h4>
+                                    <div style={{display:"flex", gap:8, flexWrap:"wrap"}}>
+                                        <Chip $on={qLevel==="mix"}    onClick={()=>setQLevel("mix")}>혼합</Chip>
+                                        <Chip $on={qLevel==="easy"}   onClick={()=>setQLevel("easy")}>쉬움</Chip>
+                                        <Chip $on={qLevel==="medium"} onClick={()=>setQLevel("medium")}>보통</Chip>
+                                        <Chip $on={qLevel==="hard"}   onClick={()=>setQLevel("hard")}>어려움</Chip>
+                                    </div>
+                                </Section>
+                        </SheetBody>
+
+                        <SheetFooter>
+                            <Ghost onClick={()=>setSetupOpen(false)}>취소</Ghost>
+                            <Primary onClick={onConfirmStart}>시작하기</Primary>
+                        </SheetFooter>
+                    </Sheet>
+                </Scrim>
+            )}
             <Spacer />
         </PageWrap>
     );
@@ -371,6 +469,7 @@ const HeroWrap = styled.section`
     @media (max-width: 640px) {
         --arrow-safe: 48px;
         /* --content-nudge: 8px; */
+    }
 `;
 
 const HeroPanel = styled.div`
@@ -968,4 +1067,85 @@ const ShareButton = styled.button`
 const ShareAccent = styled.em`
   color: ${UI.primaryBlue};
   font-style: normal;
+`;
+
+// ===== Modal Styles (compact) =====
+const Scrim = styled.div`
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(15,23,42,.45);
+  backdrop-filter: saturate(120%) blur(2px);
+`;
+const Sheet = styled.div`
+  position: fixed; z-index: 1001;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: min(760px, calc(100% - 32px));
+  max-height: min(84vh, calc(100vh - 32px));
+  display: flex; flex-direction: column;
+  background: #fff; border: 1px solid ${UI.panelLineSoft};
+  border-radius: 18px; box-shadow: 0 30px 80px rgba(0,0,0,.18);
+  overflow: hidden;
+`;
+const SheetHeader = styled.div`
+  position: relative; padding: 18px 20px 14px;
+  display:flex; align-items:center; gap:12px;
+  border-bottom: 1px solid ${UI.panelLineSoft};
+  background: linear-gradient(180deg, #ffffff 0%, #fbfbfd 100%);
+`;
+const TitleWrap = styled.div`
+  display:flex; flex-direction:column; gap:4px;
+  h3{ margin:0; font-size:18px; letter-spacing:-0.02em; color:${UI.text}; }
+  small{ color:${UI.sub}; font-weight:400; }
+`;
+const CloseX = styled.button`
+  margin-left:auto; border:0; background:transparent; cursor:pointer;
+  width:32px; height:32px; border-radius:10px;
+  display:grid; place-items:center; color:#6b7280;
+  &:hover{ background:#f3f4f6; color:#111827; }
+`;
+const SheetBody = styled.div`
+  padding: 16px 20px 8px;
+  overflow: auto; scrollbar-gutter: stable;
+`;
+const Section = styled.section`
+  &:not(:first-child){ margin-top: 16px; }
+  h4{ margin:0 0 10px; font-size:14px; color:#0f172a; letter-spacing:-0.02em; }
+`;
+const IconBox = styled.span`
+  width:36px; height:36px; border-radius:10px;
+  display:grid; place-items:center;
+  background: linear-gradient(135deg, rgba(79,118,241,0.12) 0%, rgba(62,99,224,0.12) 100%);
+  color: ${UI.color?.primaryStrong ?? UI.primaryBlue};
+  flex: 0 0 auto;
+`;
+const Chip = styled.button<{ $on?: boolean }>`
+  height: 34px; padding: 0 14px; border-radius: 999px; font-weight:700; letter-spacing:-0.02em;
+  border:1px solid ${({$on}) => $on ? "#c7d2fe" : "#e5e7eb"};
+  background: ${({$on}) => $on ? "#eef2ff" : "#fff"};
+  color: ${({$on}) => $on ? UI.primaryBlue : UI.text};
+  cursor:pointer; &:hover{ background:#f9fafb; }
+`;
+const CountChip = styled(Chip)``;
+const Select = styled.select`
+  box-sizing: border-box;
+  height: 38px; width: 100%;
+  padding: 0 12px;
+  border-radius: 12px; border:1px solid #e5e7eb;
+  background:#fff; color:#374151; letter-spacing: -0.02em;
+`;
+const SheetFooter = styled.div`
+  position: sticky; bottom: 0;
+  display:flex; justify-content:flex-end; gap:10px;
+  padding: 12px 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,.85), #fff 60%);
+  border-top: 1px solid #e5e7eb;
+`;
+const Ghost = styled.button`
+  height: 35px; padding: 0 16px; border-radius: 6px; font-weight: 700;
+  background: #fff; color: ${UI.primaryBlue}; border: 1px solid ${UI.primaryBlue};
+  cursor: pointer; &:hover { background: #eef2ff; }
+`;
+const Primary = styled.button`
+  height: 35px; padding: 0 18px; border-radius: 6px; font-weight: 700; letter-spacing: -0.02em;
+  background: ${UI.primaryBlue}; border: 1px solid ${UI.primaryBlue}; color: #fff;
+  cursor: pointer; &:hover { filter: brightness(0.96); }
 `;
