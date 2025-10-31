@@ -25,12 +25,18 @@ module.exports = defineConfig({
     port: 3006,
     historyApiFallback: true,
     watchFiles: [path.resolve(__dirname, "src")],
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+      "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Authorization",
+    },
   },
   output: {
     // You need to set a unique value that is not equal to other applications
     uniqueName: "spoon_word_app",
     // publicPath must be configured if using manifest
     publicPath: `${ process.env.MFE_PUBLIC_SERVICE }/` ,
+    crossOriginLoading: "anonymous",
   },
 
   experiments: {
@@ -39,32 +45,29 @@ module.exports = defineConfig({
 
   module: {
     rules: [
+      // 이미지 (svg는 여기서 처리하므로 아래 별도 svg rule은 삭제)
       {
         test: /\.(png|jpe?g|gif|svg|webp|avif)$/i,
         type: "asset",
-        parser: {
-          dataUrlCondition: { maxSize: 8 * 1024 } // 8KB 이하는 data URL로 인라인
-        },
-        generator: {
-          filename: "static/media/[name].[contenthash][ext]"
-        }
+        parser: { dataUrlCondition: { maxSize: 8 * 1024 } },
+        generator: { filename: "static/media/[name].[contenthash][ext]" }
       },
 
-      // CSS
+      // 폰트
       {
-        test: /\.css$/,
+        test: /\.(woff2?|ttf|otf|eot)$/i,
+        type: "asset/resource",
+        generator: { filename: "static/fonts/[name].[contenthash][ext]" }
+      },
+
+      // CSS (중복 rule 있던 거 하나만 남기기)
+      {
+        test: /\.css$/i,
         use: ["postcss-loader"],
         type: "css",
       },
-      {
-        test: /\.svg$/,
-        type: "asset",
-      },
-      {
-        test: /\.css$/,
-        use: ["postcss-loader"],
-        type: "css",
-      },
+
+      // TS/JS
       {
         test: /\.(jsx?|tsx?)$/,
         use: [
@@ -89,10 +92,11 @@ module.exports = defineConfig({
       template: "./index.html",
     }),
     new DefinePlugin({
-      "process.env.REACT_APP_BASE_URL": JSON.stringify(process.env.REACT_APP_BASE_URL),
-      "process.env.MFE_PUBLIC_SERVICE": JSON.stringify(process.env.MFE_PUBLIC_SERVICE),
-      "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
+      "process.env.REACT_APP_API_BASE_URL": JSON.stringify(process.env.REACT_APP_API_BASE_URL ?? ""),
+      "process.env.MFE_PUBLIC_SERVICE": JSON.stringify(process.env.MFE_PUBLIC_SERVICE ?? "http://localhost:3006"),
+      "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV ?? "development"),
     }),
+
     new ModuleFederationPlugin(mfConfig),
     isDev ? new RefreshPlugin() : null,
   ].filter(Boolean),

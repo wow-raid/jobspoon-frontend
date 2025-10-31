@@ -1,28 +1,15 @@
 import axios from "axios";
 
+// 멀티 빌드툴 공용 API 베이스 헬퍼 (Vite/CRA/Next/Webpack + 런타임 주입)
+const API_BASE =
+    (typeof window !== "undefined" && (window as any).__API_BASE__) ||
+    (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_BASE) ||
+    (process?.env?.REACT_APP_API_BASE as string | undefined) ||
+    (process?.env?.NEXT_PUBLIC_API_BASE as string | undefined) ||
+    (process?.env?.API_BASE as string | undefined) ||
+    "/api"; // 기본값: 같은 도메인의 /api 프록시
+
 const axiosInstance = axios.create({
-    baseURL: "http://localhost:8080",
+    baseURL: API_BASE,
     withCredentials: true,
 });
-
-function pruneParams(obj: Record<string, any>) {
-    const out: Record<string, any> = {};
-    Object.entries(obj).forEach(([k, v]) => {
-        if (v === undefined || v === null) return;
-        if (typeof v === "string" && v.trim() === "") return; // 빈 문자열 제거
-        out[k] = v;
-    });
-    return out;
-}
-
-axiosInstance.interceptors.request.use((config) => {
-    if (config.headers && "Authorization" in config.headers) {
-        delete (config.headers as any).Authorization;
-    }
-    if (config.params) {
-        config.params = pruneParams(config.params);
-    }
-    return config;
-});
-
-export default axiosInstance;

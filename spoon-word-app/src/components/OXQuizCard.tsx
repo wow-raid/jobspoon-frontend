@@ -1,18 +1,19 @@
 import React from "react";
 import styled, { css, createGlobalStyle, keyframes } from "styled-components";
 import SoftBlobsBackground from "./SoftBlobsBackground";
+import emblem from "../assets/quiz/emblem.png"
+import GhanaWoff2 from "../assets/fonts/ghana-choco/GhanaChocolate.woff2";
 
 /* ====== 폰트 ====== */
-
 const ASSET = process.env.MFE_PUBLIC_SERVICE || "";
 const GhanaFont = createGlobalStyle`
-  @font-face {
-    font-family: 'GhanaChocolate';
-    src: url('${ASSET}/fonts/ghana-choco/GhanaChocolate.woff2') format('woff2');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-  }
+    @font-face {
+        font-family: 'GhanaChocolate';
+        src: url(${GhanaWoff2}) format('woff2');
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+    }
 `;
 
 /* ====== 토큰 ====== */
@@ -688,7 +689,7 @@ const Emblem = styled.img`
 `;
 
 
-const DEFAULT_EMBLEM = `${ASSET}/quiz/emblem.png`;
+const DEFAULT_EMBLEM = emblem;
 
 /* ====== 컴포넌트 ====== */
 export default function OXQuizCard({

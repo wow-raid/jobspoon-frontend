@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import styled from "styled-components";
 import HeroFloatingIcons from "./HeroFloatingIcons";
 
@@ -12,6 +13,7 @@ type Props = {
     offsetRight?: number;  // 오른쪽 패딩 조정
     floatingIcons?: [string, string, string];
     assetHost?: string;
+    linkTo?: string;       // 배너 클릭 시 이동 경로
     iconProps?: Partial<{
         width: string;
         height: string;
@@ -41,19 +43,16 @@ const HeroWrap = styled.section`
     --blob-mint: 196 236 220;  /* rgb(연한 민트) */
 
     background:
-        /* 좌하단: 스카이블루 블롭 */
             radial-gradient(900px 600px at 20% 72%,
             rgba(var(--blob-sky) / 0.55) 0%,
             rgba(var(--blob-sky) / 0.28) 24%,
             rgba(var(--blob-sky) / 0.10) 40%,
             rgba(var(--blob-sky) / 0.00) 64%),
-                /* 우상단: 민트 블롭 */
             radial-gradient(720px 620px at 76% 30%,
             rgba(var(--blob-mint) / 0.60) 0%,
             rgba(var(--blob-mint) / 0.26) 34%,
             rgba(var(--blob-mint) / 0.08) 54%,
             rgba(var(--blob-mint) / 0.00) 68%),
-                /* 전체를 아주 살짝 밝게 */
             linear-gradient(180deg, #f7fbff 0%, #f9fffb 100%);
     background-repeat: no-repeat;
 
@@ -75,22 +74,20 @@ const HeroWrap = styled.section`
     }
 `;
 
-/* 히어로 전체를 클릭 영역으로 만드는 오버레이 링크 */
-const OverlayLink = styled.a`
-  position: absolute;
-  inset: 0;        /* 전체 영역 커버 */
-  z-index: 10;     /* 텍스트/아이콘 위에 */
-  display: block;
-  pointer-events: auto;
-  cursor: pointer;
+const OverlayLink = styled(Link)`
+    position: absolute;
+    inset: 0;        /* 전체 영역 커버 */
+    z-index: 10;     /* 텍스트/아이콘 위에 */
+    display: block;
+    pointer-events: auto;
+    cursor: pointer;
 
-  &:focus-visible {
-    outline: 3px solid rgba(79,118,241,.5);
-    outline-offset: -2px;
-  }
+    &:focus-visible {
+        outline: 3px solid rgba(79,118,241,.5);
+        outline-offset: -2px;
+    }
 `;
 
-/* 네비 Inner 라인에 맞춘 인셋 + 원하는 만큼 좌우 오프셋 */
 const Inset = styled.div`
     --hero-left-offset: 0px;
     --hero-right-offset: 0px;
@@ -106,7 +103,6 @@ const HeroInner = styled.div<{ $align: "left" | "center" }>`
     text-align: ${({ $align }) => ($align === "center" ? "center" : "left")};
 `;
 
-/* 검색바와 동일한 폭/정렬 */
 const HeroNarrow = styled.div<{ $narrow: boolean }>`
     width: 100%;
     max-width: ${({ $narrow, theme }) =>
@@ -141,17 +137,18 @@ const TextWrap = styled.div`
 `;
 
 export default function SpoonWordHeroBanner({
-                                       title = "스푼워드",
-                                       subtitle = "잡스푼과 함께, 기술 용어를 나만의 언어로 만들어 보세요.",
-                                       className,
-                                       align = "left",
-                                       narrow = true,
-                                       offsetLeft = 15,
-                                       offsetRight = 0,
-                                       floatingIcons,
-                                       assetHost,
-                                       iconProps,
-                                   }: Props) {
+                                                title = "스푼워드",
+                                                subtitle = "잡스푼과 함께, 기술 용어를 나만의 언어로 만들어 보세요.",
+                                                className,
+                                                align = "left",
+                                                narrow = true,
+                                                offsetLeft = 15,
+                                                offsetRight = 0,
+                                                floatingIcons,
+                                                assetHost,
+                                                linkTo = "/spoon-word/words",
+                                                iconProps,
+                                            }: Props) {
     return (
         <HeroWrap className={className} aria-label="스푼워드 소개 배너">
             <Inset
@@ -177,14 +174,11 @@ export default function SpoonWordHeroBanner({
                 <HeroFloatingIcons
                     srcs={floatingIcons}
                     assetHost={assetHost}
+                    {...(iconProps ?? {})}
                 />
             )}
 
-            {/* 배너 전체 클릭 → /spoon-word/words 이동 */}
-            <OverlayLink
-                href="http://localhost/spoon-word/words"
-                aria-label="스푼워드 단어 목록으로 이동"
-            />
+            <OverlayLink to={linkTo} aria-label="스푼워드 단어 목록으로 이동" />
         </HeroWrap>
     );
 }
