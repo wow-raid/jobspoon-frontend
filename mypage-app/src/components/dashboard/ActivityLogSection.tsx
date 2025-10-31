@@ -9,19 +9,17 @@ import {
     QuizCompletionResponse,
     WritingCountResponse,
 } from "../../api/dashboardApi.ts";
-import {
-    fetchTrustScore,
-    TrustScoreResponse,
-} from "../../api/userTrustScoreApi.ts";
+import { fetchTrustScore, TrustScoreResponse } from "../../api/userTrustScoreApi.ts";
+import { fetchInterviewResultList, InterviewSummary } from "../../api/InterviewApi.ts";
 import { notifyError } from "../../utils/toast";
 import WritingModal from "../modals/WritingModal.tsx";
 import TrustScoreModal from "../modals/TrustScoreModal.tsx";
 
 /* ================== 색상 팔레트 ================== */
 const palette = {
-    primary: "#4CC4A8",   // 따뜻한 민트
-    accent: "#3AB49A",    // 포인트용
-    lightBG: "#F8FBF8",   // 연한 배경
+    primary: "#4CC4A8",
+    accent: "#3AB49A",
+    lightBG: "#F8FBF8",
     border: "rgba(76,196,168,0.35)",
     shadow: "rgba(76,196,168,0.22)",
     textMain: "#0F172A",
@@ -36,7 +34,7 @@ const fadeUp = keyframes`
     to { opacity: 1; margin-top: 0; }
 `;
 
-/* ================== 도넛 데이터 ================== */
+/* ================== 도넛 데이터 생성 ================== */
 const makeDonutData = (percent: number) => [
     { name: "progress", value: percent },
     { name: "remain", value: 100 - percent },
@@ -110,20 +108,40 @@ export default function ActivityLogSection() {
             return;
         }
 
-        Promise.allSettled([
-            getAttendanceRate(),
-            getQuizCompletion(),
-            getWritingCount(),
-            fetchTrustScore(),
-        ]).then(([att, quiz, writing, trust]) => {
-            if (att.status === "fulfilled") setAttendance(att.value);
-            if (quiz.status === "fulfilled") setQuiz(quiz.value);
-            if (writing.status === "fulfilled") setWriting(writing.value);
-            if (trust.status === "fulfilled") setTrust(trust.value);
-        });
+        const loadData = async () => {
+            try {
+                const [att, quizRes, writingRes, trustRes, interviewRes] = await Promise.all([
+                    getAttendanceRate(),
+                    getQuizCompletion(),
+                    getWritingCount(),
+                    fetchTrustScore(),
+                    fetchInterviewResultList(),
+                ]);
 
-        // 임시 mock 데이터 (AI면접)
-        setInterview({ total: 12, monthly: 3 });
+                setAttendance(att);
+                setQuiz(quizRes);
+                setWriting(writingRes);
+                setTrust(trustRes);
+
+                if (Array.isArray(interviewRes)) {
+                    const total = interviewRes.length;
+                    const monthly = interviewRes.filter((item) => {
+                        const d = new Date(item.createdAt);
+                        const now = new Date();
+                        return (
+                            d.getFullYear() === now.getFullYear() &&
+                            d.getMonth() === now.getMonth()
+                        );
+                    }).length;
+                    setInterview({ total, monthly });
+                }
+            } catch (err) {
+                console.error("❌ 대시보드 데이터 로드 실패:", err);
+                notifyError("활동 로그 데이터를 불러오는 중 오류가 발생했습니다 ❗");
+            }
+        };
+
+        loadData();
     }, []);
 
     if (!attendance || !interview || !quiz || !writing || !trust)
@@ -132,7 +150,7 @@ export default function ActivityLogSection() {
     /* ---------- 렌더링 ---------- */
     return (
         <>
-            {/* 텍스트 카드 */}
+            {/* 상단 카드 요약 */}
             <TopCardGrid>
                 <TopCard>
                     <p>이번 달 출석</p>
@@ -157,7 +175,7 @@ export default function ActivityLogSection() {
                 </TopCard>
             </TopCardGrid>
 
-            {/* 도넛 차트 */}
+            {/* 도넛 차트 섹션 */}
             <DonutGrid>
                 <DonutChart value={attendance.attendanceRate} label="이번 달 출석률" unit="%" />
                 <DonutChart value={interview.monthly} label="이번 달 모의면접" unit="회" />
@@ -186,7 +204,7 @@ export default function ActivityLogSection() {
     );
 }
 
-/* ================== styled-components ================== */
+/* ================== 스타일 ================== */
 
 const LoadingText = styled.p`
     font-size: 15px;
@@ -195,7 +213,6 @@ const LoadingText = styled.p`
     margin-top: 40px;
 `;
 
-/* ---------- 카드 ---------- */
 const TopCardGrid = styled.div`
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -260,7 +277,6 @@ const DetailButton = styled.button`
     }
 `;
 
-/* ---------- 도넛 ---------- */
 const DonutGrid = styled.div`
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));

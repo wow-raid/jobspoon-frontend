@@ -1,18 +1,9 @@
 import React, { useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
-import { fetchInterviewResultList } from "../api/InterviewApi.ts";
+import { fetchInterviewResultList, InterviewSummary } from "../api/InterviewApi.ts";
 import {FaRobot, FaRegClock, FaSearch, FaLock} from "react-icons/fa";
 import Spinner from "../components/common/Spinner.tsx";
 import {notifyError, notifyInfo} from "../utils/toast.ts";
-import { useNavigate } from "react-router-dom";
-
-type InterviewSummary = {
-    interviewId: number;
-    interviewType: string;
-    createdAt: string;
-    sender: string;
-    finished: boolean;
-};
 
 export default function InterviewResultPage() {
     const [loading, setLoading] = useState(true);
@@ -20,15 +11,12 @@ export default function InterviewResultPage() {
     const [searchText, setSearchText] = useState("");
     const [filterStatus, setFilterStatus] = useState<"all" | "completed" | "progress">("all");
     const [sortOption, setSortOption] = useState<"latest" | "oldest" | "status">("latest");
-    const navigate = useNavigate();
 
     useEffect(() => {
         const loadData = async () => {
             try {
                 const data = await fetchInterviewResultList();
-                if (!data || !Array.isArray(data.interviewResultList))
-                    throw new Error("Invalid response");
-                setList(data.interviewResultList);
+                setList(data);
             } catch (err) {
                 console.error(err);
                 notifyError("면접 결과 목록을 불러오지 못했습니다 ❗");
