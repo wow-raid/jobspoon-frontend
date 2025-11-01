@@ -28,6 +28,7 @@ type Props = {
     }>;
 };
 
+/* ===== 안전한 색 변수 기본값(라이트) ===== */
 const HeroWrap = styled.section`
     width: 100vw;
     margin-left: calc(50% - 50vw);
@@ -37,122 +38,118 @@ const HeroWrap = styled.section`
     position: relative;
     isolation: isolate;
 
-    /* ===== light mode: 부드러운 블롭 두 개 + 아주 옅은 톤 ===== */
-    --blob-blue: 170 185 255;   /* rgb */
-    --blob-pink: 255 165 190;   /* rgb */
+    /* blob은 공백 구분(r g b), 텍스트/배경은 변수로 통일 */
+    --blob-blue: 170 185 255;
+    --blob-pink: 255 165 190;
+    --bg-top: #f9fbff;
+    --bg-bottom: #ffffff;
+    --title-color: #0f172a;
+    --sub-color: #334155;
 
     background:
-        /* 좌하단 보라/인디고 블롭 */
             radial-gradient(900px 600px at 20% 72%,
-            rgba(var(--blob-blue) / 0.55) 0%,
-            rgba(var(--blob-blue) / 0.28) 22%,
-            rgba(var(--blob-blue) / 0.10) 38%,
-            rgba(var(--blob-blue) / 0.00) 62%),
-                /* 우상단 핑크 블롭 */
+            rgb(var(--blob-blue) / 0.55) 0%,
+            rgb(var(--blob-blue) / 0.28) 22%,
+            rgb(var(--blob-blue) / 0.10) 38%,
+            rgb(var(--blob-blue) / 0.00) 62%),
             radial-gradient(700px 620px at 74% 30%,
-            rgba(var(--blob-pink) / 0.60) 0%,
-            rgba(var(--blob-pink) / 0.26) 32%,
-            rgba(var(--blob-pink) / 0.08) 52%,
-            rgba(var(--blob-pink) / 0.00) 66%),
-                /* 전체 톤을 살짝 밝게 */
-            linear-gradient(180deg, #f9fbff 0%, #ffffff 100%);
-
+            rgb(var(--blob-pink) / 0.60) 0%,
+            rgb(var(--blob-pink) / 0.26) 32%,
+            rgb(var(--blob-pink) / 0.08) 52%,
+            rgb(var(--blob-pink) / 0.00) 66%),
+            linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
     background-repeat: no-repeat;
 
+    /* 시스템 다크 선호(옵션) — 변수만 바꿔서 안전하게 */
     @media (prefers-color-scheme: dark) {
-        /* ===== dark mode: 네이비 바탕 + 보라/마젠타 블롭 ===== */
         --blob-blue: 120 150 255;
         --blob-pink: 255 110 190;
+        --bg-top: #0b1222;
+        --bg-bottom: #0a0f1c;
+        --title-color: #e5e7eb;
+        --sub-color: #9aa4b2;
+    }
 
-        background:
-                radial-gradient(900px 600px at 20% 72%,
-                rgba(var(--blob-blue) / 0.35) 0%,
-                rgba(var(--blob-blue) / 0.18) 28%,
-                rgba(var(--blob-blue) / 0.00) 60%),
-                radial-gradient(700px 620px at 74% 30%,
-                rgba(var(--blob-pink) / 0.38) 0%,
-                rgba(var(--blob-pink) / 0.16) 36%,
-                rgba(var(--blob-pink) / 0.00) 62%),
-                linear-gradient(180deg, #0b1222 0%, #0a0f1c 100%);
+    /* 명시 오버라이드: <html data-theme="light|dark"> 로 강제 가능 */
+    :root[data-theme='light'] &,
+    body[data-theme='light'] & {
+        --blob-blue: 170 185 255;
+        --blob-pink: 255 165 190;
+        --bg-top: #f9fbff;
+        --bg-bottom: #ffffff;
+        --title-color: #0f172a;
+        --sub-color: #334155;
+    }
+    :root[data-theme='dark'] &,
+    body[data-theme='dark'] & {
+        --blob-blue: 120 150 255;
+        --blob-pink: 255 110 190;
+        --bg-top: #0b1222;
+        --bg-bottom: #0a0f1c;
+        --title-color: #e5e7eb;
+        --sub-color: #9aa4b2;
     }
 `;
 
 /* 전면 오버레이 링크 */
 const OverlayLink = styled(Link)`
-  position: absolute;
-  inset: 0;            /* 전체 영역 커버 */
-  z-index: 10;         /* 텍스트/아이콘 위에 */
-  display: block;
-  pointer-events: auto;
-  cursor: pointer;
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: block;
+    pointer-events: auto;
+    cursor: pointer;
 
-  /* 접근성: 키보드 포커스 링 */
-  &:focus-visible {
-    outline: 3px solid rgba(79,118,241,.5);
-    outline-offset: -2px;
-  }
+    &:focus-visible {
+        outline: 3px solid rgba(79,118,241,.5);
+        outline-offset: -2px;
+    }
 `;
 
-/* 네비 Inner 라인에 맞춘 인셋 + 원하는 만큼 좌우 오프셋 */
 const Inset = styled.div`
-  --hero-left-offset: 0px;
-  --hero-right-offset: 0px;
+    --hero-left-offset: 0px;
+    --hero-right-offset: 0px;
 
-  padding-left: calc(
-    max(var(--shell-left, 20px), env(safe-area-inset-left)) +
-      var(--hero-left-offset)
-  );
-  padding-right: calc(
-    max(var(--shell-right, 20px), env(safe-area-inset-right)) +
-      var(--hero-right-offset)
-  );
+    padding-left: calc(max(var(--shell-left, 20px), env(safe-area-inset-left)) + var(--hero-left-offset));
+    padding-right: calc(max(var(--shell-right, 20px), env(safe-area-inset-right)) + var(--hero-right-offset));
 `;
 
 const HeroInner = styled.div<{ $align: "left" | "center" }>`
-  display: grid;
-  gap: 8px;
-  justify-items: ${({ $align }) => ($align === "center" ? "center" : "start")};
-  text-align: ${({ $align }) => ($align === "center" ? "center" : "left")};
+    display: grid;
+    gap: 8px;
+    justify-items: ${({ $align }) => ($align === "center" ? "center" : "start")};
+    text-align: ${({ $align }) => ($align === "center" ? "center" : "left")};
 `;
 
-/* 검색바와 동일한 폭/정렬 */
 const HeroNarrow = styled.div<{ $narrow: boolean }>`
-  width: 100%;
-  max-width: ${({ $narrow, theme }) =>
-    $narrow
-        ? `${theme?.custom?.layout?.narrowMaxWidth ?? 980}px`
-        : `${theme?.custom?.layout?.containerMaxWidth ?? 1280}px`};
-  margin: 0 auto;
+    width: 100%;
+    max-width: ${({ $narrow, theme }) =>
+            $narrow
+                    ? `${theme?.custom?.layout?.narrowMaxWidth ?? 980}px`
+                    : `${theme?.custom?.layout?.containerMaxWidth ?? 1280}px`};
+    margin: 0 auto;
 `;
 
 const HeroTitle = styled.h1`
-  margin: 0;
-  font-weight: 750;
-  letter-spacing: -0.06em;
-  font-size: clamp(28px, 6vw, 56px);
-  line-height: 1.1;
-  color: #0f172a;
-
-  @media (prefers-color-scheme: dark) {
-    color: #e5e7eb;
-  }
+    margin: 0;
+    font-weight: 750;
+    letter-spacing: -0.06em;
+    font-size: clamp(28px, 6vw, 56px);
+    line-height: 1.1;
+    color: var(--title-color);
 `;
 
 const HeroSub = styled.p`
-  margin: 12px 0 0 0;
-  letter-spacing: -0.06em;
-  font-size: clamp(14px, 2.6vw, 20px);
-  line-height: 1.6;
-  color: #334155;
-
-  @media (prefers-color-scheme: dark) {
-    color: #9aa4b2;
-  }
+    margin: 12px 0 0 0;
+    letter-spacing: -0.06em;
+    font-size: clamp(14px, 2.6vw, 20px);
+    line-height: 1.6;
+    color: var(--sub-color);
 `;
 
 const TextWrap = styled.div`
-  position: relative;
-  z-index: 2; /* 아이콘 레이어(1) 위로 */
+    position: relative;
+    z-index: 2; /* 아이콘 레이어(1) 위로 */
 `;
 
 export default function SpoonNoteHeroBanner({
@@ -168,9 +165,7 @@ export default function SpoonNoteHeroBanner({
                                                 floatingIcons,
                                                 iconProps,
                                             }: Props) {
-    const srcs = (floatingIcons && floatingIcons.length > 0)
-        ? floatingIcons
-        : [icon4];
+    const srcs = (floatingIcons && floatingIcons.length > 0) ? floatingIcons : [icon4];
 
     return (
         <HeroWrap className={className} aria-label="스푼노트 소개 배너">
