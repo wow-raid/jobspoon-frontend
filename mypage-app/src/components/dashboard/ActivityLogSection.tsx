@@ -153,9 +153,9 @@ export default function ActivityLogSection() {
                     <p>총 문제풀이</p>
                     <strong>{quiz.quizTotalCount}개</strong>
                 </TopCard>
-                <TopCard>
+                <TopCard> {/* ✅ ActivityItem → TopCard 통일 */}
                     <p>총 글 작성</p>
-                    <strong>{writing.totalCount}개</strong>
+                    <strong>{writing?.studyroomCount ?? 0}개</strong>
                 </TopCard>
             </TopCardGrid>
 

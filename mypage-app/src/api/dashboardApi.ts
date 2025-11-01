@@ -17,10 +17,8 @@ export interface QuizCompletionResponse {
 
 /** 글쓰기 활동 통계 */
 export interface WritingCountResponse {
-    postCount: number;
     studyroomCount: number;
-    commentCount: number;
-    totalCount: number;
+
 }
 
 /** 인터뷰 통계 응답 */

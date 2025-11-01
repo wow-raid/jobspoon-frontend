@@ -264,6 +264,17 @@ const fadeUp = keyframes`
   to { opacity: 1; margin-top: 0; }
 `;
 
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const zoomIn = keyframes`
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+`;
+
+
 export const Wrapper = styled.div`
     animation: ${fadeUp} 0.6s ease both;
     display: flex;
@@ -452,10 +463,15 @@ export const ModalOverlay = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 9999;
+    animation: ${fadeIn} 0.25s ease;
 `;
 
-export const ModalContent = styled.div`background: transparent;`;
+export const ModalContent = styled.div`
+    background: transparent;
+    animation: ${zoomIn} 0.25s ease;
+`;
+
 export const LargeImage = styled.img`
     width: 400px;
     height: 400px;
@@ -463,6 +479,11 @@ export const LargeImage = styled.img`
     border-radius: 12px;
     border: 3px solid #fff;
     box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+
+    @media (max-width: 768px) {
+        width: 80vw;
+        height: 80vw;
+    }
 `;
 
 /* ---------- 칭호 ---------- */
