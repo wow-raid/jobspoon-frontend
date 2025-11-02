@@ -177,11 +177,6 @@
 <!--              ></v-textarea>-->
 <!--            </div>-->
 
-            <!-- STT 결과 미리보기 (간단하게) -->
-            <div v-if="sttLog !== ''" :style="sttPreviewStyle">
-              <v-icon size="16" color="#3b82f6">mdi-text-to-speech</v-icon>
-              <span :style="sttPreviewTextStyle">{{ sttLog.substring(0, 50) }}{{ sttLog.length > 50 ? '...' : '' }}</span>
-            </div>
 
             <!-- 버튼 그룹 -->
             <div :style="interviewActionButtonsStyle">
